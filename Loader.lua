@@ -6,7 +6,7 @@ end
 
 getgenv().Parvus = {}
 Parvus.Loaded = true
-Parvus.Debug = true
+Parvus.Debug = false
 Parvus.Current = "Loader"
 Parvus.Config = {}
 Parvus.Utilities = {
