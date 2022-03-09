@@ -388,17 +388,12 @@ local __namecall
 __namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     if Parvus.Config.AimAssist.SilentAim.Enabled and SilentAimTarget then
+        local Camera = Workspace.CurrentCamera
         local HitChance = math.random(0,100) <= Parvus.Config.AimAssist.SilentAim.HitChance
-        if getnamecallmethod() == "Raycast" then
-            local Camera = Workspace.CurrentCamera
-            if args[1] == Camera.CFrame.Position and HitChance then
-                args[2] = SilentAimTarget.Position - Camera.CFrame.Position
-            end
-        elseif getnamecallmethod() == "FindPartOnRayWithIgnoreList" then
-            local Camera = Workspace.CurrentCamera
-            if args[1] == Camera.CFrame.Position and HitChance then
-                args[2] = SilentAimTarget.Position - Camera.CFrame.Position
-            end
+        if getnamecallmethod() == "Raycast" and HitChance then
+            args[2] = SilentAimTarget.Position - Camera.CFrame.Position
+        elseif getnamecallmethod() == "FindPartOnRayWithIgnoreList" and HitChance then
+            args[1] = Ray.new(args[1].Origin,SilentAimTarget.Position - Camera.CFrame.Position)
         end
     end
     return __namecall(self, unpack(args))
