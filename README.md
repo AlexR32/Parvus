@@ -1,18 +1,13 @@
 # Parvus
+Free, Open Source And Modular Roblox Script Hub, Made With Love By [AlexR32#0157](https://discord.com/users/679661473261551634) ❤️
 
-## loadstring
+### loadstring
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))()
 ```
 ### TODO
-- [x] Ui funtions rename
-- [x] Ui notifications
-- [x] Ui colorpicker table
-- [ ] Offscreen arrows
-- [ ] Games finish
-- [x] Utility rework
-- [x] Ui re-layout
-- [x] Ui text color
-- [ ] Priority target func
-- [x] Silent aim hit chance
-- [ ] Sa priority hit chance
+- Cursor rework
+- Offscreen arrows
+- Finish Games
+- Priority target function
+- Silent Aim priority hit chance
