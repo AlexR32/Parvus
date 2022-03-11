@@ -6,9 +6,6 @@ Free, Open Source And Modular Roblox Script Hub, Made With Love By [AlexR32#0157
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))()
 ```
 ### TODO
-- Cursor Remake
-- Advanced Tracers
-- Offscreen Arrows
 - Finish Games
 - Priority Reinvention
 - Silent Aim Priority Hit Chance

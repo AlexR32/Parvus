@@ -13,25 +13,53 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 
         TeamColor = false,
         TeamCheck = false,
-
-        BoxVisible = false,
-        Text = {
-            Visible = false,
-            AutoScale = true,
-            Size = 16
-        },
-        HeadCircle = {
-            Visible = false,
-            Filled = true,
-            AutoScale = true,
-            Radius = 8,
-            NumSides = 4
-        },
         Highlight = {
-            Visible = false,
+            Enabled = false,
             Transparency = 0.5,
-            OutlineColor = {1,1,1,0},
-            OutlineTransparency = 1
+            Outline = {
+                Color = {1,1,1,0},
+                Transparency = 1
+            }
+        },
+        Box = {
+            Enabled = false,
+            Outline = true,
+            Filled = false,
+            Thickness = 1,
+            Transparency = 1,
+            Info = {
+                Enabled = false,
+                AutoScale = true,
+                Transparency = 1,
+                Size = 16
+            }
+        },
+        Other = {
+            Head = {
+                Enabled = false,
+                AutoScale = true,
+                Filled = true,
+                Radius = 8,
+                NumSides = 4,
+                Thickness = 1,
+                Transparency = 1
+            },
+            Tracer = {
+                Enabled = false,
+                Thickness = 1,
+                Transparency = 1,
+                From = "ScreenBottom",
+                To = "Head"
+            },
+            Arrow = {
+                Enabled = false,
+                Filled = true,
+                Width = 16,
+                Height = 16,
+                Thickness = 1,
+                Transparency = 1,
+                DistanceFromCenter = 80,
+            }
         }
     },
     AimAssist = {
@@ -75,7 +103,19 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         Background = "Floral",
         BackgroundId = "rbxassetid://5553946656",
         BackgroundColor = {0,0,0,0},
-        BackgroundTransparency = 0
+        BackgroundTransparency = 0,
+        Cursor = {
+            Enabled = false,
+            Length = 16,
+            Width = 11,
+
+            Crosshair = {
+                Enabled = false,
+                Color = {1,0.25,0.25,0},
+                Size = 4,
+                Gap = 2,
+            }
+        }
     },
     Binds = {
         Aimbot = "MouseButton2",
@@ -83,6 +123,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     }
 })
 
+Parvus.Utilities.Cursor(Parvus.Config.UI.Cursor)
 local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.Config.UI.Enabled,Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
     local AimAssistTab = Window:Tab({Name = "Aim Assist"}) do
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
@@ -105,7 +146,7 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
             AimbotSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.Aimbot.FieldOfView,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.FieldOfView = Number
             end})
-            AimbotSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.Aimbot.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
+            AimbotSection:Dropdown({Name = "Target Part",Default = Parvus.Config.AimAssist.Aimbot.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
                 Parvus.Config.AimAssist.Aimbot.Priority = String
             end})
         end
@@ -124,7 +165,7 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
             SilentAimSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.SilentAim.FieldOfView,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.FieldOfView = Number
             end})
-            SilentAimSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.SilentAim.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
+            SilentAimSection:Dropdown({Name = "Target Part",Default = Parvus.Config.AimAssist.SilentAim.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
                 Parvus.Config.AimAssist.SilentAim.Priority = String
             end})
         end
@@ -144,49 +185,97 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
                 Parvus.Config.PlayerESP.TeamCheck = Bool
             end})
         end
-        local BoxSection = VisualsTab:Section({Name = "Box",Side = "Left"}) do
-            BoxSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.BoxVisible,Callback = function(Bool)
-                Parvus.Config.PlayerESP.BoxVisible = Bool
+        local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
+            BoxSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Box.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Box.Enabled = Bool
             end})
-            BoxSection:Toggle({Name = "Text",Value = Parvus.Config.PlayerESP.Text.Visible,Callback = function(Bool)
-                Parvus.Config.PlayerESP.Text.Visible = Bool
+            BoxSection:Toggle({Name = "Filled",Value = Parvus.Config.PlayerESP.Box.Filled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Box.Filled = Bool
             end})
-            BoxSection:Toggle({Name = "Text Autoscale",Value = Parvus.Config.PlayerESP.Text.AutoScale,Callback = function(Bool)
-                Parvus.Config.PlayerESP.Text.AutoScale = Bool
+            BoxSection:Toggle({Name = "Outline",Value = Parvus.Config.PlayerESP.Box.Outline,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Box.Outline = Bool
             end})
-            BoxSection:Slider({Name = "Text Size",Min = 14,Max = 28,Value = Parvus.Config.PlayerESP.Text.Size,Callback = function(Number)
-                Parvus.Config.PlayerESP.Text.Size = Number
+            BoxSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Box.Thickness,Callback = function(Number)
+                Parvus.Config.PlayerESP.Box.Thickness = Number
+            end})
+            BoxSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Box.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Box.Transparency = Number
+            end})
+            BoxSection:Divider({Text = "Text / Info"})
+            BoxSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Box.Info.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Box.Info.Enabled = Bool
+            end})
+            BoxSection:Toggle({Name = "Autoscale",Value = Parvus.Config.PlayerESP.Box.Info.AutoScale,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Box.Info.AutoScale = Bool
+            end})
+            BoxSection:Slider({Name = "Size",Min = 14,Max = 28,Value = Parvus.Config.PlayerESP.Box.Info.Size,Callback = function(Number)
+                Parvus.Config.PlayerESP.Box.Info.Size = Number
+            end})
+            BoxSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Box.Info.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Box.Info.Transparency = Number
             end})
         end
-        local HighlightSection = VisualsTab:Section({Name = "Highlight",Side = "Left"}) do
-            HighlightSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Highlight.Visible,Callback = function(Bool)
-                Parvus.Config.PlayerESP.Highlight.Visible = Bool
+        local TracerSection = VisualsTab:Section({Name = "Tracers",Side = "Left"}) do
+            TracerSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Other.Tracer.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Tracer.Enabled = Bool
+            end})
+            TracerSection:Dropdown({Name = "Mode",Default = Parvus.Config.PlayerESP.Other.Tracer.From == "ScreenBottom" and "From Bottom" or "From Mouse",
+            List = {"From Bottom","From Mouse"},
+            Callback = function(String)
+                if String == "From Bottom" then
+                    Parvus.Config.PlayerESP.Other.Tracer.From = "ScreenBottom"
+                elseif String == "From Mouse" then
+                    Parvus.Config.PlayerESP.Other.Tracer.From = "Mouse"
+                end
+            end})
+            TracerSection:Dropdown({Name = "Target Part",Default = Parvus.Config.PlayerESP.Other.Tracer.To,
+            List = {"Head","HumanoidRootPart"},
+            Callback = function(String)
+                Parvus.Config.PlayerESP.Other.Tracer.To = String
+            end})
+            TracerSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Other.Tracer.Thickness,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Tracer.Thickness = Number
+            end})
+            TracerSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Other.Tracer.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Tracer.Transparency = Number
+            end})
+        end
+        local HighlightSection = VisualsTab:Section({Name = "Highlights",Side = "Left"}) do
+            HighlightSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Highlight.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Highlight.Enabled = Bool
             end})
             HighlightSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Highlight.Transparency,Callback = function(Number)
                 Parvus.Config.PlayerESP.Highlight.Transparency = Number
             end})
-            HighlightSection:Colorpicker({Name = "Outline Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.PlayerESP.Highlight.OutlineColor),Callback = function(Color,Table)
-                Parvus.Config.PlayerESP.Highlight.OutlineColor = Table
+            HighlightSection:Divider({Text = "Outline"})
+            HighlightSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.PlayerESP.Highlight.Outline.Color),Callback = function(Color,Table)
+                Parvus.Config.PlayerESP.Highlight.Outline.Color = Table
             end})
-            HighlightSection:Slider({Name = "Outline Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Highlight.OutlineTransparency,Callback = function(Number)
-                Parvus.Config.PlayerESP.Highlight.OutlineTransparency = Number
+            HighlightSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Highlight.Outline.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Highlight.Outline.Transparency = Number
             end})
         end
-        local HeadCircleSection = VisualsTab:Section({Name = "Head Circle",Side = "Right"}) do
-            HeadCircleSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.HeadCircle.Visible,Callback = function(Bool)
-                Parvus.Config.PlayerESP.HeadCircle.Visible = Bool
+        local HeadSection = VisualsTab:Section({Name = "Head Circles",Side = "Right"}) do
+            HeadSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Other.Head.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Head.Enabled = Bool
             end})
-            HeadCircleSection:Toggle({Name = "Filled",Value = Parvus.Config.PlayerESP.HeadCircle.Filled,Callback = function(Bool)
-                Parvus.Config.PlayerESP.HeadCircle.Filled = Bool
+            HeadSection:Toggle({Name = "Filled",Value = Parvus.Config.PlayerESP.Other.Head.Filled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Head.Filled = Bool
             end})
-            HeadCircleSection:Toggle({Name = "Autoscale",Value = Parvus.Config.PlayerESP.HeadCircle.AutoScale,Callback = function(Bool)
-                Parvus.Config.PlayerESP.HeadCircle.AutoScale = Bool
+            HeadSection:Toggle({Name = "Autoscale",Value = Parvus.Config.PlayerESP.Other.Head.AutoScale,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Head.AutoScale = Bool
             end})
-            HeadCircleSection:Slider({Name = "Radius",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.HeadCircle.Radius,Callback = function(Number)
-                Parvus.Config.PlayerESP.HeadCircle.Radius = Number
+            HeadSection:Slider({Name = "Radius",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Other.Head.Radius,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Head.Radius = Number
             end})
-            HeadCircleSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.PlayerESP.HeadCircle.NumSides,Callback = function(Number)
-                Parvus.Config.PlayerESP.HeadCircle.NumSides = Number
+            HeadSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.PlayerESP.Other.Head.NumSides,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Head.NumSides = Number
+            end})
+            HeadSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Other.Head.Thickness,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Head.Thickness = Number
+            end})
+            HeadSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Other.Head.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Head.Transparency = Number
             end})
         end
         local AFoVSection = VisualsTab:Section({Name = "Aimbot FoV Circle",Side = "Right"}) do
@@ -199,14 +288,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
             AFoVSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.Aimbot.Circle.Color),Callback = function(Color,Table)
                 Parvus.Config.AimAssist.Aimbot.Circle.Color = Table
             end})
-            AFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Aimbot.Circle.Transparency,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Circle.Transparency = Number
+            AFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.Aimbot.Circle.NumSides,Callback = function(Number)
+                Parvus.Config.AimAssist.Aimbot.Circle.NumSides = Number
             end})
             AFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.Aimbot.Circle.Thickness,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.Circle.Thickness = Number
             end})
-            AFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.Aimbot.Circle.NumSides,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Circle.NumSides = Number
+            AFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Aimbot.Circle.Transparency,Callback = function(Number)
+                Parvus.Config.AimAssist.Aimbot.Circle.Transparency = Number
             end})
         end
         local SAFoVSection = VisualsTab:Section({Name = "Silent Aim FoV Circle",Side = "Right"}) do
@@ -219,20 +308,39 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
             SAFoVSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.SilentAim.Circle.Color),Callback = function(Color,Table)
                 Parvus.Config.AimAssist.SilentAim.Circle.Color = Table
             end})
-            SAFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.SilentAim.Circle.Transparency,Callback = function(Number)
-                Parvus.Config.AimAssist.SilentAim.Circle.Transparency = Number
+            SAFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.SilentAim.Circle.NumSides,Callback = function(Number)
+                Parvus.Config.AimAssist.SilentAim.Circle.NumSides = Number
             end})
             SAFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.SilentAim.Circle.Thickness,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.Circle.Thickness = Number
             end})
-            SAFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.SilentAim.Circle.NumSides,Callback = function(Number)
-                Parvus.Config.AimAssist.SilentAim.Circle.NumSides = Number
+            SAFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.SilentAim.Circle.Transparency,Callback = function(Number)
+                Parvus.Config.AimAssist.SilentAim.Circle.Transparency = Number
             end})
         end
-        --[[
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
+        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
+            OoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Other.Arrow.Enabled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Arrow.Enabled = Bool
+            end})
+            OoVSection:Toggle({Name = "Filled",Value = Parvus.Config.PlayerESP.Other.Arrow.Filled,Callback = function(Bool)
+                Parvus.Config.PlayerESP.Other.Arrow.Filled = Bool
+            end})
+            OoVSection:Slider({Name = "Height",Min = 14,Max = 28,Value = Parvus.Config.PlayerESP.Other.Arrow.Height,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Arrow.Height = Number
+            end})
+            OoVSection:Slider({Name = "Width",Min = 14,Max = 28,Value = Parvus.Config.PlayerESP.Other.Arrow.Width,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Arrow.Width = Number
+            end})
+            OoVSection:Slider({Name = "Distance From Center",Min = 80,Max = 200,Value = Parvus.Config.PlayerESP.Other.Arrow.DistanceFromCenter,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Arrow.DistanceFromCenter = Number
+            end})
+            OoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Other.Arrow.Thickness,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Arrow.Thickness = Number
+            end})
+            OoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Other.Arrow.Transparency,Callback = function(Number)
+                Parvus.Config.PlayerESP.Other.Arrow.Transparency = Number
+            end})
         end
-        ]]
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
@@ -244,9 +352,26 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
             MenuSection:Toggle({Name = "Close On Exec",Value = not Parvus.Config.UI.Enabled,Callback = function(Bool) 
                 Parvus.Config.UI.Enabled = not Bool
             end})
+            MenuSection:Toggle({Name = "Custom Mouse",Value = Parvus.Config.UI.Cursor.Enabled,Callback = function(Bool) 
+                Parvus.Config.UI.Cursor.Enabled = Bool
+            end})
             MenuSection:Colorpicker({Name = "Color",Color = Window.Color,Callback = function(Color,Table)
                 Parvus.Config.UI.Color = Table
                 Window:ChangeColor(Color)
+            end})
+        end
+        local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Left"}) do
+            CrosshairSection:Toggle({Name = "Enabled",Value = Parvus.Config.UI.Cursor.Crosshair.Enabled,Callback = function(Bool) 
+                Parvus.Config.UI.Cursor.Crosshair.Enabled = Bool
+            end})
+            CrosshairSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Cursor.Crosshair.Color),Callback = function(Color,Table)
+                Parvus.Config.UI.Cursor.Crosshair.Color = Table
+            end})
+            CrosshairSection:Slider({Name = "Size",Min = 0,Max = 100,Value = Parvus.Config.UI.Cursor.Crosshair.Size,Callback = function(Number)
+                Parvus.Config.UI.Cursor.Crosshair.Size = Number
+            end})
+            CrosshairSection:Slider({Name = "Gap",Min = 0,Max = 100,Value = Parvus.Config.UI.Cursor.Crosshair.Gap,Callback = function(Number)
+                Parvus.Config.UI.Cursor.Crosshair.Gap = Number
             end})
         end
         SettingsTab:Button({Name = "Server Hop",Side = "Left",Callback = function()
@@ -332,6 +457,7 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.
         local CreditsSection = SettingsTab:Section({Name = "Credits",Side = "Right"}) do
             CreditsSection:Label({Text = "Thanks to Jan for this awesome background patterns."})
             CreditsSection:Label({Text = "Thanks to Infinite Yield Team for server hop."})
+            CreditsSection:Label({Text = "Thanks to Blissful for Offscreen Arrows."})
             CreditsSection:Label({Text = "Thanks to coasts for his Universal ESP."})
             CreditsSection:Label({Text = "Thanks to el3tric for Bracket V2."})
             CreditsSection:Label({Text = "And thanks to AlexR32#0157 for making this script."})
@@ -401,6 +527,8 @@ end)
 
 local AimbotCircle = Drawing.new("Circle")
 local SilentAimCircle = Drawing.new("Circle")
+AimbotCircle.ZIndex = 3
+SilentAimCircle.ZIndex = 3
 RunService.Heartbeat:Connect(function()
     AimbotCircle.Visible = Parvus.Config.AimAssist.Aimbot.Circle.Visible
     if AimbotCircle.Visible then
