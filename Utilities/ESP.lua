@@ -280,11 +280,12 @@ RunService.Heartbeat:Connect(function()
         elseif ESP.Mode == "NPC" then
             if Model:IsA("Model") and Model.PrimaryPart then
                 local Camera = Workspace.CurrentCamera
+                Character, PrimaryPart = Model, Model.PrimaryPart
                 ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Model.PrimaryPart.Position)
                 if OnScreen then
                     ESP.Highlight.Adornee = Model
-                    if Character:FindFirstChild("Head") and ESP.Drawing.Other.Head.Visible then
-                        local HeadPosition = Camera:WorldToViewportPoint(Character.Head.Position)
+                    if Model:FindFirstChild("Head") and ESP.Drawing.Other.Head.Visible then
+                        local HeadPosition = Camera:WorldToViewportPoint(Model.Head.Position)
                         local Distance = GetDistanceFromCamera(PrimaryPart.Position)
                         local Radius = ESP.Config.Other.Head.AutoScale and math.clamp(1 / Distance * 1000, 0, ESP.Config.Other.Head.Radius) or ESP.Config.Other.Head.Radius
                         ESP.Drawing.Other.Head.Color = TableToColor(ESP.Config.EnemyColor)
@@ -299,8 +300,8 @@ RunService.Heartbeat:Connect(function()
                         local TracerFrom = ESP.Config.Other.Tracer.From == "Mouse" and UserInputService:GetMouseLocation()
                         or ESP.Config.Other.Tracer.From == "ScreenBottom" and Vector2.new(Camera.ViewportSize.X * 0.5,Camera.ViewportSize.Y)
                         local TracerTo = ScreenPosition
-                        if Character:FindFirstChild(ESP.Config.Other.Tracer.To) then
-                            TracerTo = Camera:WorldToViewportPoint(Character[ESP.Config.Other.Tracer.To].Position)
+                        if Model:FindFirstChild(ESP.Config.Other.Tracer.To) then
+                            TracerTo = Camera:WorldToViewportPoint(Model[ESP.Config.Other.Tracer.To].Position)
                         end
                         TracerTo = Vector2.new(TracerTo.X,TracerTo.Y)
 

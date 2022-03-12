@@ -125,7 +125,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 })
 
 Parvus.Utilities.Cursor(Parvus.Config.UI.Cursor)
-local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub",Enabled = Parvus.Config.UI.Enabled,Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
+local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Current,Enabled = Parvus.Config.UI.Enabled,Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
     local AimAssistTab = Window:Tab({Name = "Aim Assist"}) do
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Enabled,Callback = function(Bool)
@@ -479,21 +479,16 @@ function TeamCheck(Character)
 end
 
 local function WallCheck(Enabled,Hitbox,Character)
-    if Enabled and Character then
-        local Camera = Workspace.CurrentCamera
-        local RaycastParameters = RaycastParams.new()
-        RaycastParameters.FilterType = Enum.RaycastFilterType.Blacklist
-        RaycastParameters.FilterDescendantsInstances = {LocalPlayer.Character,Character}
-        RaycastParameters.IgnoreWater = true
-        
-        if Workspace:Raycast(Camera.CFrame.Position, Hitbox.Position - Camera.CFrame.Position, RaycastParameters) then
-            return false
-        end
-    end
-    return true
+	if not Enabled then return true end
+	local Camera = Workspace.CurrentCamera
+	local RaycastParameters = RaycastParams.new()
+	RaycastParameters.FilterType = Enum.RaycastFilterType.Blacklist
+	RaycastParameters.FilterDescendantsInstances = {LocalPlayer.Character,Character}
+	RaycastParameters.IgnoreWater = true
+	return not Workspace:Raycast(Camera.CFrame.Position, Hitbox.Position - Camera.CFrame.Position, RaycastParameters)
 end
 
-local function GetTarget(FoV,Priority,Visibility)
+local function GetTarget(FoV,Priority,WallCheckEnabled)
     local Camera = Workspace.CurrentCamera
     local FieldOfView = FoV
     local ClosestTarget = nil
@@ -505,7 +500,7 @@ local function GetTarget(FoV,Priority,Visibility)
         if Target ~= LocalPlayer and Hitbox and Health and TeamCheck(Character) then
             local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
             local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-            if OnScreen and WallCheck(Visibility,Hitbox,Character) and FieldOfView > Magnitude then
+            if OnScreen and WallCheck(WallCheckEnabled,Hitbox,Character) and FieldOfView > Magnitude then
                 FieldOfView = Magnitude
                 ClosestTarget = Hitbox
             end
