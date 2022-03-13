@@ -477,14 +477,17 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
 end
 
 function TeamCheck(Character)
-    local InEnemyTeam = false
-    if Character and Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
-        if Character.Team.Value ~= LocalPlayer.Character.Team.Value or Character.Team.Value == "None" then
-            InEnemyTeam = true
+    if Parvus.Config.AimAssist.TeamCheck then
+        local InEnemyTeam = false
+        if Character and Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
+            if Character.Team.Value ~= LocalPlayer.Character.Team.Value or Character.Team.Value == "None" then
+                InEnemyTeam = true
+            end
         end
+        return InEnemyTeam
     end
 
-    return InEnemyTeam
+    return true
 end
 
 local function WallCheck(Enabled,Hitbox,Character)
@@ -504,7 +507,7 @@ local function GetTarget(Config)
 	for Index, Target in pairs(PlayerService:GetPlayers()) do
 		local Character = Target.Character
 		local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-		if Target ~= LocalPlayer and Health and TeamCheck(Target) then
+		if Target ~= LocalPlayer and Health and TeamCheck(Character) then
 			for Index, BodyPart in pairs(Config.Priority) do
 				local Hitbox = Character and Character:FindFirstChild(BodyPart)
 				if Hitbox then
@@ -577,8 +580,6 @@ RunService.Heartbeat:Connect(function()
             local TargetOnScreen = Camera:WorldToViewportPoint(AimbotTarget.Position)
             mousemoverel((TargetOnScreen.X - Mouse.X) * Parvus.Config.AimAssist.Aimbot.Sensitivity, (TargetOnScreen.Y - Mouse.Y) * Parvus.Config.AimAssist.Aimbot.Sensitivity)
         end
-    else
-        AimbotTarget = nil
     end
 end)
 

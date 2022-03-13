@@ -238,9 +238,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
-            AimbotSection:Dropdown({Name = "Target Mode",Default = Parvus.Config.AimAssist.TargetMode,List = {"Player","NPC"},Callback = function(String)
-                Parvus.Config.AimAssist.TargetMode = String
-            end}):ToolTip("Affects Aimbot and Silent Aim")
+            AimbotSection:Dropdown({Name = "Target Mode",Default = {Parvus.Config.AimAssist.TargetMode},List = {
+                {Name = "Player",Mode = "Button",Callback = function()
+                    Parvus.Config.AimAssist.Aimbot.TargetMode = "Player"
+                end},
+                {Name = "NPC",Mode = "Button",Callback = function()
+                    Parvus.Config.AimAssist.Aimbot.TargetMode = "NPC"
+                end}
+            }}):ToolTip("Affects Aimbot and Silent Aim")
         end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.SilentAim.Enabled,Callback = function(Bool)
@@ -475,20 +480,16 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             TracerSection:Toggle({Name = "Enabled",Value = Parvus.Config.NPCESP.Other.Tracer.Enabled,Callback = function(Bool)
                 Parvus.Config.NPCESP.Other.Tracer.Enabled = Bool
             end})
-            TracerSection:Dropdown({Name = "Mode",Default = Parvus.Config.NPCESP.Other.Tracer.From == "ScreenBottom" and "From Bottom" or "From Mouse",
-            List = {"From Bottom","From Mouse"},
-            Callback = function(String)
-                if String == "From Bottom" then
-                    Parvus.Config.NPCESP.Other.Tracer.From = "ScreenBottom"
-                elseif String == "From Mouse" then
-                    Parvus.Config.NPCESP.Other.Tracer.From = "Mouse"
-                end
-            end})
-            TracerSection:Dropdown({Name = "Target Part",Default = Parvus.Config.NPCESP.Other.Tracer.To,
-            List = {"Head","HumanoidRootPart"},
-            Callback = function(String)
-                Parvus.Config.NPCESP.Other.Tracer.To = String
-            end})
+            TracerSection:Dropdown({Name = "Mode",Default = {
+                Parvus.Config.PlayerESP.Other.Tracer.From == "ScreenBottom" and "From Bottom" or "From Mouse"
+            },List = {
+                {Name = "From Bottom",Mode = "Button",Callback = function()
+                    Parvus.Config.PlayerESP.Other.Tracer.From = "ScreenBottom"
+                end},
+                {Name = "From Mouse",Mode = "Button",Callback = function()
+                    Parvus.Config.PlayerESP.Other.Tracer.From = "Mouse"
+                end}
+            }})
             TracerSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.NPCESP.Other.Tracer.Thickness,Callback = function(Number)
                 Parvus.Config.NPCESP.Other.Tracer.Thickness = Number
             end})
@@ -1089,8 +1090,6 @@ RunService.Heartbeat:Connect(function()
             local TargetOnScreen = Camera:WorldToViewportPoint(AimbotTarget.Position)
             mousemoverel((TargetOnScreen.X - Mouse.X) * Parvus.Config.AimAssist.Aimbot.Sensitivity, (TargetOnScreen.Y - Mouse.Y) * Parvus.Config.AimAssist.Aimbot.Sensitivity)
         end
-    else
-        AimbotTarget = nil
     end
     if Parvus.Config.GameFeatures.EnvEnable then
         Lighting.ClockTime = Parvus.Config.GameFeatures.EnvTime

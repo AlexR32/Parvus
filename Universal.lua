@@ -581,8 +581,6 @@ RunService.Heartbeat:Connect(function()
             local TargetOnScreen = Camera:WorldToViewportPoint(AimbotTarget.Position)
             mousemoverel((TargetOnScreen.X - Mouse.X) * Parvus.Config.AimAssist.Aimbot.Sensitivity, (TargetOnScreen.Y - Mouse.Y) * Parvus.Config.AimAssist.Aimbot.Sensitivity)
         end
-    else
-        AimbotTarget = nil
     end
 end)
 
