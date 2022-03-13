@@ -240,10 +240,10 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             }})
             AimbotSection:Dropdown({Name = "Target Mode",Default = {Parvus.Config.AimAssist.TargetMode},List = {
                 {Name = "Player",Mode = "Button",Callback = function()
-                    Parvus.Config.AimAssist.Aimbot.TargetMode = "Player"
+                    Parvus.Config.AimAssist.TargetMode = "Player"
                 end},
                 {Name = "NPC",Mode = "Button",Callback = function()
-                    Parvus.Config.AimAssist.Aimbot.TargetMode = "NPC"
+                    Parvus.Config.AimAssist.TargetMode = "NPC"
                 end}
             }}):ToolTip("Affects Aimbot and Silent Aim")
         end
@@ -1076,6 +1076,7 @@ RunService.Heartbeat:Connect(function()
         SilentAimCircle.Filled = Parvus.Config.AimAssist.SilentAim.Circle.Filled
         SilentAimCircle.Position = UserInputService:GetMouseLocation()
     end
+    Parvus.Config.NPCESP.Other.Tracer.To = AimbotTarget or SilentAimTarget or "Head"
     Parvus.Config.PlayerESP.Other.Tracer.To = AimbotTarget or SilentAimTarget or "Head"
     if Parvus.Config.AimAssist.SilentAim.Enabled then
         SilentAimTarget = GetTarget(Parvus.Config.AimAssist.SilentAim)
