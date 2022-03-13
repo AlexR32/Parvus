@@ -10,37 +10,37 @@ Parvus.Debug = false
 Parvus.Current = "Loader"
 Parvus.Config = {}
 Parvus.Utilities = {
-    Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))(),
-    Cursor = Parvus.Debug and loadfile("Parvus/Utilities/Cursor.lua")() or loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Cursor.lua"))(),
-    ESP = Parvus.Debug and loadfile("Parvus/Utilities/ESP.lua")() or loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/ESP.lua"))(),
-    UI = loadstring(game:GetObjects("rbxassetid://7974127463")[1].Source)()
+    Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))(),
+    Cursor = Parvus.Debug and loadfile("Parvus/Utilities/Cursor.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Cursor.lua"))(),
+    ESP = Parvus.Debug and loadfile("Parvus/Utilities/ESP.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/ESP.lua"))(),
+    UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 }
 
 Parvus.Games = {
     ["1054526971"] = {
         Name = "Blackhawk Rescue Mission 5",
-        Script = Parvus.Debug and readfile("Parvus/Games/BRM5.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/BRM5.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/BRM5.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/BRM5.lua")
     },
     ["580765040"] = {
         Name = "RAGDOLL UNIVERSE",
-        Script = Parvus.Debug and readfile("Parvus/Games/RU.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/RU.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/RU.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/RU.lua")
     },
     ["1168263273"] = {
         Name = "Bad Business",
-        Script = Parvus.Debug and readfile("Parvus/Games/BB.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/BB.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/BB.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/BB.lua")
     },
     --[[
     ["807930589"] = {
         Name = "The Wild West",
-        Script = Parvus.Debug and readfile("Parvus/Games/TWW.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWW.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/TWW.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWW.lua")
     },
     ["2194874153"] = {
         Name = "Those Who Remain",
-        Script = Parvus.Debug and readfile("Parvus/Games/TWR.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/TWR.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
     },
     ["2194874153"] = {
         Name = "Jailbird",
-        Script = Parvus.Debug and readfile("Parvus/Games/Jailbird.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/Jailbird.lua")
+        Script = Parvus.Debug and readfile("Parvus/Games/Jailbird.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/Jailbird.lua")
     }
     ]]
 }
@@ -60,7 +60,7 @@ LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
         getgenv().Parvus.Loaded = false
         local QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport
-        QueueOnTeleport(Parvus.Debug and readfile("Parvus/Loader.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))
+        QueueOnTeleport(Parvus.Debug and readfile("Parvus/Loader.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))
     end
 end)
 --[[
@@ -81,7 +81,7 @@ end
     else
         Parvus.Current = "Universal"
         Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
-        loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
+        loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
     end
 --end
 

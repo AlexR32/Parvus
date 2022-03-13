@@ -17,7 +17,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         EnemyColor = {1,0.25,0.25,0},
 
         TeamColor = false,
-        TeamCheck = false,
+        TeamCheck = true,
         Highlight = {
             Enabled = false,
             Transparency = 0.5,
@@ -121,14 +121,14 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         }
     },
     AimAssist = {
-        TeamCheck = false,
+        TeamCheck = true,
         TargetMode = "NPC",
         SilentAim = {
             Enabled = false,
             WallCheck = false,
             HitChance = 100,
             FieldOfView = 50,
-            Priority = "Head",
+            Priority = {"Head"},
             Circle = {
                 Visible = false,
                 Transparency = 0.5,
@@ -143,7 +143,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             WallCheck = false,
             Sensitivity = 0.25,
             FieldOfView = 100,
-            Priority = "Head",
+            Priority = {"Head"},
             Circle = {
                 Visible = true,
                 Transparency = 0.5,
@@ -209,7 +209,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 
 Parvus.Utilities.Cursor(Parvus.Config.UI.Cursor)
 local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Current,Enabled = Parvus.Config.UI.Enabled,Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
-    local AimAssistTab = Window:Tab({Name = "Aim Assist"}) do
+    local AimAssistTab = Window:Tab({Name = "Combat"}) do
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.Enabled = Bool
@@ -230,9 +230,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             AimbotSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.Aimbot.FieldOfView,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.FieldOfView = Number
             end})
-            AimbotSection:Dropdown({Name = "Target Part",Default = Parvus.Config.AimAssist.Aimbot.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
-                Parvus.Config.AimAssist.Aimbot.Priority = String
-            end})
+            AimbotSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.Aimbot.Priority,List = {
+                {Name = "Head",Mode = "Toggle",Callback = function(Selected)
+                    Parvus.Config.AimAssist.Aimbot.Priority = Selected
+                end},
+                {Name = "HumanoidRootPart",Mode = "Toggle",Callback = function(Selected)
+                    Parvus.Config.AimAssist.Aimbot.Priority = Selected
+                end}
+            }})
             AimbotSection:Dropdown({Name = "Target Mode",Default = Parvus.Config.AimAssist.TargetMode,List = {"Player","NPC"},Callback = function(String)
                 Parvus.Config.AimAssist.TargetMode = String
             end}):ToolTip("Affects Aimbot and Silent Aim")
@@ -252,9 +257,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             SilentAimSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.SilentAim.FieldOfView,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.FieldOfView = Number
             end})
-            SilentAimSection:Dropdown({Name = "Target Part",Default = Parvus.Config.AimAssist.SilentAim.Priority,List = {"Head","HumanoidRootPart"},Callback = function(String)
-                Parvus.Config.AimAssist.SilentAim.Priority = String
-            end})
+            SilentAimSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.SilentAim.Priority,List = {
+                {Name = "Head",Mode = "Toggle",Callback = function(Selected)
+                    Parvus.Config.AimAssist.SilentAim.Priority = Selected
+                end},
+                {Name = "HumanoidRootPart",Mode = "Toggle",Callback = function(Selected)
+                    Parvus.Config.AimAssist.SilentAim.Priority = Selected
+                end}
+            }})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -306,20 +316,16 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             TracerSection:Toggle({Name = "Enabled",Value = Parvus.Config.PlayerESP.Other.Tracer.Enabled,Callback = function(Bool)
                 Parvus.Config.PlayerESP.Other.Tracer.Enabled = Bool
             end})
-            TracerSection:Dropdown({Name = "Mode",Default = Parvus.Config.PlayerESP.Other.Tracer.From == "ScreenBottom" and "From Bottom" or "From Mouse",
-            List = {"From Bottom","From Mouse"},
-            Callback = function(String)
-                if String == "From Bottom" then
+            TracerSection:Dropdown({Name = "Mode",Default = {
+                Parvus.Config.PlayerESP.Other.Tracer.From == "ScreenBottom" and "From Bottom" or "From Mouse"
+            },List = {
+                {Name = "From Bottom",Mode = "Button",Callback = function()
                     Parvus.Config.PlayerESP.Other.Tracer.From = "ScreenBottom"
-                elseif String == "From Mouse" then
+                end},
+                {Name = "From Mouse",Mode = "Button",Callback = function()
                     Parvus.Config.PlayerESP.Other.Tracer.From = "Mouse"
-                end
-            end})
-            TracerSection:Dropdown({Name = "Target Part",Default = Parvus.Config.PlayerESP.Other.Tracer.To,
-            List = {"Head","HumanoidRootPart"},
-            Callback = function(String)
-                Parvus.Config.PlayerESP.Other.Tracer.To = String
-            end})
+                end}
+            }})
             TracerSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.PlayerESP.Other.Tracer.Thickness,Callback = function(Number)
                 Parvus.Config.PlayerESP.Other.Tracer.Thickness = Number
             end})
@@ -683,37 +689,40 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             })
         end}):ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
-            BackgroundSection:Dropdown({Name = "Image",Default = Parvus.Config.UI.Background,
-            List = {"Legacy","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"},
-            Callback = function(String)
-                Parvus.Config.UI.Background = String
-                if String == "Legacy" then
+            BackgroundSection:Dropdown({Name = "Image",Default = {Parvus.Config.UI.Background},List = {
+                {Name = "Legacy",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://2151741365"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://2151741365"
-                elseif String == "Hearts" then
+                end},
+                {Name = "Hearts",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://6073763717"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://6073763717"
-                elseif String == "Abstract" then
+                end},
+                {Name = "Abstract",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://6073743871"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://6073743871"
-                elseif String == "Hexagon" then
+                end},
+                {Name = "Hexagon",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://6073628839"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://6073628839"
-                elseif String == "Circles" then
+                end},
+                {Name = "Circles",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://6071579801"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://6071579801"
-                elseif String == "Lace With Flowers" then
+                end},
+                {Name = "Lace With Flowers",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://6071575925"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://6071575925"
-                elseif String == "Floral" then
+                end},
+                {Name = "Floral",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://5553946656"
                     Parvus.Config.UI.BackgroundId = "rbxassetid://5553946656"
-                end
-            end})
+                end}
+            }})
             Window.Background.Image = Parvus.Config.UI.BackgroundId
-            BackgroundSection:Textbox({Name = "Custom Image",Text = "",Placeholder = "rbxassetid://ImageId",Callback = function(String)
-                Window.Background.Image = String
-                Parvus.Config.UI.BackgroundId = String
+            BackgroundSection:Textbox({Name = "Custom Image",Text = "",Placeholder = "ImageId",Callback = function(String)
+                Window.Background.Image = "rbxassetid://" .. String
+                Parvus.Config.UI.BackgroundId = "rbxassetid://" .. String
             end})
             Window.Background.ImageColor3 = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.BackgroundColor)
             BackgroundSection:Colorpicker({Name = "Color",Color = Window.Background.ImageColor3,Callback = function(Color,Table)
@@ -753,42 +762,49 @@ end
 local function WallCheck(Enabled,Hitbox,Character)
 	if not Enabled then return true end
 	local Camera = Workspace.CurrentCamera
-	local RaycastParameters = RaycastParams.new()
-	RaycastParameters.FilterType = Enum.RaycastFilterType.Blacklist
-	RaycastParameters.FilterDescendantsInstances = {LocalPlayer.Character,Character}
-	RaycastParameters.IgnoreWater = true
-	return not Workspace:Raycast(Camera.CFrame.Position, Hitbox.Position - Camera.CFrame.Position, RaycastParameters)
+	return not Camera:GetPartsObscuringTarget({Hitbox.Position},{
+        LocalPlayer.Character,
+        Character
+    })[1]
 end
 
-local function GetTarget(FoV,Priority,Visibility)
+local function GetTarget(Config)
     local Camera = Workspace.CurrentCamera
-    local FieldOfView = FoV
+    local FieldOfView = Config.FieldOfView
     local ClosestTarget = nil
 
     if Parvus.Config.AimAssist.TargetMode == "NPC" then
         for Index, Target in pairs(NPCFolder:GetChildren()) do
-            local Hitbox = Target:FindFirstChild(Priority) or (Target:IsA("Model") and Target.PrimaryPart)
-            local Health = Target:FindFirstChildOfClass("Humanoid") and Target:FindFirstChildOfClass("Humanoid").Health > 0
-            if Hitbox and Health then
-                local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
-                local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                if OnScreen and WallCheck(WallCheckEnabled,Hitbox,Target) and FieldOfView > Magnitude then
-                    FieldOfView = Magnitude
-                    ClosestTarget = Hitbox
+            if not Target:FindFirstChild("Vest") then continue end
+            if Target:FindFirstChildOfClass("Humanoid") and Target:FindFirstChildOfClass("Humanoid").Health > 0 then
+                for Index, BodyPart in pairs(Config.Priority) do
+                    local Hitbox = Target:FindFirstChild(BodyPart)
+                    if Hitbox then
+                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
+                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Character) then
+                            FieldOfView = Magnitude
+                            ClosestTarget = Hitbox
+                        end
+                    end
                 end
             end
         end
     elseif Parvus.Config.AimAssist.TargetMode == "Player" then
         for Index, Target in pairs(PlayerService:GetPlayers()) do
             local Character = Target.Character
-            local Hitbox = (Character and Character:FindFirstChild(Priority)) or (Character and (Character:IsA("Model") and Character.PrimaryPart))
             local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-            if Target ~= LocalPlayer and Hitbox and Health and TeamCheck(Target) then
-                local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
-                local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                if OnScreen and WallCheck(WallCheckEnabled,Hitbox,Character) and FieldOfView > Magnitude then
-                    FieldOfView = Magnitude
-                    ClosestTarget = Hitbox
+            if Target ~= LocalPlayer and Health and TeamCheck(Target) then
+                for Index, BodyPart in pairs(Config.Priority) do
+                    local Hitbox = Character and Character:FindFirstChild(BodyPart)
+                    if Hitbox then
+                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
+                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Character) then
+                            FieldOfView = Magnitude
+                            ClosestTarget = Hitbox
+                        end
+                    end
                 end
             end
         end
@@ -1059,23 +1075,14 @@ RunService.Heartbeat:Connect(function()
         SilentAimCircle.Filled = Parvus.Config.AimAssist.SilentAim.Circle.Filled
         SilentAimCircle.Position = UserInputService:GetMouseLocation()
     end
-
+    Parvus.Config.PlayerESP.Other.Tracer.To = AimbotTarget or SilentAimTarget or "Head"
     if Parvus.Config.AimAssist.SilentAim.Enabled then
-        SilentAimTarget = GetTarget(
-            Parvus.Config.AimAssist.SilentAim.FieldOfView,
-            Parvus.Config.AimAssist.SilentAim.Priority,
-            Parvus.Config.AimAssist.SilentAim.WallCheck
-        )
+        SilentAimTarget = GetTarget(Parvus.Config.AimAssist.SilentAim)
     else
         SilentAimTarget = nil
     end
     if Aimbot then
-        AimbotTarget = GetTarget(
-            Parvus.Config.AimAssist.Aimbot.FieldOfView,
-            Parvus.Config.AimAssist.Aimbot.Priority,
-            Parvus.Config.AimAssist.Aimbot.WallCheck
-        )
-
+        AimbotTarget = GetTarget(Parvus.Config.AimAssist.Aimbot)
         if AimbotTarget then
             local Camera = Workspace.CurrentCamera
             local Mouse = UserInputService:GetMouseLocation()
@@ -1085,7 +1092,6 @@ RunService.Heartbeat:Connect(function()
     else
         AimbotTarget = nil
     end
-
     if Parvus.Config.GameFeatures.EnvEnable then
         Lighting.ClockTime = Parvus.Config.GameFeatures.EnvTime
     end

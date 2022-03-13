@@ -7,5 +7,4 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Parvus/main/L
 ```
 ### TODO
 - Finish Games
-- Priority Reinvention
 - Silent Aim Priority Hit Chance
