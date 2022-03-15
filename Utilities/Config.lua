@@ -5,11 +5,12 @@ local function Compare(Table,Default)
     for Index,Value in pairs(Default) do
         if Table[Index] == nil then
             Table[Index] = Value
-            print(tostring(Index) .. " added to config")
-        elseif typeof(Table[Index]) == "table" and typeof(Value) == "table" then
+            --print(tostring(Index) .. " added to config")
+        elseif typeof(Table[Index]) == "table" then
             Compare(Table[Index],Value)
         end
     end
+    --[[
     for Index,Value in pairs(Table) do
         if Default[Index] == nil then
             print(tostring(Index) .. " removed from config")
@@ -18,6 +19,7 @@ local function Compare(Table,Default)
             Compare(Default[Index],Value)
         end
     end
+    ]]
 end
 
 function Config:TableToColor(Table)

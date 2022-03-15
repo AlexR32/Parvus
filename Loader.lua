@@ -6,7 +6,7 @@ end
 
 getgenv().Parvus = {}
 Parvus.Loaded = true
-Parvus.Debug = false
+Parvus.Debug = true
 Parvus.Current = "Loader"
 Parvus.Config = {}
 Parvus.Utilities = {
@@ -45,7 +45,6 @@ Parvus.Games = {
     ]]
 }
 
---local ParvusModule = {}
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 local function getGameInfo()
@@ -63,26 +62,14 @@ LocalPlayer.OnTeleport:Connect(function(State)
         QueueOnTeleport(Parvus.Debug and readfile("Parvus/Loader.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))
     end
 end)
---[[
-function ParvusModule:AddUtility(Name, Loadstring)
-    Parvus.Utilities[Name] = Loadstring
-end
 
-function ParvusModule:AddGame(GameId,Info)
-    Parvus.Games[GameId] = Info
+local Info = getGameInfo()
+if Info then
+    Parvus.Current = Info.Name
+    Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
+    loadstring(Info.Script)()
+else
+    Parvus.Current = "Universal"
+    Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
+    loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
 end
-]]
---function ParvusModule:Load()
-    local Info = getGameInfo()
-    if Info then
-        Parvus.Current = Info.Name
-        Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
-        loadstring(Info.Script)()
-    else
-        Parvus.Current = "Universal"
-        Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
-        loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
-    end
---end
-
---return ParvusModule

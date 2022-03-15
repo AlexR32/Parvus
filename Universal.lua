@@ -49,7 +49,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
                 Thickness = 1,
                 Transparency = 1,
                 From = "ScreenBottom",
-                To = "Head"
+                --To = "Head"
             },
             Arrow = {
                 Enabled = false,
@@ -85,6 +85,10 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             Sensitivity = 0.25,
             FieldOfView = 100,
             Priority = {"Head"},
+            Prediction = {
+                Enabled = false,
+                Velocity = 5,
+            },
             Circle = {
                 Visible = true,
                 Transparency = 0.5,
@@ -154,6 +158,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
+        end
+        local PredictionSection = AimAssistTab:Section({Name = "Prediction",Side = "Left"}) do
+            PredictionSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
+            end})
+            PredictionSection:Slider({Name = "Velocity",Min = 1,Max = 20,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
+            end})
         end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.SilentAim.Enabled,Callback = function(Bool)
@@ -527,6 +539,18 @@ local function GetTarget(Config)
 	return ClosestTarget
 end
 
+local function AimAt(Target,Config)
+	if not Target then return end
+	local Camera = Workspace.CurrentCamera
+	local Mouse = UserInputService:GetMouseLocation()
+	local TargetPrediction = ((Target.Position - Camera.CFrame.Position).Magnitude * Target.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+	local TargetOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Target.Position + TargetPrediction or Target.Position)
+	mousemoverel(
+		(TargetOnScreen.X - Mouse.X) * Config.Sensitivity,
+		(TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
+	)
+end
+
 local __namecall
 __namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
@@ -567,7 +591,7 @@ RunService.Heartbeat:Connect(function()
         SilentAimCircle.Filled = Parvus.Config.AimAssist.SilentAim.Circle.Filled
         SilentAimCircle.Position = UserInputService:GetMouseLocation()
     end
-    Parvus.Config.PlayerESP.Other.Tracer.To = AimbotTarget or SilentAimTarget or "Head"
+    --Parvus.Config.PlayerESP.Other.Tracer.To = AimbotTarget or SilentAimTarget or "Head"
     if Parvus.Config.AimAssist.SilentAim.Enabled then
         SilentAimTarget = GetTarget(Parvus.Config.AimAssist.SilentAim)
     else
@@ -576,10 +600,7 @@ RunService.Heartbeat:Connect(function()
     if Aimbot then
         AimbotTarget = GetTarget(Parvus.Config.AimAssist.Aimbot)
         if AimbotTarget then
-            local Camera = Workspace.CurrentCamera
-            local Mouse = UserInputService:GetMouseLocation()
-            local TargetOnScreen = Camera:WorldToViewportPoint(AimbotTarget.Position)
-            mousemoverel((TargetOnScreen.X - Mouse.X) * Parvus.Config.AimAssist.Aimbot.Sensitivity, (TargetOnScreen.Y - Mouse.Y) * Parvus.Config.AimAssist.Aimbot.Sensitivity)
+            AimAt(AimbotTarget,Parvus.Config.AimAssist.Aimbot)
         end
     end
 end)

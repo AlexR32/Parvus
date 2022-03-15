@@ -218,7 +218,9 @@ RunService.Heartbeat:Connect(function()
                         ESP.Drawing.Other.Head.Transparency = ESP.Config.Other.Head.Transparency
                         ESP.Drawing.Other.Head.Position = Vector2.new(HeadPosition.X,HeadPosition.Y)
                     end
-                    if ESP.Drawing.Other.Tracer.Visible then
+                    if Character:FindFirstChild("Head") and ESP.Drawing.Other.Tracer.Visible then
+                        local HeadPosition = Camera:WorldToViewportPoint(Character.Head.Position)
+                        --[[
                         local TracerFrom = ESP.Config.Other.Tracer.From == "Mouse" and UserInputService:GetMouseLocation()
                         or ESP.Config.Other.Tracer.From == "ScreenBottom" and Vector2.new(Camera.ViewportSize.X * 0.5,Camera.ViewportSize.Y)
                         local TracerTo = ScreenPosition
@@ -226,12 +228,14 @@ RunService.Heartbeat:Connect(function()
                             TracerTo = Camera:WorldToViewportPoint(Character[ESP.Config.Other.Tracer.To].Position)
                         end
                         TracerTo = Vector2.new(TracerTo.X,TracerTo.Y)
+                        ]]
 
                         ESP.Drawing.Other.Tracer.Color = ESP.Config.TeamColor and TeamColor or (InEnemyTeam and TableToColor(ESP.Config.EnemyColor) or TableToColor(ESP.Config.AllyColor))
                         ESP.Drawing.Other.Tracer.Thickness = ESP.Config.Other.Tracer.Thickness
                         ESP.Drawing.Other.Tracer.Transparency = ESP.Config.Other.Tracer.Transparency
-                        ESP.Drawing.Other.Tracer.From = TracerFrom
-                        ESP.Drawing.Other.Tracer.To = TracerTo
+                        ESP.Drawing.Other.Tracer.From = ESP.Config.Other.Tracer.From == "Mouse" and UserInputService:GetMouseLocation()
+                        or ESP.Config.Other.Tracer.From == "ScreenBottom" and Vector2.new(Camera.ViewportSize.X * 0.5,Camera.ViewportSize.Y)
+                        ESP.Drawing.Other.Tracer.To = Vector2.new(HeadPosition.X,HeadPosition.Y)
                     end
                     if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
                         local ScreenPosition, ScreenSize = CalculateBox(Character,PrimaryPart.CFrame,ScreenPosition)
