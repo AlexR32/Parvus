@@ -5,7 +5,7 @@ local function Compare(Table,Default)
     for Index,Value in pairs(Default) do
         if Table[Index] == nil then
             Table[Index] = Value
-            --print(tostring(Index) .. " added to config")
+            Parvus.Utilities.UI:Notification("Parvus Hub",tostring(Index) .. " added to config",3)
         elseif typeof(Table[Index]) == "table" then
             Compare(Table[Index],Value)
         end
