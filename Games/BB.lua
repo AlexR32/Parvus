@@ -194,7 +194,7 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
                 Parvus.Config.AimAssist.Aimbot.Circle.Transparency = Number
             end})
         end
-        local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
+        local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim (disabled for now)",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.SilentAim.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.Enabled = Bool
             end}):Keybind({Key = Parvus.Config.Binds.SilentAim,Mouse = true,Callback = function(Bool,Key)
@@ -637,7 +637,7 @@ local function AimAt(Target,Config)
 		(TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
 	)
 end
-
+--[[
 local Fire = Toroiseshell.Network.Fire
 Toroiseshell.Network.Fire = function(self, ...)
     local args = {...}
@@ -649,7 +649,7 @@ Toroiseshell.Network.Fire = function(self, ...)
     end
     return Fire(self, unpack(args))
 end
-
+]]
 local AimbotCircle = Drawing.new("Circle")
 local SilentAimCircle = Drawing.new("Circle")
 AimbotCircle.ZIndex = 3
@@ -675,11 +675,12 @@ RunService.Heartbeat:Connect(function()
         SilentAimCircle.Filled = Parvus.Config.AimAssist.SilentAim.Circle.Filled
         SilentAimCircle.Position = UserInputService:GetMouseLocation()
     end
+	--[[
     if Parvus.Config.AimAssist.SilentAim.Enabled then
         SilentAimTarget = GetTarget(Parvus.Config.AimAssist.SilentAim)
     else
         SilentAimTarget = nil
-    end
+    end]]
     if Aimbot then
         AimbotTarget = GetTarget(Parvus.Config.AimAssist.Aimbot)
         if AimbotTarget then
