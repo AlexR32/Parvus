@@ -5,7 +5,11 @@ local function Compare(Table,Default)
     for Index,Value in pairs(Default) do
         if Table[Index] == nil then
             Table[Index] = Value
-            Parvus.Utilities.UI:Notification("Parvus Hub",tostring(Index) .. " added to config",3)
+            Parvus.Utilities.UI:Notification2({
+                Title = tostring(Index) .. " added to config",
+                Color = Color3.new(0.5,1,0.5),
+                Duration = 3
+            })
         elseif typeof(Table[Index]) == "table" then
             Compare(Table[Index],Value)
         end
@@ -24,7 +28,7 @@ end
 
 function Config:TableToColor(Table)
     if typeof(Table) ~= "table" then return end
-    return Color3.new(Table[1],Table[2],Table[3])
+    return Color3.fromHSV(Table[1],Table[2],Table[3])
 end
 
 function Config:WriteJSON(Name,Table)

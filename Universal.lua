@@ -3,24 +3,22 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local LocalPlayer = PlayerService.LocalPlayer
+local Stats = game:GetService("Stats")
 
-local AimbotTarget, SilentAimTarget, Aimbot = nil, nil, false
+local LocalPlayer = PlayerService.LocalPlayer
+local Aimbot, SilentAim = false, nil
 
 Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     PlayerESP = {
-        AllyColor = {0.25,1,0.25,0},
-        EnemyColor = {1,0.25,0.25,0},
+        AllyColor = {0.3333333432674408,1,1,0,false},
+        EnemyColor = {1,1,1,0,false},
 
         TeamColor = false,
         TeamCheck = false,
         Highlight = {
             Enabled = false,
             Transparency = 0.5,
-            Outline = {
-                Color = {1,1,1,0},
-                Transparency = 1
-            }
+            OutlineColor = {0,0,0,0.5,false}
         },
         Box = {
             Enabled = false,
@@ -49,8 +47,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
                 Enabled = false,
                 Thickness = 1,
                 Transparency = 1,
-                From = "ScreenBottom",
-                --To = "Head"
+                From = "ScreenBottom"
             },
             Arrow = {
                 Enabled = false,
@@ -59,7 +56,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
                 Height = 16,
                 Thickness = 1,
                 Transparency = 1,
-                DistanceFromCenter = 80,
+                DistanceFromCenter = 80
             }
         }
     },
@@ -72,9 +69,9 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             FieldOfView = 50,
             Priority = {"Head"},
             Circle = {
-                Visible = false,
+                Visible = true,
                 Transparency = 0.5,
-                Color = {0.25,0.25,1,0},
+                Color = {0.6666666865348816,1,1,0.5,false},
                 Thickness = 1,
                 NumSides = 100,
                 Filled = false
@@ -85,15 +82,15 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             WallCheck = false,
             Sensitivity = 0.25,
             FieldOfView = 100,
-            Priority = {"Head"},
+            Priority = {"Head","HumanoidRootPart"},
             Prediction = {
                 Enabled = false,
-                Velocity = 5,
+                Velocity = 1,
             },
             Circle = {
                 Visible = true,
                 Transparency = 0.5,
-                Color = {1,0.25,0.25,0},
+                Color = {1,1,1,0.5,false},
                 Thickness = 1,
                 NumSides = 100,
                 Filled = false
@@ -103,11 +100,12 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     UI = {
         Enabled = true,
         Keybind = "RightShift",
-        Color = {0.5,0.25,0.5,0},
+        Color = {0.8333333134651184,0.5,0.5,0,false},
         TileSize = 74,
+        Watermark = true,
         Background = "Floral",
         BackgroundId = "rbxassetid://5553946656",
-        BackgroundColor = {0,0,0,0},
+        BackgroundColor = {1,0,0,0,false},
         BackgroundTransparency = 0,
         Cursor = {
             Enabled = false,
@@ -116,7 +114,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 
             Crosshair = {
                 Enabled = false,
-                Color = {1,0.25,0.25,0},
+                Color = {1,1,1,0,false},
                 Size = 4,
                 Gap = 2,
             }
@@ -128,8 +126,11 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     }
 })
 
-Parvus.Utilities.Cursor(Parvus.Config.UI.Cursor)
-local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Current,Enabled = Parvus.Config.UI.Enabled,Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
+Parvus.Utilities.Drawing:Cursor(Parvus.Config.UI.Cursor)
+Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.Aimbot)
+Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.SilentAim)
+local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Current,Enabled = Parvus.Config.UI.Enabled,
+Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Enabled,Callback = function(Bool)
@@ -164,17 +165,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             AFoVSection:Toggle({Name = "Filled",Value = Parvus.Config.AimAssist.Aimbot.Circle.Filled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.Circle.Filled = Bool
             end})
-            AFoVSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.Aimbot.Circle.Color),Callback = function(Color,Table)
-                Parvus.Config.AimAssist.Aimbot.Circle.Color = Table
+            AFoVSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.AimAssist.Aimbot.Circle.Color,Callback = function(HSVAR)
+                Parvus.Config.AimAssist.Aimbot.Circle.Color = HSVAR
             end})
             AFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.Aimbot.Circle.NumSides,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.Circle.NumSides = Number
             end})
             AFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.Aimbot.Circle.Thickness,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.Circle.Thickness = Number
-            end})
-            AFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Aimbot.Circle.Transparency,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Circle.Transparency = Number
             end})
         end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
@@ -208,17 +206,14 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             SAFoVSection:Toggle({Name = "Filled",Value = Parvus.Config.AimAssist.SilentAim.Circle.Filled,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.Circle.Filled = Bool
             end})
-            SAFoVSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.SilentAim.Circle.Color),Callback = function(Color,Table)
-                Parvus.Config.AimAssist.SilentAim.Circle.Color = Table
+            SAFoVSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.AimAssist.SilentAim.Circle.Color,Callback = function(HSVAR)
+                Parvus.Config.AimAssist.SilentAim.Circle.Color = HSVAR
             end})
             SAFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.SilentAim.Circle.NumSides,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.Circle.NumSides = Number
             end})
             SAFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.SilentAim.Circle.Thickness,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.Circle.Thickness = Number
-            end})
-            SAFoVSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.SilentAim.Circle.Transparency,Callback = function(Number)
-                Parvus.Config.AimAssist.SilentAim.Circle.Transparency = Number
             end})
         end
         local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Right"}) do
@@ -235,17 +230,17 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
         local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
-            GlobalSection:Colorpicker({Name = "Ally Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.PlayerESP.AllyColor),Callback = function(Color,Table)
-                Parvus.Config.PlayerESP.AllyColor = Table
+            GlobalSection:Colorpicker({Name = "Ally Color",HSVAR = Parvus.Config.PlayerESP.AllyColor,Callback = function(HSVAR)
+                Parvus.Config.PlayerESP.AllyColor = HSVAR
             end})
-            GlobalSection:Colorpicker({Name = "Enemy Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.PlayerESP.EnemyColor),Callback = function(Color,Table)
-                Parvus.Config.PlayerESP.EnemyColor = Table
-            end})
-            GlobalSection:Toggle({Name = "Use Team Color",Value = Parvus.Config.PlayerESP.TeamColor,Callback = function(Bool)
-                Parvus.Config.PlayerESP.TeamColor = Bool
+            GlobalSection:Colorpicker({Name = "Enemy Color",HSVAR = Parvus.Config.PlayerESP.EnemyColor,Callback = function(HSVAR)
+                Parvus.Config.PlayerESP.EnemyColor = HSVAR
             end})
             GlobalSection:Toggle({Name = "Team Check",Value = Parvus.Config.PlayerESP.TeamCheck,Callback = function(Bool)
                 Parvus.Config.PlayerESP.TeamCheck = Bool
+            end})
+            GlobalSection:Toggle({Name = "Use Team Color",Value = Parvus.Config.PlayerESP.TeamColor,Callback = function(Bool)
+                Parvus.Config.PlayerESP.TeamColor = Bool
             end})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
@@ -352,12 +347,8 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             HighlightSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Highlight.Transparency,Callback = function(Number)
                 Parvus.Config.PlayerESP.Highlight.Transparency = Number
             end})
-            HighlightSection:Divider({Text = "Outline"})
-            HighlightSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.PlayerESP.Highlight.Outline.Color),Callback = function(Color,Table)
-                Parvus.Config.PlayerESP.Highlight.Outline.Color = Table
-            end})
-            HighlightSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.PlayerESP.Highlight.Outline.Transparency,Callback = function(Number)
-                Parvus.Config.PlayerESP.Highlight.Outline.Transparency = Number
+            HighlightSection:Colorpicker({Name = "Outline Color",HSVAR = Parvus.Config.PlayerESP.Highlight.OutlineColor,Callback = function(HSVAR)
+                Parvus.Config.PlayerESP.Highlight.OutlineColor = HSVAR
             end})
         end
     end
@@ -368,23 +359,29 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
             end}):Keybind({Key = Parvus.Config.UI.Keybind,Callback = function(Bool,Key)
                 Parvus.Config.UI.Keybind = Key or "NONE"
             end})
+            MenuSection:Toggle({Name = "Watermark",Value = Parvus.Config.UI.Watermark,Callback = function(Bool) 
+                Parvus.Config.UI.Watermark = Bool
+                if not Parvus.Config.UI.Watermark then
+                    Parvus.Utilities.UI:Watermark()
+                end
+            end})
             MenuSection:Toggle({Name = "Close On Exec",Value = not Parvus.Config.UI.Enabled,Callback = function(Bool) 
                 Parvus.Config.UI.Enabled = not Bool
             end})
             MenuSection:Toggle({Name = "Custom Mouse",Value = Parvus.Config.UI.Cursor.Enabled,Callback = function(Bool) 
                 Parvus.Config.UI.Cursor.Enabled = Bool
             end})
-            MenuSection:Colorpicker({Name = "Color",Color = Window.Color,Callback = function(Color,Table)
-                Parvus.Config.UI.Color = Table
-                Window:ChangeColor(Color)
+            MenuSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.UI.Color,Callback = function(HSVAR,Color)
+                Parvus.Config.UI.Color = HSVAR
+                Window:SetColor(Color)
             end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Left"}) do
             CrosshairSection:Toggle({Name = "Enabled",Value = Parvus.Config.UI.Cursor.Crosshair.Enabled,Callback = function(Bool) 
                 Parvus.Config.UI.Cursor.Crosshair.Enabled = Bool
             end})
-            CrosshairSection:Colorpicker({Name = "Color",Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Cursor.Crosshair.Color),Callback = function(Color,Table)
-                Parvus.Config.UI.Cursor.Crosshair.Color = Table
+            CrosshairSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.UI.Cursor.Crosshair.Color,Callback = function(HSVAR)
+                Parvus.Config.UI.Cursor.Crosshair.Color = HSVAR
             end})
             CrosshairSection:Slider({Name = "Size",Min = 0,Max = 100,Value = Parvus.Config.UI.Cursor.Crosshair.Size,Callback = function(Number)
                 Parvus.Config.UI.Cursor.Crosshair.Size = Number
@@ -393,17 +390,32 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
                 Parvus.Config.UI.Cursor.Crosshair.Gap = Number
             end})
         end
+        SettingsTab:Button({Name = "Rejoin",Side = "Left",Callback = function()
+            if #PlayerService:GetPlayers() <= 1 then
+                LocalPlayer:Kick("\nRejoining...")
+                task.wait()
+                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+            else
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+            end
+        end})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",Callback = function()
-            local x = {}
-            for _, v in ipairs(HttpService:JSONDecode(game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data) do
-                if type(v) == "table" and v.id ~= game.JobId then
-                    x[#x + 1] = v.id
+            local Servers = {}
+            local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+            local DataDecoded = HttpService:JSONDecode(Request).data
+            for Index,ServerData in ipairs(DataDecoded) do
+                if type(ServerData) == "table" and ServerData.id ~= game.JobId then
+                    table.insert(Servers,ServerData.id)
                 end
             end
-            if #x > 0 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, x[math.random(1, #x)])
+            if #Servers > 0 then
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
             else
-                Parvus.Utilities.UI:Notification("Parvus Hub","Couldn't find a server",5)
+                Parvus.Utilities.UI:Notification({
+                    Title = "Parvus Hub",
+                    Description = "Couldn't find a server",
+                    Duration = 5
+                })
             end
         end})
         SettingsTab:Button({Name = "Join Discord Server",Side = "Left",Callback = function()
@@ -456,36 +468,46 @@ local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Cu
                 end}
             }})
             Window.Background.Image = Parvus.Config.UI.BackgroundId
+            Window.Background.ImageTransparency = Parvus.Config.UI.BackgroundColor[4]
+            Window.Background.TileSize = UDim2.new(0,Parvus.Config.UI.TileSize,0,Parvus.Config.UI.TileSize)
+            Window.Background.ImageColor3 = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.BackgroundColor)
             BackgroundSection:Textbox({Name = "Custom Image",Text = "",Placeholder = "ImageId",Callback = function(String)
                 Window.Background.Image = "rbxassetid://" .. String
                 Parvus.Config.UI.BackgroundId = "rbxassetid://" .. String
             end})
-            Window.Background.ImageColor3 = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.BackgroundColor)
-            BackgroundSection:Colorpicker({Name = "Color",Color = Window.Background.ImageColor3,Callback = function(Color,Table)
-                Parvus.Config.UI.BackgroundColor = Table
+            BackgroundSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.UI.BackgroundColor,Callback = function(HSVAR,Color)
+                Parvus.Config.UI.BackgroundColor = HSVAR
                 Window.Background.ImageColor3 = Color
+                Window.Background.ImageTransparency = HSVAR[4]
             end})
-            Window.Background.ImageTransparency = Parvus.Config.UI.BackgroundTransparency
-            BackgroundSection:Slider({Name = "Transparency",Min = 0,Max = 1,Precise = 2,Value = Window.Background.ImageTransparency,Callback = function(Number)
-                Parvus.Config.UI.BackgroundTransparency = Number
-                Window.Background.ImageTransparency = Number
-            end})
-            Window.Background.TileSize = UDim2.new(0,Parvus.Config.UI.TileSize,0,Parvus.Config.UI.TileSize)
             BackgroundSection:Slider({Name = "Tile Offset",Min = 74, Max = 296,Value = Window.Background.TileSize.X.Offset,Callback = function(Number)
                 Parvus.Config.UI.TileSize = Number
                 Window.Background.TileSize = UDim2.new(0,Number,0,Number)
             end})
         end
         local CreditsSection = SettingsTab:Section({Name = "Credits",Side = "Right"}) do
+            CreditsSection:Label({Text = "This script was made by AlexR32#0157"})
+            CreditsSection:Divider()
             CreditsSection:Label({Text = "Thanks to Jan for this awesome background patterns."})
             CreditsSection:Label({Text = "Thanks to Infinite Yield Team for server hop."})
             CreditsSection:Label({Text = "Thanks to Blissful for Offscreen Arrows."})
             CreditsSection:Label({Text = "Thanks to coasts for his Universal ESP."})
             CreditsSection:Label({Text = "Thanks to el3tric for Bracket V2."})
-            CreditsSection:Label({Text = "And thanks to AlexR32#0157 for making this script."})
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
         end
     end
+end
+
+local LastIteration
+local FrameUpdate = {}
+local Start = os.clock()
+local function GetFPS()
+	LastIteration = os.clock()
+	for Index = #FrameUpdate, 1, -1 do
+		FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
+	end
+	FrameUpdate[1] = LastIteration
+	return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
 end
 
 local function TeamCheck(Target)
@@ -505,6 +527,7 @@ local function WallCheck(Enabled,Hitbox,Character)
 end
 
 local function GetTarget(Config)
+    if not Config.Enabled then return end
 	local Camera = Workspace.CurrentCamera
 	local FieldOfView = Config.FieldOfView
 	local ClosestTarget = nil
@@ -545,65 +568,44 @@ end
 local __namecall
 __namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
-    if Parvus.Config.AimAssist.SilentAim.Enabled and SilentAimTarget then
+    if Parvus.Config.AimAssist.SilentAim.Enabled and SilentAim then
         local Camera = Workspace.CurrentCamera
         local HitChance = math.random(0,100) <= Parvus.Config.AimAssist.SilentAim.HitChance
         if getnamecallmethod() == "Raycast" and HitChance then
-            args[2] = SilentAimTarget.Position - Camera.CFrame.Position
+            args[2] = SilentAim.Position - Camera.CFrame.Position
         elseif getnamecallmethod() == "FindPartOnRayWithIgnoreList" and HitChance then
-            args[1] = Ray.new(args[1].Origin,SilentAimTarget.Position - Camera.CFrame.Position)
+            args[1] = Ray.new(args[1].Origin,SilentAim.Position - Camera.CFrame.Position)
         end
     end
     return __namecall(self, unpack(args))
 end)
 
-local AimbotCircle = Drawing.new("Circle")
-local SilentAimCircle = Drawing.new("Circle")
-AimbotCircle.ZIndex = 3
-SilentAimCircle.ZIndex = 3
 RunService.Heartbeat:Connect(function()
-    AimbotCircle.Visible = Parvus.Config.AimAssist.Aimbot.Circle.Visible
-    if AimbotCircle.Visible then
-        AimbotCircle.Transparency = Parvus.Config.AimAssist.Aimbot.Circle.Transparency
-        AimbotCircle.Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.Aimbot.Circle.Color)
-        AimbotCircle.Thickness = Parvus.Config.AimAssist.Aimbot.Circle.Thickness
-        AimbotCircle.NumSides = Parvus.Config.AimAssist.Aimbot.Circle.NumSides
-        AimbotCircle.Radius = Parvus.Config.AimAssist.Aimbot.FieldOfView
-        AimbotCircle.Filled = Parvus.Config.AimAssist.Aimbot.Circle.Filled
-        AimbotCircle.Position = UserInputService:GetMouseLocation()
+    SilentAim = GetTarget(Parvus.Config.AimAssist.SilentAim)
+    if Aimbot then AimAt(GetTarget(Parvus.Config.AimAssist.Aimbot),
+        Parvus.Config.AimAssist.Aimbot)
     end
-    SilentAimCircle.Visible = Parvus.Config.AimAssist.SilentAim.Circle.Visible
-    if SilentAimCircle.Visible then
-        SilentAimCircle.Transparency = Parvus.Config.AimAssist.SilentAim.Circle.Transparency
-        SilentAimCircle.Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.AimAssist.SilentAim.Circle.Color)
-        SilentAimCircle.Thickness = Parvus.Config.AimAssist.SilentAim.Circle.Thickness
-        SilentAimCircle.NumSides = Parvus.Config.AimAssist.SilentAim.Circle.NumSides
-        SilentAimCircle.Radius = Parvus.Config.AimAssist.SilentAim.FieldOfView
-        SilentAimCircle.Filled = Parvus.Config.AimAssist.SilentAim.Circle.Filled
-        SilentAimCircle.Position = UserInputService:GetMouseLocation()
-    end
-    if Parvus.Config.AimAssist.SilentAim.Enabled then
-        SilentAimTarget = GetTarget(Parvus.Config.AimAssist.SilentAim)
-    else
-        SilentAimTarget = nil
-    end
-    if Aimbot then
-        AimbotTarget = GetTarget(Parvus.Config.AimAssist.Aimbot)
-        if AimbotTarget then
-            AimAt(AimbotTarget,Parvus.Config.AimAssist.Aimbot)
-        end
+
+    if Parvus.Config.UI.Watermark then
+        Parvus.Utilities.UI:Watermark({
+            Enabled = true,
+            Title = string.format(
+                "Parvus Hub — %s\nTime: %s - %s\nFPS: %i/s\nPing: %i ms",
+                Parvus.Current,os.date("%X"),os.date("%x"),GetFPS(),math.round(Stats.PerformanceStats.Ping:GetValue())
+            )
+        })
     end
 end)
 
 for Index, Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then
-        Parvus.Utilities.ESP:Add("Player", Player, Parvus.Config.PlayerESP)
+        Parvus.Utilities.Drawing:AddESP("Player", Player, Parvus.Config.PlayerESP)
     end
 end
 PlayerService.PlayerAdded:Connect(function(Player)
-    Parvus.Utilities.ESP:Add("Player", Player, Parvus.Config.PlayerESP)
+    Parvus.Utilities.Drawing:AddESP("Player", Player, Parvus.Config.PlayerESP)
 end)
 PlayerService.PlayerRemoving:Connect(function(Player)
     if Player == LocalPlayer then Parvus.Utilities.Config:WriteJSON(Parvus.Current,Parvus.Config) end
-    Parvus.Utilities.ESP:Remove(Player)
+    Parvus.Utilities.Drawing:RemoveESP(Player)
 end)

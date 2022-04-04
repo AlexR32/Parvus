@@ -1,6 +1,10 @@
 repeat task.wait() until game.GameId ~= 0
 if Parvus and Parvus.Loaded then
-    Parvus.Utilities.UI:Notification("Parvus Hub","Script already executed!",5)
+    Parvus.Utilities.UI:Notification({
+        Title = "Parvus Hub",
+        Description = "Script already executed!",
+        Duration = 5
+    })
     return
 end
 
@@ -11,8 +15,7 @@ Parvus.Current = "Loader"
 Parvus.Config = {}
 Parvus.Utilities = {
     Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))(),
-    Cursor = Parvus.Debug and loadfile("Parvus/Utilities/Cursor.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Cursor.lua"))(),
-    ESP = Parvus.Debug and loadfile("Parvus/Utilities/ESP.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/ESP.lua"))(),
+    Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")(), or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/ESP.lua"))(),
     UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 }
 
@@ -37,10 +40,6 @@ Parvus.Games = {
     ["2194874153"] = {
         Name = "Those Who Remain",
         Script = Parvus.Debug and readfile("Parvus/Games/TWR.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
-    },
-    ["2194874153"] = {
-        Name = "Jailbird",
-        Script = Parvus.Debug and readfile("Parvus/Games/Jailbird.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/Jailbird.lua")
     }
     ]]
 }
@@ -66,10 +65,18 @@ end)
 local Info = getGameInfo()
 if Info then
     Parvus.Current = Info.Name
-    Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
+    Parvus.Utilities.UI:Notification({
+        Title = "Parvus Hub",
+        Description = Parvus.Current .. " loaded!",
+        Duration = 5
+    })
     loadstring(Info.Script)()
 else
     Parvus.Current = "Universal"
-    Parvus.Utilities.UI:Notification("Parvus Hub",Parvus.Current .. " loaded!",5)
+    Parvus.Utilities.UI:Notification({
+        Title = "Parvus Hub",
+        Description = Parvus.Current .. " loaded!",
+        Duration = 5
+    })
     loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
 end
