@@ -1,5 +1,5 @@
 repeat task.wait() until game.GameId ~= 0
-if getgenv().Parvus and Parvus.Loaded then
+if Parvus and Parvus.Loaded then
 	Parvus.Utilities.UI:Notification({
 		Title = "Parvus Hub",
 		Description = "Script already executed!",
@@ -8,11 +8,13 @@ if getgenv().Parvus and Parvus.Loaded then
 	return
 end
 
-getgenv().Parvus = {}
-Parvus.Loaded = true
-Parvus.Debug = false
-Parvus.Current = "Loader"
-Parvus.Config = {}
+getgenv().Parvus = {
+	Loaded = true,
+	Debug = false,
+	Current = "Loader",
+	Utilities = {},
+	Config = {}
+}
 
 Parvus.Utilities.UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 Parvus.Utilities.Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))()
