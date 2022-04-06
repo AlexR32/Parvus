@@ -634,7 +634,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     ["cmd"] = "INVITE_BROWSER",
                     ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
                     ["args"] = {
-                        ["code"] = "JKywVqjV6m"
+                        ["code"] = "sYqDpbPYb7"
                     }
                 })
             })
@@ -720,12 +720,12 @@ local LastIteration
 local FrameUpdate = {}
 local Start = os.clock()
 local function GetFPS()
-	LastIteration = os.clock()
-	for Index = #FrameUpdate, 1, -1 do
-		FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
-	end
-	FrameUpdate[1] = LastIteration
-	return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
+    LastIteration = os.clock()
+    for Index = #FrameUpdate, 1, -1 do
+        FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
+    end
+    FrameUpdate[1] = LastIteration
+    return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
 end
 
 local function InputToVelocity()
@@ -773,10 +773,10 @@ end
 
 local function FindPlayerFromCharacter(Character)
     for Index, Player in pairs(PlayerService:GetPlayers()) do
-		if Player.Character == Character then
+        if Player.Character == Character then
             return Player
         end
-	end
+    end
 end
 
 local function PlayerFly(Config)
@@ -825,11 +825,11 @@ local function CustomizeArms(Config,Properties)
 end
 
 local function Raycast(Origin,Direction,Table)
-	local RaycastParams = RaycastParams.new()
-	RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
-	RaycastParams.FilterDescendantsInstances = Table
-	RaycastParams.IgnoreWater = true
-	return Workspace:Raycast(Origin,Direction,RaycastParams)
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
+    RaycastParams.FilterDescendantsInstances = Table
+    RaycastParams.IgnoreWater = true
+    return Workspace:Raycast(Origin,Direction,RaycastParams)
 end
 
 local function TeamCheck(Target)
@@ -838,9 +838,9 @@ local function TeamCheck(Target)
 end
 
 local function WallCheck(Enabled,Hitbox)
-	if not Enabled then return true end
-	local Camera = Workspace.CurrentCamera
-	return not Raycast(
+    if not Enabled then return true end
+    local Camera = Workspace.CurrentCamera
+    return not Raycast(
         Camera.CFrame.Position,
         Hitbox.Position - Camera.CFrame.Position,
         {Workspace.Geometry,Workspace.Terrain}
@@ -849,73 +849,73 @@ end
 
 local function GetTarget(Config)
     if not Config.Enabled then return end
-	local Camera = Workspace.CurrentCamera
-	local FieldOfView = Config.FieldOfView
-	local ClosestTarget = nil
+    local Camera = Workspace.CurrentCamera
+    local FieldOfView = Config.FieldOfView
+    local ClosestTarget = nil
 
-	for Index, Target in pairs(PlayerService:GetPlayers()) do
-		local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
-		if Target ~= LocalPlayer and TeamCheck(Target) then
-			for Index, BodyPart in pairs(Config.Priority) do
-				local Hitbox = Character and Character:FindFirstChild(BodyPart)
-				if Hitbox then
-					local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
-					local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-					if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox) then
-						FieldOfView = Magnitude
-						ClosestTarget = {
+    for Index, Target in pairs(PlayerService:GetPlayers()) do
+        local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
+        if Target ~= LocalPlayer and TeamCheck(Target) then
+            for Index, BodyPart in pairs(Config.Priority) do
+                local Hitbox = Character and Character:FindFirstChild(BodyPart)
+                if Hitbox then
+                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
+                    local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox) then
+                        FieldOfView = Magnitude
+                        ClosestTarget = {
                             Player = Target,
                             Character = Target.Character,
                             Hitbox = Hitbox
                         }
-					end
-				end
-			end
-		end
-	end
+                    end
+                end
+            end
+        end
+    end
 
-	return ClosestTarget
+    return ClosestTarget
 end
 
 local function Trigger(Config)
-	if not Config.Enabled then return end
-	local Camera = Workspace.CurrentCamera
-	for Index, Target in pairs(PlayerService:GetPlayers()) do
-		local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
+    if not Config.Enabled then return end
+    local Camera = Workspace.CurrentCamera
+    for Index, Target in pairs(PlayerService:GetPlayers()) do
+        local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
         if Target ~= LocalPlayer and TeamCheck(Target) then
             for Index, BodyPart in pairs(Config.Priority) do
-				local Hitbox = Character and Character:FindFirstChild(BodyPart)
-				if Hitbox and iswindowactive() and WallCheck(true,Hitbox) and Raycast(
+                local Hitbox = Character and Character:FindFirstChild(BodyPart)
+                if Hitbox and iswindowactive() and WallCheck(true,Hitbox) and Raycast(
                 Camera.CFrame.Position,Camera.CFrame.LookVector * 1000,{Hitbox}) then
                     task.wait(Config.Delay)
                     mouse1press()
                     task.wait(Config.HoldTime)
                     mouse1release()
-				end
-			end
-		end
-	end
+                end
+            end
+        end
+    end
 end
 
 local function AutoShoot(Enabled)
     if not Enabled then return end
     local Camera = Workspace.CurrentCamera
-	local Distance = math.huge
-	local TargetHitbox = nil
+    local Distance = math.huge
+    local TargetHitbox = nil
 
-	for Index, Target in pairs(PlayerService:GetPlayers()) do
-		local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
-		if Target ~= LocalPlayer and TeamCheck(Target) then
+    for Index, Target in pairs(PlayerService:GetPlayers()) do
+        local Character = Target.Character and Target.Character:FindFirstChild("Hitbox")
+        if Target ~= LocalPlayer and TeamCheck(Target) then
             local Hitbox = Character and Character:FindFirstChild("Head")
-			if Hitbox then
-				local Magnitude = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-				if Distance > Magnitude then
-					Distance = Magnitude
-					TargetHitbox = Hitbox
-				end
-			end
-		end
-	end
+            if Hitbox then
+                local Magnitude = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Distance > Magnitude then
+                    Distance = Magnitude
+                    TargetHitbox = Hitbox
+                end
+            end
+        end
+    end
 
     local GunModel = FindGunModel()
     if TargetHitbox and GunModel
@@ -939,16 +939,16 @@ local function AutoShoot(Enabled)
 end
 
 local function AimAt(Target,Config)
-	if not Target then return end
+    if not Target then return end
     Target = Target.Hitbox
-	local Camera = Workspace.CurrentCamera
-	local Mouse = UserInputService:GetMouseLocation()
-	local TargetPrediction = ((Target.Position - Camera.CFrame.Position).Magnitude * Target.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
-	local TargetOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Target.Position + TargetPrediction or Target.Position)
-	mousemoverel(
-		(TargetOnScreen.X - Mouse.X) * Config.Sensitivity,
-		(TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
-	)
+    local Camera = Workspace.CurrentCamera
+    local Mouse = UserInputService:GetMouseLocation()
+    local TargetPrediction = ((Target.Position - Camera.CFrame.Position).Magnitude * Target.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+    local TargetOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Target.Position + TargetPrediction or Target.Position)
+    mousemoverel(
+        (TargetOnScreen.X - Mouse.X) * Config.Sensitivity,
+        (TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
+    )
 end
 
 local HitNotify = Instance.new("BindableEvent")
@@ -1032,12 +1032,9 @@ RunService.Heartbeat:Connect(function()
     CustomizeGun(Parvus.Config.GameFeatures.GunCustomization)
     CustomizeArms(Parvus.Config.GameFeatures.ArmsCustomization)
 end)
-
-coroutine.wrap(function()
-	while task.wait() do
-		Trigger(Parvus.Config.AimAssist.Trigger)
-	end
-end)()
+Parvus.Utilities.ThreadLoop(0,function()
+    Trigger(Parvus.Config.AimAssist.Trigger)
+end)
 
 for Index, Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then

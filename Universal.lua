@@ -431,7 +431,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     ["cmd"] = "INVITE_BROWSER",
                     ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
                     ["args"] = {
-                        ["code"] = "JKywVqjV6m"
+                        ["code"] = "sYqDpbPYb7"
                     }
                 })
             })

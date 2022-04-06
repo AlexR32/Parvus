@@ -94,11 +94,7 @@ local function ChooseTab(ScreenAsset,TabButtonAsset,TabAsset)
 	end
 	for Index,Instance in pairs(ScreenAsset.Window.TabButtonContainer:GetChildren()) do
 		if Instance:IsA("TextButton") then
-			if Instance ~= TabButtonAsset then
-				Instance.Highlight.Visible = false
-			else
-				Instance.Highlight.Visible = true
-			end
+			Instance.Highlight.Visible = Instance == TabButtonAsset
 		end
 	end
 end
@@ -135,7 +131,7 @@ end
 local function InitScreen()
 	local ScreenAsset = GetAsset("Screen","Bracket")
 	ScreenAsset.Name = "Bracket " .. game:GetService("HttpService"):GenerateGUID(false)
-	ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or game:GetService("CoreGui")
+	ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or CoreGui
 	return {ScreenAsset = ScreenAsset}
 end
 local function InitWindow(ScreenAsset,Window)
