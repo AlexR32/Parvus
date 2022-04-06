@@ -25,7 +25,7 @@ end
 
 function PlayerManager(Player)
 	return Player.Character,
-	Player.Character and Player.Character:FindFirstChild("HumanoidRootPart"),
+	Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or false,
 	Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and
 	Player.Character:FindFirstChildOfClass("Humanoid").Health > 0 or false,
 	LocalPlayer.Team ~= Player.Team, Player.TeamColor.Color
