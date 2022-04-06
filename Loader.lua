@@ -13,18 +13,17 @@ Parvus.Loaded = true
 Parvus.Debug = false
 Parvus.Current = "Loader"
 Parvus.Config = {}
-Parvus.Utilities = {
-	UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))(),
-	Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))(),
-	Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))(),
-	ThreadLoop = function(Wait,Function)
-		coroutine.wrap(function()
-			while task.wait(Wait) do
-				Function()
-			end
-		end)()
-	end
-}
+
+Parvus.Utilities.UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
+Parvus.Utilities.Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))()
+Parvus.Utilities.Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))()
+Parvus.Utilities.ThreadLoop = function(Wait,Function)
+	coroutine.wrap(function()
+		while task.wait(Wait) do
+			Function()
+		end
+	end)()
+end
 
 Parvus.Games = {
 	["1054526971"] = {
