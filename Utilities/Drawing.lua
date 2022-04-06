@@ -325,7 +325,7 @@ RunService.Heartbeat:Connect(function()
 						or (InEnemyTeam and TableToColor(ESP.Config.EnemyColor)
 						or TableToColor(ESP.Config.AllyColor))
 						ESP.Highlight.FillTransparency = ESP.Config.Highlight.Transparency
-						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.Outline.Color)
+						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.OutlineColor)
 						ESP.Highlight.OutlineTransparency = ESP.Config.Highlight.OutlineColor[4]
 					end
 					if Character:FindFirstChild("Head") and ESP.Drawing.Other.Head.Visible then
@@ -410,7 +410,7 @@ RunService.Heartbeat:Connect(function()
 						ESP.Highlight.Adornee = Model
 						ESP.Highlight.FillColor = TableToColor(ESP.Config.EnemyColor)
 						ESP.Highlight.FillTransparency = ESP.Config.Highlight.Transparency
-						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.Outline.Color)
+						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.OutlineColor)
 						ESP.Highlight.OutlineTransparency = ESP.Config.Highlight.OutlineColor[4]
 					end
 					if Model:FindFirstChild("Head") and ESP.Drawing.Other.Head.Visible then
@@ -491,7 +491,7 @@ RunService.Heartbeat:Connect(function()
 						ESP.Highlight.Adornee = Model
 						ESP.Highlight.FillColor = TableToColor(ESP.Config.EnemyColor)
 						ESP.Highlight.FillTransparency = ESP.Config.Highlight.Transparency
-						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.Outline.Color)
+						ESP.Highlight.OutlineColor = TableToColor(ESP.Config.Highlight.OutlineColor)
 						ESP.Highlight.OutlineTransparency = ESP.Config.Highlight.OutlineColor[4]
 					end
 					if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
