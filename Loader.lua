@@ -1,5 +1,5 @@
 repeat task.wait() until game.GameId ~= 0
-if Parvus and Parvus.Loaded then
+if Parvus and Parvus.Utilities and Parvus.Loaded then
 	Parvus.Utilities.UI:Notification({
 		Title = "Parvus Hub",
 		Description = "Script already executed!",
@@ -25,6 +25,14 @@ Parvus.Utilities = {
 		end)()
 	end
 }
+--[[
+Parvus.Utilities.ThreadLoop = function(Wait,Function)
+	coroutine.wrap(function()
+		while task.wait(Wait) do
+			Function()
+		end
+	end)()
+end]]
 
 Parvus.Games = {
 	["1054526971"] = {
