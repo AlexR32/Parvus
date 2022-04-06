@@ -1,5 +1,5 @@
 repeat task.wait() until game.GameId ~= 0
-if Parvus and Parvus.Utilities and Parvus.Loaded then
+if getgenv().Parvus and Parvus.Utilities and Parvus.Loaded then
 	Parvus.Utilities.UI:Notification({
 		Title = "Parvus Hub",
 		Description = "Script already executed!",
@@ -16,23 +16,16 @@ Parvus.Config = {}
 Parvus.Utilities = {
 	Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))(),
 	Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))(),
-	UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))(),
-	ThreadLoop = function(Wait,Function)
-		coroutine.wrap(function()
-			while task.wait(Wait) do
-				Function()
-			end
-		end)()
-	end
+	UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 }
---[[
+
 Parvus.Utilities.ThreadLoop = function(Wait,Function)
 	coroutine.wrap(function()
 		while task.wait(Wait) do
 			Function()
 		end
 	end)()
-end]]
+end
 
 Parvus.Games = {
 	["1054526971"] = {
