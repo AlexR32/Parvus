@@ -47,9 +47,9 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 - Bad Business
   - Autoshoot
   - Trigger Bot
-  - Gun Customization
+  - Weapon Customization
   - Arms Customization
-  - No Recoil
+  - Camera Modification
   - Exposure Compensation Changer
   - Fly
   - Pitch Anti-Aim
@@ -67,6 +67,8 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 - RAGDOLL UNIVERSE
   - Silent Aim and Aimbot Support
 ### TODO
+- New Config System
+- Lighting Modification
 - Toggle Slider
-- Toggle Colorpicker (2)
+- Toggle Colorpicker
 - Add More Games

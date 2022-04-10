@@ -126,6 +126,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 	}
 })
 
+local GetFPS = Parvus.Utilities.SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Parvus.Config.UI.Cursor)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.Aimbot)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.SilentAim)
@@ -495,18 +496,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
 	end
 end
 
-local LastIteration
-local FrameUpdate = {}
-local Start = os.clock()
-local function GetFPS()
-	LastIteration = os.clock()
-	for Index = #FrameUpdate, 1, -1 do
-		FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
-	end
-	FrameUpdate[1] = LastIteration
-	return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
-end
-
 local function TeamCheck(Character)
 	if Character and Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
 		return Character.Team.Value ~= LocalPlayer.Character.Team.Value
@@ -524,42 +513,42 @@ local function WallCheck(Enabled,Hitbox,Character)
 	})[1]
 end
 
-local function GetTarget(Config)
+local function GetHitbox(Config)
 	if not Config.Enabled then return end
 	local Camera = Workspace.CurrentCamera
 	local FieldOfView = Config.FieldOfView
-	local ClosestTarget = nil
+	local ClosestHitbox = nil
 
-	for Index, Target in pairs(PlayerService:GetPlayers()) do
-		local Character = Target.Character
+	for Index, Player in pairs(PlayerService:GetPlayers()) do
+		local Character = Player.Character
 		local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-		if Target ~= LocalPlayer and Health and TeamCheck(Character) then
-			for Index, BodyPart in pairs(Config.Priority) do
-				local Hitbox = Character and Character:FindFirstChild(BodyPart)
+		if Player ~= LocalPlayer and Health and TeamCheck(Player) then
+			for Index, HumanoidPart in pairs(Config.Priority) do
+				local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
 				if Hitbox then
 					local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
 					local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 					if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Character) then
 						FieldOfView = Magnitude
-						ClosestTarget = Hitbox
+						ClosestHitbox = Hitbox
 					end
 				end
 			end
 		end
 	end
 
-	return ClosestTarget
+	return ClosestHitbox
 end
 
-local function AimAt(Target,Config)
-	if not Target then return end
+local function AimAt(Hitbox,Config)
+	if not Hitbox then return end
 	local Camera = Workspace.CurrentCamera
 	local Mouse = UserInputService:GetMouseLocation()
-	local TargetPrediction = ((Target.Position - Camera.CFrame.Position).Magnitude * Target.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
-	local TargetOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Target.Position + TargetPrediction or Target.Position)
+	local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+	local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
 	mousemoverel(
-		(TargetOnScreen.X - Mouse.X) * Config.Sensitivity,
-		(TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
+		(HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
+		(HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
 	)
 end
 
@@ -574,7 +563,7 @@ __namecall = hookmetamethod(game, "__namecall", function(self, ...)
 			and table.find(args[2],Workspace.Projectiles,5) then
 				if math.random(0,100) <= Parvus.Config.AimAssist.SilentAim.HitChance then
 					local Camera = Workspace.CurrentCamera
-					args[1] = Ray.new(args[1].Origin, SilentAim.Position - Camera.CFrame.Position)
+					args[1] = Ray.new(args[1].Origin,SilentAim.Position - Camera.CFrame.Position)
 				end
 			end
 		end
@@ -583,8 +572,9 @@ __namecall = hookmetamethod(game, "__namecall", function(self, ...)
 end)
 
 RunService.Heartbeat:Connect(function()
-	SilentAim = GetTarget(Parvus.Config.AimAssist.SilentAim)
-	if Aimbot then AimAt(GetTarget(Parvus.Config.AimAssist.Aimbot),
+	SilentAim = GetHitbox(Parvus.Config.AimAssist.SilentAim)
+	if Aimbot then AimAt(
+		GetHitbox(Parvus.Config.AimAssist.Aimbot),
 		Parvus.Config.AimAssist.Aimbot)
 	end
 

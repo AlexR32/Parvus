@@ -9,7 +9,7 @@ if Parvus and Parvus.Loaded then
 end
 
 getgenv().Parvus = {
-	Loaded = true,
+	Loaded = false,
 	Debug = false,
 	Current = "Loader",
 	Utilities = {},
@@ -19,10 +19,30 @@ getgenv().Parvus = {
 Parvus.Utilities.UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 Parvus.Utilities.Config = Parvus.Debug and loadfile("Parvus/Utilities/Config.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Config.lua"))()
 Parvus.Utilities.Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")() or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))()
-Parvus.Utilities.ThreadLoop = function(Wait,Function)
+
+Parvus.Utilities.SetupFPS = function()
+	local LastIteration
+	local FrameUpdate = {}
+	local Start = os.clock()
+	return function()
+		LastIteration = os.clock()
+		for Index = #FrameUpdate, 1, -1 do
+			FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
+		end
+		FrameUpdate[1] = LastIteration
+		return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
+	end
+end
+
+Parvus.Utilities.NewThreadLoop = function(Wait,Function)
 	coroutine.wrap(function()
 		while task.wait(Wait) do
-			Function()
+			local success, error = pcall(function()
+				Function()
+			end)
+			if not success then
+				warn("thread error happend: " .. error)
+			end
 		end
 	end)()
 end
@@ -43,19 +63,18 @@ Parvus.Games = {
 	--[[
 	["807930589"] = {
 		Name = "The Wild West",
-		Script = Parvus.Debug and readfile("Parvus/Games/TWW.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWW.lua")
+		Script = readfile("Parvus/Games/TWW.lua")--Parvus.Debug and readfile("Parvus/Games/TWW.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWW.lua")
 	},
 	["2194874153"] = {
 		Name = "Those Who Remain",
-		Script = Parvus.Debug and readfile("Parvus/Games/TWR.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
-	}
-	]]
+		Script = readfile("Parvus/Games/TWR.lua")--Parvus.Debug and readfile("Parvus/Games/TWR.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
+	}]]
 }
 
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
-local function getGameInfo()
-	for Id,Info in pairs(Parvus.Games) do
+local function IfGameSupported()
+	for Id, Info in pairs(Parvus.Games) do
 		if tostring(game.GameId) == Id then
 			return Info
 		end
@@ -64,27 +83,29 @@ end
 
 LocalPlayer.OnTeleport:Connect(function(State)
 	if State == Enum.TeleportState.Started then
-		getgenv().Parvus.Loaded = false
 		local QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport
 		QueueOnTeleport(Parvus.Debug and readfile("Parvus/Loader.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))
 	end
 end)
 
-local Info = getGameInfo()
-if Info then
-	Parvus.Current = Info.Name
+local SupportedGame = IfGameSupported()
+if SupportedGame then
+	Parvus.Current = SupportedGame.Name
+	loadstring(SupportedGame.Script)()
 	Parvus.Utilities.UI:Notification({
 		Title = "Parvus Hub",
 		Description = Parvus.Current .. " loaded!",
 		Duration = 5
 	})
-	loadstring(Info.Script)()
+
+	Parvus.Loaded = true
 else
 	Parvus.Current = "Universal"
+	loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
 	Parvus.Utilities.UI:Notification({
 		Title = "Parvus Hub",
 		Description = Parvus.Current .. " loaded!",
 		Duration = 5
 	})
-	loadstring(Parvus.Debug and readfile("Parvus/Universal.lua") or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Universal.lua"))()
+	Parvus.Loaded = true
 end

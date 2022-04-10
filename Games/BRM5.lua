@@ -6,11 +6,11 @@ local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 
-repeat task.wait() until Workspace:FindFirstChild("Enemies")
+repeat task.wait() until Workspace:FindFirstChild("Bots")
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot, SilentAim, NPCFolder,
 GroundTip, AircraftTip = false, nil,
-Workspace.Enemies, nil, nil
+Workspace.Bots, nil, nil
 
 Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 	PlayerESP = {
@@ -208,6 +208,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 	}
 })
 
+local GetFPS = Parvus.Utilities.SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Parvus.Config.UI.Cursor)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.Aimbot)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.SilentAim)
@@ -698,7 +699,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
 					["cmd"] = "INVITE_BROWSER",
 					["nonce"] = string.lower(HttpService:GenerateGUID(false)),
 					["args"] = {
-						["code"] = "JKywVqjV6m"
+						["code"] = "sYqDpbPYb7"
 					}
 				})
 			})
@@ -765,20 +766,8 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
 	end
 end
 
-local LastIteration
-local FrameUpdate = {}
-local Start = os.clock()
-local function GetFPS()
-	LastIteration = os.clock()
-	for Index = #FrameUpdate, 1, -1 do
-		FrameUpdate[Index + 1] = FrameUpdate[Index] >= LastIteration - 1 and FrameUpdate[Index] or nil
-	end
-	FrameUpdate[1] = LastIteration
-	return os.clock() - Start >= 1 and #FrameUpdate or #FrameUpdate / (os.clock() - Start)
-end
-
-local function TeamCheck(Target)
-	return LocalPlayer.Team ~= Target.Team
+local function TeamCheck(Player)
+	return LocalPlayer.Team ~= Player.Team
 end
 
 local function WallCheck(Enabled,Hitbox,Character)
@@ -790,42 +779,41 @@ local function WallCheck(Enabled,Hitbox,Character)
 	})[1]
 end
 
-local function GetTarget(Config)
+local function GetHitbox(Config)
 	if not Config.Enabled then return end
 	local Camera = Workspace.CurrentCamera
 	local FieldOfView = Config.FieldOfView
-	local ClosestTarget = nil
+	local ClosestHitbox = nil
 
 	if Parvus.Config.AimAssist.TargetMode == "NPC" then
-		for Index, Target in pairs(NPCFolder:GetChildren()) do
-			local ActualEnemy = Target:FindFirstChild("Vest")
-			if ActualEnemy and (Target:FindFirstChildOfClass("Humanoid") and Target:FindFirstChildOfClass("Humanoid").Health > 0) then
-				for Index, BodyPart in pairs(Config.Priority) do
-					local Hitbox = Target:FindFirstChild(BodyPart)
+		for Index, NPC in pairs(NPCFolder:GetChildren()) do
+			if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and (NPC:FindFirstChildOfClass("Humanoid") and NPC:FindFirstChildOfClass("Humanoid").Health > 0) then
+				for Index, HumanoidPart in pairs(Config.Priority) do
+					local Hitbox = NPC:FindFirstChild(HumanoidPart)
 					if Hitbox then
 						local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
 						local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-						if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Target) then
+						if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Enemy) then
 							FieldOfView = Magnitude
-							ClosestTarget = Hitbox
+							ClosestHitbox = Hitbox
 						end
 					end
 				end
 			end
 		end
 	elseif Parvus.Config.AimAssist.TargetMode == "Player" then
-		for Index, Target in pairs(PlayerService:GetPlayers()) do
-			local Character = Target.Character
+		for Index, Player in pairs(PlayerService:GetPlayers()) do
+			local Character = Player.Character
 			local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-			if Target ~= LocalPlayer and Health and TeamCheck(Target) then
-				for Index, BodyPart in pairs(Config.Priority) do
-					local Hitbox = Character and Character:FindFirstChild(BodyPart)
+			if Player ~= LocalPlayer and Health and TeamCheck(Player) then
+				for Index, HumanoidPart in pairs(Config.Priority) do
+					local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
 					if Hitbox then
 						local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
 						local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 						if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Character) then
 							FieldOfView = Magnitude
-							ClosestTarget = Hitbox
+							ClosestHitbox = Hitbox
 						end
 					end
 				end
@@ -833,18 +821,18 @@ local function GetTarget(Config)
 		end
 	end
 
-	return ClosestTarget
+	return ClosestHitbox
 end
 
-local function AimAt(Target,Config)
-	if not Target then return end
+local function AimAt(Hitbox,Config)
+	if not Hitbox then return end
 	local Camera = Workspace.CurrentCamera
 	local Mouse = UserInputService:GetMouseLocation()
-	local TargetPrediction = ((Target.Position - Camera.CFrame.Position).Magnitude * Target.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
-	local TargetOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Target.Position + TargetPrediction or Target.Position)
+	local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+	local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
 	mousemoverel(
-		(TargetOnScreen.X - Mouse.X) * Config.Sensitivity,
-		(TargetOnScreen.Y - Mouse.Y) * Config.Sensitivity
+		(HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
+		(HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
 	)
 end
 
@@ -1087,8 +1075,9 @@ __namecall = hookmetamethod(game, "__namecall", function(self, ...)
 end)
 
 RunService.Heartbeat:Connect(function()
-	SilentAim = GetTarget(Parvus.Config.AimAssist.SilentAim)
-	if Aimbot then AimAt(GetTarget(Parvus.Config.AimAssist.Aimbot),
+	SilentAim = GetHitbox(Parvus.Config.AimAssist.SilentAim)
+	if Aimbot then AimAt(
+		GetHitbox(Parvus.Config.AimAssist.Aimbot),
 		Parvus.Config.AimAssist.Aimbot)
 	end
 
