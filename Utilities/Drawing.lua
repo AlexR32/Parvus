@@ -137,13 +137,13 @@ elseif game.GameId == 1168263273 then
 	end
 
 	local __index
-	__index = hookmetamethod(game, "__index", function(table, index)
-		if index == "Character" then
-			return Toroiseshell.Characters:GetCharacter(table)
-		elseif index == "Team" then
-			return Toroiseshell.Teams:GetPlayerTeam(table)
+	__index = hookmetamethod(game, "__index", function(Table,Index)
+		if Index == "Character" then
+			return Toroiseshell.Characters:GetCharacter(Table)
+		elseif Index == "Team" then
+			return Toroiseshell.Teams:GetPlayerTeam(Table)
 		end
-		return __index(table, index)
+		return __index(Table,Index)
 	end)
 end
 
@@ -198,7 +198,7 @@ function DrawingLibrary:RemoveESP(Model)
 	end
 end
 
-function DrawingLibrary:Cursor(Config)
+function DrawingLibrary:Cursor(Config,LibraryConfig)
 	local Cursor = AddDrawing("Triangle", {
 		Color = Color3.new(1,1,1),
 		Filled = true,
@@ -248,12 +248,34 @@ function DrawingLibrary:Cursor(Config)
 		Visible = true,
 		ZIndex = 3
 	})
-	
+	--[[
+	local __index, __newindex, MouseState
+	__index = hookmetamethod(game, "__index", function(Table,Index)
+		if checkcaller() then return __index(Table,Index) end
+
+		if Index == "MouseIconEnabled" then
+			return MouseState
+		end
+
+		return __index(Table,Index)
+	end)
+
+	__newindex = hookmetamethod(game, "__newindex", function(Table,Index,Value)
+		if checkcaller() then return __newindex(Table,Index,Value) end
+
+		if Index == "MouseIconEnabled" then
+			MouseState = Value
+		end
+
+		return __newindex(Table,Index,Value)
+	end)]]
+
 	RunService.RenderStepped:Connect(function()
+		--UserInputService.MouseIconEnabled = (not Config.Enabled or not LibraryConfig.Enabled) or MouseState
 		local CursorEnabled = Config.Enabled and UserInputService.MouseBehavior == Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
 		local CrosshairEnabled = Config.Crosshair.Enabled and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
 		local Mouse = UserInputService:GetMouseLocation()
-	
+
 		Cursor.Visible = CursorEnabled
 		CursorOutline.Visible = CursorEnabled
 	
@@ -263,9 +285,9 @@ function DrawingLibrary:Cursor(Config)
 		CrosshairB.Visible = CrosshairEnabled
 	
 		if CursorEnabled then
-			Cursor.PointA = Vector2.new(Mouse.X,Mouse.Y + Config.Length)
-			Cursor.PointB = Vector2.new(Mouse.X,Mouse.Y)
-			Cursor.PointC = Vector2.new(Mouse.X + Config.Width,Mouse.Y + Config.Width)
+			Cursor.PointA = Mouse + Vector2.new(0,Config.Length)
+			Cursor.PointB = Mouse
+			Cursor.PointC = Mouse + Vector2.new(Config.Width,Config.Width)
 	
 			CursorOutline.PointA = Cursor.PointA + Vector2.new(0,1)
 			CursorOutline.PointB = Cursor.PointB
@@ -274,20 +296,20 @@ function DrawingLibrary:Cursor(Config)
 		if CrosshairEnabled then
 			local Color = TableToColor(Config.Crosshair.Color)
 			CrosshairL.Color = Color
-			CrosshairL.From = Vector2.new(Mouse.X - Config.Crosshair.Gap,Mouse.Y)
-			CrosshairL.To = Vector2.new(Mouse.X - (Config.Crosshair.Size + Config.Crosshair.Gap),Mouse.Y)
+			CrosshairL.From = Mouse - Vector2.new(Config.Crosshair.Gap,0) --Vector2.new(Mouse.X - Config.Crosshair.Gap,Mouse.Y)
+			CrosshairL.To = Mouse - Vector2.new(Config.Crosshair.Size + Config.Crosshair.Gap,0) --Vector2.new(Mouse.X - (Config.Crosshair.Size + Config.Crosshair.Gap),Mouse.Y)
 	
 			CrosshairR.Color = Color
-			CrosshairR.From = Vector2.new(Mouse.X + (Config.Crosshair.Gap + 1),Mouse.Y)
-			CrosshairR.To = Vector2.new(Mouse.X + (Config.Crosshair.Size + (Config.Crosshair.Gap + 1)),Mouse.Y)
+			CrosshairR.From = Mouse + Vector2.new(Config.Crosshair.Gap + 1,0) --Vector2.new(Mouse.X + (Config.Crosshair.Gap + 1),Mouse.Y)
+			CrosshairR.To = Mouse + Vector2.new(Config.Crosshair.Size + (Config.Crosshair.Gap + 1),0) --Vector2.new(Mouse.X + (Config.Crosshair.Size + (Config.Crosshair.Gap + 1)),Mouse.Y)
 	
 			CrosshairT.Color = Color
-			CrosshairT.From = Vector2.new(Mouse.X,Mouse.Y - Config.Crosshair.Gap)
-			CrosshairT.To = Vector2.new(Mouse.X,Mouse.Y - (Config.Crosshair.Size + Config.Crosshair.Gap))
+			CrosshairT.From = Mouse - Vector2.new(0,Config.Crosshair.Gap) --Vector2.new(Mouse.X,Mouse.Y - Config.Crosshair.Gap)
+			CrosshairT.To = Mouse - Vector2.new(0,Config.Crosshair.Size + Config.Crosshair.Gap) --Vector2.new(Mouse.X,Mouse.Y - (Config.Crosshair.Size + Config.Crosshair.Gap))
 	
 			CrosshairB.Color = Color
-			CrosshairB.From = Vector2.new(Mouse.X,Mouse.Y + (Config.Crosshair.Gap + 1))
-			CrosshairB.To = Vector2.new(Mouse.X,Mouse.Y + (Config.Crosshair.Size + (Config.Crosshair.Gap + 1)))
+			CrosshairB.From = Mouse + Vector2.new(0,Config.Crosshair.Gap + 1) --Vector2.new(Mouse.X,Mouse.Y + (Config.Crosshair.Gap + 1))
+			CrosshairB.To = Mouse + Vector2.new(0,Config.Crosshair.Size + (Config.Crosshair.Gap + 1)) --Vector2.new(Mouse.X,Mouse.Y + (Config.Crosshair.Size + (Config.Crosshair.Gap + 1)))
 		end
 	end)
 end
