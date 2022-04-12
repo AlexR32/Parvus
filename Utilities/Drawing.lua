@@ -144,21 +144,21 @@ elseif game.GameId == 1054526971 then
     end
 elseif game.GameId == 1168263273 then
     repeat task.wait() until ReplicatedStorage:FindFirstChild("TS")
-    local Toroiseshell = require(ReplicatedStorage.TS)
+    local Tortoiseshell = require(ReplicatedStorage.TS)
 
     function PlayerManager(Player)
         return Player.Character and Player.Character:FindFirstChild("Hitbox"),
         (Player.Character and Player.Character.PrimaryPart) or false, true,
         LocalPlayer.Team ~= Player.Team or tostring(Player.Team) == "FFA",
-        Toroiseshell.Teams.Colors[Player.Team]
+        Tortoiseshell.Teams.Colors[Player.Team]
     end
 
     local __index
     __index = hookmetamethod(game, "__index", function(Table,Index)
         if Index == "Character" then
-            return Toroiseshell.Characters:GetCharacter(Table)
+            return Tortoiseshell.Characters:GetCharacter(Table)
         elseif Index == "Team" then
-            return Toroiseshell.Teams:GetPlayerTeam(Table)
+            return Tortoiseshell.Teams:GetPlayerTeam(Table)
         end
         return __index(Table,Index)
     end)

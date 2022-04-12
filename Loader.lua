@@ -10,7 +10,7 @@ end
 
 getgenv().Parvus = {
     Loaded = false,
-    Debug = false,
+    Debug = true,
     Current = "Loader",
     Utilities = {},
     Config = {}

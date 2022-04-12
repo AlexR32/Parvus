@@ -8,8 +8,12 @@ local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot, SilentAim, Toroiseshell = false,
+local Aimbot, SilentAim, Tortoiseshell = false,
 nil, require(ReplicatedStorage.TS)
+
+-- Very hacky method to fix my recoil hook
+repeat task.wait() until
+    not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
 
 local BanReasons = {
     "Unsafe function",
@@ -85,9 +89,23 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         AutoShoot = false,
         Trigger = {
             Enabled = false,
-            Priority = {"Head"},
+            WallCheck = true,
+            FieldOfView = 10,
+            Priority = {"Head","Neck","Chest","Abdomen","Hips"},
             Delay = 0.15,
-            HoldTime = 0
+            HoldTime = 0,
+            Prediction = {
+                Enabled = true,
+                Velocity = 1000,
+            },
+            Circle = {
+                Visible = true,
+                Transparency = 0.5,
+                Color = {1,1,1,0.5,false},
+                Thickness = 1,
+                NumSides = 100,
+                Filled = false
+            }
         },
         SilentAim = {
             Enabled = false,
@@ -112,7 +130,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             Priority = {"Head","Neck","Chest","Abdomen","Hips"},
             Prediction = {
                 Enabled = false,
-                Velocity = 1,
+                Velocity = 1000,
             },
             Circle = {
                 Visible = true,
@@ -125,13 +143,14 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         }
     },
     GameFeatures = {
-        Camera = {
+        WeaponModification = {
             Enabled = false,
             WeaponBob = 0,
             CameraBob = 0,
-            RecoilScale = 0
+            RecoilScale = 0,
+            BulletDrop = 0
         },
-        GunCustomization = {
+        WeaponCustomization = {
             Enabled = false,
             HideTextures = true,
             Color = {1,0.75,1,0.5,true},
@@ -196,6 +215,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
 local GetFPS = Parvus.Utilities.SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Parvus.Config.UI.Cursor)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.Aimbot)
+Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.Trigger)
 Parvus.Utilities.Drawing:FoVCircle(Parvus.Config.AimAssist.SilentAim)
 local Window = Parvus.Utilities.UI:Window({Name = "Parvus Hub — " .. Parvus.Current,Enabled = Parvus.Config.UI.Enabled,
 Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = UDim2.new(0.2,-248,0.5,-248)}) do
@@ -234,6 +254,13 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
+            AimbotSection:Divider({Text = "Prediction"})
+            AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
+            end})
+            AimbotSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
+            end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
         end
         local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
             AFoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Circle.Visible,Callback = function(Bool)
@@ -252,12 +279,37 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                 Parvus.Config.AimAssist.Aimbot.Circle.Thickness = Number
             end})
         end
+        local TFoVSection = AimAssistTab:Section({Name = "Trigger FoV Circle",Side = "Left"}) do
+            TFoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Circle.Visible,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.Circle.Visible = Bool
+            end})
+            TFoVSection:Toggle({Name = "Filled",Value = Parvus.Config.AimAssist.Trigger.Circle.Filled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.Circle.Filled = Bool
+            end})
+            TFoVSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.AimAssist.Trigger.Circle.Color,Callback = function(HSVAR)
+                Parvus.Config.AimAssist.Trigger.Circle.Color = HSVAR
+            end})
+            TFoVSection:Slider({Name = "NumSides",Min = 3,Max = 100,Value = Parvus.Config.AimAssist.Trigger.Circle.NumSides,Callback = function(Number)
+                Parvus.Config.AimAssist.Trigger.Circle.NumSides = Number
+            end})
+            TFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.Trigger.Circle.Thickness,Callback = function(Number)
+                Parvus.Config.AimAssist.Trigger.Circle.Thickness = Number
+            end})
+        end
+        --[[local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
+            MiscSection:Toggle({Name = "AutoShoot (Beta)",Value = Parvus.Config.AimAssist.AutoShoot,Callback = function(Bool)
+                Parvus.Config.AimAssist.AutoShoot = Bool
+            end}):ToolTip("Silent Aim will not work with this being toggled")
+        end]]
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.SilentAim.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.Enabled = Bool
             end}):Keybind({Key = Parvus.Config.Binds.SilentAim,Mouse = true,Callback = function(Bool,Key)
                 Parvus.Config.Binds.SilentAim = Key or "NONE"
             end})
+            SilentAimSection:Toggle({Name = "AutoShoot (Beta)",Value = Parvus.Config.AimAssist.AutoShoot,Callback = function(Bool)
+                Parvus.Config.AimAssist.AutoShoot = Bool
+            end}):ToolTip("Silent Aim will not work with this being toggled")
             SilentAimSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.SilentAim.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.WallCheck = Bool
             end})
@@ -302,26 +354,23 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                 Parvus.Config.AimAssist.SilentAim.Circle.Thickness = Number
             end})
         end
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Right"}) do
-            MiscSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
-            end}):ToolTip("Affects Only Aimbot")
-            MiscSection:Slider({Name = "Velocity",Min = 1,Max = 20,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
-            end}):ToolTip("Prediction Velocity")
-            MiscSection:Toggle({Name = "AutoShoot (Beta)",Value = Parvus.Config.AimAssist.AutoShoot,Callback = function(Bool)
-                Parvus.Config.AimAssist.AutoShoot = Bool
-            end}):ToolTip("Silent Aim will not work with this being toggled")
-            MiscSection:Toggle({Name = "Trigger (Beta)",Value = Parvus.Config.AimAssist.Trigger.Enabled,Callback = function(Bool)
+        local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
+            TriggerSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Trigger.Enabled = Bool
             end})
-            MiscSection:Slider({Name = "Delay",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Trigger.Delay,Callback = function(Number)
+            TriggerSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Trigger.WallCheck,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.WallCheck = Bool
+            end})
+            TriggerSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.Trigger.FieldOfView,Callback = function(Number)
+                Parvus.Config.AimAssist.Trigger.FieldOfView = Number
+            end})
+            TriggerSection:Slider({Name = "Delay",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Trigger.Delay,Callback = function(Number)
                 Parvus.Config.AimAssist.Trigger.Delay = Number
-            end}):ToolTip("Trigger Delay")
-            MiscSection:Slider({Name = "Hold Time",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Trigger.HoldTime,Callback = function(Number)
+            end})
+            TriggerSection:Slider({Name = "Hold Time",Min = 0,Max = 1,Precise = 2,Value = Parvus.Config.AimAssist.Trigger.HoldTime,Callback = function(Number)
                 Parvus.Config.AimAssist.Trigger.HoldTime = Number
-            end}):ToolTip("Trigger Hold Time")
-            MiscSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.Trigger.Priority,List = {
+            end})
+            TriggerSection:Dropdown({Name = "Priority",Default = Parvus.Config.AimAssist.Trigger.Priority,List = {
                 {Name = "Head",Mode = "Toggle",Callback = function(Selected)
                     Parvus.Config.AimAssist.Trigger.Priority = Selected
                 end},
@@ -337,7 +386,14 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                 {Name = "Hips",Mode = "Toggle",Callback = function(Selected)
                     Parvus.Config.AimAssist.Trigger.Priority = Selected
                 end}
-            }}):ToolTip("Trigger Priority")
+            }})
+            TriggerSection:Divider({Text = "Prediction"})
+            TriggerSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.Prediction.Enabled = Bool
+            end})
+            TriggerSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Trigger.Prediction.Velocity,Callback = function(Number)
+                Parvus.Config.AimAssist.Trigger.Prediction.Velocity = Number
+            end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -466,45 +522,48 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
     end
     local GameTab = Window:Tab({Name = Parvus.Current}) do
         local GCSection = GameTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            GCSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.GunCustomization.Enabled,Callback = function(Bool) 
-                Parvus.Config.GameFeatures.GunCustomization.Enabled = Bool
+            GCSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.WeaponCustomization.Enabled,Callback = function(Bool) 
+                Parvus.Config.GameFeatures.WeaponCustomization.Enabled = Bool
             end})
-            GCSection:Toggle({Name = "Hide Textures",Value = Parvus.Config.GameFeatures.GunCustomization.HideTextures,Callback = function(Bool) 
-                Parvus.Config.GameFeatures.GunCustomization.HideTextures = Bool
+            GCSection:Toggle({Name = "Hide Textures",Value = Parvus.Config.GameFeatures.WeaponCustomization.HideTextures,Callback = function(Bool) 
+                Parvus.Config.GameFeatures.WeaponCustomization.HideTextures = Bool
             end})
-            GCSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.GameFeatures.GunCustomization.Color,Callback = function(HSVAR)
-                Parvus.Config.GameFeatures.GunCustomization.Color = HSVAR
+            GCSection:Colorpicker({Name = "Color",HSVAR = Parvus.Config.GameFeatures.WeaponCustomization.Color,Callback = function(HSVAR)
+                Parvus.Config.GameFeatures.WeaponCustomization.Color = HSVAR
             end})
-            GCSection:Slider({Name = "Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = Parvus.Config.GameFeatures.GunCustomization.Reflectance,Callback = function(Number)
-                Parvus.Config.GameFeatures.GunCustomization.Reflectance = Number
+            GCSection:Slider({Name = "Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = Parvus.Config.GameFeatures.WeaponCustomization.Reflectance,Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponCustomization.Reflectance = Number
             end})
-            GCSection:Dropdown({Name = "Material",Default = {Parvus.Config.GameFeatures.GunCustomization.Material},List = {
+            GCSection:Dropdown({Name = "Material",Default = {Parvus.Config.GameFeatures.WeaponCustomization.Material},List = {
                 {Name = "SmoothPlastic",Mode = "Button",Callback = function()
-                    Parvus.Config.GameFeatures.GunCustomization.Material = "SmoothPlastic"
+                    Parvus.Config.GameFeatures.WeaponCustomization.Material = "SmoothPlastic"
                 end},
                 {Name = "ForceField",Mode = "Button",Callback = function()
-                    Parvus.Config.GameFeatures.GunCustomization.Material = "ForceField"
+                    Parvus.Config.GameFeatures.WeaponCustomization.Material = "ForceField"
                 end},
                 {Name = "Neon",Mode = "Button",Callback = function()
-                    Parvus.Config.GameFeatures.GunCustomization.Material = "Neon"
+                    Parvus.Config.GameFeatures.WeaponCustomization.Material = "Neon"
                 end},
                 {Name = "Glass",Mode = "Button",Callback = function()
-                    Parvus.Config.GameFeatures.GunCustomization.Material = "Glass"
+                    Parvus.Config.GameFeatures.WeaponCustomization.Material = "Glass"
                 end}
             }})
         end
-        local CMSection = GameTab:Section({Name = "Camera Modification",Side = "Left"}) do
-            CMSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.Camera.Enabled,Callback = function(Bool) 
-                Parvus.Config.GameFeatures.Camera.Enabled = Bool
+        local CMSection = GameTab:Section({Name = "Weapon Modification",Side = "Left"}) do
+            CMSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.WeaponModification.Enabled,Callback = function(Bool) 
+                Parvus.Config.GameFeatures.WeaponModification.Enabled = Bool
             end})
-            CMSection:Slider({Name = "Weapon Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.Camera.WeaponBob * 100,Unit = "%",Callback = function(Number)
-                Parvus.Config.GameFeatures.Camera.WeaponBob = Number / 100
+            CMSection:Slider({Name = "Weapon Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.WeaponBob * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.WeaponBob = Number / 100
             end})
-            CMSection:Slider({Name = "Camera Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.Camera.CameraBob * 100,Unit = "%",Callback = function(Number)
-                Parvus.Config.GameFeatures.Camera.CameraBob = Number / 100
+            CMSection:Slider({Name = "Camera Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.CameraBob * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.CameraBob = Number / 100
             end})
-            CMSection:Slider({Name = "Recoil Scale",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.Camera.RecoilScale * 100,Unit = "%",Callback = function(Number)
-                Parvus.Config.GameFeatures.Camera.RecoilScale = Number / 100
+            CMSection:Slider({Name = "Recoil Scale",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.RecoilScale * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.RecoilScale = Number / 100
+            end})
+            CMSection:Slider({Name = "Bullet Drop",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.BulletDrop * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.BulletDrop = Number / 100
             end})
         end
         local EnvSection = GameTab:Section({Name = "Environment",Side = "Left"}) do
@@ -553,7 +612,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             end}):Keybind({Key = Parvus.Config.Binds.Fly,Callback = function(Bool,Key)
                 Parvus.Config.Binds.Fly = Key or "NONE"
             end})
-            CharSection:Slider({Name = "Speed",Min = 10,Max = 150,Value = Parvus.Config.GameFeatures.Character.Fly.Speed,Callback = function(Number)
+            CharSection:Slider({Name = "Speed",Min = 10,Max = 100,Value = Parvus.Config.GameFeatures.Character.Fly.Speed,Callback = function(Number)
                 Parvus.Config.GameFeatures.Character.Fly.Speed = Number
             end})
             CharSection:Toggle({Name = "Anti-Aim",Value = Parvus.Config.GameFeatures.Character.AntiAim.Enabled,Callback = function(Bool) 
@@ -715,7 +774,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
     end
 end
 
-local WeaponConfigs = {}
+local DefaultRecoil = {}
 local Notify = Instance.new("BindableEvent")
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
@@ -723,18 +782,14 @@ BodyVelocity.MaxForce = Vector3.zero
 
 for Index,Config in pairs(getgc(true)) do
     if type(Config) == "table"
-    and rawget(Config,"Model")
-    and rawget(Config,"Slot") then
-        WeaponConfigs[Config.Model] = {}
-        if Config.Recoil and Config.Recoil.Default then
-            WeaponConfigs[Config.Model].Recoil = {}
-            WeaponConfigs[Config.Model].Recoil.WeaponScale = 
-            Config.Recoil.Default.WeaponScale
-            WeaponConfigs[Config.Model].Recoil.CameraScale = 
-            Config.Recoil.Default.CameraScale
-            WeaponConfigs[Config.Model].Recoil.RecoilScale =
-            Config.Recoil.Default.RecoilScale
-        end
+    and rawget(Config,"Recoil")
+    and type(Config.Recoil) == "table"
+    and Config.Recoil.Default then
+        DefaultRecoil[Config.Model] = {
+            WeaponScale = Config.Recoil.Default.WeaponScale,
+            CameraScale = Config.Recoil.Default.CameraScale,
+            RecoilScale = Config.Recoil.Default.RecoilScale
+        }
     end
 end
 
@@ -805,27 +860,28 @@ local function PlayerFly(Config)
 end
 
 local function UpdateConfigs()
-    local abc = nil
     for Index,Config in pairs(getgc(true)) do
         if type(Config) == "table"
         and rawget(Config,"Controller")
         and rawget(Config,"Model") then
             if Config.Recoil and Config.Recoil.Default and
-            WeaponConfigs[Config.Model] and WeaponConfigs[Config.Model].Recoil then
-                local CameraConfig = Parvus.Config.GameFeatures.Camera
-                local WeaponConfigs = WeaponConfigs[Config.Model].Recoil
+            DefaultRecoil[Config.Model] then
+                local Modified = Parvus.Config.GameFeatures.WeaponModification
+                if Modified.Enabled then
+                    local Default = DefaultRecoil[Config.Model]
 
-                Config.Recoil.Default.WeaponScale = CameraConfig.Enabled
-                and WeaponConfigs.WeaponScale * CameraConfig.WeaponBob
-                or WeaponConfigs.WeaponScale
+                    Config.Recoil.Default.WeaponScale = 
+                    Default.WeaponScale * Modified.WeaponBob
+                    or Default.WeaponScale
 
-                Config.Recoil.Default.CameraScale = CameraConfig.Enabled
-                and WeaponConfigs.CameraScale * CameraConfig.CameraBob
-                or WeaponConfigs.CameraScale
+                    Config.Recoil.Default.CameraScale = 
+                    Default.CameraScale * Modified.CameraBob
+                    or Default.CameraScale
 
-                Config.Recoil.Default.RecoilScale = CameraConfig.Enabled
-                and WeaponConfigs.RecoilScale * CameraConfig.RecoilScale
-                or WeaponConfigs.RecoilScale
+                    Config.Recoil.Default.RecoilScale = 
+                    Default.RecoilScale * Modified.RecoilScale
+                    or Default.RecoilScale
+                end
             end
         end
     end
@@ -890,62 +946,56 @@ end
 local function Trigger(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
-    for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character = Player.Character and Player.Character:FindFirstChild("Hitbox")
-        if Player ~= LocalPlayer and TeamCheck(Player) then
-            for Index, HumanoidPart in pairs(Config.Priority) do
-                local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox and iswindowactive() and WallCheck(true,Hitbox) and Raycast(
-                Camera.CFrame.Position,Camera.CFrame.LookVector * 1000,{Hitbox}) then
-                    task.wait(Config.Delay)
-                    mouse1press()
-                    task.wait(Config.HoldTime)
-                    mouse1release()
-                end
-            end
-        end
-    end
-end
-
-local function AutoShoot(Enabled)
-    if not Enabled then return end
-    local Camera = Workspace.CurrentCamera
-    local Distance = math.huge
+    local FieldOfView = Config.FieldOfView
     local ClosestHitbox = nil
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
         local Character = Player.Character and Player.Character:FindFirstChild("Hitbox")
         if Player ~= LocalPlayer and TeamCheck(Player) then
-            local Hitbox = Character and Character:FindFirstChild("Head")
-            if Hitbox then
-                local Magnitude = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                if Distance > Magnitude and WallCheck(false,Hitbox) then
-                    Distance = Magnitude
-                    ClosestHitbox = Hitbox
+            for Index, HumanoidPart in pairs(Config.Priority) do
+                local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
+                if Hitbox then
+                    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity) / Config.Prediction.Velocity
+                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
+                    local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox) then
+                        FieldOfView = Magnitude
+                        ClosestHitbox = Hitbox
+                    end
                 end
             end
         end
     end
 
+    if ClosestHitbox then
+        task.wait(Config.Delay)
+        mouse1press()
+        task.wait(Config.HoldTime)
+        mouse1release()
+    end
+end
+
+local function AutoShoot(Hitbox,Enabled)
+    if not Hitbox or not Enabled then return end
+
     local GunModel = FindGunModel()
-    if ClosestHitbox and GunModel
-    and LocalPlayer.Character
+    if GunModel and LocalPlayer.Character
     and LocalPlayer.Character:FindFirstChild("Backpack")
     and LocalPlayer.Character.Backpack:FindFirstChild("Items")
     and LocalPlayer.Character.Backpack.Items:FindFirstChild(GunModel.Name) then
         local GunFolder = LocalPlayer.Character.Backpack.Items[GunModel.Name]
         local Ammo = LocalPlayer.Character.Backpack.Items[GunModel.Name].State:FindFirstChild("Ammo")
         if Ammo and Ammo.Server.Value > 0 then
-            local ID = Toroiseshell.Projectiles:GetID()
-            local LookVector = Toroiseshell.Input.Reticle:LookVector()
-            Toroiseshell.Network:Fire("Item_Paintball","AltAim",GunFolder,true)
-            Toroiseshell.Network:Fire("Item_Paintball","Shoot",GunFolder,
-            Toroiseshell.Input.Reticle:GetPosition(),{{LookVector,ID}})
-            Toroiseshell.Network:Fire("Projectiles","__Hit",ID,
-            ClosestHitbox.Position,ClosestHitbox,LookVector,
-            ClosestHitbox.Parent.Parent)
+            local ID = Tortoiseshell.Projectiles:GetID()
+            local LookVector = Tortoiseshell.Input.Reticle:LookVector()
+            Tortoiseshell.Network:Fire("Item_Paintball","AltAim",GunFolder,true)
+            Tortoiseshell.Network:Fire("Item_Paintball","Shoot",GunFolder,
+            Tortoiseshell.Input.Reticle:GetPosition(),{{
+            (LookVector + Vector3.new(0, 2 / 1000, 0)).Unit,ID}})
+            Tortoiseshell.Network:Fire("Projectiles","__Hit",ID,
+            Hitbox[2].Position,Hitbox[2],LookVector,Hitbox[1])
         else
-            Toroiseshell.Network:Fire("Item_Paintball","Reload",GunFolder)
+            Tortoiseshell.Network:Fire("Item_Paintball","Reload",GunFolder)
         end
     end
 end
@@ -981,7 +1031,7 @@ local function AimAt(Hitbox,Config)
     Hitbox = Hitbox[2]
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity) / Config.Prediction.Velocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
@@ -1002,8 +1052,8 @@ __namecall = hookmetamethod(game, "__namecall", function(self, ...)
     return __namecall(self, ...)
 end)
 
-local OldNetworkFire = Toroiseshell.Network.Fire
-Toroiseshell.Network.Fire = function(self, ...)
+local OldNetworkFire = Tortoiseshell.Network.Fire
+Tortoiseshell.Network.Fire = function(self, ...)
     local args = {...}
 
     if SilentAim and Parvus.Config.AimAssist.SilentAim.Enabled
@@ -1012,6 +1062,7 @@ Toroiseshell.Network.Fire = function(self, ...)
             args[4] = SilentAim[2].Position
             args[5] = SilentAim[2]
             args[7] = SilentAim[1]
+
             local GunModel = FindGunModel()
             if GunModel then
                 Notify:Fire("Hit " .. SilentAim[1].Name .. " in the " .. SilentAim[2].Name .. " with " .. GunModel.Name)
@@ -1028,6 +1079,15 @@ Toroiseshell.Network.Fire = function(self, ...)
     end
 
     return OldNetworkFire(self, unpack(args))
+end
+
+local OldCastGeometryAndEnemies = Tortoiseshell.Raycast.CastGeometryAndEnemies
+Tortoiseshell.Raycast.CastGeometryAndEnemies = function(self, ...)
+    local args = {...}
+    if not checkcaller() and args[4] and args[4].Gravity and Parvus.Config.GameFeatures.WeaponModification.Enabled then
+        args[4].Gravity = args[4].Gravity * Parvus.Config.GameFeatures.WeaponModification.BulletDrop
+    end
+    return OldCastGeometryAndEnemies(self, unpack(args))
 end
 
 RunService.Heartbeat:Connect(function()
@@ -1047,9 +1107,9 @@ RunService.Heartbeat:Connect(function()
         })
     end
 
-    AutoShoot(Parvus.Config.AimAssist.AutoShoot)
+    AutoShoot(SilentAim,Parvus.Config.AimAssist.AutoShoot)
     PlayerFly(Parvus.Config.GameFeatures.Character.Fly)
-    CustomizeGun(Parvus.Config.GameFeatures.GunCustomization)
+    CustomizeGun(Parvus.Config.GameFeatures.WeaponCustomization)
     CustomizeArms(Parvus.Config.GameFeatures.ArmsCustomization)
 end)
 
