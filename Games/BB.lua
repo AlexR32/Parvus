@@ -8,8 +8,8 @@ local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot, SilentAim, Tortoiseshell = false,
-nil, require(ReplicatedStorage.TS)
+local Aimbot, SilentAim, Tortoiseshell =
+false, nil, require(ReplicatedStorage.TS)
 
 -- Very hacky method to fix my recoil hook
 repeat task.wait() until
@@ -96,7 +96,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             HoldTime = 0,
             Prediction = {
                 Enabled = true,
-                Velocity = 1000,
+                Velocity = 1600,
             },
             Circle = {
                 Visible = true,
@@ -130,7 +130,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             Priority = {"Head","Neck","Chest","Abdomen","Hips"},
             Prediction = {
                 Enabled = false,
-                Velocity = 1000,
+                Velocity = 1600,
             },
             Circle = {
                 Visible = true,
@@ -145,8 +145,8 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     GameFeatures = {
         WeaponModification = {
             Enabled = false,
-            WeaponBob = 0,
-            CameraBob = 0,
+            WeaponScale = 0,
+            CameraScale = 0,
             RecoilScale = 0,
             BulletDrop = 0
         },
@@ -296,11 +296,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                 Parvus.Config.AimAssist.Trigger.Circle.Thickness = Number
             end})
         end
-        --[[local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
-            MiscSection:Toggle({Name = "AutoShoot (Beta)",Value = Parvus.Config.AimAssist.AutoShoot,Callback = function(Bool)
-                Parvus.Config.AimAssist.AutoShoot = Bool
-            end}):ToolTip("Silent Aim will not work with this being toggled")
-        end]]
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.SilentAim.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.Enabled = Bool
@@ -550,14 +545,15 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             }})
         end
         local CMSection = GameTab:Section({Name = "Weapon Modification",Side = "Left"}) do
+            CMSection:Label({Text = "Respawn to make it work"})
             CMSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.WeaponModification.Enabled,Callback = function(Bool) 
                 Parvus.Config.GameFeatures.WeaponModification.Enabled = Bool
             end})
-            CMSection:Slider({Name = "Weapon Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.WeaponBob * 100,Unit = "%",Callback = function(Number)
-                Parvus.Config.GameFeatures.WeaponModification.WeaponBob = Number / 100
+            CMSection:Slider({Name = "Weapon Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.WeaponScale * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.WeaponScale = Number / 100
             end})
-            CMSection:Slider({Name = "Camera Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.CameraBob * 100,Unit = "%",Callback = function(Number)
-                Parvus.Config.GameFeatures.WeaponModification.CameraBob = Number / 100
+            CMSection:Slider({Name = "Camera Shake",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.CameraScale * 100,Unit = "%",Callback = function(Number)
+                Parvus.Config.GameFeatures.WeaponModification.CameraScale = Number / 100
             end})
             CMSection:Slider({Name = "Recoil Scale",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.RecoilScale * 100,Unit = "%",Callback = function(Number)
                 Parvus.Config.GameFeatures.WeaponModification.RecoilScale = Number / 100
@@ -774,13 +770,13 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
     end
 end
 
-local DefaultRecoil = {}
+--local DefaultRecoil = {}
 local Notify = Instance.new("BindableEvent")
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
 BodyVelocity.MaxForce = Vector3.zero
 
-for Index,Config in pairs(getgc(true)) do
+--[[for Index,Config in pairs(getgc(true)) do
     if type(Config) == "table"
     and rawget(Config,"Recoil")
     and type(Config.Recoil) == "table"
@@ -791,7 +787,7 @@ for Index,Config in pairs(getgc(true)) do
             RecoilScale = Config.Recoil.Default.RecoilScale
         }
     end
-end
+end]]
 
 for Index,Property in pairs({"ExposureCompensation"}) do
     if Parvus.Config.GameFeatures.Environment.Enabled then
@@ -859,33 +855,34 @@ local function PlayerFly(Config)
     end
 end
 
-local function UpdateConfigs()
+--[[
+-- this shit is laggy as hell dont use in your scripts bruh
+local function UpdateRecoil()
     for Index,Config in pairs(getgc(true)) do
         if type(Config) == "table"
         and rawget(Config,"Controller")
         and rawget(Config,"Model") then
             if Config.Recoil and Config.Recoil.Default and
-            DefaultRecoil[Config.Model] then
+                DefaultRecoil[Config.Model] then
+
                 local Modified = Parvus.Config.GameFeatures.WeaponModification
-                if Modified.Enabled then
-                    local Default = DefaultRecoil[Config.Model]
+                local Default = DefaultRecoil[Config.Model]
 
-                    Config.Recoil.Default.WeaponScale = 
-                    Default.WeaponScale * Modified.WeaponBob
-                    or Default.WeaponScale
+                Config.Recoil.Default.WeaponScale = Modified.Enabled
+                and Default.WeaponScale * Modified.WeaponScale
+                or Default.WeaponScale
 
-                    Config.Recoil.Default.CameraScale = 
-                    Default.CameraScale * Modified.CameraBob
-                    or Default.CameraScale
+                Config.Recoil.Default.CameraScale = Modified.Enabled
+                and Default.CameraScale * Modified.CameraScale
+                or Default.CameraScale
 
-                    Config.Recoil.Default.RecoilScale = 
-                    Default.RecoilScale * Modified.RecoilScale
-                    or Default.RecoilScale
-                end
+                Config.Recoil.Default.RecoilScale = Modified.Enabled
+                and Default.RecoilScale * Modified.RecoilScale
+                or Default.RecoilScale
             end
         end
     end
-end
+end]]
 
 local function CustomizeGun(Config)
     if not Config.Enabled then return end
@@ -1031,7 +1028,7 @@ local function AimAt(Hitbox,Config)
     Hitbox = Hitbox[2]
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity) / Config.Prediction.Velocity
+    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / Config.Prediction.Velocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
@@ -1081,11 +1078,29 @@ Tortoiseshell.Network.Fire = function(self, ...)
     return OldNetworkFire(self, unpack(args))
 end
 
+local OldGetConfig = Tortoiseshell.Items.GetConfig
+Tortoiseshell.Items.GetConfig = function(self, weapon)
+    local Config = OldGetConfig(self, weapon)
+    local Modified = Parvus.Config.GameFeatures.WeaponModification
+    if Modified.Enabled and Config.Recoil and Config.Recoil.Default then
+        Config.Recoil.Default.WeaponScale = 
+        Config.Recoil.Default.WeaponScale * Modified.WeaponScale
+
+        Config.Recoil.Default.CameraScale = 
+        Config.Recoil.Default.CameraScale * Modified.CameraScale
+
+        Config.Recoil.Default.RecoilScale = 
+        Config.Recoil.Default.RecoilScale * Modified.RecoilScale
+    end
+    return Config
+end
+
 local OldCastGeometryAndEnemies = Tortoiseshell.Raycast.CastGeometryAndEnemies
 Tortoiseshell.Raycast.CastGeometryAndEnemies = function(self, ...)
     local args = {...}
-    if not checkcaller() and args[4] and args[4].Gravity and Parvus.Config.GameFeatures.WeaponModification.Enabled then
-        args[4].Gravity = args[4].Gravity * Parvus.Config.GameFeatures.WeaponModification.BulletDrop
+    local Modified = Parvus.Config.GameFeatures.WeaponModification
+    if Modified.Enabled and args[4] and args[4].Gravity then
+        args[4].Gravity = args[4].Gravity * Modified.BulletDrop
     end
     return OldCastGeometryAndEnemies(self, unpack(args))
 end
@@ -1116,9 +1131,10 @@ end)
 Parvus.Utilities.NewThreadLoop(0,function()
     Trigger(Parvus.Config.AimAssist.Trigger)
 end)
+--[[
 Parvus.Utilities.NewThreadLoop(1,function()
-    UpdateConfigs()
-end)
+    UpdateRecoil()
+end)]]
 
 for Index, Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then

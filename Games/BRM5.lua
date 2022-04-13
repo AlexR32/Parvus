@@ -13,8 +13,8 @@ local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot, SilentAim, NPCFolder,
-GroundTip, AircraftTip = false, nil,
-Workspace.Bots, nil, nil
+GroundTip, AircraftTip, PredictVelocity = 
+false, nil, Workspace.Bots, nil, nil, 1000
 
 Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     PlayerESP = {
@@ -146,7 +146,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             Priority = {"Head","HumanoidRootPart"},
             Prediction = {
                 Enabled = false,
-                Velocity = 1,
+                Velocity = 2000,
             },
             Circle = {
                 Visible = true,
@@ -223,6 +223,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.Enabled = Bool
+            end})
+            AimbotSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
             end})
             AimbotSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Aimbot.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.WallCheck = Bool
@@ -305,12 +308,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             end})
         end
         local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Right"}) do
-            MiscSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
-            end}):ToolTip("Affects Only Aimbot")
-            MiscSection:Slider({Name = "Velocity",Min = 1,Max = 20,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
-            end}):ToolTip("Prediction Velocity")
             MiscSection:Dropdown({Name = "Target Mode",Default = {Parvus.Config.AimAssist.TargetMode},List = {
                 {Name = "Player",Mode = "Button",Callback = function()
                     Parvus.Config.AimAssist.TargetMode = "Player"
@@ -844,7 +841,7 @@ local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / PredictVelocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
@@ -951,8 +948,9 @@ if FirearmInventory and firearmDischargeOld and firearmNewOld then
             args[1]._config.Tune.RPM = Parvus.Config.GameFeatures.RapidFireValue
         end
         if Parvus.Config.GameFeatures.InstantHit then
-            args[1]._config.Tune.Velocity = 9e9
+            args[1]._config.Tune.Velocity = math.huge
         end
+        PredictVelocity = args[1]._config.Tune.Velocity
         return firearmDischargeOld(...)
     end
     FirearmInventory.new = function(...)
@@ -1129,16 +1127,10 @@ RunService.Heartbeat:Connect(function()
 end)
 
 for Index, NPC in pairs(NPCFolder:GetChildren()) do
-    --if NPC:WaitForChild("HumanoidRootPart")
-    --and not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) then
-        Parvus.Utilities.Drawing:AddESP("NPC", NPC, Parvus.Config.NPCESP)
-    --end
+    Parvus.Utilities.Drawing:AddESP("NPC", NPC, Parvus.Config.NPCESP)
 end
 NPCFolder.ChildAdded:Connect(function(NPC)
-    --if NPC:WaitForChild("HumanoidRootPart")
-    --and not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) then
-        Parvus.Utilities.Drawing:AddESP("NPC", NPC, Parvus.Config.NPCESP)
-    --end
+    Parvus.Utilities.Drawing:AddESP("NPC", NPC, Parvus.Config.NPCESP)
 end)
 NPCFolder.ChildRemoved:Connect(function(NPC)
     Parvus.Utilities.Drawing:RemoveESP(NPC)

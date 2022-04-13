@@ -85,7 +85,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
             Priority = {"Head","Torso"},
             Prediction = {
                 Enabled = false,
-                Velocity = 1,
+                Velocity = 2000,
             },
             Circle = {
                 Visible = true,
@@ -158,6 +158,13 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
+            AimbotSection:Divider({Text = "Prediction"})
+            AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
+            end})
+            AimbotSection:Slider({Name = "Velocity",Min = 100,Max = 5000,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
+            end})
         end
         local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
             AFoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Circle.Visible,Callback = function(Bool)
@@ -216,14 +223,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             SAFoVSection:Slider({Name = "Thickness",Min = 1,Max = 10,Value = Parvus.Config.AimAssist.SilentAim.Circle.Thickness,Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.Circle.Thickness = Number
             end})
-        end
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Right"}) do
-            MiscSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
-            end}):ToolTip("Affects Only Aimbot")
-            MiscSection:Slider({Name = "Velocity",Min = 1,Max = 20,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
-            end}):ToolTip("Prediction Velocity")
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -544,7 +543,7 @@ local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity * (Config.Prediction.Velocity / 10)) / 100
+    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / Config.Prediction.Velocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,

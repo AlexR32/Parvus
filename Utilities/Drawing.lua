@@ -37,7 +37,6 @@ function NPCManager(NPC)
     return NPC, HumanoidRootPart or false,
     Humanoid and Humanoid.Health > 0 or false,
     true,Color3.new(1,1,1)
-    
 end
 
 local function GetDistanceFromCamera(Position)
@@ -138,8 +137,10 @@ elseif game.GameId == 1054526971 then
     function NPCManager(NPC)
         local HumanoidRootPart = NPC:FindFirstChild("HumanoidRootPart")
         local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
+        local RootRigAttachment = HumanoidRootPart:FindFirstChild("RootRigAttachment")
         return NPC, HumanoidRootPart or false, Humanoid and Humanoid.Health > 0 or false,
-        HumanoidRootPart and not HumanoidRootPart:FindFirstChildWhichIsA("ProximityPrompt", true),
+        HumanoidRootPart and RootRigAttachment and not
+        RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt"),
         Color3.new(1,1,1)
     end
 elseif game.GameId == 1168263273 then
