@@ -8,8 +8,8 @@ local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot, SilentAim, Tortoiseshell =
-false, nil, require(ReplicatedStorage.TS)
+local Aimbot, SilentAim, PredictedVelocity, Tortoiseshell
+ = false, nil, 1600, require(ReplicatedStorage.TS)
 
 -- Very hacky method to fix my recoil hook
 repeat task.wait() until
@@ -224,6 +224,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.Enabled = Bool
             end})
+            AimbotSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
+            end})
             AimbotSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Aimbot.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.WallCheck = Bool
             end})
@@ -254,6 +257,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
+            --[[
             AimbotSection:Divider({Text = "Prediction"})
             AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
@@ -261,6 +265,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             AimbotSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
                 Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
             end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
+            ]]
         end
         local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
             AFoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Circle.Visible,Callback = function(Bool)
@@ -353,6 +358,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             TriggerSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Trigger.Enabled = Bool
             end})
+            TriggerSection:Toggle({Name = "Prediction",Value = Parvus.Config.AimAssist.Trigger.Prediction.Enabled,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.Prediction.Enabled = Bool
+            end})
             TriggerSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Trigger.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Trigger.WallCheck = Bool
             end})
@@ -382,6 +390,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Trigger.Priority = Selected
                 end}
             }})
+            --[[
             TriggerSection:Divider({Text = "Prediction"})
             TriggerSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Prediction.Enabled,Callback = function(Bool)
                 Parvus.Config.AimAssist.Trigger.Prediction.Enabled = Bool
@@ -389,6 +398,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             TriggerSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Trigger.Prediction.Velocity,Callback = function(Number)
                 Parvus.Config.AimAssist.Trigger.Prediction.Velocity = Number
             end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
+            ]]
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -545,7 +555,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             }})
         end
         local CMSection = GameTab:Section({Name = "Weapon Modification",Side = "Left"}) do
-            CMSection:Label({Text = "Respawn to make it work"})
             CMSection:Toggle({Name = "Enabled",Value = Parvus.Config.GameFeatures.WeaponModification.Enabled,Callback = function(Bool) 
                 Parvus.Config.GameFeatures.WeaponModification.Enabled = Bool
             end})
@@ -561,6 +570,7 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             CMSection:Slider({Name = "Bullet Drop",Min = 0,Max = 100,Value = Parvus.Config.GameFeatures.WeaponModification.BulletDrop * 100,Unit = "%",Callback = function(Number)
                 Parvus.Config.GameFeatures.WeaponModification.BulletDrop = Number / 100
             end})
+            CMSection:Label({Text = "Respawn to make it work"})
         end
         local EnvSection = GameTab:Section({Name = "Environment",Side = "Left"}) do
             EnvSection:Toggle({Name = "Enable",Value = Parvus.Config.GameFeatures.Environment.Enabled,Callback = function(Bool)
@@ -1028,7 +1038,7 @@ local function AimAt(Hitbox,Config)
     Hitbox = Hitbox[2]
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / Config.Prediction.Velocity
+    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / PredictedVelocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
@@ -1076,6 +1086,16 @@ Tortoiseshell.Network.Fire = function(self, ...)
     end
 
     return OldNetworkFire(self, unpack(args))
+end
+
+local OldInitProjectile = Tortoiseshell.Projectiles.InitProjectile
+local Projectiles = getupvalue(OldInitProjectile,1)
+Tortoiseshell.Projectiles.InitProjectile = function(self, ...)
+    local args = {...}
+    if args[4] == LocalPlayer.Character then
+        PredictedVelocity = Projectiles[args[1]].Speed
+    end
+    return OldInitProjectile(self, ...)
 end
 
 local OldGetConfig = Tortoiseshell.Items.GetConfig

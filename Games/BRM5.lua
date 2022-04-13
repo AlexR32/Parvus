@@ -13,7 +13,7 @@ local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot, SilentAim, NPCFolder,
-GroundTip, AircraftTip, PredictVelocity = 
+GroundTip, AircraftTip, PredictedVelocity = 
 false, nil, Workspace.Bots, nil, nil, 1000
 
 Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
@@ -841,7 +841,7 @@ local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / PredictVelocity
+    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / PredictedVelocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
@@ -948,9 +948,9 @@ if FirearmInventory and firearmDischargeOld and firearmNewOld then
             args[1]._config.Tune.RPM = Parvus.Config.GameFeatures.RapidFireValue
         end
         if Parvus.Config.GameFeatures.InstantHit then
-            args[1]._config.Tune.Velocity = math.huge
+            args[1]._config.Tune.Velocity = 9e9
         end
-        PredictVelocity = args[1]._config.Tune.Velocity
+        PredictedVelocity = args[1]._config.Tune.Velocity
         return firearmDischargeOld(...)
     end
     FirearmInventory.new = function(...)
@@ -1028,6 +1028,7 @@ if AircraftMovement and aircraftDischargeOld then
         if Parvus.Config.GameFeatures.InstantHit then
             args[1]._tune.Velocity = 9e9
         end
+        PredictedVelocity = args[1]._tune.Velocity
         AircraftTip = args[1]._tip
         return aircraftDischargeOld(...)
     end
@@ -1049,6 +1050,7 @@ if TurretMovement and turretOld then
         if Parvus.Config.GameFeatures.InstantHit then
             args[1]._tune.Velocity = 9e9
         end
+        PredictedVelocity = args[1]._tune.Velocity
         GroundTip = args[1]._tip
         return turretOld(...)
     end
