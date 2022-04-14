@@ -137,10 +137,11 @@ elseif game.GameId == 1054526971 then
     function NPCManager(NPC)
         local HumanoidRootPart = NPC:FindFirstChild("HumanoidRootPart")
         local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
-        local RootRigAttachment = HumanoidRootPart:FindFirstChild("RootRigAttachment")
+        local RootRigAttachment = HumanoidRootPart
+        and HumanoidRootPart:FindFirstChild("RootRigAttachment")
+
         return NPC, HumanoidRootPart or false, Humanoid and Humanoid.Health > 0 or false,
-        HumanoidRootPart and RootRigAttachment and not
-        RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt"),
+        RootRigAttachment and RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt") or false,
         Color3.new(1,1,1)
     end
 elseif game.GameId == 1168263273 then

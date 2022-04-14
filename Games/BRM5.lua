@@ -800,7 +800,9 @@ local function GetHitbox(Config)
 
     if Parvus.Config.AimAssist.TargetMode == "NPC" then
         for Index, NPC in pairs(NPCFolder:GetChildren()) do
-            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and (NPC:FindFirstChildOfClass("Humanoid") and NPC:FindFirstChildOfClass("Humanoid").Health > 0) then
+            local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
+            local IsAlive = Humanoid and Humanoid.Health > 0
+            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
                     if Hitbox then
@@ -817,8 +819,9 @@ local function GetHitbox(Config)
     elseif Parvus.Config.AimAssist.TargetMode == "Player" then
         for Index, Player in pairs(PlayerService:GetPlayers()) do
             local Character = Player.Character
-            local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-            if Player ~= LocalPlayer and Health and TeamCheck(Player) then
+            local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+            local IsAlive = Humanoid and Humanoid.Health > 0
+            if Player ~= LocalPlayer and IsAlive and TeamCheck(Player) then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                     if Hitbox then
@@ -948,7 +951,7 @@ if FirearmInventory and firearmDischargeOld and firearmNewOld then
             args[1]._config.Tune.RPM = Parvus.Config.GameFeatures.RapidFireValue
         end
         if Parvus.Config.GameFeatures.InstantHit then
-            args[1]._config.Tune.Velocity = 9e9
+            args[1]._config.Tune.Velocity = 1e6
         end
         PredictedVelocity = args[1]._config.Tune.Velocity
         return firearmDischargeOld(...)
@@ -1026,7 +1029,7 @@ if AircraftMovement and aircraftDischargeOld then
     AircraftMovement._discharge = function(...)
         local args = {...}
         if Parvus.Config.GameFeatures.InstantHit then
-            args[1]._tune.Velocity = 9e9
+            args[1]._tune.Velocity = 1e6
         end
         PredictedVelocity = args[1]._tune.Velocity
         AircraftTip = args[1]._tip
@@ -1048,7 +1051,7 @@ if TurretMovement and turretOld then
     TurretMovement._discharge = function(...)
         local args = {...}
         if Parvus.Config.GameFeatures.InstantHit then
-            args[1]._tune.Velocity = 9e9
+            args[1]._tune.Velocity = 1e6
         end
         PredictedVelocity = args[1]._tune.Velocity
         GroundTip = args[1]._tip

@@ -6,7 +6,8 @@ local Workspace = game:GetService("Workspace")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot, SilentAim = false, nil
+local Aimbot, SilentAim
+= false, nil
 
 Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
     PlayerESP = {
@@ -519,8 +520,9 @@ local function GetHitbox(Config)
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
         local Character = Player.Character
-        local Health = Character and (Character:FindFirstChildOfClass("Humanoid") and Character:FindFirstChildOfClass("Humanoid").Health > 0)
-        if Player ~= LocalPlayer and Health and TeamCheck(Player) then
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+        local IsAlive = Humanoid and Humanoid.Health > 0
+        if Player ~= LocalPlayer and IsAlive and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 if Hitbox then

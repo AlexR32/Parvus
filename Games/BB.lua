@@ -8,12 +8,8 @@ local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot, SilentAim, PredictedVelocity, Tortoiseshell
- = false, nil, 1600, require(ReplicatedStorage.TS)
-
--- Very hacky method to fix my recoil hook
-repeat task.wait() until
-    not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
+local Aimbot, SilentAim, PredictedVelocity, PredictedGravity, GravityCorrection, Tortoiseshell
+= false, nil, 1600, 150, 2, require(ReplicatedStorage.TS)
 
 local BanReasons = {
     "Unsafe function",
@@ -257,15 +253,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Aimbot.Priority = Selected
                 end}
             }})
-            --[[
-            AimbotSection:Divider({Text = "Prediction"})
-            AimbotSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Prediction.Enabled,Callback = function(Bool)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Enabled = Bool
-            end})
-            AimbotSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Aimbot.Prediction.Velocity,Callback = function(Number)
-                Parvus.Config.AimAssist.Aimbot.Prediction.Velocity = Number
-            end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
-            ]]
         end
         local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
             AFoVSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Aimbot.Circle.Visible,Callback = function(Bool)
@@ -390,15 +377,6 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
                     Parvus.Config.AimAssist.Trigger.Priority = Selected
                 end}
             }})
-            --[[
-            TriggerSection:Divider({Text = "Prediction"})
-            TriggerSection:Toggle({Name = "Enabled",Value = Parvus.Config.AimAssist.Trigger.Prediction.Enabled,Callback = function(Bool)
-                Parvus.Config.AimAssist.Trigger.Prediction.Enabled = Bool
-            end})
-            TriggerSection:Slider({Name = "Velocity",Min = 200,Max = 2800,Value = Parvus.Config.AimAssist.Trigger.Prediction.Velocity,Callback = function(Number)
-                Parvus.Config.AimAssist.Trigger.Prediction.Velocity = Number
-            end}):ToolTip("Throwing Knife - 200\nLaser, MagicOrb, Snowball - 1000\nArrow - 1400\nIcicle,MagicPaintball,Paintball - 1600\nBolt - 2000\nPaintball_Rifle - 2200\nPaintball_Sniper - 2800")
-            ]]
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -1034,16 +1012,21 @@ local function GetHitbox(Config)
 end
 
 local function AimAt(Hitbox,Config)
-    if not Hitbox then return end
+	if not Hitbox then return end
     Hitbox = Hitbox[2]
-    local Camera = Workspace.CurrentCamera
-    local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / PredictedVelocity
-    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
-    mousemoverel(
-        (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
-        (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
-    )
+	local Camera = Workspace.CurrentCamera
+	local Mouse = UserInputService:GetMouseLocation()
+
+	local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+	local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity,0) / GravityCorrection
+    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
+
+	local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
+	and Hitbox.Position + HitboxGravityCorrection + HitboxVelocityCorrection or Hitbox.Position)
+	mousemoverel(
+		(HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
+		(HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
+	)
 end
 
 local __namecall
@@ -1094,6 +1077,7 @@ Tortoiseshell.Projectiles.InitProjectile = function(self, ...)
     local args = {...}
     if args[4] == LocalPlayer.Character then
         PredictedVelocity = Projectiles[args[1]].Speed
+        PredictedGravity = Projectiles[args[1]].Gravity
     end
     return OldInitProjectile(self, ...)
 end
@@ -1102,6 +1086,10 @@ local OldGetConfig = Tortoiseshell.Items.GetConfig
 Tortoiseshell.Items.GetConfig = function(self, weapon)
     local Config = OldGetConfig(self, weapon)
     local Modified = Parvus.Config.GameFeatures.WeaponModification
+    if Config.Proejctile and Config.Proejctile.GravityCorrection
+    and Config.Controller == "Paintball" then
+        GravityCorrection = Config.Proejctile.GravityCorrection
+    end
     if Modified.Enabled and Config.Recoil and Config.Recoil.Default then
         Config.Recoil.Default.WeaponScale = 
         Config.Recoil.Default.WeaponScale * Modified.WeaponScale
@@ -1151,10 +1139,6 @@ end)
 Parvus.Utilities.NewThreadLoop(0,function()
     Trigger(Parvus.Config.AimAssist.Trigger)
 end)
---[[
-Parvus.Utilities.NewThreadLoop(1,function()
-    UpdateRecoil()
-end)]]
 
 for Index, Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then
