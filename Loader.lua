@@ -37,9 +37,7 @@ end
 Parvus.Utilities.NewThreadLoop = function(Wait,Function)
     coroutine.wrap(function()
         while task.wait(Wait) do
-            local success, error = pcall(Function)--()
-                --Function()
-            --end)
+            local success, error = pcall(Function)
             if not success then
                 warn("thread error happend: " .. error)
             end

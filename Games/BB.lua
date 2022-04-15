@@ -86,6 +86,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         Trigger = {
             Enabled = false,
             WallCheck = true,
+            DynamicFoV = false,
             FieldOfView = 10,
             Priority = {"Head","Neck","Chest","Abdomen","Hips"},
             Delay = 0.15,
@@ -106,6 +107,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         SilentAim = {
             Enabled = false,
             WallCheck = false,
+            DynamicFoV = false,
             HitChance = 100,
             FieldOfView = 50,
             Priority = {"Head"},
@@ -121,6 +123,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         Aimbot = {
             Enabled = false,
             WallCheck = false,
+            DynamicFoV = false,
             Sensitivity = 0.25,
             FieldOfView = 100,
             Priority = {"Head","Neck","Chest","Abdomen","Hips"},
@@ -226,6 +229,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             AimbotSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Aimbot.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.WallCheck = Bool
             end})
+            AimbotSection:Toggle({Name = "Dynamic FoV",Value = Parvus.Config.AimAssist.Aimbot.DynamicFoV,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.DynamicFoV = Bool
+            end})
             AimbotSection:Keybind({Name = "Keybind",Key = Parvus.Config.Binds.Aimbot,Mouse = true,Callback = function(Bool,Key)
                 Parvus.Config.Binds.Aimbot = Key or "NONE"
                 Aimbot = Parvus.Config.AimAssist.Aimbot.Enabled and Bool
@@ -300,6 +306,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             SilentAimSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.SilentAim.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.WallCheck = Bool
             end})
+            SilentAimSection:Toggle({Name = "Dynamic FoV",Value = Parvus.Config.AimAssist.SilentAim.DynamicFoV,Callback = function(Bool)
+                Parvus.Config.AimAssist.SilentAim.DynamicFoV = Bool
+            end})
             SilentAimSection:Slider({Name = "Hit Chance",Min = 0,Max = 100,Value = Parvus.Config.AimAssist.SilentAim.HitChance,Unit = "%",Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.HitChance = Number
             end})
@@ -350,6 +359,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             end})
             TriggerSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Trigger.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Trigger.WallCheck = Bool
+            end})
+            TriggerSection:Toggle({Name = "Dynamic FoV",Value = Parvus.Config.AimAssist.Trigger.DynamicFoV,Callback = function(Bool)
+                Parvus.Config.AimAssist.Trigger.DynamicFoV = Bool
             end})
             TriggerSection:Slider({Name = "Field of View",Min = 0,Max = 500,Value = Parvus.Config.AimAssist.Trigger.FieldOfView,Callback = function(Number)
                 Parvus.Config.AimAssist.Trigger.FieldOfView = Number
@@ -999,7 +1011,8 @@ local function GetHitbox(Config)
                 if Hitbox then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox) then
+                    FieldOfView = Config.DynamicFoV and (120 - Workspace.CurrentCamera.FieldOfView) * 4 or FieldOfView
+                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
                         FieldOfView = Magnitude
                         ClosestHitbox = {Player,Hitbox}
                     end
@@ -1012,21 +1025,21 @@ local function GetHitbox(Config)
 end
 
 local function AimAt(Hitbox,Config)
-	if not Hitbox then return end
+    if not Hitbox then return end
     Hitbox = Hitbox[2]
-	local Camera = Workspace.CurrentCamera
-	local Mouse = UserInputService:GetMouseLocation()
+    local Camera = Workspace.CurrentCamera
+    local Mouse = UserInputService:GetMouseLocation()
 
-	local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-	local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity,0) / GravityCorrection
+    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+    local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity,0) / 2 --GravityCorrection
     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
 
-	local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
-	and Hitbox.Position + HitboxGravityCorrection + HitboxVelocityCorrection or Hitbox.Position)
-	mousemoverel(
-		(HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
-		(HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
-	)
+    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
+    and Hitbox.Position + HitboxGravityCorrection + HitboxVelocityCorrection or Hitbox.Position)
+    mousemoverel(
+        (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
+        (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
+    )
 end
 
 local __namecall
@@ -1086,10 +1099,10 @@ local OldGetConfig = Tortoiseshell.Items.GetConfig
 Tortoiseshell.Items.GetConfig = function(self, weapon)
     local Config = OldGetConfig(self, weapon)
     local Modified = Parvus.Config.GameFeatures.WeaponModification
-    if Config.Proejctile and Config.Proejctile.GravityCorrection
-    and Config.Controller == "Paintball" then
-        GravityCorrection = Config.Proejctile.GravityCorrection
-    end
+    --if Config.Proejctile and Config.Proejctile.GravityCorrection
+    --and Config.Controller == "Paintball" then
+        --GravityCorrection = Config.Proejctile.GravityCorrection
+    --end
     if Modified.Enabled and Config.Recoil and Config.Recoil.Default then
         Config.Recoil.Default.WeaponScale = 
         Config.Recoil.Default.WeaponScale * Modified.WeaponScale

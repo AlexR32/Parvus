@@ -66,6 +66,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         SilentAim = {
             Enabled = false,
             WallCheck = false,
+            DynamicFoV = false,
             HitChance = 100,
             FieldOfView = 50,
             Priority = {"Head"},
@@ -81,6 +82,7 @@ Parvus.Config = Parvus.Utilities.Config:ReadJSON(Parvus.Current, {
         Aimbot = {
             Enabled = false,
             WallCheck = false,
+            DynamicFoV = false,
             Sensitivity = 0.25,
             FieldOfView = 100,
             Priority = {"Head","HumanoidRootPart"},
@@ -141,6 +143,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             AimbotSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.Aimbot.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.Aimbot.WallCheck = Bool
             end})
+            AimbotSection:Toggle({Name = "Dynamic FoV",Value = Parvus.Config.AimAssist.Aimbot.DynamicFoV,Callback = function(Bool)
+                Parvus.Config.AimAssist.Aimbot.DynamicFoV = Bool
+            end})
             AimbotSection:Keybind({Name = "Keybind",Key = Parvus.Config.Binds.Aimbot,Mouse = true,Callback = function(Bool,Key)
                 Parvus.Config.Binds.Aimbot = Key or "NONE"
                 Aimbot = Parvus.Config.AimAssist.Aimbot.Enabled and Bool
@@ -192,6 +197,9 @@ Color = Parvus.Utilities.Config:TableToColor(Parvus.Config.UI.Color),Position = 
             end})
             SilentAimSection:Toggle({Name = "Visibility Check",Value = Parvus.Config.AimAssist.SilentAim.WallCheck,Callback = function(Bool)
                 Parvus.Config.AimAssist.SilentAim.WallCheck = Bool
+            end})
+            SilentAimSection:Toggle({Name = "Dynamic FoV",Value = Parvus.Config.AimAssist.SilentAim.DynamicFoV,Callback = function(Bool)
+                Parvus.Config.AimAssist.SilentAim.DynamicFoV = Bool
             end})
             SilentAimSection:Slider({Name = "Hit Chance",Min = 0,Max = 100,Value = Parvus.Config.AimAssist.SilentAim.HitChance,Unit = "%",Callback = function(Number)
                 Parvus.Config.AimAssist.SilentAim.HitChance = Number
@@ -528,7 +536,8 @@ local function GetHitbox(Config)
                 if Hitbox then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox,Character) then
+                    FieldOfView = Config.DynamicFoV and (120 - Workspace.CurrentCamera.FieldOfView) * 4 or FieldOfView
+                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
                         FieldOfView = Magnitude
                         ClosestHitbox = Hitbox
                     end
@@ -544,8 +553,12 @@ local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-    local HitboxPrediction = (Hitbox.AssemblyLinearVelocity * (Hitbox.Position - Camera.CFrame.Position).Magnitude) / Config.Prediction.Velocity
-    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
+
+    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
+
+    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
+    and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
         (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity

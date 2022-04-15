@@ -141,7 +141,7 @@ elseif game.GameId == 1054526971 then
         and HumanoidRootPart:FindFirstChild("RootRigAttachment")
 
         return NPC, HumanoidRootPart or false, Humanoid and Humanoid.Health > 0 or false,
-        RootRigAttachment and RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt") or false,
+        RootRigAttachment and not RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt") or false,
         Color3.new(1,1,1)
     end
 elseif game.GameId == 1168263273 then
@@ -338,11 +338,14 @@ function DrawingLibrary:FoVCircle(Config)
     RunService.RenderStepped:Connect(function()
         FovCircle.Visible = Config.Enabled and Config.Circle.Visible
         if FovCircle.Visible then
+            local FieldOfView = Config.FieldOfView
             FovCircle.Transparency = 1 - Config.Circle.Color[4]
             FovCircle.Color = TableToColor(Config.Circle.Color)
             FovCircle.Thickness = Config.Circle.Thickness
             FovCircle.NumSides = Config.Circle.NumSides
-            FovCircle.Radius = Config.FieldOfView
+            FovCircle.Radius = Config.DynamicFoV
+            and (120 - Workspace.CurrentCamera.FieldOfView) * 4
+            or FieldOfView
             FovCircle.Filled = Config.Circle.Filled
             FovCircle.Position = UserInputService:GetMouseLocation()
         end
