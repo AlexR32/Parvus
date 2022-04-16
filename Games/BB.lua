@@ -952,10 +952,17 @@ local function Trigger(Config)
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 if Hitbox then
-                    local HitboxPrediction = ((Hitbox.Position - Camera.CFrame.Position).Magnitude * Hitbox.AssemblyLinearVelocity) / Config.Prediction.Velocity
-                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled and Hitbox.Position + HitboxPrediction or Hitbox.Position)
+                    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                    local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity,0) / 2 --GravityCorrection
+                    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
+
+                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
+                    and Hitbox.Position + HitboxGravityCorrection + HitboxVelocityCorrection or Hitbox.Position)
+
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and FieldOfView > Magnitude and WallCheck(Config.WallCheck,Hitbox) then
+                    FieldOfView = Config.DynamicFoV and (120 - Workspace.CurrentCamera.FieldOfView) * 4 or FieldOfView
+
+                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
                         FieldOfView = Magnitude
                         ClosestHitbox = Hitbox
                     end

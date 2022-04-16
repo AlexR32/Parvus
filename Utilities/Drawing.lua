@@ -147,6 +147,7 @@ elseif game.GameId == 1054526971 then
 elseif game.GameId == 1168263273 then
     repeat task.wait() until ReplicatedStorage:FindFirstChild("TS")
     local Tortoiseshell = require(ReplicatedStorage.TS)
+    local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 
     function PlayerManager(Player)
         return Player.Character and Player.Character:FindFirstChild("Hitbox"),
@@ -155,10 +156,18 @@ elseif game.GameId == 1168263273 then
         Tortoiseshell.Teams.Colors[Player.Team]
     end
 
+    local function GetCharacter(Player)
+        if not Characters[Player]
+        or not Characters[Player].Parent then
+            return
+        end
+        return Characters[Player]
+    end
+
     local __index
     __index = hookmetamethod(game, "__index", function(Table,Index)
         if Index == "Character" then
-            return Tortoiseshell.Characters:GetCharacter(Table)
+            return GetCharacter(Table)
         elseif Index == "Team" then
             return Tortoiseshell.Teams:GetPlayerTeam(Table)
         end
@@ -365,7 +374,7 @@ RunService.Heartbeat:Connect(function()
                 local Color = ESP.Config.TeamColor and TeamColor
                 or (InEnemyTeam and TableToColor(ESP.Config.EnemyColor)
                 or TableToColor(ESP.Config.AllyColor))
-
+                
                 if OnScreen then
                     if ESP.Highlight.Enabled then
                         ESP.Highlight.Adornee = Model.Character
@@ -589,6 +598,7 @@ RunService.Heartbeat:Connect(function()
                 end
             end
         end
+
         local Visible = OnScreen and IsAlive and PrimaryPart and (not ESP.Config.TeamCheck and not InEnemyTeam or InEnemyTeam)
         local ArrowVisible = not OnScreen and IsAlive and PrimaryPart and (not ESP.Config.TeamCheck and not InEnemyTeam or InEnemyTeam)
 
