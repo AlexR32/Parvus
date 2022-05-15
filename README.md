@@ -5,7 +5,7 @@ Made With ❤️ By ***[AlexR32#0157](https://discord.com/users/6796614732615516
 
 ### Loadstring
 ```lua
-loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))("Parvus hitting p!")
+loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))()
 ```
 ### Supported Games
 - Blackhawk Rescue Mission 5
@@ -28,6 +28,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
     - Hit Chance
     - Priority
     - FoV
+  - Trigger Bot
   - Visuals
     - Ally Color
     - Enemy Color
@@ -37,22 +38,19 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
     - Offscreen Arrows
     - Head Circles
     - Tracers
-    - Chams
+    - Chams (Highlight)
   - Misc
     - Custom Mouse
     - Custom Crosshair
     - Rejoin
     - Server Hop
-  - Sexy UI
 - Bad Business
-  - Autoshoot
-  - Trigger Bot
+  - Autoshoot (Rage)
   - Weapon Customization
   - Arms Customization
-  - Camera Modification
-  - Exposure Compensation Changer
-  - Fly
+  - Weapon Modification
   - Pitch Anti-Aim
+  - Fly
 - Blackhawk Rescue Mission 5
   - NPC ESP
   - Clock Time Changer
@@ -67,8 +65,6 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 - RAGDOLL UNIVERSE
   - Silent Aim and Aimbot Support
 ### TODO
-- New Config System
-- Lighting Modification
+- Add More Games
 - Toggle Slider
 - Toggle Colorpicker
-- Add More Games
