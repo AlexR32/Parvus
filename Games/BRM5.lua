@@ -50,6 +50,12 @@ local Window = Parvus.Utilities.UI:Window({
             TFoVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
             TFoVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
+        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
+            MiscSection:Dropdown({Name = "Target Mode",Flag = "BRM5/TargetMode",List = {
+                {Name = "Player",Mode = "Button"},
+                {Name = "NPC",Mode = "Button",Value = true}
+            }})
+        end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
@@ -83,12 +89,6 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Divider({Text = "Prediction"})
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Prediction/Enabled",Value = false})
             TriggerSection:Slider({Name = "Velocity",Flag = "Trigger/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
-        end
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Right"}) do
-            MiscSection:Dropdown({Name = "Target Mode",Flag = "BRM5/TargetMode",List = {
-                {Name = "Player",Mode = "Button"},
-                {Name = "NPC",Mode = "Button",Value = true}
-            }})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -236,7 +236,8 @@ local Window = Parvus.Utilities.UI:Window({
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 2,Value = 0.25})
         end
         local WeaponSection = GameTab:Section({Name = "Weapon"}) do
-            WeaponSection:Toggle({Name = "No Recoil",Flag = "BRM5/NoRecoil",Value = false})
+            WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
+            WeaponSection:Slider({Name = "Recoil Percent",Flag = "BRM5/Recoil/Value",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WeaponSection:Toggle({Name = "Instant Hit",Flag = "BRM5/BulletDrop",Value = false})
             :ToolTip("silent aim works better with it")
             WeaponSection:Toggle({Name = "Unlock Firemodes",Flag = "BRM5/Firemodes",Value = false})
@@ -245,7 +246,8 @@ local Window = Parvus.Utilities.UI:Window({
             WeaponSection:Slider({Name = "Round Per Minute",Flag = "BRM5/RapidFire/Value",Min = 45,Max = 1000,Value = 1000})
         end
         local CharSection = GameTab:Section({Name = "Character"}) do
-            CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/NVG",Value = false})
+            CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
+            CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGMode",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
             CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind({Flag = "BRM5/WalkSpeed/Keybind"})
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
@@ -423,7 +425,6 @@ local function WallCheck(Enabled,Hitbox,Character)
         Character
     })[1]
 end
-
 local function GetHitbox(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
@@ -450,7 +451,7 @@ local function GetHitbox(Config)
                 end
             end
         end
-    else--if Config.TargetMode == "Player" then
+    elseif Config.TargetMode == "Player" then
         for Index, Player in pairs(PlayerService:GetPlayers()) do
             local Character = Player.Character
             local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
@@ -473,7 +474,6 @@ local function GetHitbox(Config)
 
     return ClosestHitbox
 end
-
 local function Trigger(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
@@ -504,7 +504,7 @@ local function Trigger(Config)
                 end
             end
         end
-    else
+    elseif Config.TargetMode == "Player" then
         for Index, Player in pairs(PlayerService:GetPlayers()) do
             local Character = Player.Character
             local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
@@ -536,7 +536,6 @@ local function Trigger(Config)
         mouse1release()
     end
 end
-
 local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
@@ -553,242 +552,133 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-local function HookSignal(Signal,Index,Function)
-    local Connection = getconnections(Signal)[Index]
-    Connection:Disable()
-    local ConnectionOld = Connection.Function
-    Signal:Connect(function(...)
-        local args = Function({...})
-        ConnectionOld(unpack(args))
-    end)
-end
-
-local function requireGameModule(Name)
+local function RequireModule(Name)
     for Index, Instance in pairs(getloadedmodules()) do
         if Instance.Name == Name then
             return require(Instance)
         end
     end
 end
-
-local ControllerClass = requireGameModule("ControllerClass")
-local controllerOld
-while task.wait() do
-    if ControllerClass and ControllerClass.LateUpdate then
-        controllerOld = ControllerClass.LateUpdate
-        break
-    else
-        ControllerClass = requireGameModule("ControllerClass")
-    end
+local function HookSignal(Signal,Index,Callback)
+    local Connection = getconnections(Signal)[Index]
+    local OldConnection = Connection.Function
+    Connection:Disable()
+    Signal:Connect(function(...)
+        local args = Callback({...})
+        OldConnection(unpack(args))
+    end)
 end
-if ControllerClass and controllerOld then
-    ControllerClass.LateUpdate = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/WalkSpeed/Enabled"] then
-            args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
+local function HookFunction(Module,Function,Callback)
+    Module = RequireModule(Module) local OldFunction
+    while task.wait() do
+        if Module and Module[Function] then
+            OldFunction = Module[Function]
+            break
         end
-        return controllerOld(...)
+        Module = RequireModule("ControllerClass")
     end
-end
-
-local CharacterCamera = requireGameModule("CharacterCamera")
-local cameraOld
-while task.wait() do
-    if CharacterCamera and CharacterCamera.Update then
-        cameraOld = CharacterCamera.Update
-        break
-    else
-        CharacterCamera = requireGameModule("CharacterCamera")
-    end
-end
-if CharacterCamera and cameraOld then
-    CharacterCamera.Update = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/NoBob"] then
-            args[1]._shakes = {}
-            args[1]._bob = 0
+    if Module and OldFunction then
+        Module[Function] = function(...)
+            local args = Callback({...})
+            return OldFunction(unpack(args))
         end
-        if Window.Flags["BRM5/NoRecoil"] then
-            args[1]._recoil.Velocity = Vector3.zero
-        end
-        return cameraOld(...)
     end
 end
 
-local TurretCamera = requireGameModule("TurretCamera")
-local turretCamOld
-while task.wait() do
-    if TurretCamera and TurretCamera.Update then
-        turretCamOld = TurretCamera.Update
-        break
-    else
-        TurretCamera = requireGameModule("TurretCamera")
+HookFunction("ControllerClass","LateUpdate",function(args)
+    if Window.Flags["BRM5/WalkSpeed/Enabled"] then
+        args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
     end
-end
-if TurretCamera and turretCamOld then
-    TurretCamera.Update = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/NoRecoil"] then
-            args[1]._recoil.Velocity = Vector3.zero
+    return args
+end)
+HookFunction("CharacterCamera","Update",function(args)
+    if Window.Flags["BRM5/NoBob"] then
+        args[1]._shakes = {}
+        args[1]._bob = 0
+    end
+    if Window.Flags["BRM5/Recoil/Enabled"] then
+        args[1]._recoil.Velocity = args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
+    end
+    return args
+end)
+HookFunction("TurretCamera","Update",function(args)
+    if Window.Flags["BRM5/Recoil/Enabled"] then
+        args[1]._recoil.Velocity = args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
+    end
+    return args
+end)
+HookFunction("FirearmInventory","new",function(args)
+    if Window.Flags["BRM5/Firemodes"] then
+        if not table.find(args[2].Tune.Firemodes,1) then
+            table.insert(args[2].Tune.Firemodes,1)
         end
-        return turretCamOld(...)
-    end
-end
-
-local FirearmInventory = requireGameModule("FirearmInventory")
-local firearmDischargeOld
-local firearmNewOld
-while task.wait() do
-    if FirearmInventory and FirearmInventory._discharge and FirearmInventory.new then
-        firearmDischargeOld = FirearmInventory._discharge
-        firearmNewOld = FirearmInventory.new
-        break
-    else
-        FirearmInventory = requireGameModule("FirearmInventory")
-    end
-end
-if FirearmInventory and firearmDischargeOld and firearmNewOld then
-    FirearmInventory._discharge = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/RapidFire/Enabled"] then
-            args[1]._config.Tune.RPM = Window.Flags["BRM5/RapidFire/Value"]
+        if not table.find(args[2].Tune.Firemodes,2) then
+            table.insert(args[2].Tune.Firemodes,2)
         end
-        if Window.Flags["BRM5/BulletDrop"] then
-            args[1]._config.Tune.Velocity = 1e6
+        if not table.find(args[2].Tune.Firemodes,3) then
+            table.insert(args[2].Tune.Firemodes,3)
         end
-        PredictedVelocity = args[1]._config.Tune.Velocity
-        return firearmDischargeOld(...)
+        args[2].Mode = 1
     end
-    FirearmInventory.new = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/Firemodes"] then
-            if not table.find(args[2].Tune.Firemodes,1) then
-                table.insert(args[2].Tune.Firemodes,1)
-            end
-            if not table.find(args[2].Tune.Firemodes,2) then
-                table.insert(args[2].Tune.Firemodes,2)
-            end
-            if not table.find(args[2].Tune.Firemodes,3) then
-                table.insert(args[2].Tune.Firemodes,3)
-            end
-            args[2].Mode = 1
+    return args
+end)
+HookFunction("FirearmInventory","_discharge",function(args)
+    if Window.Flags["BRM5/RapidFire/Enabled"] then
+        args[1]._config.Tune.RPM = Window.Flags["BRM5/RapidFire/Value"]
+    end
+    if Window.Flags["BRM5/BulletDrop"] then
+        args[1]._config.Tune.Velocity = 1e6
+    end
+    PredictedVelocity = args[1]._config.Tune.Velocity
+    return args
+end)
+HookFunction("GroundMovement","Update",function(args)
+    if Window.Flags["BRM5/Vehicle/Enabled"] then
+        args[1]._tune.Speed = Window.Flags["BRM5/Vehicle/Speed"]
+        args[1]._tune.Accelerate = Window.Flags["BRM5/Vehicle/Acceleration"]
+    end
+    return args
+end)
+HookFunction("HelicopterMovement","Update",function(args)
+    if Window.Flags["BRM5/Helicopter/Enabled"] then
+        args[1]._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
+    end
+    return args
+end)
+HookFunction("AircraftMovement","_discharge",function(args)
+    if Window.Flags["BRM5/BulletDrop"] then
+        args[1]._tune.Velocity = 1e6
+    end
+    PredictedVelocity = args[1]._tune.Velocity
+    AircraftTip = args[1]._tip
+    return args
+end)
+HookFunction("TurretMovement","_discharge",function(args)
+    if Window.Flags["BRM5/BulletDrop"] then
+        args[1]._tune.Velocity = 1e6
+    end
+    PredictedVelocity = args[1]._tune.Velocity
+    GroundTip = args[1]._tip
+    return args
+end)
+HookFunction("EnvironmentService","Update",function(args)
+    if Window.Flags["BRM5/Lighting/Enabled"] then
+        args[1]._atmoshperes.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
+        if args[1]._atmoshperes.Desert and args[1]._atmoshperes.Snow then
+            args[1]._atmoshperes.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
+            args[1]._atmoshperes.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
         end
-        return firearmNewOld(...)
     end
-end
-
-local GroundMovement = requireGameModule("GroundMovement")
-local groundOld
-while task.wait() do
-    if GroundMovement and GroundMovement.Update then
-        groundOld = GroundMovement.Update
-        break
-    else
-        GroundMovement = requireGameModule("GroundMovement")
-    end
-end
-if GroundMovement and groundOld then
-    GroundMovement.Update = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/Vehicle/Enabled"] then
-            args[1]._tune.Speed = Window.Flags["BRM5/Vehicle/Speed"]
-            args[1]._tune.Accelerate = Window.Flags["BRM5/Vehicle/Acceleration"]
-        end
-        return groundOld(...)
-    end
-end
-
-local HelicopterMovement = requireGameModule("HelicopterMovement")
-local heliOld
-while task.wait() do
-    if HelicopterMovement and HelicopterMovement.Update then
-        heliOld = HelicopterMovement.Update
-        break
-    else
-        HelicopterMovement = requireGameModule("HelicopterMovement")
-    end
-end
-if HelicopterMovement and heliOld then
-    HelicopterMovement.Update = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/Helicopter/Enabled"] then
-            args[1]._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
-        end
-        return heliOld(...)
-    end
-end
-
-local AircraftMovement = requireGameModule("AircraftMovement")
-local aircraftDischargeOld
-while task.wait() do
-    if AircraftMovement and AircraftMovement._discharge then
-        aircraftDischargeOld = AircraftMovement._discharge
-        break
-    else
-        AircraftMovement = requireGameModule("AircraftMovement")
-    end
-end
-if AircraftMovement and aircraftDischargeOld then
-    AircraftMovement._discharge = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/BulletDrop"] then
-            args[1]._tune.Velocity = 1e6
-        end
-        PredictedVelocity = args[1]._tune.Velocity
-        AircraftTip = args[1]._tip
-        return aircraftDischargeOld(...)
-    end
-end
-
-local TurretMovement = requireGameModule("TurretMovement")
-local turretOld
-while task.wait() do
-    if TurretMovement and TurretMovement._discharge then
-        turretOld = TurretMovement._discharge
-        break
-    else
-        TurretMovement = requireGameModule("TurretMovement")
-    end
-end
-if TurretMovement and turretOld then
-    TurretMovement._discharge = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/BulletDrop"] then
-            args[1]._tune.Velocity = 1e6
-        end
-        PredictedVelocity = args[1]._tune.Velocity
-        GroundTip = args[1]._tip
-        return turretOld(...)
-    end
-end
-
-local EnvironmentService = requireGameModule("EnvironmentService")
-local environmentOld
-while task.wait() do
-    if EnvironmentService and EnvironmentService.Update then
-        environmentOld = EnvironmentService.Update
-        break
-    else
-        EnvironmentService = requireGameModule("EnvironmentService")
-    end
-end
-if EnvironmentService and environmentOld then
-    EnvironmentService.Update = function(...)
-        local args = {...}
-        if Window.Flags["BRM5/Lighting/Enabled"] then
-            args[1]._atmoshperes.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
-            if args[1]._atmoshperes.Desert and args[1]._atmoshperes.Snow then
-                args[1]._atmoshperes.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
-                args[1]._atmoshperes.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
-            end
-        end
-        return environmentOld(...)
-    end
-end
-
+    return args
+end)
 HookSignal(RemoteEvent.OnClientEvent,1,function(args)
-    if Window.Flags["BRM5/NVG"] and args[1] == "ReplicateNVG" then
-        args[2] = false
+    if args[1] == "ReplicateNVG" then
+        if Window.Flags["BRM5/DisableNVG"] then
+            args[2] = false
+        end
+        if Window.Flags["BRM5/NVGShape"] then
+            args[3] = ""
+        end
     end
     return args
 end)
