@@ -135,7 +135,8 @@ local function ConfigsToList()
 	if not isfile("Parvus\\DefaultConfig.txt") then writefile("Parvus\\DefaultConfig.txt","") end
 	
 	local Configs = {}
-	for Index,File in pairs(listfiles("Parvus\\Configs")) do
+	local Files = listfiles("Parvus\\Configs") or {}
+	for Index,File in pairs(Files) do
 		File = File:gsub("Parvus\\Configs\\","")
 		File = File:gsub(".json","")
 		local DefaultConfig = readfile("Parvus\\DefaultConfig.txt")
