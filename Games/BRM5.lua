@@ -577,11 +577,9 @@ local function HookFunction(Module,Function,Callback)
         end
         Module = RequireModule("ControllerClass")
     end
-    if Module and OldFunction then
-        Module[Function] = function(...)
-            local args = Callback({...})
-            return OldFunction(unpack(args))
-        end
+    Module[Function] = function(...)
+        local args = Callback({...})
+        return OldFunction(unpack(args))
     end
 end
 

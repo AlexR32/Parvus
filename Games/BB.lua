@@ -9,9 +9,13 @@ local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
-local Aimbot,Trigger,SilentAim,PredictedVelocity,PredictedGravity,GravityCorrection,
-Tortoiseshell,BanReasons,EquippedWeaponConfig,UpdateDelta
-= false,nil,nil,1600,150,2,require(ReplicatedStorage.TS),{
+local Aimbot,Trigger,SilentAim,
+PredictedVelocity,PredictedGravity,
+GravityCorrection,Tortoiseshell
+= false,nil,nil,1600,150,2,
+require(ReplicatedStorage.TS)
+
+--[[{
     "Unsafe function",
     "Camera object", -- Crash
     "Geometry deleted", -- Crash
@@ -27,7 +31,7 @@ Tortoiseshell,BanReasons,EquippedWeaponConfig,UpdateDelta
     "Floating",
     "Root",
     "Hitbox extender"
-}
+}]]
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Current,
@@ -395,11 +399,11 @@ Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
 }]]
 
 do local OldRandom
-OldRandom = hookfunction(math.random,function(...)
+OldRandom = hookfunction(math.random, function(...)
     local args = {...}
     if (args[1] == 7 or args[1] == 5)
         and not args[2] then
-        return 100
+        return OldRandom(100,1000)
     end
     return OldRandom(...)
 end)
@@ -412,7 +416,7 @@ task.spawn(function()
     Message = Error
 end)
 local OldPluginManager
-OldPluginManager = hookfunction(getrenv().PluginManager,function(...)
+OldPluginManager = hookfunction(getrenv().PluginManager, function()
     return error(Message)
 end) end
 
@@ -757,7 +761,7 @@ local function AimAt(Hitbox,Config)
     local Mouse = UserInputService:GetMouseLocation()
 
     local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-    local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity / GravityCorrection,0)
+    local HitboxGravityCorrection = Vector3.new(0,(HitboxDistance + (GravityCorrection / 1000)) / PredictedGravity,0)
     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
 
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction
