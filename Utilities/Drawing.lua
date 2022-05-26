@@ -144,7 +144,7 @@ if game.GameId == 580765040 then
         end
 
         return Model.Character,
-        (Model.Character and Model.Character:FindFirstChild("HumanoidRootPart")) or false,
+        (Model.Character and Model.Character:FindFirstChild("Torso")) or false,
         (Model.Character and Model.Character:FindFirstChildOfClass("Humanoid") and
         Model.Character:FindFirstChildOfClass("Humanoid").Health > 0) or false,
         InEnemyTeam, PlayerColor
