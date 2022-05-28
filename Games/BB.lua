@@ -18,6 +18,9 @@ require(ReplicatedStorage.TS)
 repeat task.wait() until not
 LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
 
+--local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--local Tortoiseshell = require(ReplicatedStorage.TS)
+
 --[[
 { -- ban reasons
     "Unsafe function",
@@ -390,23 +393,6 @@ Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
---[[local DefaultLighting = {
-    Ambient = Lighting.Ambient,
-    Brightness = Lighting.Brightness,
-    ClockTime = Lighting.ClockTime,
-    ColorShift_Bottom = Lighting.ColorShift_Bottom,
-    ColorShift_Top = Lighting.ColorShift_Top,
-    EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
-    EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
-    ExposureCompensation = Lighting.ExposureCompensation,
-    FogColor = Lighting.FogColor,
-    FogEnd = Lighting.FogEnd,
-    FogStart = Lighting.FogStart,
-    GeographicLatitude = Lighting.GeographicLatitude,
-    GlobalShadows = Lighting.GlobalShadows,
-    OutdoorAmbient = Lighting.OutdoorAmbient,
-    ShadowSoftness = Lighting.ShadowSoftness
-}]]
 
 do local OldRandom
 OldRandom = hookfunction(math.random, function(...)
@@ -468,6 +454,15 @@ end]]
     end)
 end]]
 
+-- why freeze tables?
+setreadonly(Tortoiseshell.Projectiles,false)
+setreadonly(Tortoiseshell.Network,false)
+setreadonly(Tortoiseshell.Raycast,false)
+
+local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
+local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
+local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
+
 local Notify = Instance.new("BindableEvent")
 Notify.Event:Connect(function(Text)
     Parvus.Utilities.UI:Notification2(Text)
@@ -477,11 +472,48 @@ local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
 BodyVelocity.MaxForce = Vector3.zero
 
+
+local function Raycast(Origin,Direction,Table)
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
+    RaycastParams.FilterDescendantsInstances = Table
+    RaycastParams.IgnoreWater = true
+    return Workspace:Raycast(Origin,Direction,RaycastParams)
+end
+
+local function TeamCheck(Player)
+    return LocalPlayer.Team ~= Player.Team
+    or tostring(Player.Team) == "FFA"
+end
+local function WallCheck(Enabled,Hitbox)
+    if not Enabled then return true end
+    local Camera = Workspace.CurrentCamera
+    return not Raycast(
+        Camera.CFrame.Position,
+        Hitbox.Position - Camera.CFrame.Position,
+        {Workspace.Geometry,Workspace.Terrain}
+    )
+end
 local function FindGunModel()
     for Index,Instance in pairs(Workspace:GetChildren()) do
         if Instance:FindFirstChild("AnimationController") then
             return Instance
         end
+    end
+end
+local function GetCharacterInfo(Player,Shield)
+    local Character = Player.Character
+    if not Character then return end
+    local Root = Character.PrimaryPart
+    if not Root then return end
+    local ShieldEmitter = Root:FindFirstChild("ShieldEmitter")
+    if not ShieldEmitter then return end
+
+    if Shield then
+        return Character:FindFirstChild("Hitbox"),
+        not ShieldEmitter.Enabled
+    else
+        return Character:FindFirstChild("Hitbox"),true
     end
 end
 local function GetEquippedController()
@@ -496,10 +528,11 @@ local function GetEquippedWeapon()
     local Controllers = Tortoiseshell.Items:GetControllers()
     for Weapon,Controller in pairs(Controllers) do
         if Controller.Equipped then
-            return Weapon,require(Weapon.Config)
+            return Weapon,WeaponConfigs[Weapon]
         end
     end
 end
+
 local function ToggleShoot(Toggle)
     if Toggle then
         coroutine.wrap(function()
@@ -541,7 +574,6 @@ local function InputToVelocity()
         Velocities[6]
     )
 end
-
 local function PlayerFly(Config)
     if not Config.Enabled then
         BodyVelocity.MaxForce = Vector3.zero
@@ -599,13 +631,14 @@ local function CustomizeGun(Config)
         end
     end
 end
-
 local function CustomizeArms(Config)
     if not Config.Enabled then return end
     for Index,Instance in pairs(Workspace.Arms:GetDescendants()) do
-        if Config.HideTextures and Instance:IsA("Texture") then
+        if Config.HideTextures
+        and Instance:IsA("Texture") then
             Instance.Transparency = 1
-        elseif Instance:IsA("BasePart") and Instance.Transparency < 1
+        elseif Instance:IsA("BasePart") 
+        and Instance.Transparency < 1
         and Instance.Reflectance < 1 then
             Instance.Color = Parvus.Utilities.UI:TableToColor(Config.Color)
             Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
@@ -613,37 +646,6 @@ local function CustomizeArms(Config)
             Instance.Material = Config.Material
         end
     end
-end
-
-local function Raycast(Origin,Direction,Table)
-    local RaycastParams = RaycastParams.new()
-    RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
-    RaycastParams.FilterDescendantsInstances = Table
-    RaycastParams.IgnoreWater = true
-    return Workspace:Raycast(Origin,Direction,RaycastParams)
-end
-
-local function TeamCheck(Player)
-    return LocalPlayer.Team ~= Player.Team
-    or tostring(Player.Team) == "FFA"
-end
-
-local function GetCharacterInfo(Player)
-    local Character = Player.Character
-    if not Character then return end
-    return Character:FindFirstChild("Hitbox"),
-    Character:FindFirstChild("Health") and 
-    not Character.Health:FindFirstChild("Shield")
-end
-
-local function WallCheck(Enabled,Hitbox)
-    if not Enabled then return true end
-    local Camera = Workspace.CurrentCamera
-    return not Raycast(
-        Camera.CFrame.Position,
-        Hitbox.Position - Camera.CFrame.Position,
-        {Workspace.Geometry,Workspace.Terrain}
-    )
 end
 
 local function ComputeProjectiles(Config,Hitbox)
@@ -659,27 +661,28 @@ local function ComputeProjectiles(Config,Hitbox)
             + Vector3.new(0,Config.Projectile.GravityCorrection/1000,0)).Unit,ID
         })
     end
-
-    return Projectiles,RayResult.Position,RayResult.Normal,ID
+    
+    if RayResult then
+        return Projectiles,RayResult.Position,RayResult.Normal,ID
+    else
+        return Projectiles,Hitbox.Position,Vector3.one,ID
+    end
 end
-
 local function AutoShoot(Hitbox,Enabled)
-    if not Hitbox or not Enabled then return end
+    if not Enabled then return end
     local Weapon,Config = GetEquippedWeapon()
-    if Weapon  then
+
+    if Weapon and Config then
         local State = Weapon:FindFirstChild("State")
         local Ammo = State and State:FindFirstChild("Ammo")
         local FireMode = State and State:FindFirstChild("FireMode")
         local Reloading = State and State:FindFirstChild("Reloading")
 
         local OldAmmo = Ammo and Ammo.Server.Value
-        if Ammo and Ammo.Server.Value > 1 then
+        if Ammo and Ammo.Server.Value > 0 then if not Hitbox then return end
             local FireModeFromList = Config.FireModeList[FireMode.Server.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
-            local Projectiles,RayPosition,RayNormal,ID
-            = ComputeProjectiles(Config,Hitbox[2])
-
-            Tortoiseshell.Network:Fire("Item_Paintball","AltAim",Weapon,true)
+            local Projectiles,RayPosition,RayNormal,ID = ComputeProjectiles(Config,Hitbox[2])
             
             Tortoiseshell.Network:Fire("Item_Paintball","Shoot",Weapon,
             Tortoiseshell.Input.Reticle:GetPosition(),Projectiles)
@@ -704,7 +707,7 @@ local function AutoShoot(Hitbox,Enabled)
                 Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
                 Parvus.Utilities.UI:Notification2({
                     Title = "Autoshoot | Reloading | Approx Time: " .. string.format("%d sec. %d msec.",Seconds,Milliseconds),
-                    Color = Color3.new(1,0.5,0.25),
+                    Color = Color3.new(1,0.25,0.25),
                     Duration = 3
                 }) task.wait(ReloadTime)
             end
@@ -721,8 +724,8 @@ local function GetHitbox(Config)
     or Config.FieldOfView,nil
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character,Shield = GetCharacterInfo(Player)
-        if Player ~= LocalPlayer and TeamCheck(Player) then
+        local Character,Shield = GetCharacterInfo(Player,Config.Shield)
+        if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 if Hitbox then
@@ -739,7 +742,6 @@ local function GetHitbox(Config)
 
     return ClosestHitbox
 end
-
 local function GetHitboxWithPrediction(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
@@ -749,8 +751,8 @@ local function GetHitboxWithPrediction(Config)
     or Config.FieldOfView,nil
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character,Shield = GetCharacterInfo(Player)
-        if Player ~= LocalPlayer  and TeamCheck(Player) then
+        local Character,Shield = GetCharacterInfo(Player,true)
+        if Player ~= LocalPlayer and Shield and TeamCheck(Player,true) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 if Hitbox then
@@ -773,13 +775,12 @@ local function GetHitboxWithPrediction(Config)
 
     return ClosestHitbox
 end
-
 local function GetHitboxAllFoV(Config)
     --if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
     local Distance,ClosestHitbox = math.huge,nil
     for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character,Shield = GetCharacterInfo(Player)
+        local Character,Shield = GetCharacterInfo(Player,true)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
@@ -814,11 +815,6 @@ local function AimAt(Hitbox,Config)
     )
 end
 
--- why freeze tables?
-setreadonly(Tortoiseshell.Projectiles,false)
-setreadonly(Tortoiseshell.Network,false)
-setreadonly(Tortoiseshell.Raycast,false)
-
 local OldNetworkFire = Tortoiseshell.Network.Fire
 Tortoiseshell.Network.Fire = function(self, ...)
     local args = {...}
@@ -844,7 +840,6 @@ Tortoiseshell.Network.Fire = function(self, ...)
 end
 
 local OldInitProjectile = Tortoiseshell.Projectiles.InitProjectile
-local Projectiles = getupvalue(OldInitProjectile,1)
 Tortoiseshell.Projectiles.InitProjectile = function(self, ...)
     local args = {...}
     if args[4] == LocalPlayer then
@@ -879,7 +874,6 @@ Tortoiseshell.Raycast.CastGeometryAndEnemies = function(self, ...)
     return OldCastGeometryAndEnemies(self, unpack(args))
 end
 
-local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 for Index,Event in pairs(Events) do
     if Event.Event == "Votekick" then
         local OldCallback = Event.Callback
@@ -916,7 +910,8 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFoV = Window.Flags["SilentAim/DynamicFoV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
-        Priority = Window.Flags["SilentAim/Priority"]
+        Priority = Window.Flags["SilentAim/Priority"],
+        Shield = true
     })
     if Aimbot then AimAt(
         GetHitbox({
@@ -960,7 +955,7 @@ end)
 
 Parvus.Utilities.NewThreadLoop(1,function()
     local Weapon,Config = GetEquippedWeapon()
-    if Weapon then
+    if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
             GravityCorrection = Config.Projectile.GravityCorrection
         end
