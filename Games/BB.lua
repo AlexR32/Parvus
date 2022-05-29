@@ -9,7 +9,7 @@ local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
-local Aimbot,Trigger,SilentAim,
+local Aimbot,SilentAim,Trigger,
 PredictedVelocity,PredictedGravity,
 GravityCorrection,Tortoiseshell
 = false,nil,nil,1600,150,2,
@@ -21,8 +21,7 @@ LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
---[[
-{ -- ban reasons
+--[[{ -- ban reasons
     "Unsafe function",
     "Camera object", -- Crash
     "Geometry deleted", -- Crash
@@ -178,24 +177,6 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
-        --[[local LightingSection = VisualsTab:Section({Name = "Lighting",Side = "Right"}) do
-            LightingSection:Toggle({Name = "Enabled",Flag = "Lighting/Enabled",Value = false})
-            LightingSection:Colorpicker({Name = "Ambient",Flag = "Lighting/Ambient",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "Brightness",Flag = "Lighting/Brightness",Min = 0,Max = 10,Precise = 2,Value = 3})
-            LightingSection:Slider({Name = "ClockTime",Flag = "Lighting/ClockTime",Min = 0,Max = 24,Precise = 2,Value = 14.5})
-            LightingSection:Colorpicker({Name = "ColorShift_Bottom",Flag = "Lighting/ColorShift_Bottom",Value = {1,0,0,0,false}})
-            LightingSection:Colorpicker({Name = "ColorShift_Top",Flag = "Lighting/ColorShift_Top",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "EnvironmentDiffuseScale",Flag = "Lighting/EnvironmentDiffuseScale",Min = 0,Max = 1,Precise = 3,Value = 1})
-            LightingSection:Slider({Name = "EnvironmentSpecularScale",Flag = "Lighting/EnvironmentSpecularScale",Min = 0,Max = 1,Precise = 3,Value = 1})
-            LightingSection:Slider({Name = "ExposureCompensation",Flag = "Lighting/ExposureCompensation",Min = -3,Max = 3,Precise = 2,Value = 0})
-            LightingSection:Colorpicker({Name = "FogColor",Flag = "Lighting/FogColor",Value = {1,0,1,0,false}})
-            LightingSection:Slider({Name = "FogEnd",Flag = "Lighting/FogEnd",Min = 0,Max = 100000,Value = 100000})
-            LightingSection:Slider({Name = "FogStart",Flag = "Lighting/FogStart",Min = 0,Max = 100000,Value = 0})
-            LightingSection:Slider({Name = "GeographicLatitude",Flag = "Lighting/GeographicLatitude",Min = 0,Max = 360,Precise = 1,Value = 23.5})
-            LightingSection:Toggle({Name = "GlobalShadows",Flag = "Lighting/GlobalShadows",Value = true})
-            LightingSection:Colorpicker({Name = "OutdoorAmbient",Flag = "Lighting/OutdoorAmbient",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "ShadowSoftness",Flag = "Lighting/ShadowSoftness",Min = 0,Max = 1,Precise = 2,Value = 1})
-        end]]
     end
     local GameTab = Window:Tab({Name = Parvus.Current}) do
         local WCSection = GameTab:Section({Name = "Weapon Customization",Side = "Left"}) do
@@ -218,17 +199,6 @@ local Window = Parvus.Utilities.UI:Window({
             WMSection:Slider({Name = "Bullet Drop",Flag = "BadBusiness/WeaponMod/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Label({Text = "Respawn to make it work"})
         end
-        --[[local EnvSection = GameTab:Section({Name = "Environment",Side = "Left"}) do
-            EnvSection:Toggle({Name = "Enable",Flag = "BadBusiness/Environment/Enabled",Value = false,Callback = function(Bool)
-                Lighting.ExposureCompensation = Bool and Window.Flags["BadBusiness/Environment/ExposureCompensation"] or 0
-            end})
-            EnvSection:Slider({Name = "Exposure Compensation",Flag = "BadBusiness/Environment/ExposureCompensation",
-            Min = -5,Max = 5,Precise = 2,Value = -2,Callback = function(Number)
-                if Window.Flags["BadBusiness/Environment/Enabled"] then
-                    Lighting.ExposureCompensation = Number
-                end
-            end})
-        end]]
         local ACSection = GameTab:Section({Name = "Arms Customization",Side = "Right"}) do
             ACSection:Toggle({Name = "Enabled",Flag = "BadBusiness/ArmsCustom/Enabled",Value = false})
             ACSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/ArmsCustom/Texture",Value = true})
@@ -245,12 +215,14 @@ local Window = Parvus.Utilities.UI:Window({
             FlySection:Toggle({Name = "Enabled",Flag = "BadBusiness/Fly/Enabled",Value = false})
             :Keybind({Flag = "BadBusiness/Fly/Keybind"})
             FlySection:Slider({Name = "Speed",Flag = "BadBusiness/Fly/Speed",Min = 10,Max = 100,Value = 100})
+            FlySection:Toggle({Name = "No Clip",Flag = "BadBusiness/Fly/NoClip",Value = false})
         end
         local AASection = GameTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BadBusiness/AntiAim/Enabled",Value = false})
             :Keybind({Flag = "BadBusiness/AntiAim/Keybind"})
             AASection:Slider({Name = "Pitch",Flag = "BadBusiness/AntiAim/Pitch",Min = -1.5,Max = 1.5,Precise = 2,Value = -1.5})
             AASection:Slider({Name = "Pitch Random",Flag = "BadBusiness/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
+            AASection:Toggle({Name = "Lean Random",Flag = "BadBusiness/AntiAim/LeanRandom",Value = true})
         end
         local MiscSection = GameTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Anti-Kick",Flag = "BadBusiness/AntiKick",Value = false})
@@ -274,52 +246,12 @@ local Window = Parvus.Utilities.UI:Window({
         end
         SettingsTab:AddConfigSection("Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
-        Callback = function()
-            if #PlayerService:GetPlayers() <= 1 then
-                LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-                task.wait(0.5)
-                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-            else
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-            end
-        end})
+        Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
-        Callback = function()
-            local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
-            local DataDecoded,Servers = HttpService:JSONDecode(Request).data,{}
-            for Index,ServerData in ipairs(DataDecoded) do
-                if type(ServerData) == "table" and ServerData.id ~= game.JobId then
-                    table.insert(Servers,ServerData.id)
-                end
-            end
-            if #Servers > 0 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
-            else
-                Parvus.Utilities.UI:Notification({
-                    Title = "Parvus Hub",
-                    Description = "Couldn't find a server",
-                    Duration = 5
-                })
-            end
-        end})
-        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",Callback = function()
-            local Request = syn and syn.request or request
-            Request({
-                ["Url"] = "http://localhost:6463/rpc?v=1",
-                ["Method"] = "POST",
-                ["Headers"] = {
-                    ["Content-Type"] = "application/json",
-                    ["Origin"] = "https://discord.com"
-                },
-                ["Body"] = HttpService:JSONEncode({
-                    ["cmd"] = "INVITE_BROWSER",
-                    ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
-                    ["args"] = {
-                        ["code"] = "sYqDpbPYb7"
-                    }
-                })
-            })
-        end}):ToolTip("Join for support, updates and more!")
+        Callback = Parvus.Utilities.Misc.ServerHop})
+        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
+        Callback = Parvus.Utilities.Misc.JoinDiscord})
+        :ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Dropdown({Name = "Image",Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
@@ -387,15 +319,17 @@ local Window = Parvus.Utilities.UI:Window({
 end
 
 Window:LoadDefaultConfig()
-local GetFPS = Parvus.Utilities.SetupFPS()
-repeat task.wait() until Parvus.Utilities.Drawing.Cursor
+local GetFPS = Parvus.Utilities.Misc:SetupFPS()
+--repeat task.wait() until Parvus.Utilities.Drawing.Cursor
 Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
 
+-- AC Bypass
 do local OldRandom
 OldRandom = hookfunction(math.random, function(...)
+    if checkcaller() then return OldRandom(...) end
     local args = {...}
     if (args[1] == 7 or args[1] == 5)
         and not args[2] then
@@ -403,7 +337,7 @@ OldRandom = hookfunction(math.random, function(...)
     end
     return OldRandom(...)
 end)
--- thanks to kiriot
+-- Thanks to Kiriot22
 local Message
 local SetIdentity = syn and syn.set_thread_identity or setidentity
 task.spawn(function()
@@ -416,7 +350,8 @@ OldPluginManager = hookfunction(getrenv().PluginManager, function()
     return error(Message)
 end) end
 
---[[local __namecall
+--[[ Old AC Bypass
+local __namecall
 __namecall = hookmetamethod(game,"__namecall",function(self, ...)
     local args = {...}
     if getnamecallmethod() == "FireServer" then
@@ -427,9 +362,10 @@ __namecall = hookmetamethod(game,"__namecall",function(self, ...)
         end
     end
     return __namecall(self, ...)
-end)]]
+end)
 
---[[local DefaultRecoil = {}
+--This thing laggy as hell, dont use in your scripts
+local DefaultRecoil = {}
 for Index,Config in pairs(getgc(true)) do
     if type(Config) == "table"
     and rawget(Config,"Recoil")
@@ -441,17 +377,32 @@ for Index,Config in pairs(getgc(true)) do
             RecoilScale = Config.Recoil.Default.RecoilScale
         }
     end
-end]]
+end
+local function UpdateRecoil()
+    for Index,Config in pairs(getgc(true)) do
+        if type(Config) == "table"
+        and rawget(Config,"Controller")
+        and rawget(Config,"Model") then
+            if Config.Recoil and Config.Recoil.Default and
+                DefaultRecoil[Config.Model] then
 
---[[for Index,Property in pairs({"ExposureCompensation"}) do
-    if Window.Flags["BadBusiness/Environment/Enabled"] then
-        Lighting[Property] = Window.Flags["BadBusiness/Environment/"..Property]
-    end
-    Lighting:GetPropertyChangedSignal(Property):Connect(function()
-        if Window.Flags["BadBusiness/Environment/Enabled"] then
-            Lighting[Property] = Window.Flags["BadBusiness/Environment/"..Property]
+                local Modified = Parvus.Config.GameFeatures.WeaponModification
+                local Default = DefaultRecoil[Config.Model]
+
+                Config.Recoil.Default.WeaponScale = Modified.Enabled
+                and Default.WeaponScale * Modified.WeaponScale
+                or Default.WeaponScale
+
+                Config.Recoil.Default.CameraScale = Modified.Enabled
+                and Default.CameraScale * Modified.CameraScale
+                or Default.CameraScale
+
+                Config.Recoil.Default.RecoilScale = Modified.Enabled
+                and Default.RecoilScale * Modified.RecoilScale
+                or Default.RecoilScale
+            end
         end
-    end)
+    end
 end]]
 
 -- why freeze tables?
@@ -535,16 +486,9 @@ end
 
 local function ToggleShoot(Toggle)
     if Toggle then
-        coroutine.wrap(function()
-            for Index,Connection in pairs(getconnections(Tortoiseshell.Input.Began)) do
-                Connection.Function("Shoot")
-            end
-        end)()
+        Tortoiseshell.Input:AutomateBegan("Shoot")
     else
-        local Controller = GetEquippedController()
-        if Controller then
-            Controller:Unequip()
-        end
+        Tortoiseshell.Input:AutomateEnded("Shoot")
     end
 end
 
@@ -577,42 +521,19 @@ end
 local function PlayerFly(Config)
     if not Config.Enabled then
         BodyVelocity.MaxForce = Vector3.zero
+        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
+            LocalPlayer.Character.PrimaryPart.CanCollide = true
+        end
         return
     end
     if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
         BodyVelocity.Parent = LocalPlayer.Character.PrimaryPart
         BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
         BodyVelocity.Velocity = InputToVelocity() * Config.Speed
+        LocalPlayer.Character.PrimaryPart.CanCollide
+        = not Window.Flags["BadBusiness/Fly/NoClip"]
     end
 end
-
---[[ this shit is laggy as hell dont use in your scripts
-local function UpdateRecoil()
-    for Index,Config in pairs(getgc(true)) do
-        if type(Config) == "table"
-        and rawget(Config,"Controller")
-        and rawget(Config,"Model") then
-            if Config.Recoil and Config.Recoil.Default and
-                DefaultRecoil[Config.Model] then
-
-                local Modified = Parvus.Config.GameFeatures.WeaponModification
-                local Default = DefaultRecoil[Config.Model]
-
-                Config.Recoil.Default.WeaponScale = Modified.Enabled
-                and Default.WeaponScale * Modified.WeaponScale
-                or Default.WeaponScale
-
-                Config.Recoil.Default.CameraScale = Modified.Enabled
-                and Default.CameraScale * Modified.CameraScale
-                or Default.CameraScale
-
-                Config.Recoil.Default.RecoilScale = Modified.Enabled
-                and Default.RecoilScale * Modified.RecoilScale
-                or Default.RecoilScale
-            end
-        end
-    end
-end]]
 
 local function CustomizeGun(Config)
     if not Config.Enabled then return end
@@ -752,7 +673,7 @@ local function GetHitboxWithPrediction(Config)
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
         local Character,Shield = GetCharacterInfo(Player,true)
-        if Player ~= LocalPlayer and Shield and TeamCheck(Player,true) then
+        if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 if Hitbox then
@@ -776,7 +697,6 @@ local function GetHitboxWithPrediction(Config)
     return ClosestHitbox
 end
 local function GetHitboxAllFoV(Config)
-    --if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
     local Distance,ClosestHitbox = math.huge,nil
     for Index, Player in pairs(PlayerService:GetPlayers()) do
@@ -829,6 +749,9 @@ Tortoiseshell.Network.Fire = function(self, ...)
     end
 
     if Window.Flags["BadBusiness/AntiAim/Enabled"] and args[3] == "Look" then
+        if Window.Flags["BadBusiness/AntiAim/LeanRandom"] then
+            Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
+        end
         args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < -0
         and Window.Flags["BadBusiness/AntiAim/Pitch"] + Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
@@ -889,13 +812,7 @@ for Index,Event in pairs(Events) do
                         Duration = 10
                     })
                     task.wait(10)
-                    if #PlayerService:GetPlayers() <= 1 then
-                        LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-                        task.wait(0.5)
-                        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-                    else
-                        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-                    end
+                    Parvus.Utilities.Misc:ReJoin()
                 end
             end
             return Return
@@ -952,22 +869,15 @@ RunService.Heartbeat:Connect(function()
         Material = Window.Flags["BadBusiness/ArmsCustom/Material"][1]
     })
 end)
-
-Parvus.Utilities.NewThreadLoop(1,function()
-    local Weapon,Config = GetEquippedWeapon()
-    if Weapon and Config then
-        if Config.Projectile and Config.Projectile.GravityCorrection then
-            GravityCorrection = Config.Projectile.GravityCorrection
-        end
-    end
-end)
-Parvus.Utilities.NewThreadLoop(0,function()
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFoV"]
     and GetHitboxAllFoV({
         WallCheck = Window.Flags["Aimbot/WallCheck"],
         Priority = Window.Flags["Aimbot/Priority"]
     }) or SilentAim,Window.Flags["BadBusiness/AutoShoot"])
+end)
 
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if Trigger then
         local TriggerHB = GetHitboxWithPrediction({
             Enabled = Window.Flags["Trigger/Enabled"],
@@ -977,6 +887,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
             FieldOfView = Window.Flags["Trigger/FieldOfView"],
             Priority = Window.Flags["Trigger/Priority"]
         })
+
         if TriggerHB then
             task.wait(Window.Flags["Trigger/Delay"])
             ToggleShoot(true)
@@ -997,6 +908,14 @@ Parvus.Utilities.NewThreadLoop(0,function()
                 end
             end
             ToggleShoot(false)
+        end
+    end
+end)
+Parvus.Utilities.Misc:NewThreadLoop(1,function()
+    local Weapon,Config = GetEquippedWeapon()
+    if Weapon and Config then
+        if Config.Projectile and Config.Projectile.GravityCorrection then
+            GravityCorrection = Config.Projectile.GravityCorrection
         end
     end
 end)

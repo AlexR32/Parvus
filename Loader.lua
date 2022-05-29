@@ -13,30 +13,8 @@ Parvus.Utilities.UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")()
 or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 Parvus.Utilities.Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")()
 or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))()
-
-Parvus.Utilities.SetupFPS = function()
-    local StartTime,TimeTable,
-    LastTime = os.clock(), {}
-    return function()
-        LastTime = os.clock()
-        for Index = #TimeTable, 1, -1 do
-            TimeTable[Index + 1] = TimeTable[Index] >= LastTime - 1 and TimeTable[Index] or nil
-        end
-        TimeTable[1] = LastTime
-        return os.clock() - StartTime >= 1 and #TimeTable or #TimeTable / (os.clock() - StartTime)
-    end
-end
-
-Parvus.Utilities.NewThreadLoop = function(Wait,Function)
-    coroutine.wrap(function()
-        while task.wait(Wait) do
-            local Success, Error = pcall(Function)
-            if not Success then
-                warn("thread error " .. Error)
-            end
-        end
-    end)()
-end
+Parvus.Utilities.Misc = Parvus.Debug and loadfile("Parvus/Utilities/Misc.lua")()
+or loadstring(game:HttpGetAsync("https://parvus.fun/script/Utilities/Misc.lua"))()
 
 Parvus.Games = {
     ["1054526971"] = {

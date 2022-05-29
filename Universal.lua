@@ -179,52 +179,12 @@ local Window = Parvus.Utilities.UI:Window({
         end
         SettingsTab:AddConfigSection("Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
-        Callback = function()
-            if #PlayerService:GetPlayers() <= 1 then
-                LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-                task.wait(0.5)
-                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-            else
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-            end
-        end})
+        Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
-        Callback = function()
-            local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
-            local DataDecoded,Servers = HttpService:JSONDecode(Request).data,{}
-            for Index,ServerData in ipairs(DataDecoded) do
-                if type(ServerData) == "table" and ServerData.id ~= game.JobId then
-                    table.insert(Servers,ServerData.id)
-                end
-            end
-            if #Servers > 0 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
-            else
-                Parvus.Utilities.UI:Notification({
-                    Title = "Parvus Hub",
-                    Description = "Couldn't find a server",
-                    Duration = 5
-                })
-            end
-        end})
-        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",Callback = function()
-            local Request = syn and syn.request or request
-            Request({
-                ["Url"] = "http://localhost:6463/rpc?v=1",
-                ["Method"] = "POST",
-                ["Headers"] = {
-                    ["Content-Type"] = "application/json",
-                    ["Origin"] = "https://discord.com"
-                },
-                ["Body"] = HttpService:JSONEncode({
-                    ["cmd"] = "INVITE_BROWSER",
-                    ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
-                    ["args"] = {
-                        ["code"] = "sYqDpbPYb7"
-                    }
-                })
-            })
-        end}):ToolTip("Join for support, updates and more!")
+        Callback = Parvus.Utilities.Misc.ServerHop})
+        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
+        Callback = Parvus.Utilities.Misc.JoinDiscord})
+        :ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Dropdown({Name = "Image",Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
@@ -292,7 +252,7 @@ local Window = Parvus.Utilities.UI:Window({
 end
 
 Window:LoadDefaultConfig()
-local GetFPS = Parvus.Utilities.SetupFPS()
+local GetFPS = Parvus.Utilities.Misc:SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
@@ -476,7 +436,7 @@ RunService.Heartbeat:Connect(function()
         or Value
     end]]
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     Trigger({
         Enabled = Window.Flags["Trigger/Enabled"],
         WallCheck = Window.Flags["Trigger/WallCheck"],

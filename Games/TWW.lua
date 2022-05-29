@@ -1,6 +1,4 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local Pathfinding = game:GetService("PathfindingService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
@@ -24,7 +22,14 @@ local Window = Parvus.Utilities.UI:Window({
         local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
         end
-        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
+        local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
+            AFoVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
+            AFoVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
+            AFoVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
+            AFoVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            AFoVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        end
+        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Right"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Dynamic FoV",Flag = "Aimbot/DynamicFoV",Value = false})
@@ -36,57 +41,6 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
             }})
-            AimbotSection:Divider({Text = "Prediction"})
-            AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Prediction/Enabled",Value = false})
-            AimbotSection:Slider({Name = "Velocity",Flag = "Aimbot/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
-        end
-        local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
-            AFoVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFoVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFoVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
-            AFoVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            AFoVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
-        end
-        local TFoVSection = AimAssistTab:Section({Name = "Trigger FoV Circle",Side = "Left"}) do
-            TFoVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
-            TFoVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
-            TFoVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",Value = {1,0.25,1,0.5,true}})
-            TFoVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            TFoVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
-        end
-        local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
-            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Dynamic FoV",Flag = "SilentAim/DynamicFoV",Value = false})
-            SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
-            SilentAimSection:Slider({Name = "Field of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
-            SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "HumanoidRootPart",Mode = "Toggle"}
-            }})
-        end
-        local SAFoVSection = AimAssistTab:Section({Name = "Silent Aim FoV Circle",Side = "Right"}) do
-            SAFoVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SAFoVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SAFoVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
-            SAFoVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            SAFoVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
-        end
-        local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
-            TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
-            TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
-            TriggerSection:Toggle({Name = "Dynamic FoV",Flag = "Trigger/DynamicFoV",Value = false})
-            TriggerSection:Slider({Name = "Field of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
-            TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Slider({Name = "Hold Time",Flag = "Trigger/HoldTime",Min = 0,Max = 1,Precise = 2,Value = 0})
-            TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
-            }})
-            TriggerSection:Divider({Text = "Prediction"})
-            TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Prediction/Enabled",Value = false})
-            TriggerSection:Slider({Name = "Velocity",Flag = "Trigger/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -179,10 +133,6 @@ local Window = Parvus.Utilities.UI:Window({
             Window.Flags["ESP/Legendary/Text/Font"] = {"Monospace"}
             Window.Flags["ESP/Legendary/Text/Transparency"] = 0
         end
-        local MiningSection = GameTab:Section({Name = "Mining",Side = "Left"}) do
-            MiningSection:Toggle({Name = "Automine",Flag = "TWW/Automine/Enabled",Value = false})
-            MiningSection:Toggle({Name = "Autosprint",Flag = "TWW/Automine/Sprint",Value = false})
-        end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
@@ -202,52 +152,12 @@ local Window = Parvus.Utilities.UI:Window({
         end
         SettingsTab:AddConfigSection("Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
-        Callback = function()
-            if #PlayerService:GetPlayers() <= 1 then
-                LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-                task.wait(0.5)
-                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-            else
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-            end
-        end})
+        Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
-        Callback = function()
-            local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
-            local DataDecoded,Servers = HttpService:JSONDecode(Request).data,{}
-            for Index,ServerData in ipairs(DataDecoded) do
-                if type(ServerData) == "table" and ServerData.id ~= game.JobId then
-                    table.insert(Servers,ServerData.id)
-                end
-            end
-            if #Servers > 0 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
-            else
-                Parvus.Utilities.UI:Notification({
-                    Title = "Parvus Hub",
-                    Description = "Couldn't find a server",
-                    Duration = 5
-                })
-            end
-        end})
-        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",Callback = function()
-            local Request = syn and syn.request or request
-            Request({
-                ["Url"] = "http://localhost:6463/rpc?v=1",
-                ["Method"] = "POST",
-                ["Headers"] = {
-                    ["Content-Type"] = "application/json",
-                    ["Origin"] = "https://discord.com"
-                },
-                ["Body"] = HttpService:JSONEncode({
-                    ["cmd"] = "INVITE_BROWSER",
-                    ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
-                    ["args"] = {
-                        ["code"] = "sYqDpbPYb7"
-                    }
-                })
-            })
-        end}):ToolTip("Join for support, updates and more!")
+        Callback = Parvus.Utilities.Misc.ServerHop})
+        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
+        Callback = Parvus.Utilities.Misc.JoinDiscord})
+        :ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Dropdown({Name = "Image",Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
@@ -315,11 +225,9 @@ local Window = Parvus.Utilities.UI:Window({
 end
 
 Window:LoadDefaultConfig()
-local GetFPS = Parvus.Utilities.SetupFPS()
+local GetFPS = Parvus.Utilities.Misc:SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
 
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
@@ -365,85 +273,18 @@ local function GetHitbox(Config)
     return ClosestHitbox
 end
 
-local function Trigger(Config)
-    if not Config.Enabled then return end
-    local Camera = Workspace.CurrentCamera
-
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
-    ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
-    or Config.FieldOfView,nil
-
-    for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character = Player.Character
-        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-        local IsAlive = Humanoid and Humanoid.Health > 0
-        if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
-            for Index, HumanoidPart in pairs(Config.Priority) do
-                local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
-                    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
-
-                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
-                    and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
-                    local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
-                    end
-                end
-            end
-        end
-    end
-
-    if ClosestHitbox then
-        task.wait(Config.Delay)
-        mouse1press()
-        task.wait(Config.HoldTime)
-        mouse1release()
-    end
-end
-
 local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-
-    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
-
-    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
-    and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
+    local HitboxOnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
         (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
     )
 end
 
-local OldNamecall
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
-    local args = {...}
-    if SilentAim then
-        local Camera = Workspace.CurrentCamera
-        local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
-        if getnamecallmethod() == "Raycast" and HitChance then
-            args[2] = SilentAim.Position - Camera.CFrame.Position
-        elseif getnamecallmethod() == "FindPartOnRayWithIgnoreList" and HitChance then
-            args[1] = Ray.new(args[1].Origin,SilentAim.Position - Camera.CFrame.Position)
-        end
-    end
-    return OldNamecall(Self, unpack(args))
-end)
-
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox({
-        Enabled = Window.Flags["SilentAim/Enabled"],
-        WallCheck = Window.Flags["SilentAim/WallCheck"],
-        DynamicFoV = Window.Flags["SilentAim/DynamicFoV"],
-        FieldOfView = Window.Flags["SilentAim/FieldOfView"],
-        Priority = Window.Flags["SilentAim/Priority"],
-        TeamCheck = Window.Flags["TeamCheck"]
-    })
     if Aimbot then AimAt(
         GetHitbox({
             Enabled = Window.Flags["Aimbot/Enabled"],
@@ -467,21 +308,6 @@ RunService.Heartbeat:Connect(function()
             os.date("%X"),GetFPS(),math.round(Ping:GetValue())
         ))
     end
-end)
-Parvus.Utilities.NewThreadLoop(0,function()
-    Trigger({
-        Enabled = Window.Flags["Trigger/Enabled"],
-        WallCheck = Window.Flags["Trigger/WallCheck"],
-        Prediction = {
-            Enabled = Window.Flags["Trigger/Prediction/Enabled"],
-            Velocity = Window.Flags["Trigger/Prediction/Velocity"]
-        },
-        DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
-        FieldOfView = Window.Flags["Trigger/FieldOfView"],
-        Priority = Window.Flags["Trigger/Priority"],
-        HoldTime = Window.Flags["Trigger/HoldTime"],
-        Delay = Window.Flags["Trigger/Delay"]
-    })
 end)
 
 -- Thunderstruck, Legendary ESP

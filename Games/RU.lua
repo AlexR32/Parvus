@@ -141,24 +141,6 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
-        --[[local LightingSection = VisualsTab:Section({Name = "Lighting",Side = "Right"}) do
-            LightingSection:Toggle({Name = "Enabled",Flag = "Lighting/Enabled",Value = false})
-            LightingSection:Colorpicker({Name = "Ambient",Flag = "Lighting/Ambient",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "Brightness",Flag = "Lighting/Brightness",Min = 0,Max = 10,Precise = 2,Value = 3})
-            LightingSection:Slider({Name = "ClockTime",Flag = "Lighting/ClockTime",Min = 0,Max = 24,Precise = 2,Value = 14.5})
-            LightingSection:Colorpicker({Name = "ColorShift_Bottom",Flag = "Lighting/ColorShift_Bottom",Value = {1,0,0,0,false}})
-            LightingSection:Colorpicker({Name = "ColorShift_Top",Flag = "Lighting/ColorShift_Top",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "EnvironmentDiffuseScale",Flag = "Lighting/EnvironmentDiffuseScale",Min = 0,Max = 1,Precise = 3,Value = 1})
-            LightingSection:Slider({Name = "EnvironmentSpecularScale",Flag = "Lighting/EnvironmentSpecularScale",Min = 0,Max = 1,Precise = 3,Value = 1})
-            LightingSection:Slider({Name = "ExposureCompensation",Flag = "Lighting/ExposureCompensation",Min = -3,Max = 3,Precise = 2,Value = 0})
-            LightingSection:Colorpicker({Name = "FogColor",Flag = "Lighting/FogColor",Value = {1,0,1,0,false}})
-            LightingSection:Slider({Name = "FogEnd",Flag = "Lighting/FogEnd",Min = 0,Max = 100000,Value = 100000})
-            LightingSection:Slider({Name = "FogStart",Flag = "Lighting/FogStart",Min = 0,Max = 100000,Value = 0})
-            LightingSection:Slider({Name = "GeographicLatitude",Flag = "Lighting/GeographicLatitude",Min = 0,Max = 360,Precise = 1,Value = 23.5})
-            LightingSection:Toggle({Name = "GlobalShadows",Flag = "Lighting/GlobalShadows",Value = true})
-            LightingSection:Colorpicker({Name = "OutdoorAmbient",Flag = "Lighting/OutdoorAmbient",Value = {1,0,0,0,false}})
-            LightingSection:Slider({Name = "ShadowSoftness",Flag = "Lighting/ShadowSoftness",Min = 0,Max = 1,Precise = 2,Value = 1})
-        end]]
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
@@ -178,52 +160,12 @@ local Window = Parvus.Utilities.UI:Window({
         end
         SettingsTab:AddConfigSection("Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
-        Callback = function()
-            if #PlayerService:GetPlayers() <= 1 then
-                LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-                task.wait(0.5)
-                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-            else
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-            end
-        end})
+        Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
-        Callback = function()
-            local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
-            local DataDecoded,Servers = HttpService:JSONDecode(Request).data,{}
-            for Index,ServerData in ipairs(DataDecoded) do
-                if type(ServerData) == "table" and ServerData.id ~= game.JobId then
-                    table.insert(Servers,ServerData.id)
-                end
-            end
-            if #Servers > 0 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
-            else
-                Parvus.Utilities.UI:Notification({
-                    Title = "Parvus Hub",
-                    Description = "Couldn't find a server",
-                    Duration = 5
-                })
-            end
-        end})
-        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",Callback = function()
-            local Request = syn and syn.request or request
-            Request({
-                ["Url"] = "http://localhost:6463/rpc?v=1",
-                ["Method"] = "POST",
-                ["Headers"] = {
-                    ["Content-Type"] = "application/json",
-                    ["Origin"] = "https://discord.com"
-                },
-                ["Body"] = HttpService:JSONEncode({
-                    ["cmd"] = "INVITE_BROWSER",
-                    ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
-                    ["args"] = {
-                        ["code"] = "sYqDpbPYb7"
-                    }
-                })
-            })
-        end}):ToolTip("Join for support, updates and more!")
+        Callback = Parvus.Utilities.Misc.ServerHop})
+        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
+        Callback = Parvus.Utilities.Misc.JoinDiscord})
+        :ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Dropdown({Name = "Image",Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
@@ -291,28 +233,11 @@ local Window = Parvus.Utilities.UI:Window({
 end
 
 Window:LoadDefaultConfig()
-local GetFPS = Parvus.Utilities.SetupFPS()
+local GetFPS = Parvus.Utilities.Misc:SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
---[[local DefaultLighting = {
-    Ambient = Lighting.Ambient,
-    Brightness = Lighting.Brightness,
-    ClockTime = Lighting.ClockTime,
-    ColorShift_Bottom = Lighting.ColorShift_Bottom,
-    ColorShift_Top = Lighting.ColorShift_Top,
-    EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
-    EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
-    ExposureCompensation = Lighting.ExposureCompensation,
-    FogColor = Lighting.FogColor,
-    FogEnd = Lighting.FogEnd,
-    FogStart = Lighting.FogStart,
-    GeographicLatitude = Lighting.GeographicLatitude,
-    GlobalShadows = Lighting.GlobalShadows,
-    OutdoorAmbient = Lighting.OutdoorAmbient,
-    ShadowSoftness = Lighting.ShadowSoftness
-}]]
 
 local function TeamCheck(Character)
     if Character and Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
@@ -435,15 +360,6 @@ __namecall = hookmetamethod(game,"__namecall",function(self,...)
     return __namecall(self, unpack(args))
 end)
 
---[[local __newindex
-__newindex = hookmetamethod(game,"__newindex",function(self,index,value)
-    if checkcaller() then return __newindex(self,index,value) end
-    if self == Lighting and Window.Flags["Lighting/"..index] then
-        DefaultLighting[index] = value
-    end
-    return __newindex(self,index,value)
-end)]]
-
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox({
         Enabled = Window.Flags["SilentAim/Enabled"],
@@ -476,13 +392,8 @@ RunService.Heartbeat:Connect(function()
             os.date("%X"),GetFPS(),math.round(Ping:GetValue())
         ))
     end
-    --[[for Property,Value in pairs(DefaultLighting) do
-        Lighting[Property] = Window.Flags["Lighting/Enabled"] and
-        Parvus.Utilities.UI:TableToColor(Window.Flags["Lighting/"..Property])
-        or Value
-    end]]
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     Trigger({
         Enabled = Window.Flags["Trigger/Enabled"],
         WallCheck = Window.Flags["Trigger/WallCheck"],
