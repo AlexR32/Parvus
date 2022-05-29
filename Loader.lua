@@ -14,7 +14,7 @@ or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvu
 Parvus.Utilities.Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")()
 or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))()
 Parvus.Utilities.Misc = Parvus.Debug and loadfile("Parvus/Utilities/Misc.lua")()
-or loadstring(game:HttpGetAsync("https://parvus.fun/script/Utilities/Misc.lua"))()
+or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Misc.lua"))()
 
 Parvus.Games = {
     ["1054526971"] = {
