@@ -245,6 +245,17 @@ local Window = Parvus.Utilities.UI:Window({
             HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false})
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
+        local MiscSection = GameTab:Section({Name = "Misc"}) do
+            MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
+                local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
+                if not serverSettings.CHEATS_ENABLED then
+                    serverSettings.CHEATS_ENABLED = true
+                    for Index,Connection in pairs(getconnections(RemoteEvent.OnClientEvent)) do
+                        Connection.Function("InitRGE")
+                    end
+                end
+            end})
+        end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
@@ -497,14 +508,14 @@ local function HookSignal(Signal,Index,Callback)
         OldConnection(unpack(args))
     end)
 end
-local function HookFunction(Module,Function,Callback)
-    Module = RequireModule(Module) local OldFunction
+local function HookFunction(ModuleName,Function,Callback)
+    local Module,OldFunction = RequireModule(ModuleName)
     while task.wait() do
         if Module and Module[Function] then
             OldFunction = Module[Function]
             break
         end
-        Module = RequireModule("ControllerClass")
+        Module = RequireModule(ModuleName)
     end
     Module[Function] = function(...)
         local args = Callback({...})

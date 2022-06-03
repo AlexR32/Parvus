@@ -189,6 +189,25 @@ elseif game.GameId == 1168263273 then
         end
         return OldIndex(Self, Index)
     end)
+elseif game.GameId == 1586272220 then
+    local function GetPlayerTank(Player)
+        local Char = Player:WaitForChild("Char")
+        if not Char then return end
+        local CharValue = Char.Value
+        if not CharValue then return end
+        if not CharValue.Parent
+        and not CharValue.Parent.Parent
+        and not CharValue.Parent.Parent.Parent then return end
+        return CharValue.Parent.Parent.Parent
+    end
+    function ModelManager(Mode,Model)
+        local PlayerTank = GetPlayerTank(Model)
+        if PlayerTank then
+            return PlayerTank,PlayerTank.PrimaryPart or false,
+            PlayerTank.Stats.Health.Value > 0,
+            LocalPlayer.Team ~= Model.Team, Model.TeamColor.Color
+        end
+    end
 end
 
 function DrawingLibrary:AddESP(Model,Mode,ConfigName,Config)

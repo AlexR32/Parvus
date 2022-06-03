@@ -412,6 +412,7 @@ setreadonly(Tortoiseshell.Raycast,false)
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
+local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
 
 local Notify = Instance.new("BindableEvent")
@@ -481,6 +482,14 @@ local function GetEquippedWeapon()
         if Controller.Equipped then
             return Weapon,WeaponConfigs[Weapon]
         end
+    end
+end
+local function GetCurrentConfig()
+    local Weapon,Config = GetEquippedWeapon()
+    if Weapon and Config then
+        local Controller = require(ControllersFolder[Config.Controller])
+        local Proto = debug.getproto(Controller.Create,1,true)
+        return getupvalue(Proto[1],1), getupvalue(Proto[2],1)
     end
 end
 
@@ -911,6 +920,48 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end
     end
 end)
+
+--[[local function ShallowCopy(Table)
+    local TableCopy
+    if type(Table) == "table" then
+        TableCopy = {}
+        for Index,Value in pairs(Table) do
+            if typeof(Value) == "table" then
+                TableCopy[Index] = ShallowCopy(Value)
+            else
+                TableCopy[Index] = Value
+            end
+        end
+    else
+        TableCopy = Table
+    end
+    return TableCopy
+end
+local OldConfigs = {}
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if Window.Flags["BadBusiness/WeaponMod/Enabled"] then
+        local First,Second = GetCurrentConfig()
+        if not First and not Second then return end
+        local Configs = {First = First, Second = Second}
+
+        OldConfigs.First = ShallowCopy(First)
+        OldConfigs.Second = ShallowCopy(Second)
+
+        for Index,Config in pairs(Configs) do
+            if Config.Recoil and Config.Recoil.Default then
+                local OldConfig = OldConfigs[Index]
+                Config.Recoil.Default.WeaponScale = 
+                OldConfig.Recoil.Default.WeaponScale * (Window.Flags["BadBusiness/WeaponMod/WeaponScale"] / 100)
+
+                Config.Recoil.Default.CameraScale = 
+                OldConfig.Recoil.Default.CameraScale * (Window.Flags["BadBusiness/WeaponMod/CameraScale"] / 100)
+
+                Config.Recoil.Default.RecoilScale = 
+                OldConfig.Recoil.Default.RecoilScale * (Window.Flags["BadBusiness/WeaponMod/RecoilScale"] / 100)
+            end
+        end
+    end
+end)]]
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
@@ -919,6 +970,7 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
         end
     end
 end)
+
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then

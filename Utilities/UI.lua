@@ -238,38 +238,17 @@ local function InitWindow(ScreenAsset,Window)
         Watermark.Enabled = GetType(Watermark.Enabled,false,"boolean")
         Watermark.Flag = GetType(Watermark.Flag,"UI/Watermark/Position","string")
         
-        local StartDrag, StartPosition
-        ScreenAsset.Watermark.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 and Window.Enabled then
-                StartPosition = UserInputService:GetMouseLocation()
-                StartDrag = Object.AbsolutePosition
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(Input)
-            if StartDrag and Input.UserInputType == Enum.UserInputType.MouseMovement then
-                local Mouse = UserInputService:GetMouseLocation()
-                local Delta = Mouse - StartPosition
-                StartPosition = Mouse
-                ScreenAsset.Watermark.Position = ScreenAsset.Watermark.Position + UDim2.new(0,Delta.X,0,Delta.Y)
-            end
-        end)
-        ScreenAsset.Watermark.InputEnded:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                StartDrag,StartPosition = nil,nil
-                Window.Flags[Watermark.Flag] = 
-                {ScreenAsset.Watermark.Position.X.Scale,
-                ScreenAsset.Watermark.Position.X.Offset,
-                ScreenAsset.Watermark.Position.Y.Scale,
-                ScreenAsset.Watermark.Position.Y.Offset}
-            end
-        end)
-        
         ScreenAsset.Watermark.Visible = Watermark.Enabled
         ScreenAsset.Watermark.Title.Text = Watermark.Title
         ScreenAsset.Watermark.Position = UDim2.new(0.95,0,0,10)
         ScreenAsset.Watermark.Size = UDim2.new(
         0,ScreenAsset.Watermark.Title.TextBounds.X + 10,
         0,ScreenAsset.Watermark.Title.TextBounds.Y + 10)
+        MakeDraggable(ScreenAsset.Watermark,ScreenAsset.Watermark,function(Position)
+            Window.Flags[Watermark.Flag] = 
+            {Position.X.Scale,Position.X.Offset,
+            Position.Y.Scale,Position.Y.Offset}
+        end)
         
         function Watermark:Toggle(Boolean)
             Watermark.Enabled = Boolean
