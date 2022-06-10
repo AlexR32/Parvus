@@ -230,7 +230,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CharSection = GameTab:Section({Name = "Character"}) do
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
-            CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGMode",Value = false})
+            CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
             CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind({Flag = "BRM5/WalkSpeed/Keybind"})
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
