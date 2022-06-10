@@ -502,6 +502,7 @@ end
 local function HookSignal(Signal,Index,Callback)
     local Connection = getconnections(Signal)[Index]
     local OldConnection = Connection.Function
+    if not OldConnection then return end -- cuz shitsploits have broken getconnections
     Connection:Disable()
     Signal:Connect(function(...)
         local args = Callback({...})
