@@ -412,7 +412,7 @@ setreadonly(Tortoiseshell.Raycast,false)
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
-local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
+--local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
 
 local Notify = Instance.new("BindableEvent")
@@ -484,14 +484,14 @@ local function GetEquippedWeapon()
         end
     end
 end
-local function GetCurrentConfig()
+--[[local function GetCurrentConfig()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         local Controller = require(ControllersFolder[Config.Controller])
         local Proto = debug.getproto(Controller.Create,1,true)
         return getupvalue(Proto[1],1), getupvalue(Proto[2],1)
     end
-end
+end]]
 
 local function ToggleShoot(Toggle)
     if Toggle then
@@ -776,7 +776,7 @@ Tortoiseshell.Projectiles.InitProjectile = function(self, ...)
     local args = {...}
     if args[4] == LocalPlayer then
         PredictedVelocity = Projectiles[args[1]].Speed
-        PredictedGravity = Projectiles[args[1]].Gravity
+        PredictedGravity = Projectiles[args[1]].Gravity ~= 0 and Projectiles[args[1]].Gravity or 1
     end
     return OldInitProjectile(self, ...)
 end
@@ -970,7 +970,6 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
         end
     end
 end)
-
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then
