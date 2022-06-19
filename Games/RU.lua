@@ -144,19 +144,16 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            local MenuToggle = MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) 
-                Window:Toggle(Bool)
-            end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
+            Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
+            MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = true,
+            Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
-            Callback = function(Bool) 
-                Window.Watermark:Toggle(Bool)
-            end})
+            Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {1,0.25,1,0,true},
-            Callback = function(HSVAR,Color)
-                Window:SetColor(Color)
-            end})
+            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
         SettingsTab:AddConfigSection("Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
@@ -233,6 +230,9 @@ local Window = Parvus.Utilities.UI:Window({
 end
 
 Window:LoadDefaultConfig()
+Window:SetValue("UI/Toggle",
+Window.Flags["UI/OOL"])
+
 local GetFPS = Parvus.Utilities.Misc:SetupFPS()
 Parvus.Utilities.Drawing:Cursor(Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)

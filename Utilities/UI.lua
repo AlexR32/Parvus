@@ -1,12 +1,11 @@
 local UserInputService = game:GetService("UserInputService")
 local InsertService = game:GetService("InsertService")
---local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
---local Workspace = game:GetService("Workspace")
+local PlayerService = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
-local Debug = false
+local Debug,LocalPlayer = false,PlayerService.LocalPlayer
 local MainAssetFolder = Debug and game.ReplicatedStorage["BracketV3.2"]
 or InsertService:LoadLocalAsset("rbxassetid://9153139105")
 
@@ -157,6 +156,7 @@ local function InitToolTip(Parent,ScreenAsset,Text)
 end
 local function InitScreen()
     local ScreenAsset = GetAsset("Screen/Bracket")
+    if not Debug then sethiddenproperty(ScreenAsset,"OnTopOfCoreBlur",true) end
     ScreenAsset.Name = "Bracket " .. game:GetService("HttpService"):GenerateGUID(false)
     ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or CoreGui
     return {ScreenAsset = ScreenAsset}
@@ -225,9 +225,20 @@ local function InitWindow(ScreenAsset,Window)
     function Window:Toggle(Boolean)
         Window.Enabled = Boolean
         WindowAsset.Visible = Window.Enabled
-        for Index,Instance in pairs(ScreenAsset:GetChildren()) do
+
+        if not Debug  then
+        RunService:SetRobloxGuiFocused(Window.Enabled and Window.Flags["UI/Blur"]) end
+        if not Window.Enabled then for Index,Instance in pairs(ScreenAsset:GetChildren()) do
             if Instance.Name == "Palette" or Instance.Name == "OptionContainer" then
                 Instance.Visible = false
+            end
+        end end
+    end
+
+    function Window:SetValue(Flag,Value)
+        for Index,Element in pairs(Window.Elements) do
+            if Element.Flag == Flag then
+                Element:SetValue(Value)
             end
         end
     end
