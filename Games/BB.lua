@@ -233,7 +233,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
             Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
-            MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = true,
+            MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
