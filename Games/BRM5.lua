@@ -574,7 +574,8 @@ local function HookSignal(Signal,Index,Callback)
     Connection:Disable()
     Signal:Connect(function(...)
         local Args = Callback({...})
-        OldConnection(unpack(Args or {}))
+        if not Args then return end
+        OldConnection(unpack(Args))
     end)
 end
 local function HookFunction(ModuleName,Function,Callback)
@@ -588,57 +589,10 @@ local function HookFunction(ModuleName,Function,Callback)
     end
     Module[Function] = function(...)
         local Args = Callback({...})
-        return OldFunction(unpack(Args or {}))
+        if not Args then return end
+        return OldFunction(unpack(Args))
     end
 end
-
-task.spawn(function()
-    for Index,Table in pairs(getgc(true)) do
-        if typeof(Table) == "table"
-        and rawget(Table,"FireServer")
-        and rawget(Table,"InvokeServer") then
-            function Network:FireServer(...)
-                Table:FireServer(...)
-            end
-            function Network:InvokeServer(...)
-                Table:InvokeServer(...)
-            end
-            break
-        end
-    end
-end)
-task.spawn(function()
-    for Index,Table in pairs(getgc(true)) do
-        if typeof(Table) == "table"
-        and rawget(Table,"FireServer")
-        and rawget(Table,"InvokeServer")  then
-            local OldFireServer = Table.FireServer
-            --local OldInvokeServer = Table.InvokeServer
-            Table.FireServer = function(Self, ...)
-                local Args = {...}
-                if Window.Flags["BRM5/AntiFall"] then
-                    if Args[1] == "ReplicateSkydive"
-                    and (Args[2] == 3 or Args[2] == 2)  then
-                        return
-                    end
-                end
-                return OldFireServer(Self, ...)
-            end
-            --[[Table.FireServer = function(Self, ...)
-                local Args = {...}
-                if Args[1] ~= "UpdateCharacter" then
-                    print("Network:FireServer(" .. FormatTable(Args) .. ")")
-                end
-                return OldFireServer(Self, ...)
-            end
-            Table.InvokeServer = function(Self, ...)
-                local Args = {...}
-                print("Network:InvokeServer(" .. FormatTable(Args) .. ")")
-                return OldInvokeServer(Self, ...)
-            end]]
-        end
-    end
-end)
 
 HookFunction("ControllerClass","LateUpdate",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
@@ -649,6 +603,10 @@ end)
 HookFunction("MovementService","Mount",function(Args)
     if Window.Flags["BRM5/AntiFall"] then
         if Args[3] == "Skydive" or Args[3] == "Parachute" then
+            print("ReplicateSkydive")
+            Network:FireServer("ReplicateSkydive",1)
+            Network:FireServer("ReplicateSkydive",2)
+            Network:FireServer("ReplicateSkydive",0)
             return
         end
     end
@@ -747,6 +705,55 @@ HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
         and Args[2] == true then return end
     end
     return Args
+end)
+
+task.spawn(function()
+    for Index,Table in pairs(getgc(true)) do
+        if typeof(Table) == "table"
+        and rawget(Table,"FireServer")
+        and rawget(Table,"InvokeServer") then
+            function Network:FireServer(...)
+                Table:FireServer(...)
+            end
+            function Network:InvokeServer(...)
+                Table:InvokeServer(...)
+            end
+            break
+        end
+    end
+end)
+task.spawn(function()
+    for Index,Table in pairs(getgc(true)) do
+        if typeof(Table) == "table"
+        and rawget(Table,"FireServer")
+        and rawget(Table,"InvokeServer")  then
+            local OldFireServer = Table.FireServer
+            --local OldInvokeServer = Table.InvokeServer
+            Table.FireServer = function(Self, ...)
+                if checkcaller() then OldFireServer(Self, ...) end
+                local Args = {...}
+                if Window.Flags["BRM5/AntiFall"] then
+                    if Args[1] == "ReplicateSkydive"
+                    and (Args[2] == 3 or Args[2] == 2) then
+                        return
+                    end
+                end
+                return OldFireServer(Self, ...)
+            end
+            --[[Table.FireServer = function(Self, ...)
+                local Args = {...}
+                if Args[1] ~= "UpdateCharacter" then
+                    print("Network:FireServer(" .. FormatTable(Args) .. ")")
+                end
+                return OldFireServer(Self, ...)
+            end
+            Table.InvokeServer = function(Self, ...)
+                local Args = {...}
+                print("Network:InvokeServer(" .. FormatTable(Args) .. ")")
+                return OldInvokeServer(Self, ...)
+            end]]
+        end
+    end
 end)
 
 local OldNamecall
