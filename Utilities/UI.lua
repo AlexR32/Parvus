@@ -242,6 +242,14 @@ local function InitWindow(ScreenAsset,Window)
             end
         end
     end
+
+    function Window:GetValue(Flag)
+        for Index,Element in pairs(Window.Elements) do
+            if Element.Flag == Flag then
+                return Window.Flags[Element.Flag]
+            end
+        end
+    end
     
     function Window:Watermark(Watermark)
         Watermark = GetType(Watermark,{},"table")
