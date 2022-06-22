@@ -603,10 +603,6 @@ end)
 HookFunction("MovementService","Mount",function(Args)
     if Window.Flags["BRM5/AntiFall"] then
         if Args[3] == "Skydive" or Args[3] == "Parachute" then
-            print("ReplicateSkydive")
-            Network:FireServer("ReplicateSkydive",1)
-            Network:FireServer("ReplicateSkydive",2)
-            Network:FireServer("ReplicateSkydive",0)
             return
         end
     end
