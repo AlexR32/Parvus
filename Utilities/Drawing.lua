@@ -38,16 +38,18 @@ local function GetDistanceFromCamera(Position)
 end
 function ModelManager(Mode,Model)
     if Mode == "Player" then
-        return Model.Character,
-        (Model.Character and Model.Character:FindFirstChild("HumanoidRootPart")) or false,
-        (Model.Character and Model.Character:FindFirstChildOfClass("Humanoid") and
-        Model.Character:FindFirstChildOfClass("Humanoid").Health > 0) or false,
-        LocalPlayer.Team ~= Model.Team, Model.TeamColor.Color
+        local Character = Model.Character if not Model.Character then return end
+        local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid and not HumanoidRootPart then return end
+        return Character,HumanoidRootPart,Humanoid.Health > 0,
+        LocalPlayer.Team ~= Model.Team,Model.TeamColor.Color
     else
-        local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
-        return Model, NPC:FindFirstChild("HumanoidRootPart") or false,
-        (Humanoid and Humanoid.Health > 0) or false,
-        true, Color3.new(1,1,1)
+        local HumanoidRootPart = Model:FindFirstChild("HumanoidRootPart")
+        local Humanoid = Model:FindFirstChildOfClass("Humanoid")
+        if not Humanoid and not HumanoidRootPart then return end
+        return Model,HumanoidRootPart,Humanoid.Health > 0,
+        true,Color3.new(1,1,1)
     end
 end
 
@@ -102,18 +104,19 @@ local function CalculateBox(Model,Orientation,ScreenPosition)
     Size = Vector2.new(Height / 2, Height)
     return Vector2.new(ScreenPosition.X - Size.X / 2, ScreenPosition.Y - Size.Y / 2), Size
 end]]
+
+local function AntiAliasing(Position)
+    return Vector2.new(math.round(Position.X),math.round(Position.Y))
+end
 local function CalculateBox(Model,Position) -- mickeyrbx
     local Camera = Workspace.CurrentCamera
     local Size = Model:GetExtentsSize()
     local ScaleFactor = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
     local Width,Height = math.round(ScaleFactor * Size.X),math.round(ScaleFactor * Size.Y)
-    return Vector2.new(
-        math.round(Position.X - Width / 2),
-        math.round(Position.Y - Height / 2)
-    ), Vector2.new(Width,Height)
+    return AntiAliasing(Position.X - Width / 2,Position.Y - Height / 2),Vector2.new(Width,Height)
 end
--- Blissful
-local function GetRelative(Position)
+
+local function GetRelative(Position)-- Blissful
     local Camera = Workspace.CurrentCamera
     local Relative = Camera.CFrame:PointToObjectSpace(Position)
     return Vector2.new(-Relative.X, -Relative.Z)
@@ -129,167 +132,99 @@ local function RelativeToCenter(Size)
     local Camera = Workspace.CurrentCamera
     return Camera.ViewportSize / 2 - Size
 end
---[[local function AntiAliasing(Position)
-    return Vector2.new(math.round(Position.X), math.round(Position.Y))
-end]]
 
-local function UpdateESP(Model,ESP)
+local function PlayerESP(Model,ESP)
     local ScreenPosition,OnScreen,UpdateName = false,false,
     Model.Name .. "_" .. HttpService:GenerateGUID(false)
+
     local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
     = false,false,false,false,Color3.new(1,1,1)
 
     RunService:BindToRenderStep(UpdateName,2000,function()
-        --debug.profilebegin("PARVUS_DRAWING_" .. UpdateName)
-        if ESP.Mode == "Player" or ESP.Mode == "NPC" then
-            Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
-            = ModelManager(ESP.Mode,Model)
+        Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
+        = ModelManager(ESP.Mode,Model)
 
-            if Character and PrimaryPart and IsAlive then
-                local Camera = Workspace.CurrentCamera
-                ScreenPosition, OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
-                local Color = ESP.Config[ESP.ConfigName.."/TeamColor"] and TeamColor
-                or (InEnemyTeam and TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
-                or TableToColor(ESP.Config[ESP.ConfigName.."/Ally"]))
+        if Character and PrimaryPart and IsAlive then local Camera = Workspace.CurrentCamera
+            ScreenPosition, OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
+            local Color = ESP.Config[ESP.ConfigName.."/TeamColor"] and TeamColor
+            or (InEnemyTeam and TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
+            or TableToColor(ESP.Config[ESP.ConfigName.."/Ally"]))
 
-                if OnScreen then
-                    if ESP.Highlight.Enabled then
-                        ESP.Highlight.Adornee = ESP.Mode == "Player" and Model.Character or Character
-                        ESP.Highlight.FillColor = Color
-                        ESP.Highlight.FillTransparency = ESP.Config[ESP.ConfigName.."/Highlight/Transparency"]
-                        ESP.Highlight.OutlineColor = TableToColor(ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"])
-                        ESP.Highlight.OutlineTransparency = ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"][4]
+            if OnScreen then
+                if ESP.Highlight.Enabled then
+                    ESP.Highlight.Adornee = ESP.Mode == "Player" and Model.Character or Character
+                    ESP.Highlight.FillColor = Color
+                    ESP.Highlight.FillTransparency = ESP.Config[ESP.ConfigName.."/Highlight/Transparency"]
+                    ESP.Highlight.OutlineColor = TableToColor(ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"])
+                    ESP.Highlight.OutlineTransparency = ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"][4]
+                end
+                if Character:FindFirstChild("Head") and (ESP.Drawing.Other.Head.Visible or ESP.Drawing.Other.Tracer.Visible) then
+                    local HeadPosition = Camera:WorldToViewportPoint(Character.Head.Position)
+                    if ESP.Drawing.Other.Head.Visible then
+                        ESP.Drawing.Other.Head.Color = Color
+                        ESP.Drawing.Other.Head.Radius = ESP.Config[ESP.ConfigName.."/Head/Autoscale"]
+                        and math.clamp(1 / GetDistanceFromCamera(PrimaryPart.Position) * 1000, 0, ESP.Config[ESP.ConfigName.."/Head/Radius"])
+                        or ESP.Config[ESP.ConfigName.."/Head/Radius"]
+                        ESP.Drawing.Other.Head.Filled = ESP.Config[ESP.ConfigName.."/Head/Filled"]
+                        ESP.Drawing.Other.Head.NumSides = ESP.Config[ESP.ConfigName.."/Head/NumSides"]
+                        ESP.Drawing.Other.Head.Thickness = ESP.Config[ESP.ConfigName.."/Head/Thickness"]
+                        ESP.Drawing.Other.Head.Transparency = 1-ESP.Config[ESP.ConfigName.."/Head/Transparency"]
+                        ESP.Drawing.Other.Head.Position = Vector2.new(HeadPosition.X,HeadPosition.Y)
                     end
-                    if Character:FindFirstChild("Head") and (ESP.Drawing.Other.Head.Visible or ESP.Drawing.Other.Tracer.Visible) then
-                        local HeadPosition = Camera:WorldToViewportPoint(Character.Head.Position)
-                        if ESP.Drawing.Other.Head.Visible then
-                            ESP.Drawing.Other.Head.Color = Color
-                            ESP.Drawing.Other.Head.Radius = ESP.Config[ESP.ConfigName.."/Head/Autoscale"]
-                            and math.clamp(1 / GetDistanceFromCamera(PrimaryPart.Position) * 1000, 0, ESP.Config[ESP.ConfigName.."/Head/Radius"])
-                            or ESP.Config[ESP.ConfigName.."/Head/Radius"]
-                            ESP.Drawing.Other.Head.Filled = ESP.Config[ESP.ConfigName.."/Head/Filled"]
-                            ESP.Drawing.Other.Head.NumSides = ESP.Config[ESP.ConfigName.."/Head/NumSides"]
-                            ESP.Drawing.Other.Head.Thickness = ESP.Config[ESP.ConfigName.."/Head/Thickness"]
-                            ESP.Drawing.Other.Head.Transparency = 1-ESP.Config[ESP.ConfigName.."/Head/Transparency"]
-                            ESP.Drawing.Other.Head.Position = Vector2.new(HeadPosition.X,HeadPosition.Y)
-                        end
-                        if ESP.Drawing.Other.Tracer.Visible then
-                            ESP.Drawing.Other.Tracer.Color = Color
-                            ESP.Drawing.Other.Tracer.Thickness = ESP.Config[ESP.ConfigName.."/Tracer/Thickness"]
-                            ESP.Drawing.Other.Tracer.Transparency = 1-ESP.Config[ESP.ConfigName.."/Tracer/Transparency"]
-                            ESP.Drawing.Other.Tracer.From = ESP.Config[ESP.ConfigName.."/Tracer/Mode"][1] == "From Mouse" and UserInputService:GetMouseLocation()
-                            or ESP.Config[ESP.ConfigName.."/Tracer/Mode"][1] == "From Bottom" and Vector2.new(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y)
-                            ESP.Drawing.Other.Tracer.To = Vector2.new(HeadPosition.X,HeadPosition.Y)
-                        end
-                    end
-                    if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
-                        local BoxPosition, BoxSize = CalculateBox(Character,ScreenPosition)
-                        if ESP.Drawing.Box.Main.Visible then
-                            ESP.Drawing.Box.Main.Color = Color
-                            ESP.Drawing.Box.Main.Filled = ESP.Config[ESP.ConfigName.."/Box/Filled"]
-                            ESP.Drawing.Box.Main.Thickness = ESP.Config[ESP.ConfigName.."/Box/Thickness"]
-                            ESP.Drawing.Box.Main.Transparency = 1-ESP.Config[ESP.ConfigName.."/Box/Transparency"]
-                            ESP.Drawing.Box.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
-                            ESP.Drawing.Box.Outline.Thickness = ESP.Drawing.Box.Main.Thickness + 2
-                            ESP.Drawing.Box.Main.Size = BoxSize
-                            ESP.Drawing.Box.Main.Position = BoxPosition
-                            ESP.Drawing.Box.Outline.Size = ESP.Drawing.Box.Main.Size
-                            ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
-                        end
-                        if ESP.Drawing.Box.Info.Visible then
-                            local Distance = GetDistanceFromCamera(PrimaryPart.Position)
-                            ESP.Drawing.Box.Info.Size = ESP.Config[ESP.ConfigName.."/Text/Autoscale"]
-                            and math.clamp(1 / Distance * 1000, 0, ESP.Config[ESP.ConfigName.."/Text/Size"])
-                            or ESP.Config[ESP.ConfigName.."/Text/Size"]
-                            ESP.Drawing.Box.Info.Outline = ESP.Config[ESP.ConfigName.."/Text/Outline"]
-                            ESP.Drawing.Box.Info.Font = GetFontFromName(ESP.Config[ESP.ConfigName.."/Text/Font"][1])
-                            ESP.Drawing.Box.Info.Transparency = 1-ESP.Config[ESP.ConfigName.."/Text/Transparency"]
-                            ESP.Drawing.Box.Info.Text = string.format("%s\n%i studs",ESP.Mode == "Player" and Model.Name
-                            or (InEnemyTeam and "Enemy NPC" or "Ally NPC"),Distance)
-                            ESP.Drawing.Box.Info.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
-                        end
-                    end
-                else
-                    if ESP.Drawing.Other.Arrow.Visible then
-                        local Relative = GetRelative(PrimaryPart.Position)
-                        local Direction = Relative.Unit
-                        local Base = Direction * ESP.Config[ESP.ConfigName.."/Arrow/Distance"]
-                        local SideLength = ESP.Config[ESP.ConfigName.."/Arrow/Width"] / 2
-                        local BaseL = Base + RotateDirection(Direction,90) * SideLength
-                        local BaseR = Base + RotateDirection(Direction,-90) * SideLength
-                        local Tip = Direction * (ESP.Config[ESP.ConfigName.."/Arrow/Distance"] + ESP.Config[ESP.ConfigName.."/Arrow/Height"])
-
-                        ESP.Drawing.Other.Arrow.Color = Color
-                        ESP.Drawing.Other.Arrow.Filled = ESP.Config[ESP.ConfigName.."/Arrow/Filled"]
-                        ESP.Drawing.Other.Arrow.Thickness = ESP.Config[ESP.ConfigName.."/Arrow/Thickness"]
-                        ESP.Drawing.Other.Arrow.Transparency = 1-ESP.Config[ESP.ConfigName.."/Arrow/Transparency"]
-
-                        ESP.Drawing.Other.Arrow.PointA = RelativeToCenter(BaseL)
-                        ESP.Drawing.Other.Arrow.PointB = RelativeToCenter(BaseR)
-                        ESP.Drawing.Other.Arrow.PointC = RelativeToCenter(Tip)
+                    if ESP.Drawing.Other.Tracer.Visible then
+                        ESP.Drawing.Other.Tracer.Color = Color
+                        ESP.Drawing.Other.Tracer.Thickness = ESP.Config[ESP.ConfigName.."/Tracer/Thickness"]
+                        ESP.Drawing.Other.Tracer.Transparency = 1-ESP.Config[ESP.ConfigName.."/Tracer/Transparency"]
+                        ESP.Drawing.Other.Tracer.From = ESP.Config[ESP.ConfigName.."/Tracer/Mode"][1] == "From Mouse" and UserInputService:GetMouseLocation()
+                        or ESP.Config[ESP.ConfigName.."/Tracer/Mode"][1] == "From Bottom" and Vector2.new(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y)
+                        ESP.Drawing.Other.Tracer.To = Vector2.new(HeadPosition.X,HeadPosition.Y)
                     end
                 end
-            end
-        else
-            if Model:IsA("Model") and Model.PrimaryPart then
-                Character, PrimaryPart, IsAlive, InEnemyTeam =
-                Model, Model.PrimaryPart, true, true
-
-                local Camera = Workspace.CurrentCamera
-                ScreenPosition, OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
-                if OnScreen then
-                    if ESP.Highlight.Enabled then
-                        ESP.Highlight.Adornee = Model
-                        ESP.Highlight.FillColor = TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
-                        ESP.Highlight.FillTransparency = ESP.Config[ESP.ConfigName.."/Highlight/Transparency"]
-                        ESP.Highlight.OutlineColor = TableToColor(ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"])
-                        ESP.Highlight.OutlineTransparency = ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"][4]
+                if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
+                    local BoxPosition, BoxSize = CalculateBox(Character,ScreenPosition)
+                    if ESP.Drawing.Box.Main.Visible then
+                        ESP.Drawing.Box.Main.Color = Color
+                        ESP.Drawing.Box.Main.Filled = ESP.Config[ESP.ConfigName.."/Box/Filled"]
+                        ESP.Drawing.Box.Main.Thickness = ESP.Config[ESP.ConfigName.."/Box/Thickness"]
+                        ESP.Drawing.Box.Main.Transparency = 1-ESP.Config[ESP.ConfigName.."/Box/Transparency"]
+                        ESP.Drawing.Box.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
+                        ESP.Drawing.Box.Outline.Thickness = ESP.Drawing.Box.Main.Thickness + 2
+                        ESP.Drawing.Box.Main.Size = BoxSize
+                        ESP.Drawing.Box.Main.Position = BoxPosition
+                        ESP.Drawing.Box.Outline.Size = ESP.Drawing.Box.Main.Size
+                        ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
                     end
-                    if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
-                        local BoxPosition, BoxSize = CalculateBox(Model,ScreenPosition)
-                        if ESP.Drawing.Box.Main.Visible then
-                            ESP.Drawing.Box.Main.Color = TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
-                            ESP.Drawing.Box.Main.Filled = ESP.Config[ESP.ConfigName.."/Box/Filled"]
-                            ESP.Drawing.Box.Main.Thickness = ESP.Config[ESP.ConfigName.."/Box/Thickness"]
-                            ESP.Drawing.Box.Main.Transparency = 1-ESP.Config[ESP.ConfigName.."/Box/Transparency"]
-                            ESP.Drawing.Box.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
-                            ESP.Drawing.Box.Outline.Thickness = ESP.Drawing.Box.Main.Thickness + 2
-                            ESP.Drawing.Box.Main.Size = BoxSize
-                            ESP.Drawing.Box.Main.Position = BoxPosition
-                            ESP.Drawing.Box.Outline.Size = ESP.Drawing.Box.Main.Size
-                            ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
-                        end
-                        if ESP.Drawing.Box.Info.Visible then
-                            local Distance = GetDistanceFromCamera(PrimaryPart.Position)
-                            ESP.Drawing.Box.Info.Size = ESP.Config[ESP.ConfigName.."/Text/Autoscale"]
-                            and math.clamp(1 / Distance * 1000, 0, ESP.Config[ESP.ConfigName.."/Text/Size"])
-                            or ESP.Config[ESP.ConfigName.."/Text/Size"]
-                            ESP.Drawing.Box.Info.Outline = ESP.Config[ESP.ConfigName.."/Text/Outline"]
-                            ESP.Drawing.Box.Info.Font = GetFontFromName(ESP.Config[ESP.ConfigName.."/Text/Font"][1])
-                            ESP.Drawing.Box.Info.Transparency = 1-ESP.Config[ESP.ConfigName.."/Text/Transparency"]
-                            ESP.Drawing.Box.Info.Text = string.format("%s\n%i studs",Model.Name,Distance)
-                            ESP.Drawing.Box.Info.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
-                        end
+                    if ESP.Drawing.Box.Info.Visible then
+                        local Distance = GetDistanceFromCamera(PrimaryPart.Position)
+                        ESP.Drawing.Box.Info.Size = ESP.Config[ESP.ConfigName.."/Text/Autoscale"]
+                        and math.clamp(1 / Distance * 1000, 0, ESP.Config[ESP.ConfigName.."/Text/Size"])
+                        or ESP.Config[ESP.ConfigName.."/Text/Size"]
+                        ESP.Drawing.Box.Info.Outline = ESP.Config[ESP.ConfigName.."/Text/Outline"]
+                        ESP.Drawing.Box.Info.Font = GetFontFromName(ESP.Config[ESP.ConfigName.."/Text/Font"][1])
+                        ESP.Drawing.Box.Info.Transparency = 1-ESP.Config[ESP.ConfigName.."/Text/Transparency"]
+                        ESP.Drawing.Box.Info.Text = string.format("%s\n%i studs",ESP.Mode == "Player" and Model.Name
+                        or (InEnemyTeam and "Enemy NPC" or "Ally NPC"),Distance)
+                        ESP.Drawing.Box.Info.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
                     end
-                else
-                    if ESP.Drawing.Other.Arrow.Visible then
-                        local Relative = GetRelative(PrimaryPart.Position)
-                        local Direction = Relative.Unit
-                        local Base = Direction * ESP.Config[ESP.ConfigName.."/Arrow/Distance"]
-                        local SideLength = ESP.Config[ESP.ConfigName.."/Arrow/Width"] / 2
-                        local BaseL = Base + RotateDirection(Direction,90) * SideLength
-                        local BaseR = Base + RotateDirection(Direction,-90) * SideLength
-                        local Tip = Direction * (ESP.Config[ESP.ConfigName.."/Arrow/Distance"] + ESP.Config[ESP.ConfigName.."/Arrow/Height"])
+                end
+            else
+                if ESP.Drawing.Other.Arrow.Visible then
+                    local Relative = GetRelative(PrimaryPart.Position)
+                    local Direction = Relative.Unit
+                    local Base = Direction * ESP.Config[ESP.ConfigName.."/Arrow/Distance"]
+                    local SideLength = ESP.Config[ESP.ConfigName.."/Arrow/Width"] / 2
+                    local BaseL = Base + RotateDirection(Direction,90) * SideLength
+                    local BaseR = Base + RotateDirection(Direction,-90) * SideLength
+                    local Tip = Direction * (ESP.Config[ESP.ConfigName.."/Arrow/Distance"] + ESP.Config[ESP.ConfigName.."/Arrow/Height"])
 
-                        ESP.Drawing.Other.Arrow.Color = TableToColor(ESP.Config[ESP.ConfigName.."/Global/Enemy"])
-                        ESP.Drawing.Other.Arrow.Filled = ESP.Config[ESP.ConfigName.."/Arrow/Filled"]
-                        ESP.Drawing.Other.Arrow.Thickness = ESP.Config[ESP.ConfigName.."/Arrow/Thickness"]
-                        ESP.Drawing.Other.Arrow.Transparency = 1-ESP.Config[ESP.ConfigName.."/Arrow/Transparency"]
+                    ESP.Drawing.Other.Arrow.Color = Color
+                    ESP.Drawing.Other.Arrow.Filled = ESP.Config[ESP.ConfigName.."/Arrow/Filled"]
+                    ESP.Drawing.Other.Arrow.Thickness = ESP.Config[ESP.ConfigName.."/Arrow/Thickness"]
+                    ESP.Drawing.Other.Arrow.Transparency = 1-ESP.Config[ESP.ConfigName.."/Arrow/Transparency"]
 
-                        ESP.Drawing.Other.Arrow.PointA = RelativeToCenter(BaseL)
-                        ESP.Drawing.Other.Arrow.PointB = RelativeToCenter(BaseR)
-                        ESP.Drawing.Other.Arrow.PointC = RelativeToCenter(Tip)
-                    end
+                    ESP.Drawing.Other.Arrow.PointA = RelativeToCenter(BaseL)
+                    ESP.Drawing.Other.Arrow.PointB = RelativeToCenter(BaseR)
+                    ESP.Drawing.Other.Arrow.PointC = RelativeToCenter(Tip)
                 end
             end
         end
@@ -306,43 +241,123 @@ local function UpdateESP(Model,ESP)
         ESP.Drawing.Other.Head.Visible = Visible and ESP.Config[ESP.ConfigName.."/Head/Enabled"] or false
         ESP.Drawing.Other.Tracer.Visible = Visible and ESP.Config[ESP.ConfigName.."/Tracer/Enabled"] or false
         ESP.Drawing.Other.Arrow.Visible = ArrowVisible and ESP.Config[ESP.ConfigName.."/Arrow/Enabled"] or false
-        --debug.profileend()
-    end)
-    return UpdateName
+    end) return UpdateName
+end
+
+local function ModelESP(Model,ESP)
+    local ScreenPosition,OnScreen,UpdateName = false,false,
+    Model.Name .. "_" .. HttpService:GenerateGUID(false)
+    local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
+    = false,false,false,false,Color3.new(1,1,1)
+
+    RunService:BindToRenderStep(UpdateName,2000,function()
+        if Model:IsA("Model") and Model.PrimaryPart then
+            Character, PrimaryPart, IsAlive, InEnemyTeam =
+            Model, Model.PrimaryPart, true, true
+
+            local Camera = Workspace.CurrentCamera
+            ScreenPosition, OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
+            if OnScreen then
+                if ESP.Highlight.Enabled then
+                    ESP.Highlight.Adornee = Model
+                    ESP.Highlight.FillColor = TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
+                    ESP.Highlight.FillTransparency = ESP.Config[ESP.ConfigName.."/Highlight/Transparency"]
+                    ESP.Highlight.OutlineColor = TableToColor(ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"])
+                    ESP.Highlight.OutlineTransparency = ESP.Config[ESP.ConfigName.."/Highlight/OutlineColor"][4]
+                end
+                if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Info.Visible then
+                    local BoxPosition, BoxSize = CalculateBox(Model,ScreenPosition)
+                    if ESP.Drawing.Box.Main.Visible then
+                        ESP.Drawing.Box.Main.Color = TableToColor(ESP.Config[ESP.ConfigName.."/Enemy"])
+                        ESP.Drawing.Box.Main.Filled = ESP.Config[ESP.ConfigName.."/Box/Filled"]
+                        ESP.Drawing.Box.Main.Thickness = ESP.Config[ESP.ConfigName.."/Box/Thickness"]
+                        ESP.Drawing.Box.Main.Transparency = 1-ESP.Config[ESP.ConfigName.."/Box/Transparency"]
+                        ESP.Drawing.Box.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
+                        ESP.Drawing.Box.Outline.Thickness = ESP.Drawing.Box.Main.Thickness + 2
+                        ESP.Drawing.Box.Main.Size = BoxSize
+                        ESP.Drawing.Box.Main.Position = BoxPosition
+                        ESP.Drawing.Box.Outline.Size = ESP.Drawing.Box.Main.Size
+                        ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
+                    end
+                    if ESP.Drawing.Box.Info.Visible then
+                        local Distance = GetDistanceFromCamera(PrimaryPart.Position)
+                        ESP.Drawing.Box.Info.Size = ESP.Config[ESP.ConfigName.."/Text/Autoscale"]
+                        and math.clamp(1 / Distance * 1000, 0, ESP.Config[ESP.ConfigName.."/Text/Size"])
+                        or ESP.Config[ESP.ConfigName.."/Text/Size"]
+                        ESP.Drawing.Box.Info.Outline = ESP.Config[ESP.ConfigName.."/Text/Outline"]
+                        ESP.Drawing.Box.Info.Font = GetFontFromName(ESP.Config[ESP.ConfigName.."/Text/Font"][1])
+                        ESP.Drawing.Box.Info.Transparency = 1-ESP.Config[ESP.ConfigName.."/Text/Transparency"]
+                        ESP.Drawing.Box.Info.Text = string.format("%s\n%i studs",Model.Name,Distance)
+                        ESP.Drawing.Box.Info.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
+                    end
+                end
+            else
+                if ESP.Drawing.Other.Arrow.Visible then
+                    local Relative = GetRelative(PrimaryPart.Position)
+                    local Direction = Relative.Unit
+                    local Base = Direction * ESP.Config[ESP.ConfigName.."/Arrow/Distance"]
+                    local SideLength = ESP.Config[ESP.ConfigName.."/Arrow/Width"] / 2
+                    local BaseL = Base + RotateDirection(Direction,90) * SideLength
+                    local BaseR = Base + RotateDirection(Direction,-90) * SideLength
+                    local Tip = Direction * (ESP.Config[ESP.ConfigName.."/Arrow/Distance"] + ESP.Config[ESP.ConfigName.."/Arrow/Height"])
+
+                    ESP.Drawing.Other.Arrow.Color = TableToColor(ESP.Config[ESP.ConfigName.."/Global/Enemy"])
+                    ESP.Drawing.Other.Arrow.Filled = ESP.Config[ESP.ConfigName.."/Arrow/Filled"]
+                    ESP.Drawing.Other.Arrow.Thickness = ESP.Config[ESP.ConfigName.."/Arrow/Thickness"]
+                    ESP.Drawing.Other.Arrow.Transparency = 1-ESP.Config[ESP.ConfigName.."/Arrow/Transparency"]
+
+                    ESP.Drawing.Other.Arrow.PointA = RelativeToCenter(BaseL)
+                    ESP.Drawing.Other.Arrow.PointB = RelativeToCenter(BaseR)
+                    ESP.Drawing.Other.Arrow.PointC = RelativeToCenter(Tip)
+                end
+            end
+        end
+
+        local Visible = OnScreen and IsAlive and PrimaryPart and (not ESP.Config[ESP.ConfigName.."/TeamCheck"] and not InEnemyTeam or InEnemyTeam)
+        local ArrowVisible = not OnScreen and IsAlive and PrimaryPart and (not ESP.Config[ESP.ConfigName.."/TeamCheck"] and not InEnemyTeam or InEnemyTeam)
+
+        ESP.Highlight.Enabled = Visible and ESP.Config[ESP.ConfigName.."/Highlight/Enabled"] or false
+
+        ESP.Drawing.Box.Main.Visible = Visible and ESP.Config[ESP.ConfigName.."/Box/Enabled"] or false
+        ESP.Drawing.Box.Outline.Visible = ESP.Config[ESP.ConfigName.."/Box/Outline"] and ESP.Drawing.Box.Main.Visible and not ESP.Drawing.Box.Main.Filled
+        ESP.Drawing.Box.Info.Visible = Visible and ESP.Config[ESP.ConfigName.."/Text/Enabled"] or false
+
+        ESP.Drawing.Other.Head.Visible = Visible and ESP.Config[ESP.ConfigName.."/Head/Enabled"] or false
+        ESP.Drawing.Other.Tracer.Visible = Visible and ESP.Config[ESP.ConfigName.."/Tracer/Enabled"] or false
+        ESP.Drawing.Other.Arrow.Visible = ArrowVisible and ESP.Config[ESP.ConfigName.."/Arrow/Enabled"] or false
+    end) return UpdateName
 end
 
 if game.GameId == 580765040 then
     function ModelManager(Mode,Model)
-        local InEnemyTeam, PlayerColor = false, Color3.new(1,1,1)
-        if Model.Character and Model.Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
-            if Model.Character.Team.Value ~= LocalPlayer.Character.Team.Value or Model.Character.Team.Value == "None" then
-                InEnemyTeam, PlayerColor = true, Model.Character.Torso.Color
-            end
-        end
+        local Character = Model.Character if not Character then return end
+        local LPCharacter = LocalPlayer.Character if not LPCharacter then return end
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid") if not Humanoid then return end
 
-        return Model.Character,
-        (Model.Character and Model.Character:FindFirstChild("Torso")) or false,
-        (Model.Character and Model.Character:FindFirstChildOfClass("Humanoid") and
-        Model.Character:FindFirstChildOfClass("Humanoid").Health > 0) or false,
-        InEnemyTeam, PlayerColor
+        local InEnemyTeam, PlayerColor = false, Color3.new(1,1,1)
+        if Character:FindFirstChild("Team") and LPCharacter:FindFirstChild("Team") then
+            if Character.Team.Value ~= LPCharacter.Team.Value or Character.Team.Value == "None" then
+                InEnemyTeam, PlayerColor = true, Character.Torso.Color
+            end
+        end return Character,Character.Torso,Humanoid.Health > 0,InEnemyTeam,PlayerColor
     end
 elseif game.GameId == 1054526971 then
     function ModelManager(Mode,Model)
         if Mode == "Player" then
-            return Model.Character,
-            (Model.Character and Model.Character:FindFirstChild("HumanoidRootPart")) or false,
-            (Model.Character and Model.Character:FindFirstChildOfClass("Humanoid") and
-            Model.Character:FindFirstChildOfClass("Humanoid").Health > 0) or false,
-            LocalPlayer.Team ~= Model.Team, Model.TeamColor.Color
+            local Character = Model.Character if not Model.Character then return end
+            local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+            if not Humanoid and not HumanoidRootPart then return end
+            return Character,HumanoidRootPart,Humanoid.Health > 0,
+            LocalPlayer.Team ~= Model.Team,Model.TeamColor.Color
         else
             local HumanoidRootPart = Model:FindFirstChild("HumanoidRootPart")
             local Humanoid = Model:FindFirstChildOfClass("Humanoid")
-            local RootRigAttachment = HumanoidRootPart
-            and HumanoidRootPart:FindFirstChild("RootRigAttachment")
-            return Model, HumanoidRootPart or false,
-            (Humanoid and Humanoid.Health > 0) or false,
-            RootRigAttachment and not RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt") or false,
-            Color3.new(1,1,1)
+            if not HumanoidRootPart and not Humanoid then return end
+
+            local RootRigAttachment = HumanoidRootPart:FindFirstChild("RootRigAttachment")
+            return Model,HumanoidRootPart,Humanoid.Health > 0,RootRigAttachment and
+            not RootRigAttachment:FindFirstChildWhichIsA("ProximityPrompt") or false
         end
     end
 elseif game.GameId == 1168263273 then
@@ -351,8 +366,8 @@ elseif game.GameId == 1168263273 then
     local Tortoiseshell = require(ReplicatedStorage.TS)
 
     function ModelManager(Mode,Model)
-        return Model.Character and Model.Character:FindFirstChild("Hitbox"),
-        Model.Character and Model.Character:FindFirstChild("Root") or false,
+        if not Model.Character then return end local Character = Model.Character
+        return Character:FindFirstChild("Hitbox"),Character:FindFirstChild("Root"),
         true,LocalPlayer.Team ~= Model.Team or tostring(Model.Team) == "FFA",
         Tortoiseshell.Teams.Colors[Model.Team]
     end
@@ -368,79 +383,72 @@ elseif game.GameId == 1168263273 then
     end)
 elseif game.GameId == 1586272220 then
     local function GetPlayerTank(Player)
-        local Char = Player:WaitForChild("Char")
-        if not Char then return end
-        local CharValue = Char.Value
-        if not CharValue then return end
-        if not CharValue.Parent
-        and not CharValue.Parent.Parent
-        and not CharValue.Parent.Parent.Parent then return end
-        return CharValue.Parent.Parent.Parent
+        local Character = Player:FindFirstChild("Char")
+        if not Character and not Character.Value then return end
+        return Character.Value.Parent.Parent.Parent
     end
     function ModelManager(Mode,Model)
         local PlayerTank = GetPlayerTank(Model)
-        if PlayerTank then
-            return PlayerTank,PlayerTank.PrimaryPart or false,
-            PlayerTank.Stats.Health.Value > 0,
-            LocalPlayer.Team ~= Model.Team, Model.TeamColor.Color
-        end
+        if not PlayerTank then return end
+        return PlayerTank,PlayerTank.PrimaryPart or false,
+        PlayerTank.Stats.Health.Value > 0,
+        LocalPlayer.Team ~= Model.Team, Model.TeamColor.Color
     end
 end
 
 function DrawingLibrary:AddESP(Model,Mode,ConfigName,Config)
-    if not DrawingLibrary.ESPContainer[Model] then
-        DrawingLibrary.ESPContainer[Model] = {
-            ConfigName = ConfigName,
-            Config = Config,
-            Mode = Mode,
-            Highlight = AddHighlight(),
-            Drawing = {
-                Box = {
-                    Main = AddDrawing("Square", {
-                        ZIndex = 1
-                    }),
-                    Outline = AddDrawing("Square", {
-                        Color = Color3.new(0,0,0),
-                        Filled = false,
-                        ZIndex = 0
-                    }),
-                    Info = AddDrawing("Text", {
-                        Center = true,
-                        Color = Color3.new(1,1,1),
-                        --Font = 3,
-                        --Outline = true,
-                        OutlineColor = Color3.new(0,0,0),
-                        --Transparency = 1,
-                        ZIndex = 1
-                    })
-                },
-                Other = {
-                    Head = AddDrawing("Circle", {
-                        ZIndex = 2
-                    }),
-                    Tracer = AddDrawing("Line", {
-                        ZIndex = 2
-                    }),
-                    Arrow = AddDrawing("Triangle", {
-                        ZIndex = 2
-                    })
-                }
+    if DrawingLibrary.ESPContainer[Model] then return end
+
+    DrawingLibrary.ESPContainer[Model] = {
+        ConfigName = ConfigName,
+        Config = Config,
+        Mode = Mode,
+        Highlight = AddHighlight(),
+        Drawing = {
+            Box = {
+                Main = AddDrawing("Square", {
+                    ZIndex = 1
+                }),
+                Outline = AddDrawing("Square", {
+                    Color = Color3.new(0,0,0),
+                    Filled = false,
+                    ZIndex = 0
+                }),
+                Info = AddDrawing("Text", {
+                    Center = true,
+                    Color = Color3.new(1,1,1),
+                    OutlineColor = Color3.new(0,0,0),
+                    ZIndex = 1
+                })
+            },
+            Other = {
+                Head = AddDrawing("Circle", {
+                    ZIndex = 2
+                }),
+                Tracer = AddDrawing("Line", {
+                    ZIndex = 2
+                }),
+                Arrow = AddDrawing("Triangle", {
+                    ZIndex = 2
+                })
             }
         }
+    }
 
-        DrawingLibrary.ESPContainer[Model].UpdateName
-        = UpdateESP(Model,DrawingLibrary.ESPContainer[Model])
-        return DrawingLibrary.ESPContainer[Model]
-    end
+    local ESP = DrawingLibrary.ESPContainer[Model]
+    ESP.UpdateName = (ESP.Mode == "Player" or ESP.Mode == "NPC")
+    and PlayerESP(Model,ESP) or ModelESP(Model,ESP) return ESP
 end
 
 function DrawingLibrary:RemoveESP(Model)
-    if DrawingLibrary.ESPContainer[Model] then
-        RunService:UnbindFromRenderStep(DrawingLibrary.ESPContainer[Model].UpdateName)
-        RemoveDrawing(DrawingLibrary.ESPContainer[Model].Drawing)
-        DrawingLibrary.ESPContainer[Model].Highlight:Destroy()
-        DrawingLibrary.ESPContainer[Model] = nil
-    end
+    if not DrawingLibrary.ESPContainer[Model] then return end
+
+    local ESP = DrawingLibrary.ESPContainer[Model]
+    RunService:UnbindFromRenderStep(ESP.UpdateName)
+    RemoveDrawing(ESP.Drawing)
+    ESP.Highlight:Destroy()
+
+    DrawingLibrary.ESPContainer[Model] = nil
 end
 
 function DrawingLibrary:Cursor(Config)
