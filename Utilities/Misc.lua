@@ -2,6 +2,7 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
 
 local Request = syn and syn.request or request
 local Misc = {}
@@ -16,6 +17,15 @@ function Misc:SetupFPS()
         end
         TimeTable[1] = LastTime
         return os.clock() - StartTime >= 1 and #TimeTable or #TimeTable / (os.clock() - StartTime)
+    end
+end
+
+function Misc:HideObject(Object)
+    if gethui then Object.Parent = gethui() return end
+    if syn and syn.protect_gui then
+        syn.protect_gui(Object)
+        Object.Parent = CoreGui
+        return
     end
 end
 

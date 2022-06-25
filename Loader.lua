@@ -9,12 +9,12 @@ if Parvus and Parvus.Loaded then
 end
 
 getgenv().Parvus = {Loaded = false,Debug = false,Current = "Loader",Utilities = {}}
+Parvus.Utilities.Misc = Parvus.Debug and loadfile("Parvus/Utilities/Misc.lua")()
+or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Misc.lua"))()
 Parvus.Utilities.UI = Parvus.Debug and loadfile("Parvus/Utilities/UI.lua")()
 or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/UI.lua"))()
 Parvus.Utilities.Drawing = Parvus.Debug and loadfile("Parvus/Utilities/Drawing.lua")()
 or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Drawing.lua"))()
-Parvus.Utilities.Misc = Parvus.Debug and loadfile("Parvus/Utilities/Misc.lua")()
-or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Utilities/Misc.lua"))()
 
 Parvus.Games = {
     ["1054526971"] = {

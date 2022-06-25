@@ -158,7 +158,12 @@ local function InitScreen()
     local ScreenAsset = GetAsset("Screen/Bracket")
     if not Debug then sethiddenproperty(ScreenAsset,"OnTopOfCoreBlur",true) end
     ScreenAsset.Name = "Bracket " .. game:GetService("HttpService"):GenerateGUID(false)
-    ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or CoreGui
+    --ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or CoreGui
+    if Debug then
+        ScreenAsset.Parent = game.Players.LocalPlayer.PlayerGui
+    else
+        Parvus.Utilities.Misc:HideObject(ScreenAsset)
+    end
     return {ScreenAsset = ScreenAsset}
 end
 local function InitWindow(ScreenAsset,Window)
