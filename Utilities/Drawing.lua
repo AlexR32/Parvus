@@ -41,13 +41,13 @@ function ModelManager(Mode,Model)
         local Character = Model.Character if not Model.Character then return end
         local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        if not Humanoid and not HumanoidRootPart then return end
+        if not Humanoid or not HumanoidRootPart then return end
         return Character,HumanoidRootPart,Humanoid.Health > 0,
         LocalPlayer.Team ~= Model.Team,Model.TeamColor.Color
     else
         local HumanoidRootPart = Model:FindFirstChild("HumanoidRootPart")
         local Humanoid = Model:FindFirstChildOfClass("Humanoid")
-        if not Humanoid and not HumanoidRootPart then return end
+        if not Humanoid or not HumanoidRootPart then return end
         return Model,HumanoidRootPart,Humanoid.Health > 0,
         true,Color3.new(1,1,1)
     end
@@ -337,9 +337,10 @@ end
 
 if game.GameId == 580765040 then
     function ModelManager(Mode,Model)
-        local Character = Model.Character if not Character then return end
-        local LPCharacter = LocalPlayer.Character if not LPCharacter then return end
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid") if not Humanoid then return end
+        local Character,LPCharacter = Model.Character,LocalPlayer.Character
+        if not Character or not LPCharacter then return end
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then return end
 
         local InEnemyTeam, PlayerColor = false, Color3.new(1,1,1)
         if Character:FindFirstChild("Team") and LPCharacter:FindFirstChild("Team") then
@@ -354,13 +355,13 @@ elseif game.GameId == 1054526971 then
             local Character = Model.Character if not Model.Character then return end
             local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
             local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-            if not Humanoid and not HumanoidRootPart then return end
+            if not HumanoidRootPart or not Humanoid then return end
             return Character,HumanoidRootPart,Humanoid.Health > 0,
             LocalPlayer.Team ~= Model.Team,Model.TeamColor.Color
         else
             local HumanoidRootPart = Model:FindFirstChild("HumanoidRootPart")
             local Humanoid = Model:FindFirstChildOfClass("Humanoid")
-            if not HumanoidRootPart and not Humanoid then return end
+            if not HumanoidRootPart or not Humanoid then return end
 
             local RootRigAttachment = HumanoidRootPart:FindFirstChild("RootRigAttachment")
             return Model,HumanoidRootPart,Humanoid.Health > 0,RootRigAttachment and
@@ -373,7 +374,7 @@ elseif game.GameId == 1168263273 then
     local Tortoiseshell = require(ReplicatedStorage.TS)
 
     function ModelManager(Mode,Model)
-        if not Model.Character then return end local Character = Model.Character
+        local Character = Model.Character if not Character then return end
         return Character:FindFirstChild("Hitbox"),Character:FindFirstChild("Root"),
         true,LocalPlayer.Team ~= Model.Team or tostring(Model.Team) == "FFA",
         Tortoiseshell.Teams.Colors[Model.Team]
