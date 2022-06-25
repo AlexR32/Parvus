@@ -21,7 +21,7 @@ LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
---[[{ -- ban reasons
+local BanReasons,BanCommands = {
     "Unsafe function",
     "Camera object", -- Crash
     "Geometry deleted", -- Crash
@@ -29,15 +29,22 @@ LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
     "Looking hard",
     "Unbound gloop", -- Crash
     "_G", -- Crash
+    "Hitbox extender",
     "Alternate mode",
     "Shooting hard",
     "Fallback config",
     "Int check",
+    "Thawed",
     "Coregui instance",
     "Floating",
-    "Root",
-    "Hitbox extender"
-}]]
+    "Root"
+},{
+    "GetUpdate",
+    "SetUpdate",
+    "GetSetting",
+    "FireProjectile",
+    "Invoke"
+}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Current,
@@ -326,16 +333,28 @@ Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
 
--- AC Bypass
-do local OldRandom
+do --[[local OldRandom
 OldRandom = hookfunction(math.random, function(...)
     if checkcaller() then return OldRandom(...) end
     local args = {...}
-    if (args[1] == 7 or args[1] == 5)
-        and not args[2] then
-        return OldRandom(100,1000)
+    if args[1] == 1 and args[2] <= 1000 then
+        print(args[1],args[2])
+        return math.huge
     end
     return OldRandom(...)
+end)]]
+local OldTaskSpawn
+OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
+    if checkcaller() then return OldTaskSpawn(...) end
+    local Args = {...}
+    if type(Args[1]) == "function" then
+        local Constants = getconstants(Args[1])
+        if table.find(Constants,"print")
+        and table.find(Constants,"ouch") then
+            return
+        end
+    end
+    return OldTaskSpawn(...)
 end)
 -- Thanks to Kiriot22
 local Message
@@ -350,22 +369,24 @@ OldPluginManager = hookfunction(getrenv().PluginManager, function()
     return error(Message)
 end) end
 
---[[ Old AC Bypass
-local __namecall
-__namecall = hookmetamethod(game,"__namecall",function(self, ...)
-    local args = {...}
-    if getnamecallmethod() == "FireServer" then
-        for Index, Reason in pairs(BanReasons) do
-            if typeof(args[2]) == "string" and string.match(args[2],Reason) then
-                return
+
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local Method,Args = getnamecallmethod(),{...}
+    if Method == "FireServer" then
+        if typeof(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
+            for Index, Reason in pairs(BanReasons) do
+                if typeof(Args[2]) == "string" and string.match(Args[2],Reason) then
+                    return
+                end
             end
         end
     end
-    return __namecall(self, ...)
+    return OldNamecall(Self, ...)
 end)
 
 --This thing laggy as hell, dont use in your scripts
-local DefaultRecoil = {}
+--[[local DefaultRecoil = {}
 for Index,Config in pairs(getgc(true)) do
     if type(Config) == "table"
     and rawget(Config,"Recoil")
@@ -404,11 +425,6 @@ local function UpdateRecoil()
         end
     end
 end]]
-
--- why freeze tables?
-setreadonly(Tortoiseshell.Projectiles,false)
-setreadonly(Tortoiseshell.Network,false)
-setreadonly(Tortoiseshell.Raycast,false)
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
@@ -744,46 +760,39 @@ local function AimAt(Hitbox,Config)
     )
 end
 
+setreadonly(Tortoiseshell.Network,false)
 local OldNetworkFire = Tortoiseshell.Network.Fire
-Tortoiseshell.Network.Fire = function(self, ...)
-    local args = {...}
-
+Tortoiseshell.Network.Fire = function(Self,...) local Args = {...}
     if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
-        if args[2] == "__Hit" and math.random(0,100)
+        if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
-            args[4] = SilentAim[2].Position
-            args[5] = SilentAim[2]
-            args[7] = SilentAim[1]
+            Args[4] = SilentAim[2].Position
+            Args[5] = SilentAim[2]
+            Args[7] = SilentAim[1]
         end
     end
-
-    if Window.Flags["BadBusiness/AntiAim/Enabled"] and args[3] == "Look" then
+    if Window.Flags["BadBusiness/AntiAim/Enabled"] and Args[3] == "Look" then
         if Window.Flags["BadBusiness/AntiAim/LeanRandom"] then
             Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
         end
-        args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < -0
+        Args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < -0
         and Window.Flags["BadBusiness/AntiAim/Pitch"] + Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
         or Window.Flags["BadBusiness/AntiAim/Pitch"] - Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
-    end
+    end return OldNetworkFire(Self,unpack(Args))
+end setreadonly(Tortoiseshell.Network,true)
 
-    return OldNetworkFire(self, unpack(args))
-end
-
+setreadonly(Tortoiseshell.Projectiles,false)
 local OldInitProjectile = Tortoiseshell.Projectiles.InitProjectile
-Tortoiseshell.Projectiles.InitProjectile = function(self, ...)
-    local args = {...}
-    if args[4] == LocalPlayer then
-        PredictedVelocity = Projectiles[args[1]].Speed
-        PredictedGravity = Projectiles[args[1]].Gravity ~= 0 and Projectiles[args[1]].Gravity or 1
-    end
-    return OldInitProjectile(self, ...)
-end
+Tortoiseshell.Projectiles.InitProjectile = function(Self,...) local Args = {...}
+    if Args[4] == LocalPlayer then PredictedVelocity = Projectiles[Args[1]].Speed
+        PredictedGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
+    end return OldInitProjectile(Self,...)
+end setreadonly(Tortoiseshell.Projectiles,true)
 
 local OldGetConfig = Tortoiseshell.Items.GetConfig
-Tortoiseshell.Items.GetConfig = function(self, ...)
-    local Config = OldGetConfig(self, ...)
+Tortoiseshell.Items.GetConfig = function(Self,...) local Config = OldGetConfig(Self,...)
     if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Config.Recoil and Config.Recoil.Default then
         Config.Recoil.Default.WeaponScale = 
         Config.Recoil.Default.WeaponScale * (Window.Flags["BadBusiness/WeaponMod/WeaponScale"] / 100)
@@ -793,27 +802,23 @@ Tortoiseshell.Items.GetConfig = function(self, ...)
 
         Config.Recoil.Default.RecoilScale = 
         Config.Recoil.Default.RecoilScale * (Window.Flags["BadBusiness/WeaponMod/RecoilScale"] / 100)
-    end
-    return Config
+    end return Config
 end
 
+setreadonly(Tortoiseshell.Raycast,false)
 local OldCastGeometryAndEnemies = Tortoiseshell.Raycast.CastGeometryAndEnemies
-Tortoiseshell.Raycast.CastGeometryAndEnemies = function(self, ...)
-    local args = {...}
-    if Window.Flags["BadBusiness/WeaponMod/Enabled"] and args[4] and args[4].Gravity then
-        args[4].Gravity = args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
-    end
-    return OldCastGeometryAndEnemies(self, unpack(args))
-end
+Tortoiseshell.Raycast.CastGeometryAndEnemies = function(Self,...) local Args = {...}
+    if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
+        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
+    end return OldCastGeometryAndEnemies(Self,unpack(Args))
+end setreadonly(Tortoiseshell.Raycast,true)
 
 for Index,Event in pairs(Events) do
     if Event.Event == "Votekick" then
         local OldCallback = Event.Callback
-        Event.Callback = function(...)
-            local args = {...}
-            local Return = OldCallback(...)
-            if args[1] == "Message" then
-                if string.find(args[2],LocalPlayer.Name)
+        Event.Callback = function(...) local Args = {...}
+            if Args[1] == "Message" then
+                if string.find(Args[2],LocalPlayer.Name)
                 and Window.Flags["BadBusiness/AntiKick"] then
                     Notify:Fire({
                         Title = "Anti-Kick | Rejoining in 10 secs",
@@ -824,7 +829,7 @@ for Index,Event in pairs(Events) do
                     Parvus.Utilities.Misc:ReJoin()
                 end
             end
-            return Return
+            return OldCallback(...)
         end
         break
     end
