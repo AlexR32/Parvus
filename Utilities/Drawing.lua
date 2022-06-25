@@ -1,10 +1,11 @@
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 
---repeat task.wait() until PlayerService.LocalPlayer
+repeat task.wait() until PlayerService.LocalPlayer
 local LocalPlayer = PlayerService.LocalPlayer
 local DrawingLibrary = {ESPContainer = {}}
 
@@ -133,14 +134,16 @@ end
 end]]
 
 local function UpdateESP(Model,ESP)
-    local ScreenPosition,OnScreen = false,false
-    local UpdateName = Model.Name .. #DrawingLibrary.ESPContainer
-    local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColorb
+    local ScreenPosition,OnScreen,UpdateName = false,false,
+    Model.Name .. "_" .. HttpService:GenerateGUID(false)
+    local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
     = false,false,false,false,Color3.new(1,1,1)
 
-    RunService:BindToRenderStep(UpdateName,400,function()
+    RunService:BindToRenderStep(UpdateName,2000,function()
+        --debug.profilebegin("PARVUS_DRAWING_" .. UpdateName)
         if ESP.Mode == "Player" or ESP.Mode == "NPC" then
-            Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor = ModelManager(ESP.Mode,Model)
+            Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
+            = ModelManager(ESP.Mode,Model)
 
             if Character and PrimaryPart and IsAlive then
                 local Camera = Workspace.CurrentCamera
@@ -303,6 +306,7 @@ local function UpdateESP(Model,ESP)
         ESP.Drawing.Other.Head.Visible = Visible and ESP.Config[ESP.ConfigName.."/Head/Enabled"] or false
         ESP.Drawing.Other.Tracer.Visible = Visible and ESP.Config[ESP.ConfigName.."/Tracer/Enabled"] or false
         ESP.Drawing.Other.Arrow.Visible = ArrowVisible and ESP.Config[ESP.ConfigName.."/Arrow/Enabled"] or false
+        --debug.profileend()
     end)
     return UpdateName
 end
@@ -348,7 +352,7 @@ elseif game.GameId == 1168263273 then
 
     function ModelManager(Mode,Model)
         return Model.Character and Model.Character:FindFirstChild("Hitbox"),
-        (Model.Character and Model.Character:FindFirstChild("Root")) or false,
+        Model.Character and Model.Character:FindFirstChild("Root") or false,
         true,LocalPlayer.Team ~= Model.Team or tostring(Model.Team) == "FFA",
         Tortoiseshell.Teams.Colors[Model.Team]
     end

@@ -544,12 +544,11 @@ local function InputToVelocity()
     )
 end
 local function PlayerFly(Config)
-    if not Config.Enabled then
-        BodyVelocity.MaxForce = Vector3.zero
-        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
+    if not Config.Enabled then BodyVelocity.MaxForce = Vector3.zero
+        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
+        and not LocalPlayer.Character.PrimaryPart.CanCollide then
             LocalPlayer.Character.PrimaryPart.CanCollide = true
-        end
-        return
+        end return
     end
     if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
         BodyVelocity.Parent = LocalPlayer.Character.PrimaryPart
@@ -836,6 +835,7 @@ for Index,Event in pairs(Events) do
 end
 
 RunService.Heartbeat:Connect(function()
+    --debug.profilebegin("PARVUS_BAD_BUSINESS_HEARTBEAT")
     SilentAim = GetHitbox({
         Enabled = Window.Flags["SilentAim/Enabled"],
         WallCheck = Window.Flags["SilentAim/WallCheck"],
@@ -882,8 +882,10 @@ RunService.Heartbeat:Connect(function()
         Reflectance = Window.Flags["BadBusiness/ArmsCustom/Reflectance"],
         Material = Window.Flags["BadBusiness/ArmsCustom/Material"][1]
     })
+    --debug.profileend()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not Window.Flags["BadBusiness/AutoShoot"] then return end
     AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFoV"]
     and GetHitboxAllFoV({
         WallCheck = Window.Flags["Aimbot/WallCheck"],
@@ -892,37 +894,37 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 end)
 
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    if Trigger then
-        local TriggerHB = GetHitboxWithPrediction({
-            Enabled = Window.Flags["Trigger/Enabled"],
-            WallCheck = Window.Flags["Trigger/WallCheck"],
-            Prediction = Window.Flags["Trigger/Prediction"],
-            DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
-            FieldOfView = Window.Flags["Trigger/FieldOfView"],
-            Priority = Window.Flags["Trigger/Priority"]
-        })
+    if not Trigger then return end
 
-        if TriggerHB then
-            task.wait(Window.Flags["Trigger/Delay"])
-            ToggleShoot(true)
-            if Window.Flags["Trigger/HoldMode"] then
-                while task.wait() do
-                    TriggerHB = GetHitboxWithPrediction({
-                        Enabled = Window.Flags["Trigger/Enabled"],
-                        WallCheck = Window.Flags["Trigger/WallCheck"],
-                        Prediction = Window.Flags["Trigger/Prediction"],
-                        DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
-                        FieldOfView = Window.Flags["Trigger/FieldOfView"],
-                        Priority = Window.Flags["Trigger/Priority"]
-                    })
-                    if not TriggerHB then
-                        ToggleShoot(false)
-                        break
-                    end
+    local TriggerHB = GetHitboxWithPrediction({
+        Enabled = Window.Flags["Trigger/Enabled"],
+        WallCheck = Window.Flags["Trigger/WallCheck"],
+        Prediction = Window.Flags["Trigger/Prediction"],
+        DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
+        FieldOfView = Window.Flags["Trigger/FieldOfView"],
+        Priority = Window.Flags["Trigger/Priority"]
+    })
+
+    if TriggerHB then
+        task.wait(Window.Flags["Trigger/Delay"])
+        ToggleShoot(true)
+        if Window.Flags["Trigger/HoldMode"] then
+            while task.wait() do
+                TriggerHB = GetHitboxWithPrediction({
+                    Enabled = Window.Flags["Trigger/Enabled"],
+                    WallCheck = Window.Flags["Trigger/WallCheck"],
+                    Prediction = Window.Flags["Trigger/Prediction"],
+                    DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
+                    FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Priority = Window.Flags["Trigger/Priority"]
+                })
+                if not TriggerHB then
+                    ToggleShoot(false)
+                    break
                 end
             end
-            ToggleShoot(false)
         end
+        ToggleShoot(false)
     end
 end)
 
