@@ -105,7 +105,10 @@ local function CalculateBox(Model,Orientation,ScreenPosition)
     return Vector2.new(ScreenPosition.X - Size.X / 2, ScreenPosition.Y - Size.Y / 2), Size
 end]]
 
-local function AntiAliasing(Position)
+local function AntiAliasingXY(X,Y)
+    return Vector2.new(math.round(X),math.round(Y))
+end
+local function AntiAliasingP(Position)
     return Vector2.new(math.round(Position.X),math.round(Position.Y))
 end
 local function CalculateBox(Model,Position) -- mickeyrbx
@@ -113,7 +116,11 @@ local function CalculateBox(Model,Position) -- mickeyrbx
     local Size = Model:GetExtentsSize()
     local ScaleFactor = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
     local Width,Height = math.round(ScaleFactor * Size.X),math.round(ScaleFactor * Size.Y)
-    return AntiAliasing(Position.X - Width / 2,Position.Y - Height / 2),Vector2.new(Width,Height)
+
+    return AntiAliasingXY(
+        Position.X - Width / 2,
+        Position.Y - Height / 2
+    ),Vector2.new(Width,Height)
 end
 
 local function GetRelative(Position)-- Blissful
@@ -130,7 +137,7 @@ local function RotateDirection(Direction, Radius)
 end
 local function RelativeToCenter(Size)
     local Camera = Workspace.CurrentCamera
-    return Camera.ViewportSize / 2 - Size
+    return AntiAliasingP(Camera.ViewportSize / 2 - Size)
 end
 
 local function PlayerESP(Model,ESP)
