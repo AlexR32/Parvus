@@ -345,12 +345,12 @@ OldRandom = hookfunction(math.random, function(...)
 end)]]
 local OldTaskSpawn
 OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
-    if checkcaller() then return OldTaskSpawn(...) end
-    local Args = {...}
+    if checkcaller() then return OldTaskSpawn(...) end local Args = {...}
     if type(Args[1]) == "function" then
         local Constants = getconstants(Args[1])
-        if table.find(Constants,"print")
-        and table.find(Constants,"ouch") then
+        if table.find(Constants,"task")
+        and table.find(Constants,"wait") then
+            --print("blocked",repr(Constants))
             return
         end
     end
