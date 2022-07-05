@@ -936,14 +936,14 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end
     end
 end)]]
---[[Parvus.Utilities.Misc:NewThreadLoop(1,function()
+Parvus.Utilities.Misc:NewThreadLoop(1,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
             GravityCorrection = Config.Projectile.GravityCorrection
         end
     end
-end)]]
+end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then
