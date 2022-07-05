@@ -67,8 +67,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
+            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
@@ -117,21 +118,12 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "ImageId",
-            Callback = function(String)
-                if string.gsub(String," ","") ~= "" then
-                    Window.Background.Image = "rbxassetid://" .. String
-                end
-            end})
+            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
+            Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
-            Callback = function(HSVAR,Color)
-                Window.Background.ImageColor3 = Color
-                Window.Background.ImageTransparency = HSVAR[4]
-            end})
+            Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74, Max = 296,Value = 74,
-            Callback = function(Number)
-                Window.Background.TileSize = UDim2.new(0,Number,0,Number)
-            end})
+            Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
@@ -156,8 +148,9 @@ Window:LoadDefaultConfig()
 Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
-local GetFPS = Parvus.Utilities.Misc:SetupFPS()
-Parvus.Utilities.Drawing:Cursor(Window.Flags)
+Parvus.Utilities.Misc:SetupWatermark(Window)
+--Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
 local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
 local BodyVelocity = Instance.new("BodyVelocity")
@@ -171,32 +164,26 @@ local function GetPlayerTank(Player)
     return Char.Value.Parent.Parent.Parent
 end
 
-local function InputToVelocity()
-    local Camera = Workspace.CurrentCamera
-    local Velocities = {}
-
-    Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W)
-    and Camera.CFrame.LookVector or Vector3.zero
-    Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S)
-    and -Camera.CFrame.LookVector or Vector3.zero
-    Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A)
-    and -Camera.CFrame.RightVector or Vector3.zero
-    Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D)
-    and Camera.CFrame.RightVector or Vector3.zero
-    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space)
-    and Vector3.new(0,1,0) or Vector3.zero
-    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-    and Vector3.new(0,-1,0) or Vector3.zero
-    
-    return (
-        Velocities[1] +
-        Velocities[2] +
-        Velocities[3] +
-        Velocities[4] +
-        Velocities[5] +
-        Velocities[6]
-    )
+local function FixUnit(Vector)
+	if Vector.Magnitude == 0 then
+	return Vector3.zero end
+	return Vector.Unit
 end
+local function FlatCameraVector()
+    local Camera = Workspace.CurrentCamera
+	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
+		Camera.CFrame.RightVector * Vector3.new(1,0,1)
+end
+local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
+	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
+    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
+	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+end
+
 local function PlayerFly(Config)
     if not Config.Enabled then
         BodyVelocity.MaxForce = Vector3.zero
@@ -218,13 +205,6 @@ local function PlayerFly(Config)
 end
 
 RunService.Heartbeat:Connect(function()
-    if Window.Flags["UI/Watermark"] then
-        Window.Watermark:SetTitle(string.format(
-            "Parvus Hub    %s    %i FPS    %i MS",
-            os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-        ))
-    end
-
     PlayerFly({
         Enabled = Window.Flags["ST/Fly/Enabled"],
         Camera = Window.Flags["ST/Fly/Camera"],

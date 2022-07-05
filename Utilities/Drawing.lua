@@ -3,6 +3,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local TeamService = game:GetService("Teams")
 local CoreGui = game:GetService("CoreGui")
 
 repeat task.wait() until PlayerService.LocalPlayer
@@ -147,7 +148,7 @@ local function PlayerESP(Model,ESP)
     local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
     = false,false,false,false,Color3.new(1,1,1)
 
-    RunService:BindToRenderStep(UpdateName,2000,function()
+    return RunService.Heartbeat:Connect(function()--RunService:BindToRenderStep(UpdateName,2000,function()
         Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
         = ModelManager(ESP.Mode,Model)
 
@@ -248,7 +249,7 @@ local function PlayerESP(Model,ESP)
         ESP.Drawing.Other.Head.Visible = Visible and ESP.Config[ESP.ConfigName.."/Head/Enabled"] or false
         ESP.Drawing.Other.Tracer.Visible = Visible and ESP.Config[ESP.ConfigName.."/Tracer/Enabled"] or false
         ESP.Drawing.Other.Arrow.Visible = ArrowVisible and ESP.Config[ESP.ConfigName.."/Arrow/Enabled"] or false
-    end) return UpdateName
+    end) --return UpdateName
 end
 
 local function ModelESP(Model,ESP)
@@ -257,7 +258,7 @@ local function ModelESP(Model,ESP)
     local Character,PrimaryPart,IsAlive,InEnemyTeam,TeamColor
     = false,false,false,false,Color3.new(1,1,1)
 
-    RunService:BindToRenderStep(UpdateName,2000,function()
+    return RunService.Heartbeat:Connect(function()--RunService:BindToRenderStep(UpdateName,2000,function()
         if Model:IsA("Model") and Model.PrimaryPart then
             Character, PrimaryPart, IsAlive, InEnemyTeam =
             Model, Model.PrimaryPart, true, true
@@ -332,16 +333,17 @@ local function ModelESP(Model,ESP)
         ESP.Drawing.Other.Head.Visible = Visible and ESP.Config[ESP.ConfigName.."/Head/Enabled"] or false
         ESP.Drawing.Other.Tracer.Visible = Visible and ESP.Config[ESP.ConfigName.."/Tracer/Enabled"] or false
         ESP.Drawing.Other.Arrow.Visible = ArrowVisible and ESP.Config[ESP.ConfigName.."/Arrow/Enabled"] or false
-    end) return UpdateName
+    end) --return UpdateName
 end
 
 if game.GameId == 580765040 then
     function ModelManager(Mode,Model)
         local Character,LPCharacter = Model.Character,LocalPlayer.Character
         if not Character or not LPCharacter then return end
+        if not Character:FindFirstChild("Torso") then return end
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
         if not Humanoid then return end
-
+        
         local InEnemyTeam, PlayerColor = false, Color3.new(1,1,1)
         if Character:FindFirstChild("Team") and LPCharacter:FindFirstChild("Team") then
             if Character.Team.Value ~= LPCharacter.Team.Value or Character.Team.Value == "None" then
@@ -372,15 +374,28 @@ elseif game.GameId == 1168263273 then
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     repeat task.wait() until ReplicatedStorage:FindFirstChild("TS")
     local Tortoiseshell = require(ReplicatedStorage.TS)
+    local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 
-    function ModelManager(Mode,Model)
-        local Character = Model.Character if not Character then return end
-        return Character:FindFirstChild("Hitbox"),Character:FindFirstChild("Root"),
-        true,LocalPlayer.Team ~= Model.Team or tostring(Model.Team) == "FFA",
-        Tortoiseshell.Teams.Colors[Model.Team]
+    local function GetPlayerTeam(Player)
+        for Index,Team in pairs(TeamService:GetChildren()) do
+            if Team.Players:FindFirstChild(Player.Name) then
+                return Team.Name
+            end
+        end
     end
 
-    local OldIndex
+    function ModelManager(Mode,Model)
+        local LPTeam = GetPlayerTeam(LocalPlayer)
+        local Character = Characters[Model]
+        local Team = GetPlayerTeam(Model)
+        if not Character then return end
+        if Character.Parent == nil then return end
+
+        return Character:FindFirstChild("Hitbox"),Character:FindFirstChild("Root"),
+        true,LPTeam ~= Team or tostring(Team) == "FFA",Tortoiseshell.Teams.Colors[Team]
+    end
+
+    --[[local OldIndex
     OldIndex = hookmetamethod(game, "__index", function(Self, Index)
         if Index == "Character" then
             return Tortoiseshell.Characters:GetCharacter(Self)
@@ -388,7 +403,7 @@ elseif game.GameId == 1168263273 then
             return Tortoiseshell.Teams:GetPlayerTeam(Self)
         end
         return OldIndex(Self, Index)
-    end)
+    end)]]
 elseif game.GameId == 1586272220 then
     local function GetPlayerTank(Player)
         local Character = Player:FindFirstChild("Char")
@@ -450,16 +465,17 @@ end
 
 function DrawingLibrary:RemoveESP(Model)
     if not DrawingLibrary.ESPContainer[Model] then return end
-
     local ESP = DrawingLibrary.ESPContainer[Model]
-    RunService:UnbindFromRenderStep(ESP.UpdateName)
+
+    ESP.UpdateName:Disconnect()
+    --RunService:UnbindFromRenderStep(ESP.UpdateName)
     RemoveDrawing(ESP.Drawing)
     ESP.Highlight:Destroy()
 
     DrawingLibrary.ESPContainer[Model] = nil
 end
 
-function DrawingLibrary:Cursor(Config)
+function DrawingLibrary:SetupCursor(Config)
     local Cursor = AddDrawing("Triangle", {
         Color = Color3.new(1,1,1),
         Filled = true,
@@ -613,7 +629,7 @@ end
     return Watermark
 end]]
 
-function DrawingLibrary:FoVCircle(Name,Config)
+function DrawingLibrary:FOVCircle(Name,Config)
     local FovCircle = AddDrawing("Circle",{ZIndex = 3})
     RunService.RenderStepped:Connect(function()
         FovCircle.Visible = Config[Name.."/Enabled"] and Config[Name.."/Circle/Enabled"]

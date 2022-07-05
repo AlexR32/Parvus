@@ -1,28 +1,25 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local Stats = game:GetService("Stats")
 
 repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Ping = Stats.Network.ServerStatsItem["Data Ping"]
-local Aimbot,SilentAim,NPCFolder,
+local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
-= false,nil,Workspace.Bots,nil,nil,1000
+= false,nil,Workspace.Bots,{},nil,nil,1000
 
-getgenv().Network = {}
 local TI = TweenInfo.new(10,Enum.EasingStyle.Linear,
 Enum.EasingDirection.InOut,0,false,0)
 local TI2 = TweenInfo.new(5,Enum.EasingStyle.Linear,
 Enum.EasingDirection.InOut,0,false,0)
+
 local AFKPlaces = {
     CFrame.new(3853.97021484375, 172.68963623046875, -429.0279541015625), -- City Hall
     CFrame.new(-5125.18359375, 105.015625, 5607.85791015625), -- Iraq
@@ -40,73 +37,75 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
+        local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
+            GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
+            GlobalSection:Dropdown({Name = "Target Mode",Flag = "BRM5/TargetMode",List = {
+                {Name = "Player",Mode = "Button"},
+                {Name = "NPC",Mode = "Button",Value = true}
+            }})
+        end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FoV",Flag = "Aimbot/DynamicFoV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,
-            Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
+            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
+            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
+            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
             }})
         end
-        local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
-            AFoVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFoVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFoVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
-            AFoVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            AFoVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
+            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
+            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
+            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
-        local TFoVSection = AimAssistTab:Section({Name = "Trigger FoV Circle",Side = "Left"}) do
-            TFoVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
-            TFoVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
-            TFoVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",Value = {1,0.25,1,0.5,true}})
-            TFoVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            TFoVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
-        end
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
-            MiscSection:Dropdown({Name = "Target Mode",Flag = "BRM5/TargetMode",List = {
-                {Name = "Player",Mode = "Button"},
-                {Name = "NPC",Mode = "Button",Value = true}
-            }})
+        local TFOVSection = AimAssistTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",Value = {1,0.25,1,0.5,true}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Dynamic FoV",Flag = "SilentAim/DynamicFoV",Value = false})
+            SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
-            SilentAimSection:Slider({Name = "Field of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
         end
-        local SAFoVSection = AimAssistTab:Section({Name = "Silent Aim FoV Circle",Side = "Right"}) do
-            SAFoVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SAFoVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SAFoVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
-            SAFoVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            SAFoVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
+            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
+            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
+            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
+            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
         local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
+            TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = false})
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
-            TriggerSection:Toggle({Name = "Dynamic FoV",Flag = "Trigger/DynamicFoV",Value = false})
-            TriggerSection:Slider({Name = "Field of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Toggle({Name = "Dynamic FOV",Flag = "Trigger/DynamicFOV",Value = false})
+            TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
+            Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
+            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Slider({Name = "Hold Time",Flag = "Trigger/HoldTime",Min = 0,Max = 1,Precise = 2,Value = 0})
+            TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
+            TriggerSection:Toggle({Name = "Switch To RMB",Flag = "Trigger/RMBMode",Value = false})
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
             }})
-            TriggerSection:Divider({Text = "Prediction"})
-            TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Prediction/Enabled",Value = false})
-            TriggerSection:Slider({Name = "Velocity",Flag = "Trigger/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -246,11 +245,11 @@ local Window = Parvus.Utilities.UI:Window({
             WeaponSection:Slider({Name = "Round Per Minute",Flag = "BRM5/RapidFire/Value",Min = 45,Max = 1000,Value = 1000})
         end
         local CharSection = GameTab:Section({Name = "Character"}) do
+            CharSection:Toggle({Name = "Anti Fall",Flag = "BRM5/AntiFall",Value = false})
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
-            CharSection:Toggle({Name = "Anti Fall",Flag = "BRM5/AntiFall",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
-            CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind({Flag = "BRM5/WalkSpeed/Keybind"})
+            CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
         end
         local TPSection = GameTab:Section({Name = "Teleports"}) do
@@ -289,6 +288,46 @@ local Window = Parvus.Utilities.UI:Window({
             HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false})
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
+        local AirSection = GameTab:Section({Name = "Aircraft"}) do
+            AirSection:Toggle({Name = "Enabled",Flag = "BRM5/Aircraft/Enabled",Value = false}):Keybind()
+            AirSection:Slider({Name = "Speed",Flag = "BRM5/Aircraft/Speed",Min = 130,Max = 950,Value = 130})
+            AirSection:Toggle({Name = "Enable Fly",Flag = "BRM5/Aircraft/FlyEnabled",Value = false}):Keybind()
+            AirSection:Toggle({Name = "Fly Use Camera",Flag = "BRM5/Aircraft/Camera",Value = false})
+            AirSection:Slider({Name = "Fly Speed",Flag = "BRM5/Aircraft/FlySpeed",Min = 145,Max = 500,Value = 200})
+            AirSection:Button({Name = "Setup Switches/Engines",Callback = function()
+                local Aircraft = RequireModule("MovementService")
+                if not Aircraft._handler or not Aircraft._handler._main then return end
+                EnableSwitch("cicu")
+                EnableSwitch("oxygen")
+                EnableSwitch("battery")
+                EnableSwitch("ac_r")
+                EnableSwitch("ac_l")
+                EnableSwitch("inverter")
+                EnableSwitch("take_apu")
+                EnableSwitch("apu")
+                EnableSwitch("engine_r")
+                EnableSwitch("engine_l")
+                EnableSwitch("fuel_r_l")
+                EnableSwitch("fuel_l_l")
+                EnableSwitch("fuel_r_r")
+                EnableSwitch("fuel_l_r")
+                Network:FireServer("CallInteraction", "Fire", "Canopy")
+                Parvus.Utilities.UI:Notification({
+                    Title = "Aircraft thingy",
+                    Description = "Please wait till your engines start up, you dont need to touch anything",
+                    Duration = 30
+                })
+                repeat task.wait() until Aircraft._handler._main.APU.engine.PlaybackSpeed == 1
+                Network:FireServer("CallInteraction","Fire","LeftEngine")
+                Network:FireServer("CallInteraction","Fire","RightEngine")
+            end})
+            AirSection:Button({Name = "Unlock Camera",Callback = function()
+                local Aircraft = RequireModule("MovementService")
+                local CameraMod = RequireModule("CameraService")
+                CameraMod:Mount(Aircraft._handler._controller, "Character")
+                CameraMod._handler._zoom = 128
+            end})
+        end
         local MiscSection = GameTab:Section({Name = "Misc"}) do
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
                 local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
@@ -306,8 +345,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
+            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
@@ -356,21 +396,12 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "ImageId",
-            Callback = function(String)
-                if string.gsub(String," ","") ~= "" then
-                    Window.Background.Image = "rbxassetid://" .. String
-                end
-            end})
+            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
+            Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
-            Callback = function(HSVAR,Color)
-                Window.Background.ImageColor3 = Color
-                Window.Background.ImageTransparency = HSVAR[4]
-            end})
+            Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74, Max = 296,Value = 74,
-            Callback = function(Number)
-                Window.Background.TileSize = UDim2.new(0,Number,0,Number)
-            end})
+            Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
@@ -395,11 +426,38 @@ Window:LoadDefaultConfig()
 Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
-local GetFPS = Parvus.Utilities.Misc:SetupFPS()
-Parvus.Utilities.Drawing:Cursor(Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
+Parvus.Utilities.Misc:SetupWatermark(Window)
+--Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+
+Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
+Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
+Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+
+local function FixUnit(Vector)
+	if Vector.Magnitude == 0 then
+	return Vector3.zero end
+	return Vector.Unit
+end
+local function FlatCameraVector()
+    local Camera = Workspace.CurrentCamera
+	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
+		Camera.CFrame.RightVector * Vector3.new(1,0,1)
+end
+local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
+	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
+    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
+	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+end
+
+local function TeamCheck(Enabled,Player)
+    if not Enabled then return true end
+    return LocalPlayer.Team ~= Player.Team
+end
 
 local function WallCheck(Enabled,Hitbox,Character)
     if not Enabled then return true end
@@ -414,7 +472,7 @@ local function GetHitbox(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
 
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
+    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
@@ -441,7 +499,7 @@ local function GetHitbox(Config)
             local Character = Player.Character
             local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
-            if Player ~= LocalPlayer and IsAlive and LocalPlayer.Team ~= Player.Team then
+            if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                     if Hitbox then
@@ -460,14 +518,14 @@ local function GetHitbox(Config)
     return ClosestHitbox
 end
 
-local function Trigger(Config)
+local function GetHitboxWithPrediction(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
 
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
+    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
-
+    
     if Config.TargetMode == "NPC" then
         for Index, NPC in pairs(NPCFolder:GetChildren()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
@@ -476,11 +534,7 @@ local function Trigger(Config)
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
                     if Hitbox then
-                        local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                        local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
-
-                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction
-                        and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
+                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
                             FieldOfView = Magnitude
@@ -504,6 +558,7 @@ local function Trigger(Config)
 
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction
                         and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
+
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
                             FieldOfView = Magnitude
@@ -515,12 +570,7 @@ local function Trigger(Config)
         end
     end
 
-    if ClosestHitbox then
-        task.wait(Config.Delay)
-        mouse1press()
-        task.wait(Config.HoldTime)
-        mouse1release()
-    end
+    return ClosestHitbox
 end
 
 local function AimAt(Hitbox,Config)
@@ -539,28 +589,7 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-function TeleportCharacter(Target)
-    if not LocalPlayer.Character then return end
-    local HumanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not HumanoidRootPart then return end
-
-    local OldValue = Window:GetValue("BRM5/AntiFall")
-    Window:SetValue("BRM5/AntiFall",true)
-    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
-        CFrame = HumanoidRootPart.CFrame + Vector3.new(0,1000,0),
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait()
-    local Tween = TweenService:Create(HumanoidRootPart,TI,{
-        CFrame = Target + Vector3.new(0,1000,0),
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait()
-    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
-        CFrame = Target,
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait() task.wait(1)
-    Window:SetValue("BRM5/AntiFall",OldValue)
-end
-local function RequireModule(Name)
+function RequireModule(Name)
     for Index, Instance in pairs(getloadedmodules()) do
         if Instance.Name == Name then
             return require(Instance)
@@ -594,19 +623,62 @@ local function HookFunction(ModuleName,Function,Callback)
     end
 end
 
+function TeleportCharacter(Target)
+    if not LocalPlayer.Character then return end
+    local HumanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not HumanoidRootPart then return end
+
+    local OldValue = Window:GetValue("BRM5/AntiFall")
+    Window:SetValue("BRM5/AntiFall",true)
+    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
+        CFrame = HumanoidRootPart.CFrame + Vector3.new(0,1000,0),
+        AssemblyLinearVelocity = Vector3.zero
+    }) Tween:Play() Tween.Completed:Wait()
+    local Tween = TweenService:Create(HumanoidRootPart,TI,{
+        CFrame = Target + Vector3.new(0,1000,0),
+        AssemblyLinearVelocity = Vector3.zero
+    }) Tween:Play() Tween.Completed:Wait()
+    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
+        CFrame = Target,
+        AssemblyLinearVelocity = Vector3.zero
+    }) Tween:Play() Tween.Completed:Wait() task.wait(1)
+    Window:SetValue("BRM5/AntiFall",OldValue)
+end
+function EnableSwitch(Switch)
+    local CameraMod = RequireModule("CameraService")
+    if not CameraMod._handler._buttons then return end
+    for Index,Switches in pairs(CameraMod._handler._buttons) do
+        if Switches._id == Switch then
+            Switches:Update()
+            Switches:Select()
+            CameraMod._switch = Switches
+            CameraMod._switch:Activate()
+            CameraMod._switch:Unselect()
+        end
+    end
+end
+local function AircraftFly(Config,Args)
+    if not Config.Enabled then return Args end
+    local Camera = Workspace.CurrentCamera
+    Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
+    Args[1]._force.Velocity = InputToVelocity() * Config.Speed
+    if Config.Camera then
+        Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
+        Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
+    end
+end
+
 HookFunction("ControllerClass","LateUpdate",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
         Args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
-    end
-    return Args
+    end return Args
 end)
 HookFunction("MovementService","Mount",function(Args)
     if Window.Flags["BRM5/AntiFall"] then
         if Args[3] == "Skydive" or Args[3] == "Parachute" then
             return
         end
-    end
-    return Args
+    end return Args
 end)
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
@@ -615,14 +687,12 @@ HookFunction("CharacterCamera","Update",function(Args)
     end
     if Window.Flags["BRM5/Recoil/Enabled"] then
         Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
-    end
-    return Args
+    end return Args
 end)
 HookFunction("TurretCamera","Update",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] then
         Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
-    end
-    return Args
+    end return Args
 end)
 HookFunction("FirearmInventory","new",function(Args)
     if Window.Flags["BRM5/Firemodes"] then
@@ -636,8 +706,7 @@ HookFunction("FirearmInventory","new",function(Args)
             table.insert(Args[2].Tune.Firemodes,3)
         end
         Args[2].Mode = 1
-    end
-    return Args
+    end return Args
 end)
 HookFunction("FirearmInventory","_discharge",function(Args)
     if Window.Flags["BRM5/RapidFire/Enabled"] then
@@ -645,38 +714,45 @@ HookFunction("FirearmInventory","_discharge",function(Args)
     end
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._config.Tune.Velocity = 1e6
-    end
-    PredictedVelocity = Args[1]._config.Tune.Velocity
+    end PredictedVelocity = Args[1]._config.Tune.Velocity
     return Args
 end)
 HookFunction("GroundMovement","Update",function(Args)
     if Window.Flags["BRM5/Vehicle/Enabled"] then
         Args[1]._tune.Speed = Window.Flags["BRM5/Vehicle/Speed"]
         Args[1]._tune.Accelerate = Window.Flags["BRM5/Vehicle/Acceleration"]
-    end
-    return Args
+    end return Args
 end)
 HookFunction("HelicopterMovement","Update",function(Args)
     if Window.Flags["BRM5/Helicopter/Enabled"] then
         Args[1]._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
-    end
-    return Args
+    end return Args
 end)
 HookFunction("AircraftMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
-    end
-    PredictedVelocity = Args[1]._tune.Velocity
-    AircraftTip = Args[1]._tip
-    return Args
+    end PredictedVelocity = Args[1]._tune.Velocity
+    AircraftTip = Args[1]._tip return Args
+end)
+HookFunction("AircraftMovement","Update",function(Args)
+    if Window.Flags["BRM5/Aircraft/Enabled"] then
+        --[[Args[1]._speed = 1
+        Args[1]._gyro.CFrame = Args[1]._gyro.CFrame * CFrame.Angles(math.rad(-Args[3].Y * Args[4] * 50), 0, math.rad(Args[3].X * Args[4] * 50));
+		Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
+        Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000 * Args[1]._speed 
+        Args[1]._force.Velocity = Args[1]._main.CFrame.LookVector * -Window.Flags["BRM5/Aircraft/Speed"]]
+        Args[1]._model.RPM.Value = Window.Flags["BRM5/Aircraft/Speed"]
+    end Args = AircraftFly({
+        Enabled = Window.Flags["BRM5/Aircraft/FlyEnabled"],
+        Camera = Window.Flags["BRM5/Aircraft/Camera"],
+        Speed = Window.Flags["BRM5/Aircraft/FlySpeed"]
+    },Args) return Args
 end)
 HookFunction("TurretMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
-    end
-    PredictedVelocity = Args[1]._tune.Velocity
-    GroundTip = Args[1]._tip
-    return Args
+    end PredictedVelocity = Args[1]._tune.Velocity
+    GroundTip = Args[1]._tip return Args
 end)
 HookFunction("EnvironmentService","Update",function(Args)
     if Window.Flags["BRM5/Lighting/Enabled"] then
@@ -685,8 +761,7 @@ HookFunction("EnvironmentService","Update",function(Args)
             Args[1]._atmoshperes.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
             Args[1]._atmoshperes.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
         end
-    end
-    return Args
+    end return Args
 end)
 HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
     if Args[1] == "ReplicateNVG" then
@@ -699,8 +774,7 @@ HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
     elseif Args[1] == "InitInventory" then
         if Window.Flags["BRM5/AntiFall"]
         and Args[2] == true then return end
-    end
-    return Args
+    end return Args
 end)
 
 task.spawn(function()
@@ -725,9 +799,8 @@ task.spawn(function()
         and rawget(Table,"InvokeServer")  then
             local OldFireServer = Table.FireServer
             --local OldInvokeServer = Table.InvokeServer
-            Table.FireServer = function(Self, ...)
-                if checkcaller() then OldFireServer(Self, ...) end
-                local Args = {...}
+            Table.FireServer = function(Self, ...) local Args = {...}
+                if checkcaller() then return OldFireServer(Self, ...) end
                 if Window.Flags["BRM5/AntiFall"] then
                     if Args[1] == "ReplicateSkydive"
                     and (Args[2] == 3 or Args[2] == 2) then
@@ -779,31 +852,27 @@ RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox({
         Enabled = Window.Flags["SilentAim/Enabled"],
         WallCheck = Window.Flags["SilentAim/WallCheck"],
-        DynamicFoV = Window.Flags["SilentAim/DynamicFoV"],
+        DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
         Priority = Window.Flags["SilentAim/Priority"],
-        TargetMode = Window.Flags["BRM5/TargetMode"][1]
+        TargetMode = Window.Flags["BRM5/TargetMode"][1],
+        TeamCheck = Window.Flags["TeamCheck"]
     })
     if Aimbot then AimAt(
         GetHitbox({
             Enabled = Window.Flags["Aimbot/Enabled"],
             WallCheck = Window.Flags["Aimbot/WallCheck"],
-            DynamicFoV = Window.Flags["Aimbot/DynamicFoV"],
+            DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
             Priority = Window.Flags["Aimbot/Priority"],
-            TargetMode = Window.Flags["BRM5/TargetMode"][1]
+            TargetMode = Window.Flags["BRM5/TargetMode"][1],
+            TeamCheck = Window.Flags["TeamCheck"]
         }),{
             Prediction = Window.Flags["Aimbot/Prediction"],
             Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
         })
     end
 
-    if Window.Flags["UI/Watermark"] then
-        Window.Watermark:SetTitle(string.format(
-            "Parvus Hub    %s    %i FPS    %i MS",
-            os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-        ))
-    end
     if Window.Flags["BRM5/Lighting/Enabled"] then
         Lighting.ClockTime = Window.Flags["BRM5/Lighting/Time"]
     end
@@ -814,17 +883,44 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    Trigger({
+    local Press = Window.Flags["BRM5/Aircraft/Trigger"] and mouse2press or mouse1press
+    local Release = Window.Flags["BRM5/Aircraft/Trigger"] and mouse2release or mouse1release
+
+    if not Trigger then return end
+    local TriggerHB = GetHitboxWithPrediction({
         Enabled = Window.Flags["Trigger/Enabled"],
         WallCheck = Window.Flags["Trigger/WallCheck"],
-        Prediction = Window.Flags["Trigger/Prediction"],
-        DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
+        Prediction = {
+            Enabled = Window.Flags["Trigger/Prediction/Enabled"],
+            Velocity = Window.Flags["Trigger/Prediction/Velocity"]
+        },
+        DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
-        TargetMode = Window.Flags["BRM5/TargetMode"][1],
         Priority = Window.Flags["Trigger/Priority"],
-        HoldTime = Window.Flags["Trigger/HoldTime"],
-        Delay = Window.Flags["Trigger/Delay"]
+        TargetMode = Window.Flags["BRM5/TargetMode"][1],
+        TeamCheck = Window.Flags["TeamCheck"]
     })
+
+    if TriggerHB then Press()
+        task.wait(Window.Flags["Trigger/Delay"])
+        if Window.Flags["Trigger/HoldMode"] then
+            while task.wait() do
+                TriggerHB = GetHitboxWithPrediction({
+                    Enabled = Window.Flags["Trigger/Enabled"],
+                    WallCheck = Window.Flags["Trigger/WallCheck"],
+                    Prediction = {
+                        Enabled = Window.Flags["Trigger/Prediction/Enabled"],
+                        Velocity = Window.Flags["Trigger/Prediction/Velocity"]
+                    },
+                    DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
+                    FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Priority = Window.Flags["Trigger/Priority"],
+                    TargetMode = Window.Flags["BRM5/TargetMode"][1],
+                    TeamCheck = Window.Flags["TeamCheck"]
+                }) if not TriggerHB then break end
+            end
+        end Release()
+    end
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do

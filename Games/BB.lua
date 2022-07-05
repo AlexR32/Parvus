@@ -1,14 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
-local Stats = game:GetService("Stats")
+local TeamService = game:GetService("Teams")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 local Aimbot,SilentAim,Trigger,
 PredictedVelocity,PredictedGravity,
 GravityCorrection,Tortoiseshell
@@ -56,11 +53,11 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FoV",Flag = "Aimbot/DynamicFoV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,
-            Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
+            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
+            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
+            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle",Value = true},
@@ -69,29 +66,29 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Hips",Mode = "Toggle",Value = true}
             }})
         end
-        local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
-            AFoVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFoVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFoVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
-            AFoVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            AFoVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
+            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
+            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
+            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
-        local TFoVSection = AimAssistTab:Section({Name = "Trigger FoV Circle",Side = "Left"}) do
-            TFoVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
-            TFoVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
-            TFoVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",Value = {1,0.25,1,0.5,true}})
-            TFoVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            TFoVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local TFOVSection = AimAssistTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",Value = {1,0.25,1,0.5,true}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "AutoShoot",Flag = "BadBusiness/AutoShoot",Value = false})
-            SilentAimSection:Toggle({Name = "AutoShoot 360 Mode",Flag = "BadBusiness/AutoShoot/AllFoV",Value = false})
+            SilentAimSection:Toggle({Name = "AutoShoot 360 Mode",Flag = "BadBusiness/AutoShoot/AllFOV",Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Dynamic FoV",Flag = "SilentAim/DynamicFoV",Value = false})
+            SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
-            SilentAimSection:Slider({Name = "Field of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
@@ -100,23 +97,23 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Hips",Mode = "Toggle"}
             }})
         end
-        local SAFoVSection = AimAssistTab:Section({Name = "Silent Aim FoV Circle",Side = "Right"}) do
-            SAFoVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SAFoVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SAFoVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
-            SAFoVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            SAFoVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
+            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
+            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
+            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
+            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
         local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
             TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = false})
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
-            TriggerSection:Toggle({Name = "Dynamic FoV",Flag = "Trigger/DynamicFoV",Value = false})
+            TriggerSection:Toggle({Name = "Dynamic FOV",Flag = "Trigger/DynamicFOV",Value = false})
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",Mouse = true,
             Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
-            TriggerSection:Slider({Name = "Field of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 15})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
+            TriggerSection:Toggle({Name = "Hold Trigger Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle",Value = true},
@@ -237,8 +234,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
+            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
@@ -287,21 +285,12 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "ImageId",
-            Callback = function(String)
-                if string.gsub(String," ","") ~= "" then
-                    Window.Background.Image = "rbxassetid://" .. String
-                end
-            end})
+            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
+            Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
-            Callback = function(HSVAR,Color)
-                Window.Background.ImageColor3 = Color
-                Window.Background.ImageTransparency = HSVAR[4]
-            end})
+            Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74, Max = 296,Value = 74,
-            Callback = function(Number)
-                Window.Background.TileSize = UDim2.new(0,Number,0,Number)
-            end})
+            Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
@@ -326,24 +315,38 @@ Window:LoadDefaultConfig()
 Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
-local GetFPS = Parvus.Utilities.Misc:SetupFPS()
---repeat task.wait() until Parvus.Utilities.Drawing.Cursor
-Parvus.Utilities.Drawing:Cursor(Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Trigger",Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("SilentAim",Window.Flags)
+Parvus.Utilities.Misc:SetupWatermark(Window)
+--Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
-do --[[local OldRandom
-OldRandom = hookfunction(math.random, function(...)
+Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
+Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
+Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+
+do local SetIdentity = syn and syn.set_thread_identity or setidentity
+local OldNamecall,OldTaskSpawn,OldPluginManager,Message--,OldRandom
+--[[OldRandom = hookfunction(math.random, function(...)
     if checkcaller() then return OldRandom(...) end
-    local args = {...}
-    if args[1] == 1 and args[2] <= 1000 then
-        print(args[1],args[2])
+    local Args = {...} math.randomseed(1337)
+    if Args[1] == 1 and Args[2] == 64
+    or Args[1] == 1 and Args[2] == 1000 then
         return math.huge
-    end
-    return OldRandom(...)
+    end return OldRandom(...)
 end)]]
-local OldTaskSpawn
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local Method,Args = getnamecallmethod(),{...}
+    if Method == "FireServer" then
+        if typeof(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
+            for Index, Reason in pairs(BanReasons) do
+                if typeof(Args[2]) == "string" and string.match(Args[2],Reason) then
+                    --print(Args[2])
+                    return
+                end
+            end
+        end
+    end
+    return OldNamecall(Self, ...)
+end)
 OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
     if checkcaller() then return OldTaskSpawn(...) end local Args = {...}
     if type(Args[1]) == "function" then
@@ -355,35 +358,15 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
         end
     end
     return OldTaskSpawn(...)
-end)
--- Thanks to Kiriot22
-local Message
-local SetIdentity = syn and syn.set_thread_identity or setidentity
+end) -- Thanks to Kiriot22
 task.spawn(function()
     SetIdentity(2)
     local Success,Error = pcall(getrenv().PluginManager)
     Message = Error
 end)
-local OldPluginManager
 OldPluginManager = hookfunction(getrenv().PluginManager, function()
     return error(Message)
 end) end
-
-
-local OldNamecall
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
-    local Method,Args = getnamecallmethod(),{...}
-    if Method == "FireServer" then
-        if typeof(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
-            for Index, Reason in pairs(BanReasons) do
-                if typeof(Args[2]) == "string" and string.match(Args[2],Reason) then
-                    return
-                end
-            end
-        end
-    end
-    return OldNamecall(Self, ...)
-end)
 
 --This thing laggy as hell, dont use in your scripts
 --[[local DefaultRecoil = {}
@@ -428,18 +411,18 @@ end]]
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
+local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
-
-local Notify = Instance.new("BindableEvent")
-Notify.Event:Connect(function(Text)
-    Parvus.Utilities.UI:Notification2(Text)
-end)
 
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
 BodyVelocity.MaxForce = Vector3.zero
 
+local Notify = Instance.new("BindableEvent")
+Notify.Event:Connect(function(Text)
+    Parvus.Utilities.UI:Notification2(Text)
+end)
 
 local function Raycast(Origin,Direction,Table)
     local RaycastParams = RaycastParams.new()
@@ -449,9 +432,17 @@ local function Raycast(Origin,Direction,Table)
     return Workspace:Raycast(Origin,Direction,RaycastParams)
 end
 
+local function GetPlayerTeam(Player)
+    for Index,Team in pairs(TeamService:GetChildren()) do
+        if Team.Players:FindFirstChild(Player.Name) then
+            return Team
+        end
+    end
+end
 local function TeamCheck(Player)
-    return LocalPlayer.Team ~= Player.Team
-    or tostring(Player.Team) == "FFA"
+    local Team = GetPlayerTeam(Player)
+    local LPTeam = GetPlayerTeam(LocalPlayer)
+    return LPTeam ~= Team or tostring(Team) == "FFA"
 end
 local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
@@ -470,16 +461,15 @@ local function FindGunModel()
     end
 end
 local function GetCharacterInfo(Player,Shield)
-    local Character = Player.Character
+    local Character = Characters[Player]
     if not Character then return end
-    local Root = Character.PrimaryPart
-    if not Root then return end
-    local ShieldEmitter = Root:FindFirstChild("ShieldEmitter")
-    if not ShieldEmitter then return end
+    if Character.Parent == nil then return end
 
     if Shield then
+        local Health = Character:FindFirstChild("Health")
+        if not Health then return end
         return Character:FindFirstChild("Hitbox"),
-        not ShieldEmitter.Enabled
+        not Health:FindFirstChild("Shield")
     else
         return Character:FindFirstChild("Hitbox"),true
     end
@@ -517,32 +507,26 @@ local function ToggleShoot(Toggle)
     end
 end
 
-local function InputToVelocity()
-    local Camera = Workspace.CurrentCamera
-    local Velocities = {}
-
-    Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W)
-    and Camera.CFrame.LookVector or Vector3.zero
-    Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S)
-    and -Camera.CFrame.LookVector or Vector3.zero
-    Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A)
-    and -Camera.CFrame.RightVector or Vector3.zero
-    Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D)
-    and Camera.CFrame.RightVector or Vector3.zero
-    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space)
-    and Vector3.new(0,1,0) or Vector3.zero
-    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-    and Vector3.new(0,-1,0) or Vector3.zero
-    
-    return (
-        Velocities[1] +
-        Velocities[2] +
-        Velocities[3] +
-        Velocities[4] +
-        Velocities[5] +
-        Velocities[6]
-    )
+local function FixUnit(Vector)
+	if Vector.Magnitude == 0 then
+	return Vector3.zero end
+	return Vector.Unit
 end
+local function FlatCameraVector()
+    local Camera = Workspace.CurrentCamera
+	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
+		Camera.CFrame.RightVector * Vector3.new(1,0,1)
+end
+local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
+	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
+    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
+	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+end
+
 local function PlayerFly(Config)
     if not Config.Enabled then BodyVelocity.MaxForce = Vector3.zero
         if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
@@ -664,7 +648,7 @@ local function GetHitbox(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
     
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
+    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
@@ -691,7 +675,7 @@ local function GetHitboxWithPrediction(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
 
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
+    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
@@ -720,7 +704,7 @@ local function GetHitboxWithPrediction(Config)
 
     return ClosestHitbox
 end
-local function GetHitboxAllFoV(Config)
+local function GetHitboxAllFOV(Config)
     local Camera = Workspace.CurrentCamera
     local Distance,ClosestHitbox = math.huge,nil
     for Index, Player in pairs(PlayerService:GetPlayers()) do
@@ -835,11 +819,10 @@ for Index,Event in pairs(Events) do
 end
 
 RunService.Heartbeat:Connect(function()
-    --debug.profilebegin("PARVUS_BAD_BUSINESS_HEARTBEAT")
     SilentAim = GetHitbox({
         Enabled = Window.Flags["SilentAim/Enabled"],
         WallCheck = Window.Flags["SilentAim/WallCheck"],
-        DynamicFoV = Window.Flags["SilentAim/DynamicFoV"],
+        DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
         Priority = Window.Flags["SilentAim/Priority"],
         Shield = true
@@ -848,20 +831,13 @@ RunService.Heartbeat:Connect(function()
         GetHitbox({
             Enabled = Window.Flags["Aimbot/Enabled"],
             WallCheck = Window.Flags["Aimbot/WallCheck"],
-            DynamicFoV = Window.Flags["Aimbot/DynamicFoV"],
+            DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
             Priority = Window.Flags["Aimbot/Priority"]
         }),{
             Prediction = Window.Flags["Aimbot/Prediction"],
             Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
         })
-    end
-
-    if Window.Flags["UI/Watermark"] then
-        Window.Watermark:SetTitle(string.format(
-            "Parvus Hub    %s    %i FPS    %i MS",
-            os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-        ))
     end
 
     PlayerFly({
@@ -882,49 +858,40 @@ RunService.Heartbeat:Connect(function()
         Reflectance = Window.Flags["BadBusiness/ArmsCustom/Reflectance"],
         Material = Window.Flags["BadBusiness/ArmsCustom/Material"][1]
     })
-    --debug.profileend()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Window.Flags["BadBusiness/AutoShoot"] then return end
-    AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFoV"]
-    and GetHitboxAllFoV({
+    AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFOV"]
+    and GetHitboxAllFOV({
         WallCheck = Window.Flags["Aimbot/WallCheck"],
         Priority = Window.Flags["Aimbot/Priority"]
     }) or SilentAim,Window.Flags["BadBusiness/AutoShoot"])
 end)
-
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
-
     local TriggerHB = GetHitboxWithPrediction({
         Enabled = Window.Flags["Trigger/Enabled"],
         WallCheck = Window.Flags["Trigger/WallCheck"],
         Prediction = Window.Flags["Trigger/Prediction"],
-        DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
+        DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
         Priority = Window.Flags["Trigger/Priority"]
     })
 
-    if TriggerHB then
+    if TriggerHB then ToggleShoot(true)
         task.wait(Window.Flags["Trigger/Delay"])
-        ToggleShoot(true)
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
                 TriggerHB = GetHitboxWithPrediction({
                     Enabled = Window.Flags["Trigger/Enabled"],
                     WallCheck = Window.Flags["Trigger/WallCheck"],
                     Prediction = Window.Flags["Trigger/Prediction"],
-                    DynamicFoV = Window.Flags["Trigger/DynamicFoV"],
+                    DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
                     Priority = Window.Flags["Trigger/Priority"]
-                })
-                if not TriggerHB then
-                    ToggleShoot(false)
-                    break
-                end
+                }) if not TriggerHB then break end
             end
-        end
-        ToggleShoot(false)
+        end ToggleShoot(false)
     end
 end)
 
@@ -969,14 +936,14 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end
     end
 end)]]
-Parvus.Utilities.Misc:NewThreadLoop(1,function()
+--[[Parvus.Utilities.Misc:NewThreadLoop(1,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
             GravityCorrection = Config.Projectile.GravityCorrection
         end
     end
-end)
+end)]]
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then

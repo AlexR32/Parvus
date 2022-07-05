@@ -1,5 +1,5 @@
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
+--local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -22,21 +22,21 @@ local Window = Parvus.Utilities.UI:Window({
         local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
         end
-        local AFoVSection = AimAssistTab:Section({Name = "Aimbot FoV Circle",Side = "Left"}) do
-            AFoVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFoVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFoVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
-            AFoVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
-            AFoVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
+        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
+            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
+            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.75,1,0.5,false}})
+            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 100})
+            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Right"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FoV",Flag = "Aimbot/DynamicFoV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,
-            Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
+            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
+            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
+            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
@@ -136,8 +136,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) Window:Toggle(Bool) end}):Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
+            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
@@ -186,21 +187,12 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "ImageId",
-            Callback = function(String)
-                if string.gsub(String," ","") ~= "" then
-                    Window.Background.Image = "rbxassetid://" .. String
-                end
-            end})
+            BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
+            Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
-            Callback = function(HSVAR,Color)
-                Window.Background.ImageColor3 = Color
-                Window.Background.ImageTransparency = HSVAR[4]
-            end})
+            Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74, Max = 296,Value = 74,
-            Callback = function(Number)
-                Window.Background.TileSize = UDim2.new(0,Number,0,Number)
-            end})
+            Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
@@ -225,9 +217,10 @@ Window:LoadDefaultConfig()
 Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
-local GetFPS = Parvus.Utilities.Misc:SetupFPS()
-Parvus.Utilities.Drawing:Cursor(Window.Flags)
-Parvus.Utilities.Drawing:FoVCircle("Aimbot",Window.Flags)
+Parvus.Utilities.Misc:SetupWatermark(Window)
+--Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
@@ -247,7 +240,7 @@ local function GetHitbox(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
     
-    local FieldOfView,ClosestHitbox = Config.DynamicFoV and
+    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
@@ -289,7 +282,7 @@ RunService.Heartbeat:Connect(function()
         GetHitbox({
             Enabled = Window.Flags["Aimbot/Enabled"],
             WallCheck = Window.Flags["Aimbot/WallCheck"],
-            DynamicFoV = Window.Flags["Aimbot/DynamicFoV"],
+            DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
             Priority = Window.Flags["Aimbot/Priority"],
             TeamCheck = Window.Flags["TeamCheck"]
@@ -300,13 +293,6 @@ RunService.Heartbeat:Connect(function()
             },
             Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
         })
-    end
-
-    if Window.Flags["UI/Watermark"] then
-        Window.Watermark:SetTitle(string.format(
-            "Parvus Hub    %s    %i FPS    %i MS",
-            os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-        ))
     end
 end)
 
@@ -371,7 +357,6 @@ for Index,Instance in pairs(Regions) do
     end)
 end
 
--- Player ESP
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player ~= LocalPlayer then
         Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)

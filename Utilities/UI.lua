@@ -525,7 +525,7 @@ local function InitToggle(Parent,ScreenAsset,Window,Toggle)
     end
     function Toggle:Keybind(Keybind)
         Keybind = GetType(Keybind,{},"table")
-        Keybind.Flag = GetType(Keybind.Flag,Toggle.Name.."/Keybind","string")
+        Keybind.Flag = GetType(Keybind.Flag,Toggle.Flag.."/Keybind","string")
 
         Keybind.Value = GetType(Keybind.Value,"NONE","string")
         Keybind.Callback = GetType(Keybind.Callback,function() end,"function")

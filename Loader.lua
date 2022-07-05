@@ -37,7 +37,7 @@ Parvus.Games = {
         Script = Parvus.Debug and readfile("Parvus/Games/TWW.lua")
         or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWW.lua")
     },
-    ["2194874153"] = {
+    ["187796008"] = {
         Name = "Those Who Remain",
         Script = Parvus.Debug and readfile("Parvus/Games/TWR.lua")
         or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Games/TWR.lua")
