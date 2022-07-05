@@ -528,18 +528,21 @@ local function InputToVelocity() local Velocities,LookVector,RightVector = {},Fl
 end
 
 local function PlayerFly(Config)
+    local Character = GetCharacterInfo(LocalPlayer,false)
+    if not Character then return end
+    Character = Character.Parent
+    
     if not Config.Enabled then BodyVelocity.MaxForce = Vector3.zero
-        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart
-        and not LocalPlayer.Character.PrimaryPart.CanCollide then
-            LocalPlayer.Character.PrimaryPart.CanCollide = true
+        if Character and Character.PrimaryPart
+        and not Character.PrimaryPart.CanCollide then
+            Character.PrimaryPart.CanCollide = true
         end return
     end
-    if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
-        BodyVelocity.Parent = LocalPlayer.Character.PrimaryPart
+    if Character and Character.PrimaryPart then
+        BodyVelocity.Parent = Character.PrimaryPart
         BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
         BodyVelocity.Velocity = InputToVelocity() * Config.Speed
-        LocalPlayer.Character.PrimaryPart.CanCollide
-        = not Window.Flags["BadBusiness/Fly/NoClip"]
+        Character.PrimaryPart.CanCollide = not Window.Flags["BadBusiness/Fly/NoClip"]
     end
 end
 

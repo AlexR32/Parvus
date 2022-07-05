@@ -2,7 +2,7 @@
 Free Roblox Script Hub designed for shooters.  
 ***Parvus is still in beta stage of development so expect some bugs or lack of features.***  
 ***Please fork if you want to modify this hub or make your own based on it.***  
-Made With ❤️ By ***AlexR32#0157***  
+Made With :heart: By ***AlexR32#0157***  
 ### Loadstring
 ```lua
 loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))()
@@ -13,7 +13,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 - The Wild West
 - Steel Titans
 - RAGDOLL UNIVERSE
-- Those Who Remain ***(Not Finished)***
+- Those Who Remain
 ### Features
 ```markdown
 # Universal
@@ -76,6 +76,10 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - ESP
 # RAGDOLL UNIVERSE
   - Silent Aim Support
+  - Aimbot Support
+  - ESP Support
+# Those Who Remain
+  - Silent Aim Support (Wallbang, No Bullet Drop)
   - Aimbot Support
   - ESP Support
 ```

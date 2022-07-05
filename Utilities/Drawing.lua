@@ -59,12 +59,11 @@ local function AddHighlight()
     Highlight.Parent = HighlightContainer
     return Highlight
 end
-local function AddDrawing(Type, Properties)
+local function AddDrawing(Type,Properties)
     local Drawing = Drawing.new(Type)
-    for Property, Value in pairs(Properties) do
+    for Property,Value in pairs(Properties) do
         Drawing[Property] = Value
-    end
-    return Drawing
+    end return Drawing
 end
 local function RemoveDrawing(Table)
     for Index, Drawing in pairs(Table) do
@@ -638,7 +637,7 @@ function DrawingLibrary:FOVCircle(Name,Config)
             FovCircle.Color = TableToColor(Config[Name.."/Circle/Color"])
             FovCircle.Thickness = Config[Name.."/Circle/Thickness"]
             FovCircle.NumSides = Config[Name.."/Circle/NumSides"]
-            FovCircle.Radius = Config[Name.."/DynamicFoV"] and
+            FovCircle.Radius = Config[Name.."/DynamicFOV"] and
             ((120 - Workspace.CurrentCamera.FieldOfView) * 4) + Config[Name.."/FieldOfView"]
             or Config[Name.."/FieldOfView"]
             FovCircle.Filled = Config[Name.."/Circle/Filled"]

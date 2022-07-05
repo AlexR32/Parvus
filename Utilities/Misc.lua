@@ -6,28 +6,45 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local Stats = game:GetService("Stats")
 
-local Misc = {}
-local LocalPlayer = PlayerService.LocalPlayer
-local Request = syn and syn.request or request
+local Misc = {
+    DefaultLighting = {
+        Ambient = Lighting.Ambient,
+        Brightness = Lighting.Brightness,
+        ClockTime = Lighting.ClockTime,
+        ColorShift_Bottom = Lighting.ColorShift_Bottom,
+        ColorShift_Top = Lighting.ColorShift_Top,
+        EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
+        EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
+        ExposureCompensation = Lighting.ExposureCompensation,
+        FogColor = Lighting.FogColor,
+        FogEnd = Lighting.FogEnd,
+        FogStart = Lighting.FogStart,
+        GeographicLatitude = Lighting.GeographicLatitude,
+        GlobalShadows = Lighting.GlobalShadows,
+        OutdoorAmbient = Lighting.OutdoorAmbient,
+        ShadowSoftness = Lighting.ShadowSoftness
+    }
+}
 
 repeat task.wait() until
 Stats.Network:FindFirstChild("ServerStatsItem")
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 
+local LocalPlayer = PlayerService.LocalPlayer
+local Request = syn and syn.request or request
+
 function Misc:SetupFPS()
     local StartTime,TimeTable,
     LastTime = os.clock(), {}
-    return function()
-        LastTime = os.clock()
+    return function() LastTime = os.clock()
         for Index = #TimeTable, 1, -1 do
             TimeTable[Index + 1] = TimeTable[Index] >= LastTime - 1 and TimeTable[Index] or nil
-        end
-        TimeTable[1] = LastTime
+        end TimeTable[1] = LastTime
         return os.clock() - StartTime >= 1 and #TimeTable or #TimeTable / (os.clock() - StartTime)
     end
 end
 
-function Misc:HideObject(Object)
+function Misc:HideObject(Object,Parent)
     if gethui then Object.Parent = gethui() return end
     if syn and syn.protect_gui then
         syn.protect_gui(Object)
@@ -37,14 +54,14 @@ function Misc:HideObject(Object)
 end
 
 function Misc:NewThreadLoop(Wait,Function)
-    coroutine.wrap(function()
+    task.spawn(function()
         while task.wait(Wait) do
             local Success, Error = pcall(Function)
             if not Success then
                 warn("thread error " .. Error)
             end
         end
-    end)()
+    end)
 end
 
 function Misc:ReJoin()
@@ -77,7 +94,6 @@ function Misc:ServerHop()
 end
 
 function Misc:JoinDiscord()
-    local Request = syn and syn.request or request
     Request({
         ["Url"] = "http://localhost:6463/rpc?v=1",
         ["Method"] = "POST",
@@ -107,25 +123,7 @@ function Misc:SetupWatermark(Window)
     end)
 end
 
-function Misc:SetupLighting(Flags)
-    Misc.DefaultLighting = {
-        Ambient = Lighting.Ambient,
-        Brightness = Lighting.Brightness,
-        ClockTime = Lighting.ClockTime,
-        ColorShift_Bottom = Lighting.ColorShift_Bottom,
-        ColorShift_Top = Lighting.ColorShift_Top,
-        EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
-        EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
-        ExposureCompensation = Lighting.ExposureCompensation,
-        FogColor = Lighting.FogColor,
-        FogEnd = Lighting.FogEnd,
-        FogStart = Lighting.FogStart,
-        GeographicLatitude = Lighting.GeographicLatitude,
-        GlobalShadows = Lighting.GlobalShadows,
-        OutdoorAmbient = Lighting.OutdoorAmbient,
-        ShadowSoftness = Lighting.ShadowSoftness
-    } local OldNewIndex
-    
+function Misc:SetupLighting(Flags) local OldNewIndex
     Lighting.Changed:Connect(function(Property) pcall(function()
         local LightingProperty = Lighting[Property]
         if type(LightingProperty) == "number" then
