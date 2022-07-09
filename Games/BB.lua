@@ -339,10 +339,15 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
         if typeof(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
             for Index, Reason in pairs(BanReasons) do
                 if typeof(Args[2]) == "string" and string.match(Args[2],Reason) then
-                    --print(Args[2])
+                    --print("blocked",Args[2])
                     return
                 end
             end
+        end
+    elseif Method == "Destroy" then -- this is very silly
+        if Self.Parent == LocalPlayer.Character then
+            --print("blocked",Self)
+            return
         end
     end
     return OldNamecall(Self, ...)

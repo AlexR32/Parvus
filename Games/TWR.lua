@@ -8,7 +8,17 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,NPCFolder
 = false,nil,nil,Workspace.Entities.Infected
+
+repeat task.wait() until LocalPlayer.PlayerScripts:FindFirstChild("Client")
 local Ray = require(ReplicatedStorage.SharedModules.Utilities.Ray)
+local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
+local RemoteEvent = ReplicatedStorage:WaitForChild("RE")
+
+local OCIFunction for Index,Function in pairs(getgc()) do
+    if islclosure(Function) and getconstants(Function)[1] == "GetCC" then
+        OCIFunction = Function
+    end
+end if not OCIFunction then return end
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Current,
@@ -16,6 +26,11 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
+        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
+            MiscSection:Toggle({Name = "Unlimited Ammo",Flag = "TWR/InfAmmo",Value = false})
+            MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
+            MiscSection:Toggle({Name = "No Bullet Drop",Flag = "TWR/NoBulletDrop",Value = false}):ToolTip("Silent Aim Required")
+        end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
@@ -50,6 +65,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
+            SilentAimSection:Toggle({Name = "Unlimited Ammo",Flag = "TWR/InfAmmo",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
@@ -250,7 +266,7 @@ local function GetHitbox(Config)
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
-    for Index,NPC in pairs(NPCFolder:GetChildren()) do
+    for Index, NPC in pairs(NPCFolder:GetChildren()) do
         local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
         if Humanoid and Humanoid.Health > 0 then
             for Index, HumanoidPart in pairs(Config.Priority) do
@@ -278,18 +294,13 @@ local function GetHitboxWithPrediction(Config)
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView
     or Config.FieldOfView,nil
 
-    for Index,NPC in pairs(NPCFolder:GetChildren()) do
+    for Index, NPC in pairs(NPCFolder:GetChildren()) do
         local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
         if Humanoid and Humanoid.Health > 0 then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = NPC:FindFirstChild(HumanoidPart)
                 if Hitbox then
-                    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
-
-                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
-                    and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
-
+                    local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
                         FieldOfView = Magnitude
@@ -307,33 +318,65 @@ local function AimAt(Hitbox,Config)
     if not Hitbox then return end
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
-
-    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
-
-    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
-    and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
+    local HitboxOnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
         (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
     )
 end
 
+
+local OldNamecall,OldOCIFunction
+OldOCIFunction = hookfunction(OCIFunction,function(...)
+    local ToReturn = OldOCIFunction(...)
+    for Index,Weapon in pairs(ToReturn.WC) do
+        Weapon.Pool = 0
+        Weapon.Mag = 1
+    end return ToReturn
+end)
+local only = false
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local Method,Args = getnamecallmethod(),{...}
+    if Method == "FireServer" then
+        if Args[1] == "GlobalReplicate"
+        and Args[2].Mag then Args[2].Mag = 1
+        elseif Args[1] == "CheatKick" then return end
+    end return OldNamecall(Self, unpack(Args))
+end)
+
 local OldCast = Ray.Cast
 Ray.Cast = function(...)
     local Args = {...}
     if SilentAim and Args[4] == Enum.RaycastFilterType.Blacklist then
-        if math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-            local LookVector = SilentAim.CFrame * CFrame.new(0,0,-2)
-            local Camera = Workspace.CurrentCamera
-            Args[1] = LookVector.Position
-            Args[2] = SilentAim.Position - LookVector.Position
-            --Args[2] = SilentAim.Position - Camera.CFrame.Position
+        if Window.Flags["TWR/Wallbang"] then
             Args[4] = Enum.RaycastFilterType.Whitelist
             Args[3] = {SilentAim}
         end
+        if math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+            local Camera = Workspace.CurrentCamera
+            if Window.Flags["TWR/NoBulletDrop"] then
+                local LookVector = SilentAim.CFrame * CFrame.new(0,0,-2)
+                local Unit = (SilentAim.Position - LookVector.Position).Unit
+                local Velocity = Unit * ((200-200*0*0.5)*2.5*1.2) -- M320
+                Args[1] = LookVector.Position
+                Args[2] = SilentAim.Position - LookVector.Position
+            else
+                Args[2] = SilentAim.Position - Camera.CFrame.Position
+            end
+        end
     end
     return OldCast(unpack(Args))
+end
+local OldUpdateHUD = GuiModule.UpdateHUD
+GuiModule.UpdateHUD = function(...) local Args = {...}
+    if Window.Flags["TWR/InfAmmo"] then
+        if Args[1].Equipped == 3 then
+            return OldUpdateHUD(...)
+        end
+        local Weapon = Args[4][Args[1].Equipped]
+        Weapon.Pool = Args[1].WeaponModule.Stats.Pool
+        Weapon.Mag = Args[1].WeaponModule.Stats.Mag
+    end return OldUpdateHUD(...)
 end
 
 RunService.Heartbeat:Connect(function()
@@ -342,8 +385,7 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
-        Priority = Window.Flags["SilentAim/Priority"],
-        TeamCheck = Window.Flags["TeamCheck"]
+        Priority = Window.Flags["SilentAim/Priority"]
     })
     if Aimbot then AimAt(
         GetHitbox({
@@ -351,15 +393,8 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
-            Priority = Window.Flags["Aimbot/Priority"],
-            TeamCheck = Window.Flags["TeamCheck"]
-        }),{
-            Prediction = {
-                Enabled = Window.Flags["Aimbot/Prediction/Enabled"],
-                Velocity = Window.Flags["Aimbot/Prediction/Velocity"]
-            },
-            Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
-        })
+            Priority = Window.Flags["Aimbot/Priority"]
+        }),{Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100})
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
@@ -367,14 +402,9 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     local TriggerHB = GetHitboxWithPrediction({
         Enabled = Window.Flags["Trigger/Enabled"],
         WallCheck = Window.Flags["Trigger/WallCheck"],
-        Prediction = {
-            Enabled = Window.Flags["Trigger/Prediction/Enabled"],
-            Velocity = Window.Flags["Trigger/Prediction/Velocity"]
-        },
         DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
-        Priority = Window.Flags["Trigger/Priority"],
-        TeamCheck = Window.Flags["TeamCheck"]
+        Priority = Window.Flags["Trigger/Priority"]
     })
 
     if TriggerHB then mouse1press()
@@ -384,14 +414,9 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                 TriggerHB = GetHitboxWithPrediction({
                     Enabled = Window.Flags["Trigger/Enabled"],
                     WallCheck = Window.Flags["Trigger/WallCheck"],
-                    Prediction = {
-                        Enabled = Window.Flags["Trigger/Prediction/Enabled"],
-                        Velocity = Window.Flags["Trigger/Prediction/Velocity"]
-                    },
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
-                    Priority = Window.Flags["Trigger/Priority"],
-                    TeamCheck = Window.Flags["TeamCheck"]
+                    Priority = Window.Flags["Trigger/Priority"]
                 }) if not TriggerHB then break end
             end
         end mouse1release()
