@@ -1483,7 +1483,7 @@ function Bracket:Window(Window)
 end
 
 function Bracket:TableToColor(Table)
-    if typeof(Table) ~= "table" then return Table end
+    if type(Table) ~= "table" then return Table end
     return Color3.fromHSV(Table[1],Table[2],Table[3])
 end
 

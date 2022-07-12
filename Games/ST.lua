@@ -11,12 +11,12 @@ local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 local Aimbot,SilentAim = false,nil
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Current,
+    Name = "Parvus Hub — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-248),
     Size = UDim2.new(0,496,0,496)
     }) do Window:Watermark({Enabled = true})
 
-    local GameTab = Window:Tab({Name = Parvus.Current}) do
+    local GameTab = Window:Tab({Name = Parvus.Game}) do
         local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
             FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
             :Keybind({Flag = "ST/Fly/Keybind"})

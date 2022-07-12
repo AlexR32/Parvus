@@ -44,7 +44,7 @@ local BanReasons,BanCommands = {
 }
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Current,
+    Name = "Parvus Hub — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -182,7 +182,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = Parvus.Current}) do
+    local GameTab = Window:Tab({Name = Parvus.Game}) do
         local WCSection = GameTab:Section({Name = "Weapon Customization",Side = "Left"}) do
             WCSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponCustom/Enabled",Value = false})
             WCSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/WeaponCustom/Texture",Value = true})
@@ -324,15 +324,7 @@ Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldNamecall,OldTaskSpawn,OldPluginManager,Message--,OldRandom
---[[OldRandom = hookfunction(math.random, function(...)
-    if checkcaller() then return OldRandom(...) end
-    local Args = {...} math.randomseed(1337)
-    if Args[1] == 1 and Args[2] == 64
-    or Args[1] == 1 and Args[2] == 1000 then
-        return math.huge
-    end return OldRandom(...)
-end)]]
+local OldNamecall,OldTaskSpawn,OldRandom,OldPluginManager,Message
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
@@ -344,13 +336,21 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
                 end
             end
         end
-    elseif Method == "Destroy" then -- this is very silly
+    end
+    if Method == "Destroy" then -- this is very silly
         if Self.Parent == LocalPlayer.Character then
             --print("blocked",Self)
             return
         end
-    end
-    return OldNamecall(Self, ...)
+    end return OldNamecall(Self, ...)
+end)
+OldRandom = hookfunction(getrenv().math.random, function(...)
+    if checkcaller() then return OldRandom(...) end local Args = {...}
+    if Args[1] == 1000 then return 1000 end
+    if Args[1] == 1 and Args[2] == 1000 then
+        --print("random blocked")
+        return math.huge
+    end return OldRandom(...)
 end)
 OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
     if checkcaller() then return OldTaskSpawn(...) end local Args = {...}
@@ -364,8 +364,7 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
     end
     return OldTaskSpawn(...)
 end) -- Thanks to Kiriot22
-task.spawn(function()
-    SetIdentity(2)
+task.spawn(function() SetIdentity(2)
     local Success,Error = pcall(getrenv().PluginManager)
     Message = Error
 end)
@@ -591,19 +590,22 @@ local function ComputeProjectiles(Config,Hitbox)
     local ID = Tortoiseshell.Projectiles:GetID()
     local RayResult =  Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,{Hitbox})
+    local LookVector = (Hitbox.Position - Camera.CFrame.Position).Unit
 
-    for Index = 1,Config.Projectile.Amount do
+    --[[for Index = 1,Config.Projectile.Amount do
         table.insert(Projectiles,{
             (Tortoiseshell.Input.Reticle:LookVector(Config.Projectile.Choke)
             + Vector3.new(0,Config.Projectile.GravityCorrection/1000,0)).Unit,ID
         })
+    end]]
+    for Index = 1,Config.Projectile.Amount do
+        table.insert(Projectiles,{
+            LookVector,ID
+        })
     end
-    
-    if RayResult then
-        return Projectiles,RayResult.Position,RayResult.Normal,ID
-    else
-        return Projectiles,Hitbox.Position,Vector3.one,ID
-    end
+
+    return Camera.CFrame.Position,Projectiles,
+    RayResult.Position,RayResult.Normal,ID
 end
 local function AutoShoot(Hitbox,Enabled)
     if not Enabled then return end
@@ -619,13 +621,20 @@ local function AutoShoot(Hitbox,Enabled)
         if Ammo and Ammo.Server.Value > 0 then if not Hitbox then return end
             local FireModeFromList = Config.FireModeList[FireMode.Server.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
-            local Projectiles,RayPosition,RayNormal,ID = ComputeProjectiles(Config,Hitbox[2])
+            local ReticlePosition,ShootProjectiles,RayPosition,RayNormal,ID
+            = ComputeProjectiles(Config,Hitbox[2])
+            local Camera = Workspace.CurrentCamera
             
-            Tortoiseshell.Network:Fire("Item_Paintball","Shoot",Weapon,
-            Tortoiseshell.Input.Reticle:GetPosition(),Projectiles)
+            Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
+            Weapon,ReticlePosition,ShootProjectiles)
 
-            Tortoiseshell.Network:Fire("Projectiles","__Hit",ID,
-            RayPosition,Hitbox[2],RayNormal,Hitbox[1])
+            task.wait((Camera.CFrame.Position - RayPosition).Magnitude
+            / Projectiles[Config.Projectile.Template].Speed)
+
+            for Projectile = 1,#ShootProjectiles do
+                Tortoiseshell.Network:Fire("Projectiles","__Hit",
+                ID,RayPosition,Hitbox[2],RayNormal,Hitbox[1])
+            end
 
             task.wait(60/CurrentFireMode.FireRate)
             if (OldAmmo - Ammo.Server.Value) >= 1 then
@@ -669,8 +678,7 @@ local function GetHitbox(Config)
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = {Player,Hitbox}
+                        FieldOfView,ClosestHitbox = Magnitude,{Player,Hitbox}
                     end
                 end
             end
@@ -702,8 +710,7 @@ local function GetHitboxWithPrediction(Config)
 
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end
@@ -715,6 +722,7 @@ end
 local function GetHitboxAllFOV(Config)
     local Camera = Workspace.CurrentCamera
     local Distance,ClosestHitbox = math.huge,nil
+
     for Index, Player in pairs(PlayerService:GetPlayers()) do
         local Character,Shield = GetCharacterInfo(Player,true)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
@@ -733,9 +741,7 @@ local function GetHitboxAllFOV(Config)
     return ClosestHitbox
 end
 
-local function AimAt(Hitbox,Config)
-    if not Hitbox then return end
-    Hitbox = Hitbox[2]
+local function AimAt(Hitbox,Config) if not Hitbox then return end Hitbox = Hitbox[2]
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
 

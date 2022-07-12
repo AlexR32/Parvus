@@ -67,8 +67,7 @@ end
 function Misc:ReJoin()
     if #PlayerService:GetPlayers() <= 1 then
         LocalPlayer:Kick("\nParvus Hub\nRejoining...")
-        task.wait(0.5)
-        TeleportService:Teleport(game.PlaceId)
+        task.wait(0.5) TeleportService:Teleport(game.PlaceId)
     else
         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId)
     end
@@ -124,7 +123,7 @@ function Misc:SetupWatermark(Window)
 end
 
 function Misc:SetupLighting(Flags) local OldNewIndex
-    Lighting.Changed:Connect(function(Property) pcall(function()
+    Lighting.Changed:Connect(function(Property) --pcall(function()
         local LightingProperty = Lighting[Property]
         if type(LightingProperty) == "number" then
             if Property == "EnvironmentSpecularScale"
@@ -136,9 +135,8 @@ function Misc:SetupLighting(Flags) local OldNewIndex
         if LightingProperty ~= Parvus.Utilities.UI:TableToColor(Flags["Lighting/"..Property])
         and Lighting[Property] ~= Misc.DefaultLighting[Property] then
             Misc.DefaultLighting[Property] = Lighting[Property]
-            --print(Property,Lighting[Property])
         end
-    end) end)
+    end) --end)
     
     OldNewIndex = hookmetamethod(game,"__newindex",function(Self,Index,Value)
         if checkcaller() then return OldNewIndex(Self,Index,Value) end
@@ -150,7 +148,8 @@ function Misc:SetupLighting(Flags) local OldNewIndex
         if Flags["Lighting/Enabled"] then
             for Property,Value in pairs(Misc.DefaultLighting) do
                 local CustomValue = Parvus.Utilities.UI:TableToColor(Flags["Lighting/"..Property])
-                if CustomValue then Lighting[Property] = CustomValue end
+                --if CustomValue ~= nil then sethiddenproperty(Lighting,Property,CustomValue) end
+                if CustomValue ~= nil then Lighting[Property] = CustomValue end
             end
         end
     end)

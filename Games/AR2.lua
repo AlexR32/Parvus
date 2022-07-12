@@ -1,4 +1,5 @@
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -6,6 +7,9 @@ local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
+
+local Framework = require(ReplicatedFirst.Framework)
+local Animators = Framework.Classes.Animators
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -165,6 +169,16 @@ local Window = Parvus.Utilities.UI:Window({
             LightingSection:Slider({Name = "ShadowSoftness",Flag = "Lighting/ShadowSoftness",Min = 0,Max = 1,Precise = 2,Value = 1})
         end
     end
+    local GameTab = Window:Tab({Name = Parvus.Game}) do
+        local RecoilSection = GameTab:Section({Name = "Recoil Control",Side = "Left"}) do
+            RecoilSection:Toggle({Name = "Enabled",Flag = "AR2/Recoil/Enabled",Value = false})
+            RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Recoil Random",Flag = "AR2/Recoil/RandomInt",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Raise Force",Flag = "AR2/Recoil/RaiseForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+        end
+    end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
@@ -255,6 +269,16 @@ Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+
+do local SetIdentity = syn and syn.set_thread_identity or setidentity
+local OldPluginManager,Message -- Thanks to Kiriot22
+task.spawn(function() SetIdentity(2)
+    local Success,Error = pcall(getrenv().PluginManager)
+    Message = Error
+end)
+OldPluginManager = hookfunction(getrenv().PluginManager, function()
+    return error(Message)
+end) end
 
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
@@ -351,7 +375,7 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-local OldNamecall
+--[[local OldNamecall
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     if SilentAim then local Args,Method = {...},getnamecallmethod()
         local Camera = Workspace.CurrentCamera
@@ -365,7 +389,21 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         end
     end
     return OldNamecall(Self,...)
-end)
+end)]]
+
+local OldPost = Animators.Post
+Animators.Post = function(Self,...) local Args = {...}
+    if Args[1] == "FireImpulse" then
+        if Window.Flags["AR2/Recoil/Enabled"] then
+            Args[2][1] = Args[2][1] * (Window.Flags["AR2/Recoil/ShiftForce"] / 100)
+            Args[2][2] = Args[2][2] * (Window.Flags["AR2/Recoil/RandomInt"] / 100)
+            Args[2][3] = Args[2][3] * (Window.Flags["AR2/Recoil/RaiseForce"] / 100)
+            Args[2][4] = Args[2][4] * (Window.Flags["AR2/Recoil/SlideForce"] / 100)
+            Args[2][5] = Args[2][5] * (Window.Flags["AR2/Recoil/KickUpForce"] / 100)
+        end
+    end
+    return OldPost(Self,unpack(Args))
+end
 
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox({

@@ -21,7 +21,7 @@ local OCIFunction for Index,Function in pairs(getgc()) do
 end if not OCIFunction then return end
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Current,
+    Name = "Parvus Hub — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -29,7 +29,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
             MiscSection:Toggle({Name = "Unlimited Ammo",Flag = "TWR/InfAmmo",Value = false})
             MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
-            MiscSection:Toggle({Name = "No Bullet Drop",Flag = "TWR/NoBulletDrop",Value = false}):ToolTip("Silent Aim Required")
+            MiscSection:Toggle({Name = "Instant Hit",Flag = "TWR/NoBulletDrop",Value = false}):ToolTip("Silent Aim Required\nAlso Enables Wallbang")
         end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
@@ -65,7 +65,6 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Unlimited Ammo",Flag = "TWR/InfAmmo",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
@@ -356,11 +355,10 @@ Ray.Cast = function(...)
             local Camera = Workspace.CurrentCamera
             if Window.Flags["TWR/NoBulletDrop"] then
                 local LookVector = SilentAim.CFrame * CFrame.new(0,0,-2)
-                local Unit = (SilentAim.Position - LookVector.Position).Unit
-                local Velocity = Unit * ((200-200*0*0.5)*2.5*1.2) -- M320
                 Args[1] = LookVector.Position
                 Args[2] = SilentAim.Position - LookVector.Position
             else
+                Args[1] = Camera.CFrame.Position
                 Args[2] = SilentAim.Position - Camera.CFrame.Position
             end
         end
