@@ -324,21 +324,30 @@ Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldNamecall,OldTaskSpawn,OldRandom,OldPluginManager,Message
+local OldNamecall,OldTaskSpawn,OldRandom,OldPluginManager,Message,DontBlock
+for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) do
+    setupvalue(Connection.Function,4,function() local String = ""
+        for Index = 1, 10 do
+            String = String .. string.char(math.random(97, 121))
+	    end return String
+    end)
+end
+
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
-        if typeof(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
+        if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
             for Index, Reason in pairs(BanReasons) do
-                if typeof(Args[2]) == "string" and string.match(Args[2],Reason) then
+                if type(Args[2]) == "string" and string.match(Args[2],Reason) then
                     --print("blocked",Args[2])
                     return
                 end
             end
         end
     end
-    if Method == "Destroy" then -- this is very silly
-        if Self.Parent == LocalPlayer.Character then
+    if Method == "Destroy" then
+        if Self.Parent == LocalPlayer.Character
+        and Self.Name ~= DontBlock then
             --print("blocked",Self)
             return
         end
@@ -347,6 +356,11 @@ end)
 OldRandom = hookfunction(getrenv().math.random, function(...)
     if checkcaller() then return OldRandom(...) end local Args = {...}
     if Args[1] == 1000 then return 1000 end
+    if Args[1] == 97 and Args[2] == 122 then 
+        local Random = OldRandom(...)
+        DontBlock = string.char(Random)
+        return Random
+    end
     if Args[1] == 1 and Args[2] == 1000 then
         --print("random blocked")
         return math.huge
@@ -559,7 +573,7 @@ local function CustomizeGun(Config)
                 Instance.Transparency = 1
             elseif Instance:IsA("BasePart") and Instance.Transparency < 1
             and Instance.Reflectance < 1 then
-                Instance.Color = Parvus.Utilities.UI:TableToColor(Config.Color)
+                Instance.Color = Config.Color[6]
                 Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
                 Instance.Reflectance = Config.Reflectance
                 Instance.Material = Config.Material
@@ -576,7 +590,7 @@ local function CustomizeArms(Config)
         elseif Instance:IsA("BasePart") 
         and Instance.Transparency < 1
         and Instance.Reflectance < 1 then
-            Instance.Color = Parvus.Utilities.UI:TableToColor(Config.Color)
+            Instance.Color = Config.Color[6]
             Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
             Instance.Reflectance = Config.Reflectance
             Instance.Material = Config.Material
@@ -903,7 +917,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
                     Priority = Window.Flags["Trigger/Priority"]
-                }) if not TriggerHB then break end
+                }) if not TriggerHB or not Trigger then break end
             end
         end ToggleShoot(false)
     end

@@ -255,8 +255,7 @@ local function GetHitbox(Config)
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end

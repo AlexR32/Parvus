@@ -271,8 +271,7 @@ local function GetHitbox(Config)
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end
@@ -306,8 +305,7 @@ local function GetHitboxWithPrediction(Config)
 
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end
@@ -404,7 +402,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
                     Priority = Window.Flags["Trigger/Priority"]
-                }) if not TriggerHB then break end
+                }) if not TriggerHB or not Trigger then break end
             end
         end mouse1release()
     end

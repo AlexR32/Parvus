@@ -1032,25 +1032,28 @@ local function InitColorpicker(Parent,ScreenAsset,Window,Colorpicker)
     local AlphaRender = nil
 
     local function TableToColor(Table)
-        if typeof(Table) ~= "table" then return Table end
+        if type(Table) ~= "table" then return Table end
         return Color3.fromHSV(Table[1],Table[2],Table[3])
+    end
+    local function FormatToString(Color)
+        return math.round(Color.R * 255) .. "," .. math.round(Color.G * 255) .. "," .. math.round(Color.B * 255)
     end
 
     local function Update()
-        local Color = TableToColor(Colorpicker.Value)
-        ColorpickerAsset.Color.BackgroundColor3 = Color
+        Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+        ColorpickerAsset.Color.BackgroundColor3 = Colorpicker.Value[6]
         PaletteAsset.SVPicker.BackgroundColor3 = Color3.fromHSV(Colorpicker.Value[1],1,1)
         PaletteAsset.SVPicker.Pin.Position = UDim2.new(Colorpicker.Value[2],0,1 - Colorpicker.Value[3],0)
         PaletteAsset.Hue.Pin.Position = UDim2.new(1 - Colorpicker.Value[1],0,0.5,0)
 
         PaletteAsset.Alpha.Pin.Position = UDim2.new(Colorpicker.Value[4],0,0.5,0)
         PaletteAsset.Alpha.Value.Text = Colorpicker.Value[4]
-        PaletteAsset.Alpha.BackgroundColor3 = Color
+        PaletteAsset.Alpha.BackgroundColor3 = Colorpicker.Value[6]
 
-        PaletteAsset.RGB.RGBBox.PlaceholderText = math.round(Color.R * 255) .. "," .. math.round(Color.G * 255) .. "," .. math.round(Color.B * 255)
-        PaletteAsset.HEX.HEXBox.PlaceholderText = Color:ToHex()
+        PaletteAsset.RGB.RGBBox.PlaceholderText = FormatToString(Colorpicker.Value[6])
+        PaletteAsset.HEX.HEXBox.PlaceholderText = Colorpicker.Value[6]:ToHex()
         Window.Flags[Colorpicker.Flag] = Colorpicker.Value
-        Colorpicker.Callback(Colorpicker.Value,Color)
+        Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
     end
     Update()
 
@@ -1163,11 +1166,11 @@ local function InitColorpicker(Parent,ScreenAsset,Window,Colorpicker)
                 Colorpicker.Value[1] = Window.RainbowHue
                 Update()
             else 
-                local Color = TableToColor(Colorpicker.Value)
                 Colorpicker.Value[1] = Window.RainbowHue
-                ColorpickerAsset.Color.BackgroundColor3 = Color
+                Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+                ColorpickerAsset.Color.BackgroundColor3 = Colorpicker.Value[6]
                 Window.Flags[Colorpicker.Flag] = Colorpicker.Value
-                Colorpicker.Callback(Colorpicker.Value,Color)
+                Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
             end
         end
     end)

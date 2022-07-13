@@ -274,8 +274,7 @@ local function GetHitbox(Config)
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end
@@ -302,8 +301,7 @@ local function GetHitboxWithPrediction(Config)
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
-                        FieldOfView = Magnitude
-                        ClosestHitbox = Hitbox
+                        FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
             end
@@ -324,7 +322,6 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-
 local OldNamecall,OldOCIFunction
 OldOCIFunction = hookfunction(OCIFunction,function(...)
     local ToReturn = OldOCIFunction(...)
@@ -333,7 +330,6 @@ OldOCIFunction = hookfunction(OCIFunction,function(...)
         Weapon.Mag = 1
     end return ToReturn
 end)
-local only = false
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
@@ -365,6 +361,7 @@ Ray.Cast = function(...)
     end
     return OldCast(unpack(Args))
 end
+
 local OldUpdateHUD = GuiModule.UpdateHUD
 GuiModule.UpdateHUD = function(...) local Args = {...}
     if Window.Flags["TWR/InfAmmo"] then
@@ -415,7 +412,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
                     Priority = Window.Flags["Trigger/Priority"]
-                }) if not TriggerHB then break end
+                }) if not TriggerHB or not Trigger then break end
             end
         end mouse1release()
     end
