@@ -5,6 +5,12 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
+local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
+PromptLib("Notice me senpai (⁄ ⁄•⁄ω⁄•⁄ ⁄)","You have risk of getting autobanned\nAre you sure you want to load this script?",{
+    {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+    {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
+}) repeat task.wait(1) until Loaded
+
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,
 PredictedVelocity,PredictedGravity,
@@ -347,20 +353,16 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     end
     if Method == "Destroy" then
         if Self.Parent == LocalPlayer.Character
-        and Self.Name ~= DontBlock then
-            --print("blocked",Self)
+        and Self.Name ~= "z" then
+            print("blocked",Self)
             return
         end
     end return OldNamecall(Self, ...)
 end)
 OldRandom = hookfunction(getrenv().math.random, function(...)
     if checkcaller() then return OldRandom(...) end local Args = {...}
+    if Args[1] == 97 and Args[2] == 122 then return 122 end
     if Args[1] == 1000 then return 1000 end
-    if Args[1] == 97 and Args[2] == 122 then 
-        local Random = OldRandom(...)
-        DontBlock = string.char(Random)
-        return Random
-    end
     if Args[1] == 1 and Args[2] == 1000 then
         --print("random blocked")
         return math.huge
@@ -891,8 +893,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Window.Flags["BadBusiness/AutoShoot"] then return end
     AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFOV"]
     and GetHitboxAllFOV({
-        WallCheck = Window.Flags["Aimbot/WallCheck"],
-        Priority = Window.Flags["Aimbot/Priority"]
+        WallCheck = Window.Flags["SilentAim/WallCheck"],
+        Priority = Window.Flags["SilentAim/Priority"]
     }) or SilentAim,Window.Flags["BadBusiness/AutoShoot"])
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
