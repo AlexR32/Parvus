@@ -157,6 +157,21 @@ local BodyVelocity = Instance.new("BodyVelocity")
 local BodyGyro = Instance.new("BodyGyro")
 BodyGyro.P = 50000
 
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local Method,Args = getnamecallmethod(),{...}
+    if Method == "FireServer" then
+        if Self.Name == "XEvent" then
+            return
+        end
+    elseif Method == "addItem" then
+        if Args[1] == BodyGyro or Args[1] == BodyVelocity then
+            return
+        end
+    end
+    return OldNamecall(Self, ...)
+end)
+
 local function GetPlayerTank(Player)
     local Char = Player:WaitForChild("Char")
     if not Char then return end

@@ -1,3 +1,4 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local RunService = game:GetService("RunService")
@@ -9,7 +10,9 @@ local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
 
 local Framework = require(ReplicatedFirst.Framework)
+repeat task.wait() until Framework.Classes.Animators
 local Animators = Framework.Classes.Animators
+local ItemCategory = ReplicatedStorage.ItemData:GetChildren()
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -50,7 +53,7 @@ local Window = Parvus.Utilities.UI:Window({
             TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 100})
             TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 1})
         end
-        local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
+        --[[local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
@@ -68,7 +71,7 @@ local Window = Parvus.Utilities.UI:Window({
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",Value = {0.66666668653488,0.75,1,0.5,false}})
             SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 100})
             SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 1})
-        end
+        end]]
         local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
@@ -95,13 +98,13 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
-            BoxSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
+            BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
             BoxSection:Toggle({Name = "Filled",Flag = "ESP/Player/Box/Filled",Value = false})
             BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Box/Outline",Value = true})
             BoxSection:Slider({Name = "Thickness",Flag = "ESP/Player/Box/Thickness",Min = 1,Max = 10,Value = 1})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            BoxSection:Divider({Text = "Text / Info"})
-            BoxSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Text/Enabled",Value = false})
+            BoxSection:Divider()
+            BoxSection:Toggle({Name = "Text Enabled",Flag = "ESP/Player/Text/Enabled",Value = false})
             BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Text/Outline",Value = true})
             BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Text/Autoscale",Value = true})
             BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Text/Font",List = {
@@ -169,7 +172,36 @@ local Window = Parvus.Utilities.UI:Window({
             LightingSection:Slider({Name = "ShadowSoftness",Flag = "Lighting/ShadowSoftness",Min = 0,Max = 1,Precise = 2,Value = 1})
         end
     end
-    local GameTab = Window:Tab({Name = Parvus.Game}) do
+    local GameTab = Window:Tab({Name = "Item ESP"}) do
+        for Index,IC in pairs(ItemCategory) do
+            if IC.Name == "Building" then continue end
+            local ItemFlag = "AR2/Item/" .. IC.Name
+            local ItemSection = GameTab:Section({Name = IC.Name}) do
+                ItemSection:Colorpicker({Name = "Color",Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
+                ItemSection:Divider()
+                ItemSection:Toggle({Name = "Tracer Enabled",Flag = ItemFlag.."/Tracer/Enabled",Value = false})
+                ItemSection:Dropdown({Name = "Mode",Flag = ItemFlag.."/Tracer/Mode",List = {
+                    {Name = "From Bottom",Mode = "Button",Value = true},
+                    {Name = "From Mouse",Mode = "Button"}
+                }})
+                ItemSection:Slider({Name = "Thickness",Flag = ItemFlag.."/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
+                ItemSection:Slider({Name = "Transparency",Flag = ItemFlag.."/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+                ItemSection:Divider()
+                ItemSection:Toggle({Name = "Text Enabled",Flag = ItemFlag.."/Text/Enabled",Value = false})
+                ItemSection:Toggle({Name = "Outline",Flag = ItemFlag.."/Text/Outline",Value = true})
+                ItemSection:Toggle({Name = "Autoscale",Flag = ItemFlag.."/Text/Autoscale",Value = true})
+                ItemSection:Dropdown({Name = "Font",Flag = ItemFlag.."/Text/Font",List = {
+                    {Name = "UI",Mode = "Button"},
+                    {Name = "System",Mode = "Button"},
+                    {Name = "Plex",Mode = "Button"},
+                    {Name = "Monospace",Mode = "Button",Value = true}
+                }})
+                ItemSection:Slider({Name = "Size",Flag = ItemFlag.."/Text/Size",Min = 13,Max = 100,Value = 16})
+                ItemSection:Slider({Name = "Transparency",Flag = ItemFlag.."/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            end
+        end
+    end
+    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
         local RecoilSection = GameTab:Section({Name = "Recoil Control",Side = "Left"}) do
             RecoilSection:Toggle({Name = "Enabled",Flag = "AR2/Recoil/Enabled",Value = false})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -404,14 +436,14 @@ Animators.Post = function(Self,...) local Args = {...}
 end
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox({
+    --[[SilentAim = GetHitbox({
         Enabled = Window.Flags["SilentAim/Enabled"],
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
         Priority = Window.Flags["SilentAim/Priority"],
         TeamCheck = Window.Flags["TeamCheck"]
-    })
+    })]]
     if Aimbot then AimAt(
         GetHitbox({
             Enabled = Window.Flags["Aimbot/Enabled"],
@@ -462,6 +494,27 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                 }) if not TriggerHB or not Trigger then break end
             end
         end mouse1release()
+    end
+end)
+
+for Index,Item in pairs(Workspace.Loot:GetDescendants()) do
+    local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
+    if Item:IsA("Model") and ItemData then
+        Parvus.Utilities.Drawing:ItemESP(Item.Parent,
+        "AR2/Item/"..ItemData.Parent.Name,Window.Flags)
+    end
+end
+Workspace.Loot.DescendantAdded:Connect(function(Item)
+    local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
+    if Item:IsA("Model") and ItemData then
+        print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP(Item.Parent,
+        "AR2/Item/"..ItemData.Parent.Name,Window.Flags)
+    end
+end)
+Workspace.Loot.DescendantRemoving:Connect(function(Item)
+    if Item:IsA("Model") then
+        Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
     end
 end)
 
