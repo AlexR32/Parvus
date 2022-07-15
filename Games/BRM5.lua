@@ -594,8 +594,9 @@ function RequireModule(Name)
 end
 local function HookSignal(Signal,Index,Callback)
     local Connection = getconnections(Signal)[Index]
+    if not Connection then return end
     local OldConnection = Connection.Function
-    if not OldConnection then return end -- cuz shitsploits have broken getconnections
+    if not OldConnection then return end
     Connection:Disable()
     Signal:Connect(function(...)
         local Args = Callback({...})
