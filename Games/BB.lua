@@ -340,7 +340,9 @@ for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) d
 end
 
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    if checkcaller() then return OldNamecall(Self, ...) end
     local Method,Args = getnamecallmethod(),{...}
+
     if Method == "FireServer" then
         if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
             for Index, Reason in pairs(BanReasons) do
@@ -353,16 +355,21 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     end
     if Method == "Destroy" then
         if Self.Parent == LocalPlayer.Character
-        and Self.Name ~= "z" then
+        and Self.Name ~= DontBlock then
             --print("blocked",Self)
             return
         end
-    end return OldNamecall(Self, ...)
+    end
+    return OldNamecall(Self, ...)
 end)
 OldRandom = hookfunction(getrenv().math.random, function(...)
     if checkcaller() then return OldRandom(...) end local Args = {...}
-    if Args[1] == 97 and Args[2] == 122 then return 122 end
     if Args[1] == 1000 then return 1000 end
+    if Args[1] == 97 and Args[2] == 122 then 
+        local Random = OldRandom(...)
+        DontBlock = string.char(Random)
+        return Random
+    end
     if Args[1] == 1 and Args[2] == 1000 then
         --print("random blocked")
         return math.huge
@@ -375,7 +382,7 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
         if table.find(Constants,"task")
         and table.find(Constants,"wait") then
             --print("blocked",repr(Constants))
-            return
+            wait(9e9) -- big brain lmao
         end
     end
     return OldTaskSpawn(...)
