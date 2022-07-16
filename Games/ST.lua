@@ -42,7 +42,7 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Text/Size",Min = 13,Max = 100,Value = 16})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
+        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
             OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
@@ -57,7 +57,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = Name = "Miscellaneous"}) do
+    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
         local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
             FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
             :Keybind({Flag = "ST/Fly/Keybind"})
