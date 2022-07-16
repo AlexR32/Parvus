@@ -300,7 +300,7 @@ Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
-Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+--Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
 local OldPluginManager,Message -- Thanks to Kiriot22
