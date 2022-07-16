@@ -356,9 +356,9 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
         end
     end
     if Method == "Destroy" then
-        if Self.Parent == LocalPlayer.Character then
+        --[[if Self.Parent == LocalPlayer.Character then
             print(Self)
-        end
+        end]]
         if Self.Parent == LocalPlayer.Character
         and Self.Name ~= DontBlock then
             --print("blocked",Self)
@@ -790,7 +790,6 @@ Tortoiseshell.Network.Fire = function(Self,...) local Args = {...}
     if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
         if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
-            print(Args[3])
             Args[4] = SilentAim[2].Position
             Args[5] = SilentAim[2]
             Args[7] = SilentAim[1]
