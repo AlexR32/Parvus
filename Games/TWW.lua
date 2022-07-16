@@ -102,7 +102,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = Parvus.Game}) do
+    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = GameTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
             TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Box/Enabled",Value = false})
             TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Enemy",Value = {1,0.75,1,0,false}})

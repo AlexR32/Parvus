@@ -172,11 +172,11 @@ local Window = Parvus.Utilities.UI:Window({
             LightingSection:Slider({Name = "ShadowSoftness",Flag = "Lighting/ShadowSoftness",Min = 0,Max = 1,Precise = 2,Value = 1})
         end
     end
-    local GameTab = Window:Tab({Name = "Item ESP"}) do
+    local ItemTab = Window:Tab({Name = "Item ESP"}) do
         for Index,IC in pairs(ItemCategory) do
             if IC.Name == "Building" then continue end
             local ItemFlag = "AR2/Item/" .. IC.Name
-            local ItemSection = GameTab:Section({Name = IC.Name}) do
+            local ItemSection = ItemTab:Section({Name = IC.Name}) do
                 ItemSection:Colorpicker({Name = "Color",Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
                 ItemSection:Divider()
                 ItemSection:Toggle({Name = "Tracer Enabled",Flag = ItemFlag.."/Tracer/Enabled",Value = false})

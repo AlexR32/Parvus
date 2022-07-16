@@ -16,14 +16,6 @@ local Window = Parvus.Utilities.UI:Window({
     Size = UDim2.new(0,496,0,496)
     }) do Window:Watermark({Enabled = true})
 
-    local GameTab = Window:Tab({Name = Parvus.Game}) do
-        local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
-            FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
-            :Keybind({Flag = "ST/Fly/Keybind"})
-            FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
-            FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 10,Max = 500,Value = 100})
-        end
-    end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
         local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.33333334326744,0.75,1,0,false}})
@@ -63,6 +55,14 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
             HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
+        end
+    end
+    local GameTab = Window:Tab({Name = Name = "Miscellaneous"}) do
+        local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
+            FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
+            :Keybind({Flag = "ST/Fly/Keybind"})
+            FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
+            FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 10,Max = 500,Value = 100})
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do

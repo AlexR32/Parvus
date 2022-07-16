@@ -225,7 +225,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = Parvus.Game}) do
+    local GameTab = Window:Tab({Name = Name = "Miscellaneous"}) do
         local EnvSection = GameTab:Section({Name = "Environment"}) do
             EnvSection:Toggle({Name = "Enabled",Flag = "BRM5/Lighting/Enabled",Value = false})
             EnvSection:Toggle({Name = "Brightness",Flag = "BRM5/Lighting/Brightness",Value = false,Callback = function(Bool)
@@ -592,18 +592,6 @@ function RequireModule(Name)
         end
     end
 end
-local function HookSignal(Signal,Index,Callback)
-    local Connection = getconnections(Signal)[Index]
-    if not Connection then return end
-    local OldConnection = Connection.Function
-    if not OldConnection then return end
-    Connection:Disable()
-    Signal:Connect(function(...)
-        local Args = Callback({...})
-        if not Args then return end
-        OldConnection(unpack(Args))
-    end)
-end
 local function HookFunction(ModuleName,Function,Callback)
     local Module,OldFunction = RequireModule(ModuleName)
     while task.wait() do
@@ -618,6 +606,18 @@ local function HookFunction(ModuleName,Function,Callback)
         if not Args then return end
         return OldFunction(unpack(Args))
     end
+end
+local function HookSignal(Signal,Index,Callback)
+    local Connection = getconnections(Signal)[Index]
+    if not Connection then return end
+    local OldConnection = Connection.Function
+    if not OldConnection then return end
+    Connection:Disable()
+    Signal:Connect(function(...)
+        local Args = Callback({...})
+        if not Args then return end
+        OldConnection(unpack(Args))
+    end)
 end
 
 function TeleportCharacter(Target)

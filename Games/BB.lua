@@ -5,11 +5,13 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
-PromptLib("Notice me senpai (⁄ ⁄•⁄ω⁄•⁄ ⁄)","You have risk of getting autobanned\nAre you sure you want to load this script?",{
-    {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
-    {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
-}) repeat task.wait(1) until Loaded
+if game.PlaceVersion > 1274 then
+    local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
+    PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
+        {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+        {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
+    }) repeat task.wait(1) until Loaded
+end
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,
@@ -188,7 +190,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = Parvus.Game}) do
+    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
         local WCSection = GameTab:Section({Name = "Weapon Customization",Side = "Left"}) do
             WCSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponCustom/Enabled",Value = false})
             WCSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/WeaponCustom/Texture",Value = true})
@@ -335,7 +337,7 @@ for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) d
     setupvalue(Connection.Function,4,function() local String = ""
         for Index = 1, 10 do
             String = String .. string.char(math.random(97, 121))
-	    end return String
+        end return String
     end)
 end
 
@@ -354,6 +356,9 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
         end
     end
     if Method == "Destroy" then
+        if Self.Parent == LocalPlayer.Character then
+            print(Self)
+        end
         if Self.Parent == LocalPlayer.Character
         and Self.Name ~= DontBlock then
             --print("blocked",Self)
@@ -446,16 +451,17 @@ local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
 BodyVelocity.MaxForce = Vector3.zero
 
+local RaycastParams = RaycastParams.new()
+RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
+RaycastParams.IgnoreWater = true
+
 local Notify = Instance.new("BindableEvent")
 Notify.Event:Connect(function(Text)
     Parvus.Utilities.UI:Notification2(Text)
 end)
 
 local function Raycast(Origin,Direction,Table)
-    local RaycastParams = RaycastParams.new()
-    RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
     RaycastParams.FilterDescendantsInstances = Table
-    RaycastParams.IgnoreWater = true
     return Workspace:Raycast(Origin,Direction,RaycastParams)
 end
 
@@ -474,11 +480,9 @@ end
 local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return not Raycast(
-        Camera.CFrame.Position,
-        Hitbox.Position - Camera.CFrame.Position,
-        {Workspace.Geometry,Workspace.Terrain}
-    )
+    return not Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position,
+    {Workspace.Geometry,Workspace.Terrain})
 end
 local function FindGunModel()
     for Index,Instance in pairs(Workspace:GetChildren()) do
@@ -535,23 +539,23 @@ local function ToggleShoot(Toggle)
 end
 
 local function FixUnit(Vector)
-	if Vector.Magnitude == 0 then
-	return Vector3.zero end
-	return Vector.Unit
+    if Vector.Magnitude == 0 then
+    return Vector3.zero end
+    return Vector.Unit
 end
 local function FlatCameraVector()
     local Camera = Workspace.CurrentCamera
-	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
-		Camera.CFrame.RightVector * Vector3.new(1,0,1)
+    return Camera.CFrame.LookVector * Vector3.new(1,0,1),
+        Camera.CFrame.RightVector * Vector3.new(1,0,1)
 end
 local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
-	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
-	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
-	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
-	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+    Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+    Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+    Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
     Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
     Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
-	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+    return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
 end
 
 local function PlayerFly(Config)
@@ -610,10 +614,8 @@ end
 local function ComputeProjectiles(Config,Hitbox)
     local Projectiles = {}
     local Camera = Workspace.CurrentCamera
-    local ID = Tortoiseshell.Projectiles:GetID()
     local RayResult =  Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,{Hitbox})
-    local LookVector = (Hitbox.Position - Camera.CFrame.Position).Unit
 
     --[[for Index = 1,Config.Projectile.Amount do
         table.insert(Projectiles,{
@@ -623,52 +625,54 @@ local function ComputeProjectiles(Config,Hitbox)
     end]]
     for Index = 1,Config.Projectile.Amount do
         table.insert(Projectiles,{
-            LookVector,ID
+            (Hitbox.Position - Camera.CFrame.Position).Unit,
+            Tortoiseshell.Projectiles:GetID()
         })
     end
 
     return Camera.CFrame.Position,Projectiles,
-    RayResult.Position,RayResult.Normal,ID
+    RayResult.Position,RayResult.Normal
 end
 local function AutoShoot(Hitbox,Enabled)
-    if not Enabled then return end
+    if not Enabled or not Hitbox then return end
     local Weapon,Config = GetEquippedWeapon()
 
     if Weapon and Config then
-        local State = Weapon:FindFirstChild("State")
-        local Ammo = State and State:FindFirstChild("Ammo")
-        local FireMode = State and State:FindFirstChild("FireMode")
-        local Reloading = State and State:FindFirstChild("Reloading")
+        local State = Weapon.State
+        local Ammo = State.Ammo.Server
+        local FireMode = State.FireMode.Server
+        local Reloading = State.Reloading.Server
 
-        local OldAmmo = Ammo and Ammo.Server.Value
-        if Ammo and Ammo.Server.Value > 0 then if not Hitbox then return end
-            local FireModeFromList = Config.FireModeList[FireMode.Server.Value]
+        local OldAmmo = Ammo.Value
+        if Ammo.Value > 0 then
+            local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
-            local ReticlePosition,ShootProjectiles,RayPosition,RayNormal,ID
-            = ComputeProjectiles(Config,Hitbox[2])
-            local Camera = Workspace.CurrentCamera
+            local CameraPosition,ShootProjectiles,RayPosition,
+            RayNormal = ComputeProjectiles(Config,Hitbox[2])
             
             Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
-            Weapon,ReticlePosition,ShootProjectiles)
+            Weapon,CameraPosition,ShootProjectiles)
 
-            task.wait((Camera.CFrame.Position - RayPosition).Magnitude
+            task.wait((RayPosition - CameraPosition).Magnitude
             / Projectiles[Config.Projectile.Template].Speed)
 
-            for Projectile = 1,#ShootProjectiles do
+            for Index,Projectile in pairs(ShootProjectiles) do
                 Tortoiseshell.Network:Fire("Projectiles","__Hit",
-                ID,RayPosition,Hitbox[2],RayNormal,Hitbox[1])
+                Projectile[2],RayPosition,Hitbox[2],RayNormal,Hitbox[1])
             end
-
+            
+            Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
+            Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[2],RayPosition,
+            Config.Projectile.Amount and Config.Projectile.Amount > 3)
             task.wait(60/CurrentFireMode.FireRate)
-            if (OldAmmo - Ammo.Server.Value) >= 1 then
+            if (OldAmmo - Ammo.Value) >= 1 then
                 Parvus.Utilities.UI:Notification2({
-                    Title = "Autoshoot | Hit " .. Hitbox[1].Name .. " | Remaining Ammo: " .. Ammo.Server.Value,
-                    Color = Color3.new(1,0.5,0.25),
-                    Duration = 3
+                    Title = "Autoshoot | Hit " .. Hitbox[1].Name .. " | Remaining Ammo: " .. Ammo.Value,
+                    Color = Color3.new(1,0.5,0.25),Duration = 3
                 })
             end
         else
-            if Reloading and not Reloading.Server.Value then
+            if Reloading.Value then
                 local ReloadTime = Config.Magazine.ReloadTime
                 local Milliseconds = (ReloadTime % 1) * 10
                 local Seconds = ReloadTime % 60
@@ -676,8 +680,7 @@ local function AutoShoot(Hitbox,Enabled)
                 Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
                 Parvus.Utilities.UI:Notification2({
                     Title = "Autoshoot | Reloading | Approx Time: " .. string.format("%d sec. %d msec.",Seconds,Milliseconds),
-                    Color = Color3.new(1,0.25,0.25),
-                    Duration = 3
+                    Color = Color3.new(1,0.25,0.25),Duration = 3
                 }) task.wait(ReloadTime)
             end
         end
@@ -764,7 +767,8 @@ local function GetHitboxAllFOV(Config)
     return ClosestHitbox
 end
 
-local function AimAt(Hitbox,Config) if not Hitbox then return end Hitbox = Hitbox[2]
+local function AimAt(Hitbox,Config)
+    if not Hitbox then return end Hitbox = Hitbox[2]
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
 
@@ -786,9 +790,12 @@ Tortoiseshell.Network.Fire = function(Self,...) local Args = {...}
     if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
         if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
+            print(Args[3])
             Args[4] = SilentAim[2].Position
             Args[5] = SilentAim[2]
             Args[7] = SilentAim[1]
+            Tortoiseshell.UI.Events.Hitmarker:Fire(
+            SilentAim[2],SilentAim[2].Position)
         end
     end
     if Window.Flags["BadBusiness/AntiAim/Enabled"] and Args[3] == "Look" then
@@ -842,8 +849,7 @@ for Index,Event in pairs(Events) do
                 and Window.Flags["BadBusiness/AntiKick"] then
                     Notify:Fire({
                         Title = "Anti-Kick | Rejoining in 10 secs",
-                        Color = Color3.new(0.5,1,0.5),
-                        Duration = 10
+                        Color = Color3.new(0.5,1,0.5),Duration = 10
                     })
                     task.wait(10)
                     Parvus.Utilities.Misc:ReJoin()
