@@ -559,9 +559,8 @@ local function InputToVelocity() local Velocities,LookVector,RightVector = {},Fl
 end
 
 local function PlayerFly(Config)
-    local Character = GetCharacterInfo(LocalPlayer,false)
+    local Character = Characters[LocalPlayer]
     if not Character then return end
-    Character = Character.Parent
     
     if not Config.Enabled then BodyVelocity.MaxForce = Vector3.zero
         if Character and Character.PrimaryPart
@@ -722,7 +721,7 @@ local function GetHitboxWithPrediction(Config)
     or Config.FieldOfView,nil
 
     for Index, Player in pairs(PlayerService:GetPlayers()) do
-        local Character,Shield = GetCharacterInfo(Player,true)
+        local Character,Shield = GetCharacterInfo(Player,false)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
@@ -988,9 +987,8 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
 end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
-    if Player ~= LocalPlayer then
-        Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-    end
+    if Player == LocalPlayer then continue end
+    Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
 end
 PlayerService.PlayerAdded:Connect(function(Player)
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)

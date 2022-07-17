@@ -104,34 +104,50 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local GameTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = GameTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
-            TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Box/Enabled",Value = false})
-            TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Enemy",Value = {1,0.75,1,0,false}})
-            TESPSection:Toggle({Name = "Text",Flag = "ESP/Thunderstruck/Text/Enabled",Value = false})
-            TESPSection:Toggle({Name = "Text Autoscale",Flag = "ESP/Thunderstruck/Text/Autoscale",Value = false})
-            TESPSection:Slider({Name = "Text Size",Flag = "ESP/Thunderstruck/Text/Size",Min = 13,Max = 100,Value = 16})
-
-            Window.Flags["ESP/Thunderstruck/Box/Filled"] = false
-            Window.Flags["ESP/Thunderstruck/Box/Outline"] = true
-            Window.Flags["ESP/Thunderstruck/Box/Thickness"] = 1
-            Window.Flags["ESP/Thunderstruck/Box/Transparency"] = 0
-            Window.Flags["ESP/Thunderstruck/Text/Outline"] = true
-            Window.Flags["ESP/Thunderstruck/Text/Font"] = {"Monospace"}
-            Window.Flags["ESP/Thunderstruck/Text/Transparency"] = 0
+            TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0,false}})
+            TESPSection:Divider()
+            TESPSection:Toggle({Name = "Tracer Enabled",Flag = "ESP/Thunderstruck/Tracer/Enabled",Value = false})
+            TESPSection:Dropdown({Name = "Mode",Flag = "ESP/Thunderstruck/Tracer/Mode",List = {
+                {Name = "From Bottom",Mode = "Button",Value = true},
+                {Name = "From Mouse",Mode = "Button"}
+            }})
+            TESPSection:Slider({Name = "Thickness",Flag = "ESP/Thunderstruck/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
+            TESPSection:Slider({Name = "Transparency",Flag = "ESP/Thunderstruck/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            TESPSection:Divider()
+            TESPSection:Toggle({Name = "Text Enabled",Flag = "ESP/Thunderstruck/Text/Enabled",Value = false})
+            TESPSection:Toggle({Name = "Outline",Flag = "ESP/Thunderstruck/Text/Outline",Value = true})
+            TESPSection:Toggle({Name = "Autoscale",Flag = "ESP/Thunderstruck/Text/Autoscale",Value = true})
+            TESPSection:Dropdown({Name = "Font",Flag = "ESP/Thunderstruck/Text/Font",List = {
+                {Name = "UI",Mode = "Button"},
+                {Name = "System",Mode = "Button"},
+                {Name = "Plex",Mode = "Button"},
+                {Name = "Monospace",Mode = "Button",Value = true}
+            }})
+            TESPSection:Slider({Name = "Size",Flag = "ESP/Thunderstruck/Text/Size",Min = 13,Max = 100,Value = 16})
+            TESPSection:Slider({Name = "Transparency",Flag = "ESP/Thunderstruck/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
         local LESPSection = GameTab:Section({Name = "Legendary ESP",Side = "Right"}) do
-            LESPSection:Toggle({Name = "Enabled",Flag = "ESP/Legendary/Box/Enabled",Value = false})
-            LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Enemy",Value = {1,0.75,1,0,false}})
-            LESPSection:Toggle({Name = "Text",Flag = "ESP/Legendary/Text/Enabled",Value = false})
-            LESPSection:Toggle({Name = "Text Autoscale",Flag = "ESP/Legendary/Text/Autoscale",Value = false})
-            LESPSection:Slider({Name = "Text Size",Flag = "ESP/Legendary/Text/Size",Min = 13,Max = 100,Value = 16})
-            
-            Window.Flags["ESP/Legendary/Box/Filled"] = false
-            Window.Flags["ESP/Legendary/Box/Outline"] = true
-            Window.Flags["ESP/Legendary/Box/Thickness"] = 1
-            Window.Flags["ESP/Legendary/Box/Transparency"] = 0
-            Window.Flags["ESP/Legendary/Text/Outline"] = true
-            Window.Flags["ESP/Legendary/Text/Font"] = {"Monospace"}
-            Window.Flags["ESP/Legendary/Text/Transparency"] = 0
+            LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0,false}})
+            LESPSection:Divider()
+            LESPSection:Toggle({Name = "Tracer Enabled",Flag = "ESP/Legendary/Tracer/Enabled",Value = false})
+            LESPSection:Dropdown({Name = "Mode",Flag = "ESP/Legendary/Tracer/Mode",List = {
+                {Name = "From Bottom",Mode = "Button",Value = true},
+                {Name = "From Mouse",Mode = "Button"}
+            }})
+            LESPSection:Slider({Name = "Thickness",Flag = "ESP/Legendary/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
+            LESPSection:Slider({Name = "Transparency",Flag = "ESP/Legendary/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            LESPSection:Divider()
+            LESPSection:Toggle({Name = "Text Enabled",Flag = "ESP/Legendary/Text/Enabled",Value = false})
+            LESPSection:Toggle({Name = "Outline",Flag = "ESP/Legendary/Text/Outline",Value = true})
+            LESPSection:Toggle({Name = "Autoscale",Flag = "ESP/Legendary/Text/Autoscale",Value = true})
+            LESPSection:Dropdown({Name = "Font",Flag = "ESP/Legendary/Text/Font",List = {
+                {Name = "UI",Mode = "Button"},
+                {Name = "System",Mode = "Button"},
+                {Name = "Plex",Mode = "Button"},
+                {Name = "Monospace",Mode = "Button",Value = true}
+            }})
+            LESPSection:Slider({Name = "Size",Flag = "ESP/Legendary/Text/Size",Min = 13,Max = 100,Value = 16})
+            LESPSection:Slider({Name = "Transparency",Flag = "ESP/Legendary/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
@@ -303,15 +319,15 @@ for Index,Instance in pairs(Workspace.WORKSPACE_Geometry:GetChildren()) do
     end
 end
 for Index,Instance in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
-    if Instance.Health.Value > 300 then
-        --print(Instance.Name)
-        Parvus.Utilities.Drawing:AddESP(Instance,"Model","ESP/Legendary",Window.Flags)
+    if Instance:WaitForChild("Health").Value > 300 then
+        print(Instance.Name)
+        Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Legendary",Window.Flags)
     end
 end
 Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Instance)
     if Instance:WaitForChild("Health").Value > 300 then
-        --print(Instance.Name)
-        Parvus.Utilities.Drawing:AddESP(Instance,"Model","ESP/Legendary",Window.Flags)
+        print(Instance.Name)
+        Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Legendary",Window.Flags)
     end
 end)
 Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
@@ -320,20 +336,26 @@ end)
 for Index,Instance in pairs(Regions) do
     for Index,Instance in pairs(Instance.Trees:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then
-            --print(Instance.Name)
-            Parvus.Utilities.Drawing:AddESP(Instance,"Model","ESP/Thunderstruck",Window.Flags)
+            print(Instance.Name)
+            Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Thunderstruck",Window.Flags)
         end
     end
     for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then
-            --print(Instance.Name)
-            Parvus.Utilities.Drawing:AddESP(Instance,"Model","ESP/Thunderstruck",Window.Flags)
+            print(Instance.Name)
+            Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Thunderstruck",Window.Flags)
         end
     end
     Instance.Trees.DescendantAdded:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:AddESP(Instance.Parent.Parent,"Model","ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ItemESP2(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
+        end
+    end)
+    Instance.Vegetation.DescendantAdded:Connect(function()
+        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
+            --print(Instance.Parent.Parent.Name)
+            Parvus.Utilities.Drawing:ItemESP2(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Trees.DescendantRemoving:Connect(function(Instance)
@@ -342,13 +364,7 @@ for Index,Instance in pairs(Regions) do
             Parvus.Utilities.Drawing:RemoveESP(Instance.Parent.Parent)
         end
     end)
-    Instance.Vegetation.DescendantAdded:Connect(function()
-        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
-            --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:AddESP(Instance.Parent.Parent,"Model","ESP/Thunderstruck",Window.Flags)
-        end
-    end)
-    Instance.Trees.DescendantRemoving:Connect(function(Instance)
+    Instance.Vegetation.DescendantRemoving:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
             Parvus.Utilities.Drawing:RemoveESP(Instance.Parent.Parent)
@@ -357,9 +373,8 @@ for Index,Instance in pairs(Regions) do
 end
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
-    if Player ~= LocalPlayer then
-        Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-    end
+    if Player == LocalPlayer then continue end
+    Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
 end
 PlayerService.PlayerAdded:Connect(function(Player)
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)

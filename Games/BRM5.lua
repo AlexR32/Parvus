@@ -931,12 +931,11 @@ NPCFolder.ChildRemoved:Connect(function(NPC)
 end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
-    if Player ~= LocalPlayer then
-        Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-    end
+    if Player == LocalPlayer then continue end
+    Parvus.Utilities.Drawing:AddESP(Player,"Player","Player","ESP/Player",Window.Flags)
 end
 PlayerService.PlayerAdded:Connect(function(Player)
-    Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
+    Parvus.Utilities.Drawing:AddESP(Player,"Player","Player","ESP/Player",Window.Flags)
 end)
 PlayerService.PlayerRemoving:Connect(function(Player)
     Parvus.Utilities.Drawing:RemoveESP(Player)
