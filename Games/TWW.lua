@@ -321,13 +321,13 @@ end
 for Index,Instance in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
     if Instance:WaitForChild("Health").Value > 300 then
         print(Instance.Name)
-        Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Legendary",Window.Flags)
+        Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Legendary",Window.Flags)
     end
 end
 Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Instance)
     if Instance:WaitForChild("Health").Value > 300 then
         print(Instance.Name)
-        Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Legendary",Window.Flags)
+        Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Legendary",Window.Flags)
     end
 end)
 Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
@@ -337,25 +337,25 @@ for Index,Instance in pairs(Regions) do
     for Index,Instance in pairs(Instance.Trees:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then
             print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Thunderstruck",Window.Flags)
         end
     end
     for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then
             print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP2(Instance,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Thunderstruck",Window.Flags)
         end
     end
     Instance.Trees.DescendantAdded:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ItemESP2(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ModelESP(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Vegetation.DescendantAdded:Connect(function()
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ItemESP2(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ModelESP(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Trees.DescendantRemoving:Connect(function(Instance)
