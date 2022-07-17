@@ -14,6 +14,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 - Steel Titans
 - RAGDOLL UNIVERSE
 - Those Who Remain
+- Apocalypse Rising 2
 ### Features
 ```markdown
 # Universal
@@ -57,29 +58,37 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - Walkspeed Changer
   - Vehicle Modification
   - Helicopter Modification
+  - No NVG
   - NVG No Shape
   - Fake RGE
 # Bad Business
-  - Autoshoot (Rage)
+  - Autoshoot (Rage bot)
   - Weapon Customization
   - Arms Customization
   - Weapon Modification
   - Pitch Anti-Aim
-  - Fly
-  - Fly No Clip
+  - QE Lean Anti-Aim
+  - Fly + Noclip
   - Anti Kick
 # The Wild West
+  - Aimbot
+  - ESP
   - Thunderstruck ESP
   - Legendary Animals ESP
 # Steel Titans
   - Tank Fly (Funny)
-  - ESP
+  - ESP Support
 # RAGDOLL UNIVERSE
   - Silent Aim Support
   - Aimbot Support
   - ESP Support
 # Those Who Remain
-  - Silent Aim Support (Wallbang, No Bullet Drop)
+  - Silent Aim Support (Wallbang, Instant Hit)
   - Aimbot Support
   - ESP Support
+# Apocalypse Rising 2
+  - Aimbot Support
+  - ESP Support
+  - Recoil Mods
+  - Item ESP
 ```
