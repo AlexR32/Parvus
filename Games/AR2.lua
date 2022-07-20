@@ -12,7 +12,10 @@ local Aimbot,SilentAim,Trigger = false,nil,nil
 local Framework = require(ReplicatedFirst.Framework)
 repeat task.wait() until Framework.Classes.Animators
 local Animators = Framework.Classes.Animators
+
 local ItemCategory = ReplicatedStorage.ItemData:GetChildren()
+local LootBins = Workspace.Map.Shared.LootBins
+local Loot = Workspace.Loot
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -173,31 +176,19 @@ local Window = Parvus.Utilities.UI:Window({
         end
     end
     local ItemTab = Window:Tab({Name = "Item ESP"}) do
+        local GlobalSection = ItemTab:Section({Name = "Global"}) do
+            GlobalSection:Slider({Name = "Distance",Flag = "AR2/Item/Distance",Min = 25,Max = 500,Value = 50,Unit = "meters"})
+        end
+        local ContainerSection = ItemTab:Section({Name = "Container"}) do
+            ContainerSection:Toggle({Name = "Enabled",Flag = "AR2/Item/Container/Enabled",Value = false})
+            ContainerSection:Colorpicker({Name = "Color",Flag = "AR2/Item/Container/Color",Value = {1,0,1,0,false}})
+        end
         for Index,IC in pairs(ItemCategory) do
             if IC.Name == "Building" then continue end
             local ItemFlag = "AR2/Item/" .. IC.Name
             local ItemSection = ItemTab:Section({Name = IC.Name}) do
+                ItemSection:Toggle({Name = "Enabled",Flag = ItemFlag.."/Enabled",Value = false})
                 ItemSection:Colorpicker({Name = "Color",Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
-                ItemSection:Divider()
-                ItemSection:Toggle({Name = "Tracer Enabled",Flag = ItemFlag.."/Tracer/Enabled",Value = false})
-                ItemSection:Dropdown({Name = "Mode",Flag = ItemFlag.."/Tracer/Mode",List = {
-                    {Name = "From Bottom",Mode = "Button",Value = true},
-                    {Name = "From Mouse",Mode = "Button"}
-                }})
-                ItemSection:Slider({Name = "Thickness",Flag = ItemFlag.."/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
-                ItemSection:Slider({Name = "Transparency",Flag = ItemFlag.."/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-                ItemSection:Divider()
-                ItemSection:Toggle({Name = "Text Enabled",Flag = ItemFlag.."/Text/Enabled",Value = false})
-                ItemSection:Toggle({Name = "Outline",Flag = ItemFlag.."/Text/Outline",Value = true})
-                ItemSection:Toggle({Name = "Autoscale",Flag = ItemFlag.."/Text/Autoscale",Value = true})
-                ItemSection:Dropdown({Name = "Font",Flag = ItemFlag.."/Text/Font",List = {
-                    {Name = "UI",Mode = "Button"},
-                    {Name = "System",Mode = "Button"},
-                    {Name = "Plex",Mode = "Button"},
-                    {Name = "Monospace",Mode = "Button",Value = true}
-                }})
-                ItemSection:Slider({Name = "Size",Flag = ItemFlag.."/Text/Size",Min = 13,Max = 100,Value = 16})
-                ItemSection:Slider({Name = "Transparency",Flag = ItemFlag.."/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             end
         end
     end
@@ -215,7 +206,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
             Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
-            :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            :Keybind({Value = "RightControl",Flag = "UI/Keybind",DoNotClear = true})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
@@ -312,6 +303,42 @@ OldPluginManager = hookfunction(getrenv().PluginManager, function()
     return error(Message)
 end) end
 
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local Framework = require(ReplicatedFirst.Framework)
+local Network = Framework.Libraries.Network
+local Events = getupvalue(Network.Add,4)
+
+local NullFunction = function() end
+setupvalue(Network.Send,6,NullFunction)
+setupvalue(Network.Fetch,6,NullFunction)
+
+--[[
+local Blacklist = {
+    "Ping Return",
+    "Animator Camera Position Report",
+    "Get Server Debug State",
+    "Set Character State",
+    "Animator State Report",
+    "Get Character Stat"
+}
+
+local OldSend,OldFetch
+OldSend = hookfunction(Network.Send,function(Self,...)
+    local Args = {...}
+    if not table.find(Blacklist,Args[1]) then
+        print("Send",repr(Args))
+    end return OldSend(Self,...)
+end)
+OldFetch = hookfunction(Network.Fetch,function(Self,...)
+    local Args = {...}
+    if not table.find(Blacklist,Args[1]) then
+        local Return = OldFetch(Self,...)
+        print("Fetch:",repr(Args),"Returned:",repr(Return))
+        return Return
+    end return OldFetch(Self,...)
+end)
+]]
+
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
@@ -388,6 +415,34 @@ local function GetHitboxWithPrediction(Config)
 
     return ClosestHitbox
 end
+local function GetItemAllFOV(Config)
+    local Camera = Workspace.CurrentCamera
+    local Distance,ClosestItem = Config.Distance,nil
+
+    for Index, Item in pairs(LootBins:GetChildren()) do
+        for Index, Group in pairs(Item:GetChildren()) do
+            local Part = Group:FindFirstChild("Part") if not Part then continue end
+            local Magnitude = (Part.Position - Camera.CFrame.Position).Magnitude
+            if Magnitude < Distance  then
+                Distance,ClosestItem = Magnitude,Group
+            end
+        end
+    end return ClosestItem
+end
+local function CTS(Data)
+    local String = Data.Name .. "\n"
+    local Items = {}
+    for Index,Item in pairs(Data.Occupants) do
+        Items[#Items + 1] = "[" .. Item.Name .. "]"
+    end
+    return String .. table.concat(Items,"\n")
+end
+local function Length(Table) local Count = 0
+    for Index, Value in pairs(Table) do
+        Count += 1
+    end return Count
+end
+
 
 local function AimAt(Hitbox,Config)
     if not Hitbox then return end
@@ -496,20 +551,30 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end mouse1release()
     end
 end)
+Parvus.Utilities.Misc:NewThreadLoop(2.5,function()
+    local Item = GetItemAllFOV({Distance = 90})
+    if Item and LocalPlayer.Character and not Framework.Libraries.Interface:IsVisible("GameMenu") then
+        local ContainerAvailable = Network:Fetch("Inventory Container Group Connect", Item)
+        if ContainerAvailable then Network:Send("Inventory Container Group Disconnect") end
+    end
+end)
 
 for Index,Item in pairs(Workspace.Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-    if Item:IsA("Model") and ItemData then
-        Parvus.Utilities.Drawing:ItemESP(Item.Parent,
-        "AR2/Item/"..ItemData.Parent.Name,Window.Flags)
+    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP(
+            Item.Parent,Item.Parent.Name,Item.Parent.Value.Position,
+            "AR2/Item/","AR2/Item/"..ItemData.Parent.Name,Window.Flags
+        )
     end
 end
 Workspace.Loot.DescendantAdded:Connect(function(Item)
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-    if Item:IsA("Model") and ItemData then
-        print(ItemData.Parent.Name)
-        Parvus.Utilities.Drawing:ItemESP(Item.Parent,
-        "AR2/Item/"..ItemData.Parent.Name,Window.Flags)
+    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP(
+            Item.Parent,Item.Parent.Name,Item.Parent.Value.Position,
+            "AR2/Item/","AR2/Item/"..ItemData.Parent.Name,Window.Flags
+        )
     end
 end)
 Workspace.Loot.DescendantRemoving:Connect(function(Item)
@@ -517,6 +582,22 @@ Workspace.Loot.DescendantRemoving:Connect(function(Item)
         Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
     end
 end)
+
+repeat task.wait() until Events["Inventory Container Added"] and Events["Inventory Container Removed"]
+local OldICA, OldCC = Events["Inventory Container Added"], Events["Container Changed"]
+Events["Inventory Container Added"] = function(Id, Data, ...)
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and Data.Type ~= "Corpse" then
+        Parvus.Utilities.Drawing:ItemESP(Data.Id,CTS(Data),Data.WorldPosition,
+        "AR2/Item/","AR2/Item/Container",Window.Flags)
+    end return OldICA(Id,Data,...)
+end
+Events["Container Changed"] = function(Data, ...)
+    Parvus.Utilities.Drawing:RemoveESP(Data.Id)
+    if Data.WorldPosition and Length(Data.Occupants) > 0 then
+        Parvus.Utilities.Drawing:ItemESP(Data.Id,CTS(Data),Data.WorldPosition,
+        "AR2/Item/","AR2/Item/Container",Window.Flags)
+    end return OldCC(Data, ...)
+end
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end

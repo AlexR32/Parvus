@@ -20,9 +20,7 @@ GravityCorrection,Tortoiseshell
 = false,nil,nil,1600,150,2,
 require(ReplicatedStorage.TS)
 
-repeat task.wait() until not
-LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
-
+repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
@@ -349,19 +347,19 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
         if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
             for Index, Reason in pairs(BanReasons) do
                 if type(Args[2]) == "string" and string.match(Args[2],Reason) then
-                    --print("blocked",Args[2])
+                    print("blocked",Args[2])
                     return
                 end
             end
         end
     end
     if Method == "Destroy" then
-        --[[if Self.Parent == LocalPlayer.Character then
+        if Self.Parent == LocalPlayer.Character then
             print(Self)
-        end]]
+        end
         if Self.Parent == LocalPlayer.Character
         and Self.Name ~= DontBlock then
-            --print("blocked",Self)
+            print("blocked",Self)
             return
         end
     end
@@ -637,6 +635,26 @@ local function AutoShoot(Hitbox,Enabled)
     local Weapon,Config = GetEquippedWeapon()
 
     if Weapon and Config then
+        --[[if Config.Controller == "Melee" then
+            local Camera = Workspace.CurrentCamera
+            if (Hitbox[2].Position - Camera.CFrame.Position).Magnitude < 22.5 then
+                local Health = Hitbox[2].Parent.Parent.Health.Value
+                
+                local Backstab = Hitbox[2].CFrame * CFrame.new(0,0,-Config.Melee.Range)
+                local RayResult =  Raycast(Backstab.Position,
+                Hitbox[2].Position - Backstab.Position,{Hitbox[2]})
+
+                Tortoiseshell.Network:Fire("Item_Melee","StabBegin",Weapon)
+                task.wait(Config.Melee.Delay + Config.Melee.Time)
+                Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[2],
+                RayResult.Position,Backstab.LookVector * (Config.Melee.Range + 1))
+
+                if Health ~= Hitbox[2].Parent.Parent.Health.Value then
+                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[2],RayResult.Position)
+                end
+            end return
+        end]]
+        
         local State = Weapon.State
         local Ammo = State.Ammo.Server
         local FireMode = State.FireMode.Server
@@ -848,8 +866,7 @@ for Index,Event in pairs(Events) do
                     Notify:Fire({
                         Title = "Anti-Kick | Rejoining in 10 secs",
                         Color = Color3.new(0.5,1,0.5),Duration = 10
-                    })
-                    task.wait(10)
+                    }) task.wait(10)
                     Parvus.Utilities.Misc:ReJoin()
                 end
             end

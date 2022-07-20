@@ -216,38 +216,28 @@ elseif game.GameId == 1586272220 then
     end
 end
 
-local function ItemESP(Item,ESP)
-    local ScreenPosition,OnScreen = Vector3.zero,false
+local function ItemESP(Name,Position,ESP)
+    local ScreenPosition,OnScreen,MaxDistance
     local function ConcatFlag(Flag)
         return ESP.Config[ESP.FlagConcat .. Flag]
     end
+    local function GlobalFlag(Flag)
+        return ESP.Config[ESP.GlobalFlag .. Flag]
+    end
 
     return RunService.Heartbeat:Connect(function() local Camera = Workspace.CurrentCamera
-        ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Item.Value.Position)
-        if OnScreen then
-            if ESP.Drawing.Tracer.Visible then
-                local TracerMode = ConcatFlag("/Tracer/Mode")
-                ESP.Drawing.Tracer.Color = ConcatFlag("/Color")[6]
-                ESP.Drawing.Tracer.Thickness = ConcatFlag("/Tracer/Thickness")
-                ESP.Drawing.Tracer.Transparency = 1-ConcatFlag("/Color")[4]
-                ESP.Drawing.Tracer.From = TracerMode[1] == "From Mouse" and UserInputService:GetMouseLocation()
-                or TracerMode[1] == "From Bottom" and Vector2.new(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y)
-                ESP.Drawing.Tracer.To = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
-            end
-            if ESP.Drawing.Text.Visible then
-                local Distance = GetDistanceFromCamera(Item.Value.Position)
-                ESP.Drawing.Text.Size = ClampDistance(ConcatFlag("/Text/Autoscale"),
-                ConcatFlag("/Text/Size"),Distance)
-                ESP.Drawing.Text.Outline = ConcatFlag("/Text/Outline")
-                ESP.Drawing.Text.Font = GetFontFromName(ConcatFlag("/Text/Font")[1])
-                ESP.Drawing.Text.Transparency = 1-ConcatFlag("/Text/Transparency")
-                ESP.Drawing.Text.Text = string.format("%s\n%i studs",Item.Name,Distance)
+        ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Position)
+        if OnScreen then local Distance = GetDistanceFromCamera(Position) * 0.28
+            MaxDistance = Distance <= GlobalFlag("Distance")
+            if ESP.Drawing.Text.Visible and MaxDistance then
+                local Color = ConcatFlag("/Color")
+                ESP.Drawing.Text.Color = Color[6]
+                ESP.Drawing.Text.Transparency = 1-Color[4]
+
+                ESP.Drawing.Text.Text = string.format("%s\n%i meters",Name,Distance)
                 ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
             end
-        end
-
-        ESP.Drawing.Text.Visible = OnScreen and ConcatFlag("/Text/Enabled") or false
-        ESP.Drawing.Tracer.Visible = OnScreen and ConcatFlag("/Tracer/Enabled") or false
+        end ESP.Drawing.Text.Visible = OnScreen and MaxDistance and ConcatFlag("/Enabled") or false
     end)
 end
 
@@ -399,26 +389,30 @@ local function PlayerESP(Model,ESP)
     end)
 end
 
-function DrawingLibrary:ItemESP(Item,FlagConcat,Config)
+function DrawingLibrary:ItemESP(Item,Name,Position,GlobalFlag,FlagConcat,Config)
     if DrawingLibrary.ESPContainer[Item] then return end
     DrawingLibrary.ESPContainer[Item] = {
         FlagConcat = FlagConcat,
+        GlobalFlag = GlobalFlag,
         Config = Config,
         Drawing = {
-            Tracer = AddDrawing("Line", {
-                ZIndex = 2
-            }),
             Text = AddDrawing("Text", {
                 Center = true,
-                Color = Color3.new(1,1,1),
-                OutlineColor = Color3.new(0,0,0),
+                --Color = Color3.new(1,1,1),
+                --Font = 1,
+                Outline = true,
+                --OutlineColor = Color3.new(),
+                --Position = Vector2.zero,
+                --Size = 14,
+                --Text = "Text",
+                --Transparency = 1,
+                --Visible = true
                 ZIndex = 1
             })
         }
     }
-
     local ESP = DrawingLibrary.ESPContainer[Item]
-    ESP.Render = ItemESP(Item,ESP) return ESP
+    ESP.Render = ItemESP(Name,Position,ESP) return ESP
 end
 function DrawingLibrary:ModelESP(Item,FlagConcat,Config)
     if DrawingLibrary.ESPContainer[Item] then return end
