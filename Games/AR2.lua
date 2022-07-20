@@ -593,7 +593,7 @@ Events["Inventory Container Added"] = function(Id, Data, ...)
 end
 Events["Container Changed"] = function(Data, ...)
     Parvus.Utilities.Drawing:RemoveESP(Data.Id)
-    if Data.WorldPosition and Length(Data.Occupants) > 0 then
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and Data.Type ~= "Corpse" then
         Parvus.Utilities.Drawing:ItemESP(Data.Id,CTS(Data),Data.WorldPosition,
         "AR2/Item/","AR2/Item/Container",Window.Flags)
     end return OldCC(Data, ...)
