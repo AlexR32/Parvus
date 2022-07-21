@@ -20,6 +20,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 # Universal
   - Aimbot
     - Visibility Check
+    - Distance Check
     - Smoothness
     - Team Check
     - Prediction
@@ -27,12 +28,15 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
     - FoV Circle Customization
   - Silent Aim
     - Visibility Check
+    - Distance Check
     - Team Check
     - Hit Chance
     - Body Parts (Priority)
     - FoV Circle Customization
   - Trigger Bot
+    - Features same as Aimbot
   - Visuals
+    -- Distance Check
     - Ally Color
     - Enemy Color
     - Team Check
@@ -71,8 +75,8 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - Fly + Noclip
   - Anti Kick
 # The Wild West
-  - Aimbot
-  - ESP
+  - Aimbot Support
+  - ESP Support
   - Thunderstruck ESP
   - Legendary Animals ESP
 # Steel Titans
@@ -91,4 +95,5 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - ESP Support
   - Recoil Mods
   - Item ESP
+  - Map ESP
 ```
