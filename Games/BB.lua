@@ -64,6 +64,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle",Value = true},
@@ -95,6 +96,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
@@ -115,11 +117,12 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = false})
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
             TriggerSection:Toggle({Name = "Dynamic FOV",Flag = "Trigger/DynamicFOV",Value = false})
-            TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",Mouse = true,
-            Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
-            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 15})
+            TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
+            Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
+            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Toggle({Name = "Hold Trigger Mode",Flag = "Trigger/HoldMode",Value = false})
+            TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle",Value = true},
@@ -135,6 +138,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = true})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -188,8 +192,8 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
-        local WCSection = GameTab:Section({Name = "Weapon Customization",Side = "Left"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
             WCSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponCustom/Enabled",Value = false})
             WCSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/WeaponCustom/Texture",Value = true})
             WCSection:Colorpicker({Name = "Color",Flag = "BadBusiness/WeaponCustom/Color",Value = {1,0.75,1,0.5,true}})
@@ -201,7 +205,7 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local WMSection = GameTab:Section({Name = "Weapon Modification",Side = "Left"}) do
+        local WMSection = MiscTab:Section({Name = "Weapon Modification",Side = "Left"}) do
             WMSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponMod/Enabled",Value = false})
             WMSection:Slider({Name = "Weapon Shake",Flag = "BadBusiness/WeaponMod/WeaponScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Slider({Name = "Camera Shake",Flag = "BadBusiness/WeaponMod/CameraScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -209,7 +213,7 @@ local Window = Parvus.Utilities.UI:Window({
             WMSection:Slider({Name = "Bullet Drop",Flag = "BadBusiness/WeaponMod/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Label({Text = "Respawn to make it work"})
         end
-        local ACSection = GameTab:Section({Name = "Arms Customization",Side = "Right"}) do
+        local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
             ACSection:Toggle({Name = "Enabled",Flag = "BadBusiness/ArmsCustom/Enabled",Value = false})
             ACSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/ArmsCustom/Texture",Value = true})
             ACSection:Colorpicker({Name = "Color",Flag = "BadBusiness/ArmsCustom/Color",Value = {1,0,1,1,false}})
@@ -221,20 +225,20 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
+        local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
             FlySection:Toggle({Name = "Enabled",Flag = "BadBusiness/Fly/Enabled",Value = false})
             :Keybind({Flag = "BadBusiness/Fly/Keybind"})
             FlySection:Slider({Name = "Speed",Flag = "BadBusiness/Fly/Speed",Min = 10,Max = 100,Value = 100})
             FlySection:Toggle({Name = "No Clip",Flag = "BadBusiness/Fly/NoClip",Value = false})
         end
-        local AASection = GameTab:Section({Name = "Anti-Aim",Side = "Right"}) do
+        local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BadBusiness/AntiAim/Enabled",Value = false})
             :Keybind({Flag = "BadBusiness/AntiAim/Keybind"})
             AASection:Slider({Name = "Pitch",Flag = "BadBusiness/AntiAim/Pitch",Min = -1.5,Max = 1.5,Precise = 2,Value = -1.5})
             AASection:Slider({Name = "Pitch Random",Flag = "BadBusiness/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
             AASection:Toggle({Name = "Lean Random",Flag = "BadBusiness/AntiAim/LeanRandom",Value = true})
         end
-        local MiscSection = GameTab:Section({Name = "Misc",Side = "Right"}) do
+        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Anti-Kick",Flag = "BadBusiness/AntiKick",Value = false})
         end
     end
@@ -322,7 +326,6 @@ Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
---Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -717,7 +720,8 @@ local function GetHitbox(Config)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
@@ -743,7 +747,8 @@ local function GetHitboxWithPrediction(Config)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
                     local HitboxGravityCorrection = Vector3.new(0,HitboxDistance / PredictedGravity,0) / GravityCorrection
                     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
@@ -771,7 +776,8 @@ local function GetHitboxAllFOV(Config)
         if Player ~= LocalPlayer and Shield and TeamCheck(Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local Magnitude = (Hitbox.Position - Camera.CFrame.Position).Magnitude
                     if Magnitude < Distance and WallCheck(Config.WallCheck,Hitbox) then
                         Distance,ClosestHitbox = Magnitude,{Player,Hitbox}
@@ -882,6 +888,7 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
+        Distance = Window.Flags["SilentAim/Distance"],
         Priority = Window.Flags["SilentAim/Priority"],
         Shield = true
     })
@@ -891,6 +898,7 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
+            Distance = Window.Flags["Aimbot/Distance"],
             Priority = Window.Flags["Aimbot/Priority"]
         }),{
             Prediction = Window.Flags["Aimbot/Prediction"],
@@ -922,6 +930,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFOV"]
     and GetHitboxAllFOV({
         WallCheck = Window.Flags["SilentAim/WallCheck"],
+        Distance = Window.Flags["SilentAim/Distance"],
         Priority = Window.Flags["SilentAim/Priority"]
     }) or SilentAim,Window.Flags["BadBusiness/AutoShoot"])
 end)
@@ -933,6 +942,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Prediction = Window.Flags["Trigger/Prediction"],
         DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
+        Distance = Window.Flags["Trigger/Distance"],
         Priority = Window.Flags["Trigger/Priority"]
     })
 
@@ -946,6 +956,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Prediction = Window.Flags["Trigger/Prediction"],
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Distance = Window.Flags["Trigger/Distance"],
                     Priority = Window.Flags["Trigger/Priority"]
                 }) if not TriggerHB or not Trigger then break end
             end

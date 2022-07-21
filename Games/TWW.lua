@@ -1,16 +1,12 @@
 local UserInputService = game:GetService("UserInputService")
---local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
-local Stats = game:GetService("Stats")
 
 local BackgroundGui = getrenv().shared.BackgroundGui
 repeat task.wait() until BackgroundGui and BackgroundGui.Parent == nil
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 local Aimbot,SilentAim = false,nil
 
 local Window = Parvus.Utilities.UI:Window({
@@ -37,6 +33,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
@@ -49,6 +46,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -102,10 +100,12 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
-        local TESPSection = GameTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
+            TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Enabled",Value = false})
             TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0,false}})
-            TESPSection:Divider()
+            TESPSection:Slider({Name = "Distance",Flag = "ESP/Thunderstruck/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "meters"})
+            --[[TESPSection:Divider()
             TESPSection:Toggle({Name = "Tracer Enabled",Flag = "ESP/Thunderstruck/Tracer/Enabled",Value = false})
             TESPSection:Dropdown({Name = "Mode",Flag = "ESP/Thunderstruck/Tracer/Mode",List = {
                 {Name = "From Bottom",Mode = "Button",Value = true},
@@ -124,11 +124,13 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Monospace",Mode = "Button",Value = true}
             }})
             TESPSection:Slider({Name = "Size",Flag = "ESP/Thunderstruck/Text/Size",Min = 13,Max = 100,Value = 16})
-            TESPSection:Slider({Name = "Transparency",Flag = "ESP/Thunderstruck/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            TESPSection:Slider({Name = "Transparency",Flag = "ESP/Thunderstruck/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})]]
         end
-        local LESPSection = GameTab:Section({Name = "Legendary ESP",Side = "Right"}) do
+        local LESPSection = MiscTab:Section({Name = "Legendary ESP",Side = "Right"}) do
+            LESPSection:Toggle({Name = "Enabled",Flag = "ESP/Legendary/Enabled",Value = false})
             LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0,false}})
-            LESPSection:Divider()
+            LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "meters"})
+            --[[LESPSection:Divider()
             LESPSection:Toggle({Name = "Tracer Enabled",Flag = "ESP/Legendary/Tracer/Enabled",Value = false})
             LESPSection:Dropdown({Name = "Mode",Flag = "ESP/Legendary/Tracer/Mode",List = {
                 {Name = "From Bottom",Mode = "Button",Value = true},
@@ -147,7 +149,7 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Monospace",Mode = "Button",Value = true}
             }})
             LESPSection:Slider({Name = "Size",Flag = "ESP/Legendary/Text/Size",Min = 13,Max = 100,Value = 16})
-            LESPSection:Slider({Name = "Transparency",Flag = "ESP/Legendary/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            LESPSection:Slider({Name = "Transparency",Flag = "ESP/Legendary/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})]]
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
@@ -234,7 +236,6 @@ Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
---Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 
@@ -267,7 +268,8 @@ local function GetHitbox(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
@@ -299,6 +301,7 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
+            Distance = Window.Flags["Aimbot/Distance"],
             Priority = Window.Flags["Aimbot/Priority"],
             TeamCheck = Window.Flags["TeamCheck"]
         }),{
@@ -319,15 +322,15 @@ for Index,Instance in pairs(Workspace.WORKSPACE_Geometry:GetChildren()) do
     end
 end
 for Index,Instance in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
-    if Instance:WaitForChild("Health").Value > 300 then
-        print(Instance.Name)
-        Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Legendary",Window.Flags)
+    if Instance:WaitForChild("Health").Value > 300 then --print(Instance.Name)
+        Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+        "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end
 Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Instance)
-    if Instance:WaitForChild("Health").Value > 300 then
-        print(Instance.Name)
-        Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Legendary",Window.Flags)
+    if Instance:WaitForChild("Health").Value > 300 then --print(Instance.Name)
+        Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+        "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end)
 Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
@@ -335,27 +338,31 @@ Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
 end)
 for Index,Instance in pairs(Regions) do
     for Index,Instance in pairs(Instance.Trees:GetChildren()) do
-        if Instance:FindFirstChild("Strike2",true) then
-            print(Instance.Name)
-            Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Thunderstruck",Window.Flags)
+        if Instance:FindFirstChild("Strike2",true) then --print(Instance.Name)
+            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
     for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
-        if Instance:FindFirstChild("Strike2",true) then
-            print(Instance.Name)
-            Parvus.Utilities.Drawing:ModelESP(Instance,"ESP/Thunderstruck",Window.Flags)
+        if Instance:FindFirstChild("Strike2",true) then --print(Instance.Name)
+            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
     Instance.Trees.DescendantAdded:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ModelESP(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
+            Instance.Parent.Parent.Name,Instance.Parent.Parent},
+            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Vegetation.DescendantAdded:Connect(function()
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             --print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ModelESP(Instance.Parent.Parent,"ESP/Thunderstruck",Window.Flags)
+            Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
+            Instance.Parent.Parent.Name,Instance.Parent.Parent},
+            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Trees.DescendantRemoving:Connect(function(Instance)

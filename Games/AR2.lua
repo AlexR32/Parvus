@@ -9,13 +9,72 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
 
-local Framework = require(ReplicatedFirst.Framework)
-repeat task.wait() until Framework.Classes.Animators
-local Animators = Framework.Classes.Animators
+do local SetIdentity = syn and syn.set_thread_identity or setidentity
+local OldPluginManager,Message -- Thanks to Kiriot22
+task.spawn(function() SetIdentity(2)
+    local Success,Error = pcall(getrenv().PluginManager)
+    Message = Error
+end)
+OldPluginManager = hookfunction(getrenv().PluginManager, function()
+    return error(Message)
+end) end
 
-local ItemCategory = ReplicatedStorage.ItemData:GetChildren()
+local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
+local Interface = Framework.Libraries.Interface
+local Animators = Framework.Classes.Animators
+local Network = Framework.Libraries.Network
+local Events = getupvalue(Network.Add,4)
+
+local NullFunction = function() end
+setupvalue(Network.Send,6,NullFunction)
+setupvalue(Network.Fetch,6,NullFunction)
+
 local LootBins = Workspace.Map.Shared.LootBins
+local Randoms = Workspace.Map.Shared.Randoms
+local Vehicles = Workspace.Vehicles.Spawned
+local Zombies = Workspace.Zombies.Mobs
 local Loot = Workspace.Loot
+local Places,ItemCategory = {
+    "PartyTrailerTechnoGold","MilitaryConvoy01","SpecialForcesCrash01",
+    "StashWeaponMid01","StashWeaponMid02","StashWeaponMid03",
+    "StashWeaponHigh01","StashWeaponHigh02","StashWeaponHigh03",
+    "SeahawkCrashsite01","SeahawkCrashsite02","SeahawkCrashsite03",
+    "SeahawkCrashsite04","SeahawkCrashsite05","SeahawkCrashsite06",
+    "SeahawkCrashsite07","SeahawkCrashsite08","SeahawkCrashsite09",
+    "RandomCrashCessna01","RandomCrashCessna02","RandomCrashCessna03",
+    "ATVCrashsiteRenegade01","ATVCrashsiteRenegade02","ATVCrashsiteRenegade03"
+},{
+    "Containers","RandomPlaces",
+    "Accessories","Ammo","Attachments","Backpacks","Belts","Clothing","Consumables",
+    "Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"
+}
+
+--[[
+local Blacklist = {
+    "Ping Return",
+    "Animator Camera Position Report",
+    "Get Server Debug State",
+    "Set Character State",
+    "Animator State Report",
+    "Get Character Stat"
+}
+
+local OldSend,OldFetch
+OldSend = hookfunction(Network.Send,function(Self,...)
+    local Args = {...}
+    if not table.find(Blacklist,Args[1]) then
+        print("Send",repr(Args))
+    end return OldSend(Self,...)
+end)
+OldFetch = hookfunction(Network.Fetch,function(Self,...)
+    local Args = {...}
+    if not table.find(Blacklist,Args[1]) then
+        local Return = OldFetch(Self,...)
+        print("Fetch:",repr(Args),"Returned:",repr(Return))
+        return Return
+    end return OldFetch(Self,...)
+end)
+]]
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -34,6 +93,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
@@ -63,6 +123,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
@@ -82,6 +143,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
@@ -99,6 +161,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -176,30 +239,39 @@ local Window = Parvus.Utilities.UI:Window({
         end
     end
     local ItemTab = Window:Tab({Name = "Item ESP"}) do
-        local GlobalSection = ItemTab:Section({Name = "Global"}) do
-            GlobalSection:Slider({Name = "Distance",Flag = "AR2/Item/Distance",Min = 25,Max = 500,Value = 50,Unit = "meters"})
+        local GlobalSection = ItemTab:Section({Name = "Settings"}) do local Items = {}
+            GlobalSection:Slider({Name = "Distance",Flag = "AR2/Item/Distance",Min = 25,Max = 5000,Value = 50,Unit = "meters"})
+            for Index,Name in pairs(ItemCategory) do
+                local ItemFlag = "AR2/Item/" .. Name .. "/Enabled" Window.Flags[ItemFlag] = false
+                Items[#Items + 1] = {Name = Name,Mode = "Toggle",Value = false,Callback = function(Selected,Option)
+                    Window.Flags[ItemFlag] = Option.Value
+                end}
+            end
+            GlobalSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
-        local ContainerSection = ItemTab:Section({Name = "Container"}) do
-            ContainerSection:Toggle({Name = "Enabled",Flag = "AR2/Item/Container/Enabled",Value = false})
-            ContainerSection:Colorpicker({Name = "Color",Flag = "AR2/Item/Container/Color",Value = {1,0,1,0,false}})
-        end
-        for Index,IC in pairs(ItemCategory) do
-            if IC.Name == "Building" then continue end
-            local ItemFlag = "AR2/Item/" .. IC.Name
-            local ItemSection = ItemTab:Section({Name = IC.Name}) do
-                ItemSection:Toggle({Name = "Enabled",Flag = ItemFlag.."/Enabled",Value = false})
-                ItemSection:Colorpicker({Name = "Color",Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
+        local ItemSection = ItemTab:Section({Name = "ESP Colors"}) do
+            for Index,Name in pairs(ItemCategory) do local ItemFlag = "AR2/Item/" .. Name
+                ItemSection:Colorpicker({Name = Name,Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
             end
         end
     end
-    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
-        local RecoilSection = GameTab:Section({Name = "Recoil Control",Side = "Left"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local RecoilSection = MiscTab:Section({Name = "Recoil Control",Side = "Left"}) do
             RecoilSection:Toggle({Name = "Enabled",Flag = "AR2/Recoil/Enabled",Value = false})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Recoil Random",Flag = "AR2/Recoil/RandomInt",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Raise Force",Flag = "AR2/Recoil/RaiseForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+        end
+        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+            MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false,Callback = function(Bool)
+                if Bool then
+                    Interface:Get("Map"):EnableGodview()
+                else
+                    Interface:Get("Map"):DisableGodview()
+                end
+            end})
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
@@ -212,7 +284,7 @@ local Window = Parvus.Utilities.UI:Window({
             Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
-            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
+            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = true})
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {1,0.25,1,0,true},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
@@ -293,64 +365,47 @@ Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 --Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
-do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldPluginManager,Message -- Thanks to Kiriot22
-task.spawn(function() SetIdentity(2)
-    local Success,Error = pcall(getrenv().PluginManager)
-    Message = Error
-end)
-OldPluginManager = hookfunction(getrenv().PluginManager, function()
-    return error(Message)
-end) end
+local RaycastParams = RaycastParams.new()
+RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+RaycastParams.FilterDescendantsInstances = {
+    Workspace.Effects,
+    Workspace.Sounds,
+    Workspace.Locations,
+    Workspace.Spawns
+} RaycastParams.IgnoreWater = true
 
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
-local Framework = require(ReplicatedFirst.Framework)
-local Network = Framework.Libraries.Network
-local Events = getupvalue(Network.Add,4)
-
-local NullFunction = function() end
-setupvalue(Network.Send,6,NullFunction)
-setupvalue(Network.Fetch,6,NullFunction)
-
---[[
-local Blacklist = {
-    "Ping Return",
-    "Animator Camera Position Report",
-    "Get Server Debug State",
-    "Set Character State",
-    "Animator State Report",
-    "Get Character Stat"
-}
-
-local OldSend,OldFetch
-OldSend = hookfunction(Network.Send,function(Self,...)
-    local Args = {...}
-    if not table.find(Blacklist,Args[1]) then
-        print("Send",repr(Args))
-    end return OldSend(Self,...)
-end)
-OldFetch = hookfunction(Network.Fetch,function(Self,...)
-    local Args = {...}
-    if not table.find(Blacklist,Args[1]) then
-        local Return = OldFetch(Self,...)
-        print("Fetch:",repr(Args),"Returned:",repr(Return))
-        return Return
-    end return OldFetch(Self,...)
-end)
-]]
+local function Raycast(Origin,Direction)
+    local RaycastResult = Workspace:Raycast(Origin,Direction,RaycastParams)
+    if RaycastResult then
+        if CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate") then
+			return true
+		end
+		if CollectionService:HasTag(RaycastResult.Instance,"Window Part") then
+			return true
+		end
+		if CollectionService:HasTag(RaycastResult.Instance,"World Mesh") then
+			return true
+		end
+        if CollectionService:HasTag(RaycastResult.Instance,"World Water Part") then
+            return true
+        end
+		if RaycastResult.Instance.Transparency == 1
+        and RaycastResult.Instance.CanCollide == false then
+			return true
+		end return false
+    end return false
+end
 
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
 
-local function WallCheck(Enabled,Hitbox,Character)
+local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return not Camera:GetPartsObscuringTarget({Hitbox.Position},{
-        LocalPlayer.Character,
-        Character
-    })[1]
+    return Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position)
 end
 
 local function GetHitbox(Config)
@@ -368,10 +423,11 @@ local function GetHitbox(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
+                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
                         FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
@@ -397,7 +453,8 @@ local function GetHitboxWithPrediction(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
                     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
 
@@ -405,7 +462,7 @@ local function GetHitboxWithPrediction(Config)
                     and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
 
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
+                    if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
                         FieldOfView,ClosestHitbox = Magnitude,Hitbox
                     end
                 end
@@ -496,6 +553,7 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
+        Distance = Window.Flags["SilentAim/Distance"],
         Priority = Window.Flags["SilentAim/Priority"],
         TeamCheck = Window.Flags["TeamCheck"]
     })]]
@@ -505,6 +563,7 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
+            Distance = Window.Flags["Aimbot/Distance"],
             Priority = Window.Flags["Aimbot/Priority"],
             TeamCheck = Window.Flags["TeamCheck"]
         }),{
@@ -527,6 +586,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         },
         DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
+        Distance = Window.Flags["Trigger/Distance"],
         Priority = Window.Flags["Trigger/Priority"],
         TeamCheck = Window.Flags["TeamCheck"]
     })
@@ -544,6 +604,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     },
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Distance = Window.Flags["Trigger/Distance"],
                     Priority = Window.Flags["Trigger/Priority"],
                     TeamCheck = Window.Flags["TeamCheck"]
                 }) if not TriggerHB or not Trigger then break end
@@ -552,50 +613,77 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(2.5,function()
+    if not Window.Flags["AR2/Item/Containers/Enabled"] then return end
     local Item = GetItemAllFOV({Distance = 90})
-    if Item and LocalPlayer.Character and not Framework.Libraries.Interface:IsVisible("GameMenu") then
+    if Item and LocalPlayer.Character and not Interface:IsVisible("GameMenu") then
         local ContainerAvailable = Network:Fetch("Inventory Container Group Connect", Item)
         if ContainerAvailable then Network:Send("Inventory Container Group Disconnect") end
     end
 end)
 
-for Index,Item in pairs(Workspace.Loot:GetDescendants()) do
-    local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
+for Index,Place in pairs(Randoms:GetChildren()) do
+    if table.find(Places,Place.Name) then --print(Place.Name)
         Parvus.Utilities.Drawing:ItemESP(
-            Item.Parent,Item.Parent.Name,Item.Parent.Value.Position,
-            "AR2/Item/","AR2/Item/"..ItemData.Parent.Name,Window.Flags
+            {Place,Place.Name,Place.PrimaryPart.Position},
+            "AR2/Item","AR2/Item/RandomPlaces",Window.Flags
         )
     end
 end
-Workspace.Loot.DescendantAdded:Connect(function(Item)
+for Index,Item in pairs(Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
         Parvus.Utilities.Drawing:ItemESP(
-            Item.Parent,Item.Parent.Name,Item.Parent.Value.Position,
-            "AR2/Item/","AR2/Item/"..ItemData.Parent.Name,Window.Flags
+            {Item.Parent,Item.Parent.Name,Item.Parent.Value.Position},
+            "AR2/Item","AR2/Item/"..ItemData.Parent.Name,Window.Flags
+        )
+    end
+end
+
+Randoms.ChildAdded:Connect(function(Place)
+    if table.find(Places,Place.Name) then --print(Place.Name)
+        repeat task.wait() until Place.PrimaryPart
+        Parvus.Utilities.Drawing:ItemESP(
+            {Place,Place.Name,Place.PrimaryPart.Position},
+            "AR2/Item","AR2/Item/RandomPlaces",Window.Flags
+        )
+        if Window.Flags["AR2/Item/RandomPlaces/Enabled"] then
+            Parvus.Utilities.UI:Notification({
+                Title = "New Random Place Spawned!",
+                Description = "Look around you should see it\nIf not, change ESP Distance\n(" .. Place.Name .. ")"
+            })
+        end
+    end
+end)
+Loot.DescendantAdded:Connect(function(Item)
+    local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
+    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP(
+            {Item.Parent,Item.Parent.Name,Item.Parent.Value.Position},
+            "AR2/Item","AR2/Item/"..ItemData.Parent.Name,Window.Flags
         )
     end
 end)
-Workspace.Loot.DescendantRemoving:Connect(function(Item)
+Randoms.ChildRemoved:Connect(function(Place)
+    Parvus.Utilities.Drawing:RemoveESP(Place)
+end)
+Loot.DescendantRemoving:Connect(function(Item)
     if Item:IsA("Model") then
         Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
     end
 end)
 
-repeat task.wait() until Events["Inventory Container Added"] and Events["Inventory Container Removed"]
 local OldICA, OldCC = Events["Inventory Container Added"], Events["Container Changed"]
 Events["Inventory Container Added"] = function(Id, Data, ...)
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and Data.Type ~= "Corpse" then
-        Parvus.Utilities.Drawing:ItemESP(Data.Id,CTS(Data),Data.WorldPosition,
-        "AR2/Item/","AR2/Item/Container",Window.Flags)
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type, "Corpse") then
+        Parvus.Utilities.Drawing:ItemESP({Data.Id,CTS(Data),Data.WorldPosition},
+        "AR2/Item","AR2/Item/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
 Events["Container Changed"] = function(Data, ...)
     Parvus.Utilities.Drawing:RemoveESP(Data.Id)
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and Data.Type ~= "Corpse" then
-        Parvus.Utilities.Drawing:ItemESP(Data.Id,CTS(Data),Data.WorldPosition,
-        "AR2/Item/","AR2/Item/Container",Window.Flags)
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type, "Corpse") then
+        Parvus.Utilities.Drawing:ItemESP({Data.Id,CTS(Data),Data.WorldPosition},
+        "AR2/Item","AR2/Item/Containers",Window.Flags)
     end return OldCC(Data, ...)
 end
 

@@ -1,5 +1,6 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
+--local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -24,35 +25,36 @@ local function GetFontFromName(FontName)
         return 1
     elseif FontName == "Plex" then
         return 2
-    else--if FontName == "Monospace" then
+    elseif FontName == "Monospace" then
         return 3
+    else
+        return 1
     end
 end
 
 local function GetDistanceFromCamera(Position)
     local Camera = Workspace.CurrentCamera
-    return (Camera.CFrame.Position - Position).Magnitude
+    return (Position - Camera.CFrame.Position).Magnitude
 end
 local function ClampDistance(Enabled,Clamp,Distance)
-    Distance = type(Distance) == "number" and
-    Distance or GetDistanceFromCamera(Distance.Position)
+    --Distance = type(Distance) == "number" and
+    --Distance or GetDistanceFromCamera(Distance.Position)
     return Enabled and math.clamp(1 / Distance * 1000,0,Clamp) or Clamp
 end
 
 function ModelManager(Mode,Model)
     if Mode == "Player" then
-        local Character = Model.Character if not Model.Character then return end
+        if not Model.Character then return end local Character = Model.Character
         local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        if not Humanoid or not HumanoidRootPart then return end
+        if not HumanoidRootPart or not Humanoid then return end
         return Character,HumanoidRootPart,Humanoid.Health > 0,
         LocalPlayer.Team ~= Model.Team,Model.TeamColor.Color
     else
         local HumanoidRootPart = Model:FindFirstChild("HumanoidRootPart")
         local Humanoid = Model:FindFirstChildOfClass("Humanoid")
         if not Humanoid or not HumanoidRootPart then return end
-        return Model,HumanoidRootPart,Humanoid.Health > 0,
-        true,Color3.new(1,1,1)
+        return Model,HumanoidRootPart,Humanoid.Health > 0,true
     end
 end
 
@@ -68,12 +70,9 @@ local function AddDrawing(Type,Properties)
     end return Drawing
 end
 local function RemoveDrawing(Table)
-    for Index, Drawing in pairs(Table) do
-        if Drawing.Remove then
-            Drawing:Remove()
-        else
-            RemoveDrawing(Drawing)
-        end
+    for Index,Drawing in pairs(Table) do
+        if Drawing.Remove then Drawing:Remove()
+        else RemoveDrawing(Drawing) end
     end
 end
 
@@ -113,28 +112,22 @@ end
 local function AntiAliasingP(Position)
     return Vector2.new(math.round(Position.X),math.round(Position.Y))
 end
-local function CalculateBox(Model,Position) -- mickeyrbx
-    local Camera = Workspace.CurrentCamera
-    local Size = Model:GetExtentsSize()
+local function CalculateBox(Model,Position) -- CalculateBox by mickeyrbx
+    local Camera,Size = Workspace.CurrentCamera,Model:GetExtentsSize()
     local ScaleFactor = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
-    local Width,Height = math.round(ScaleFactor * Size.X),math.round(ScaleFactor * Size.Y)
-
-    return AntiAliasingXY(
-        Position.X - Width / 2,
-        Position.Y - Height / 2
-    ),Vector2.new(Width,Height)
+    Size = AntiAliasingXY(ScaleFactor * Size.X,ScaleFactor * Size.Y)
+    Position = Vector2.new(Position.X,Position.Y)
+    return AntiAliasingP(Position - Size / 2),Size
 end
 
-local function GetRelative(Position)-- Blissful
+local function GetRelative(Position) -- Offscreen Arrows by Blissful
     local Camera = Workspace.CurrentCamera
     local Relative = Camera.CFrame:PointToObjectSpace(Position)
     return Vector2.new(-Relative.X, -Relative.Z)
 end
-local function RotateDirection(Direction, Radius)
-    Radius = math.rad(Radius)
+local function RotateDirection(Direction, Radius) Radius = math.rad(Radius)
     local X = Direction.X * math.cos(Radius) - Direction.Y * math.sin(Radius)
     local Y = Direction.X * math.sin(Radius) + Direction.Y * math.cos(Radius)
-
     return Vector2.new(X,Y)
 end
 local function RelativeToCenter(Size)
@@ -146,21 +139,21 @@ if game.GameId == 580765040 then
     function ModelManager(Mode,Model)
         local Character,LPCharacter = Model.Character,LocalPlayer.Character
         if not Character or not LPCharacter then return end
-        if not Character:FindFirstChild("Torso") then return end
+        local Torso = Character:FindFirstChild("Torso")
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        if not Humanoid then return end
+        if not Humanoid or not Torso then return end
         
         local InEnemyTeam, PlayerColor = false, Color3.new(1,1,1)
         if Character:FindFirstChild("Team") and LPCharacter:FindFirstChild("Team") then
             if Character.Team.Value ~= LPCharacter.Team.Value or Character.Team.Value == "None" then
-                InEnemyTeam, PlayerColor = true, Character.Torso.Color
+                InEnemyTeam, PlayerColor = true, Torso.Color
             end
-        end return Character,Character.Torso,Humanoid.Health > 0,InEnemyTeam,PlayerColor
+        end return Character,Torso,Humanoid.Health > 0,InEnemyTeam,PlayerColor
     end
 elseif game.GameId == 1054526971 then
     function ModelManager(Mode,Model)
         if Mode == "Player" then
-            local Character = Model.Character if not Model.Character then return end
+            if not Model.Character then return end local Character = Model.Character
             local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
             local Humanoid = Character:FindFirstChildOfClass("Humanoid")
             if not HumanoidRootPart or not Humanoid then return end
@@ -177,7 +170,6 @@ elseif game.GameId == 1054526971 then
         end
     end
 elseif game.GameId == 1168263273 then
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
     repeat task.wait() until ReplicatedStorage:FindFirstChild("TS")
     local Tortoiseshell = require(ReplicatedStorage.TS)
     local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
@@ -190,13 +182,9 @@ elseif game.GameId == 1168263273 then
         end
     end
 
-    function ModelManager(Mode,Model)
-        local LPTeam = GetPlayerTeam(LocalPlayer)
-        local Character = Characters[Model]
-        local Team = GetPlayerTeam(Model)
-        if not Character then return end
-        if Character.Parent == nil then return end
-
+    function ModelManager(Mode,Model) local Character = Characters[Model]
+        if not Character or Character.Parent == nil then return end
+        local Team,LPTeam = GetPlayerTeam(Model),GetPlayerTeam(LocalPlayer)
         return Character:FindFirstChild("Hitbox"),Character:FindFirstChild("Root"),
         true,LPTeam ~= Team or tostring(Team) == "FFA",Tortoiseshell.Teams.Colors[Team]
     end
@@ -216,7 +204,7 @@ elseif game.GameId == 1586272220 then
     end
 end
 
-local function ItemESP(Name,Position,ESP)
+local function ItemESP(Item,ESP,IsBasePart)
     local ScreenPosition,OnScreen,MaxDistance
     local function ConcatFlag(Flag)
         return ESP.Config[ESP.FlagConcat .. Flag]
@@ -226,15 +214,16 @@ local function ItemESP(Name,Position,ESP)
     end
 
     return RunService.Heartbeat:Connect(function() local Camera = Workspace.CurrentCamera
-        ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Position)
-        if OnScreen then local Distance = GetDistanceFromCamera(Position) * 0.28
-            MaxDistance = Distance <= GlobalFlag("Distance")
-            if ESP.Drawing.Text.Visible and MaxDistance then
+        ScreenPosition, OnScreen = Camera:WorldToViewportPoint(IsBasePart and Item[3].Position or Item[3])
+        local Distance = GetDistanceFromCamera(Item[3]) * 0.28
+        MaxDistance = Distance <= GlobalFlag("/Distance")
+        if OnScreen and MaxDistance then
+            if ESP.Drawing.Text.Visible then
                 local Color = ConcatFlag("/Color")
                 ESP.Drawing.Text.Color = Color[6]
                 ESP.Drawing.Text.Transparency = 1-Color[4]
 
-                ESP.Drawing.Text.Text = string.format("%s\n%i meters",Name,Distance)
+                ESP.Drawing.Text.Text = string.format("%s\n%i meters",Item[2],Distance)
                 ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
             end
         end ESP.Drawing.Text.Visible = OnScreen and MaxDistance and ConcatFlag("/Enabled") or false
@@ -277,7 +266,7 @@ local function ModelESP(Item,ESP)
 end
 
 local function PlayerESP(Model,ESP)
-    local ScreenPosition,OnScreen = Vector3.zero,false
+    local ScreenPosition,OnScreen,MaxDistance
     local Character,PrimaryPart,IsAlive,InEnemyTeam,
     TeamColor = nil,nil,false,false,Color3.new(1,1,1)
 
@@ -291,11 +280,14 @@ local function PlayerESP(Model,ESP)
 
         if Character and PrimaryPart and IsAlive then local Camera = Workspace.CurrentCamera
             ScreenPosition, OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
+            local Distance = GetDistanceFromCamera(PrimaryPart.Position) * 0.28
+            MaxDistance = Distance <= ConcatFlag("/Distance")
+
             local Color = ConcatFlag("/TeamColor") and TeamColor
             or (InEnemyTeam and ConcatFlag("/Enemy")[6]
             or ConcatFlag("/Ally")[6])
 
-            if OnScreen then
+            if OnScreen and MaxDistance then
                 if ESP.Highlight.Enabled then
                     ESP.Highlight.Adornee = ESP.Mode == "Player" and Model.Character or Character
                     ESP.Highlight.FillColor = Color
@@ -307,8 +299,7 @@ local function PlayerESP(Model,ESP)
                     local HeadPosition = Character:FindFirstChild("Head") and Camera:WorldToViewportPoint(Character.Head.Position) or Vector3.zero
                     if ESP.Drawing.Other.Head.Visible then
                         ESP.Drawing.Other.Head.Color = Color
-                        ESP.Drawing.Other.Head.Radius = ClampDistance(ConcatFlag("/Head/Autoscale"),
-                        ConcatFlag("/Head/Radius"),GetDistanceFromCamera(PrimaryPart.Position))
+                        ESP.Drawing.Other.Head.Radius = ClampDistance(ConcatFlag("/Head/Autoscale"),ConcatFlag("/Head/Radius"),Distance)
                         ESP.Drawing.Other.Head.Filled = ConcatFlag("/Head/Filled")
                         ESP.Drawing.Other.Head.NumSides = ConcatFlag("/Head/NumSides")
                         ESP.Drawing.Other.Head.Thickness = ConcatFlag("/Head/Thickness")
@@ -340,13 +331,11 @@ local function PlayerESP(Model,ESP)
                         ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
                     end
                     if ESP.Drawing.Box.Text.Visible then
-                        local Distance = GetDistanceFromCamera(PrimaryPart.Position)
-                        ESP.Drawing.Box.Text.Size = ClampDistance(ConcatFlag("/Text/Autoscale"),
-                        ConcatFlag("/Text/Size"),Distance)
+                        ESP.Drawing.Box.Text.Size = ClampDistance(ConcatFlag("/Text/Autoscale"),ConcatFlag("/Text/Size"),Distance)
                         ESP.Drawing.Box.Text.Outline = ConcatFlag("/Text/Outline")
                         ESP.Drawing.Box.Text.Font = GetFontFromName(ConcatFlag("/Text/Font")[1])
                         ESP.Drawing.Box.Text.Transparency = 1-ConcatFlag("/Text/Transparency")
-                        ESP.Drawing.Box.Text.Text = string.format("%s\n%i studs",ESP.Mode == "Player" and Model.Name
+                        ESP.Drawing.Box.Text.Text = string.format("%s\n%i meters",ESP.Mode == "Player" and Model.Name
                         or (InEnemyTeam and "Enemy NPC" or "Ally NPC"),Distance)
                         ESP.Drawing.Box.Text.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
                     end
@@ -373,8 +362,8 @@ local function PlayerESP(Model,ESP)
             end
         end
 
-        local Visible = OnScreen and IsAlive and PrimaryPart and (not ConcatFlag("/TeamCheck") and not InEnemyTeam or InEnemyTeam)
-        local ArrowVisible = not OnScreen and IsAlive and PrimaryPart and (not ConcatFlag("/TeamCheck") and not InEnemyTeam or InEnemyTeam)
+        local Visible = OnScreen and MaxDistance and IsAlive and PrimaryPart and (not ConcatFlag("/TeamCheck") and not InEnemyTeam or InEnemyTeam)
+        local ArrowVisible = not OnScreen and MaxDistance and IsAlive and PrimaryPart and (not ConcatFlag("/TeamCheck") and not InEnemyTeam or InEnemyTeam)
 
         ESP.Highlight.Enabled = Visible and ConcatFlag("/Highlight/Enabled") or false
 
@@ -389,9 +378,9 @@ local function PlayerESP(Model,ESP)
     end)
 end
 
-function DrawingLibrary:ItemESP(Item,Name,Position,GlobalFlag,FlagConcat,Config)
-    if DrawingLibrary.ESPContainer[Item] then return end
-    DrawingLibrary.ESPContainer[Item] = {
+function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Config)
+    if DrawingLibrary.ESPContainer[Item[1]] then return end
+    DrawingLibrary.ESPContainer[Item[1]] = {
         FlagConcat = FlagConcat,
         GlobalFlag = GlobalFlag,
         Config = Config,
@@ -411,8 +400,10 @@ function DrawingLibrary:ItemESP(Item,Name,Position,GlobalFlag,FlagConcat,Config)
             })
         }
     }
-    local ESP = DrawingLibrary.ESPContainer[Item]
-    ESP.Render = ItemESP(Name,Position,ESP) return ESP
+    local IsBasePart = false
+    if typeof(Item[3]) ~= "Vector3" then IsBasePart = true end
+    local ESP = DrawingLibrary.ESPContainer[Item[1]]
+    ESP.Render = ItemESP(Item,ESP,IsBasePart) return ESP
 end
 function DrawingLibrary:ModelESP(Item,FlagConcat,Config)
     if DrawingLibrary.ESPContainer[Item] then return end

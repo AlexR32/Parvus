@@ -1,14 +1,9 @@
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
-local Stats = game:GetService("Stats")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Ping = Stats.Network.ServerStatsItem["Data Ping"]
-local Aimbot,SilentAim = false,nil
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -22,6 +17,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -57,8 +53,8 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
-        local FlySection = GameTab:Section({Name = "Fly",Side = "Right"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
             FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
             :Keybind({Flag = "ST/Fly/Keybind"})
             FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
@@ -149,7 +145,6 @@ Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
---Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
 local MaxVector = Vector3.new(math.huge,math.huge,math.huge)

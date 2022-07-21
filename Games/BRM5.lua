@@ -15,21 +15,18 @@ local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
 
-local TI = TweenInfo.new(10,Enum.EasingStyle.Linear,
-Enum.EasingDirection.InOut,0,false,0)
-local TI2 = TweenInfo.new(5,Enum.EasingStyle.Linear,
-Enum.EasingDirection.InOut,0,false,0)
-
-local AFKPlaces = {
-    CFrame.new(3853.97021484375, 172.68963623046875, -429.0279541015625), -- City Hall
-    CFrame.new(-5125.18359375, 105.015625, 5607.85791015625), -- Iraq
-    CFrame.new(-1584.665771484375, 820.1268310546875, -4451.94775390625), -- Mountain Outpost
-    CFrame.new(6282.3046875, 125.08175659179688, 2208.153076171875), -- Navalbase
-    CFrame.new(469.768310546875, 21.769287109375, 2273.580078125), -- Quary
-    CFrame.new(1225.836669921875, 55.94757080078125, -5377.25439453125), -- Power Station
-    CFrame.new(6866.8974609375, 181.8929443359375, -1910.042236328125), -- Stronghold
-    CFrame.new(497.245361328125, 113.73883056640625, -209.046875) -- Vietnama Village
-}
+local Teleports,TI,TI2 = {
+    ["Forward Operating Base"] = CFrame.new(-4004.792, 64.188, 808.497),
+    ["Ronograd City"] = CFrame.new(3814.537, 176.622, -160.004),
+    ["El Chara"] = CFrame.new(-4789.463, 107.638, 5298.004),
+    ["Communications Tower"] = CFrame.new(-1487.503, 809.622, -4416.927),
+    ["Naval Docks"] = CFrame.new(6167.5, 129.622, 2092),
+    ["Quarry"] = CFrame.new(272.762, 85.563, 2208.969),
+    ["Department of Utilities"] = CFrame.new(1176.5, 60.247, -5206),
+    ["Fort Ronograd"] = CFrame.new(6269.501, 185.632, -1232.474),
+    ["Vietnama Village"] = CFrame.new(539.497, 117.622, -358.074)
+},TweenInfo.new(10,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0),
+TweenInfo.new(5,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -53,6 +50,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
@@ -79,6 +77,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
@@ -99,6 +98,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Toggle({Name = "Switch To RMB",Flag = "Trigger/RMBMode",Value = false})
@@ -114,6 +114,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -172,6 +173,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Civilian Color",Flag = "ESP/NPC/Ally",Value = {0.33333334326744,0.75,1,0,false}})
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/NPC/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Hide Civilians",Flag = "ESP/NPC/TeamCheck",Value = true})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/NPC/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = NPCVisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/NPC/Box/Enabled",Value = false})
@@ -225,8 +227,8 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end
-    local GameTab = Window:Tab({Name = "Miscellaneous"}) do
-        local EnvSection = GameTab:Section({Name = "Environment"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local EnvSection = MiscTab:Section({Name = "Environment"}) do
             EnvSection:Toggle({Name = "Enabled",Flag = "BRM5/Lighting/Enabled",Value = false})
             EnvSection:Toggle({Name = "Brightness",Flag = "BRM5/Lighting/Brightness",Value = false,Callback = function(Bool)
                 Lighting.GlobalShadows = not Bool
@@ -234,7 +236,7 @@ local Window = Parvus.Utilities.UI:Window({
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 2,Value = 0.25})
         end
-        local WeaponSection = GameTab:Section({Name = "Weapon"}) do
+        local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
             WeaponSection:Slider({Name = "Recoil Percent",Flag = "BRM5/Recoil/Value",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WeaponSection:Toggle({Name = "Instant Hit",Flag = "BRM5/BulletDrop",Value = false})
@@ -244,7 +246,7 @@ local Window = Parvus.Utilities.UI:Window({
             WeaponSection:Toggle({Name = "Rapid Fire",Flag = "BRM5/RapidFire/Enabled",Value = false}):ToolTip("re-equip your weapon to disable")
             WeaponSection:Slider({Name = "Round Per Minute",Flag = "BRM5/RapidFire/Value",Min = 45,Max = 1000,Value = 1000})
         end
-        local CharSection = GameTab:Section({Name = "Character"}) do
+        local CharSection = MiscTab:Section({Name = "Character"}) do
             CharSection:Toggle({Name = "Anti Fall",Flag = "BRM5/AntiFall",Value = false})
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
@@ -252,43 +254,24 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
         end
-        local TPSection = GameTab:Section({Name = "Teleports"}) do
-            TPSection:Button({Name = "City Hall",Callback = function()
-                TeleportCharacter(AFKPlaces[1])
-            end})
-            TPSection:Button({Name = "Iraq",Callback = function()
-                TeleportCharacter(AFKPlaces[2])
-            end})
-            TPSection:Button({Name = "Mountain Outpost",Callback = function()
-                TeleportCharacter(AFKPlaces[3])
-            end})
-            TPSection:Button({Name = "Navalbase",Callback = function()
-                TeleportCharacter(AFKPlaces[4])
-            end})
-            TPSection:Button({Name = "Quary",Callback = function()
-                TeleportCharacter(AFKPlaces[5])
-            end})
-            TPSection:Button({Name = "Power Station",Callback = function()
-                TeleportCharacter(AFKPlaces[6])
-            end})
-            TPSection:Button({Name = "Stronghold",Callback = function()
-                TeleportCharacter(AFKPlaces[7])
-            end})
-            TPSection:Button({Name = "Vietnama Village",Callback = function()
-                TeleportCharacter(AFKPlaces[8])
-            end})
+        local TPSection = MiscTab:Section({Name = "Teleports"}) do
+            for Name,CF in pairs(Teleports) do
+                TPSection:Button({Name = Name,Callback = function()
+                    TeleportCharacter(CF)
+                end})
+            end
         end
-        local VehSection = GameTab:Section({Name = "Vehicle"}) do
+        local VehSection = MiscTab:Section({Name = "Vehicle"}) do
             VehSection:Toggle({Name = "Enabled",Flag = "BRM5/Vehicle/Enabled",Value = false})
             VehSection:Slider({Name = "Speed",Flag = "BRM5/Vehicle/Speed",Min = 0,Max = 1000,Value = 100})
             VehSection:Slider({Name = "Acceleration",Flag = "BRM5/Vehicle/Acceleration",Min = 1,Max = 50,Value = 1})
             :ToolTip("lower = faster")
         end
-        local HeliSection = GameTab:Section({Name = "Helicopter"}) do
+        local HeliSection = MiscTab:Section({Name = "Helicopter"}) do
             HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false})
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
-        local AirSection = GameTab:Section({Name = "Aircraft"}) do
+        local AirSection = MiscTab:Section({Name = "Aircraft"}) do
             AirSection:Toggle({Name = "Enabled",Flag = "BRM5/Aircraft/Enabled",Value = false}):Keybind()
             AirSection:Slider({Name = "Speed",Flag = "BRM5/Aircraft/Speed",Min = 130,Max = 950,Value = 130})
             AirSection:Toggle({Name = "Enable Fly",Flag = "BRM5/Aircraft/FlyEnabled",Value = false}):Keybind()
@@ -328,7 +311,7 @@ local Window = Parvus.Utilities.UI:Window({
                 CameraMod._handler._zoom = 128
             end})
         end
-        local MiscSection = GameTab:Section({Name = "Misc"}) do
+        local MiscSection = MiscTab:Section({Name = "Misc"}) do
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
                 local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
                 if not serverSettings.CHEATS_ENABLED then
@@ -427,7 +410,6 @@ Window:SetValue("UI/Toggle",
 Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
---Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -483,7 +465,8 @@ local function GetHitbox(Config)
             if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
-                    if Hitbox then
+                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                    if Hitbox and Distance <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
@@ -501,7 +484,8 @@ local function GetHitbox(Config)
             if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                    if Hitbox then
+                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                    if Hitbox and Distance <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
@@ -531,7 +515,8 @@ local function GetHitboxWithPrediction(Config)
             if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
-                    if Hitbox then
+                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                    if Hitbox and Distance <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
@@ -549,7 +534,8 @@ local function GetHitboxWithPrediction(Config)
             if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                    if Hitbox then
+                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                    if Hitbox and Distance <= Config.Distance then
                         local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
                         local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
 
@@ -851,6 +837,7 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
+        Distance = Window.Flags["SilentAim/Distance"],
         Priority = Window.Flags["SilentAim/Priority"],
         TargetMode = Window.Flags["BRM5/TargetMode"][1],
         TeamCheck = Window.Flags["TeamCheck"]
@@ -861,6 +848,7 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
+            Distance = Window.Flags["Aimbot/Distance"],
             Priority = Window.Flags["Aimbot/Priority"],
             TargetMode = Window.Flags["BRM5/TargetMode"][1],
             TeamCheck = Window.Flags["TeamCheck"]
@@ -893,6 +881,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         },
         DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
+        Distance = Window.Flags["Trigger/Distance"],
         Priority = Window.Flags["Trigger/Priority"],
         TargetMode = Window.Flags["BRM5/TargetMode"][1],
         TeamCheck = Window.Flags["TeamCheck"]
@@ -911,6 +900,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     },
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Distance = Window.Flags["Trigger/Distance"],
                     Priority = Window.Flags["Trigger/Priority"],
                     TargetMode = Window.Flags["BRM5/TargetMode"][1],
                     TeamCheck = Window.Flags["TeamCheck"]

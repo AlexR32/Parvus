@@ -24,6 +24,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle",Value = true}
@@ -53,6 +54,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 50})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
@@ -72,6 +74,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 10})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = {
@@ -89,6 +92,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.75,1,0,false}})
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -285,7 +289,8 @@ local function GetHitbox(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
@@ -314,7 +319,8 @@ local function GetHitboxWithPrediction(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                if Hitbox then
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance <= Config.Distance then
                     local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
                     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
 
@@ -371,6 +377,7 @@ RunService.Heartbeat:Connect(function()
         WallCheck = Window.Flags["SilentAim/WallCheck"],
         DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
         FieldOfView = Window.Flags["SilentAim/FieldOfView"],
+        Distance = Window.Flags["SilentAim/Distance"],
         Priority = Window.Flags["SilentAim/Priority"],
         TeamCheck = Window.Flags["TeamCheck"]
     })
@@ -380,6 +387,7 @@ RunService.Heartbeat:Connect(function()
             WallCheck = Window.Flags["Aimbot/WallCheck"],
             DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
             FieldOfView = Window.Flags["Aimbot/FieldOfView"],
+            Distance = Window.Flags["Aimbot/Distance"],
             Priority = Window.Flags["Aimbot/Priority"],
             TeamCheck = Window.Flags["TeamCheck"]
         }),{
@@ -402,6 +410,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         },
         DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
         FieldOfView = Window.Flags["Trigger/FieldOfView"],
+        Distance = Window.Flags["Trigger/Distance"],
         Priority = Window.Flags["Trigger/Priority"],
         TeamCheck = Window.Flags["TeamCheck"]
     })
@@ -419,6 +428,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     },
                     DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
                     FieldOfView = Window.Flags["Trigger/FieldOfView"],
+                    Distance = Window.Flags["Trigger/Distance"],
                     Priority = Window.Flags["Trigger/Priority"],
                     TeamCheck = Window.Flags["TeamCheck"]
                 }) if not TriggerHB or not Trigger then break end

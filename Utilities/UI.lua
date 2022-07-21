@@ -878,7 +878,8 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
         if not OptionContainerAsset.Visible and OptionContainerAsset.ListLayout.AbsoluteContentSize.Y ~= 0 then
             ContainerRender = RunService.RenderStepped:Connect(function()
                 if not OptionContainerAsset.Visible then ContainerRender:Disconnect() end
-                OptionContainerAsset.Position = UDim2.new(0,DropdownAsset.Background.AbsolutePosition.X,0,DropdownAsset.Background.AbsolutePosition.Y + 62)
+                OptionContainerAsset.Position = UDim2.new(0,DropdownAsset.Background.AbsolutePosition.X,0,
+                DropdownAsset.Background.AbsolutePosition.Y + DropdownAsset.Background.AbsoluteSize.Y + 42)
                 OptionContainerAsset.Size = UDim2.new(0,DropdownAsset.Background.AbsoluteSize.X,0,OptionContainerAsset.ListLayout.AbsoluteContentSize.Y + 2)
             end)
             OptionContainerAsset.Visible = true
@@ -890,10 +891,13 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
         end
     end)
     DropdownAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        DropdownAsset.Size = UDim2.new(1,0,0,(DropdownAsset.Title.TextBounds.Y + 6) + (DropdownAsset.Background.Value.TextBounds.Y + 6))
+        DropdownAsset.Title.Size = UDim2.new(1,0,0,DropdownAsset.Title.TextBounds.Y + 6)
+        DropdownAsset.Background.Position = UDim2.new(0.5,0,0,DropdownAsset.Title.Size.Y.Offset)
+        DropdownAsset.Size = UDim2.new(1,0,0,DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
     end)
     DropdownAsset.Background.Value:GetPropertyChangedSignal("TextBounds"):Connect(function()
         DropdownAsset.Background.Size = UDim2.new(1,0,0,DropdownAsset.Background.Value.TextBounds.Y + 6)
+        DropdownAsset.Size = UDim2.new(1,0,0,DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
     end)
 
     local function SetOptionState(Option,Toggle)
@@ -934,7 +938,7 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 
         Dropdown.Value = Selected
         if Option.Callback then
-            Option.Callback(Dropdown.Value)
+            Option.Callback(Dropdown.Value,Option)
         end
         Window.Flags[Dropdown.Flag] = Dropdown.Value
     end
