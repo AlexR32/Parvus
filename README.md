@@ -36,7 +36,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - Trigger Bot
     - Features same as Aimbot
   - Visuals
-    -- Distance Check
+    - Distance Check
     - Ally Color
     - Enemy Color
     - Team Check
