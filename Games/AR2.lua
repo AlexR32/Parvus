@@ -424,7 +424,7 @@ local function GetHitbox(Config)
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                 local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                if Hitbox and Distance <= Config.Distance then
+                if Hitbox and Distance * 0.28 <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox) then
@@ -453,11 +453,9 @@ local function GetHitboxWithPrediction(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                local Distance = (Hitbox - Camera.CFrame.Position).Magnitude
-                if Hitbox and Distance <= Config.Distance then
-                    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
-
+                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                if Hitbox and Distance * 0.28 <= Config.Distance then
+                    local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * Distance) / Config.Prediction.Velocity
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
                     and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
 

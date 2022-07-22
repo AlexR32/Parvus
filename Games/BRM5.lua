@@ -466,7 +466,7 @@ local function GetHitbox(Config)
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    if Hitbox and Distance <= Config.Distance then
+                    if Hitbox and Distance * 0.28 <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
@@ -485,7 +485,7 @@ local function GetHitbox(Config)
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    if Hitbox and Distance <= Config.Distance then
+                    if Hitbox and Distance * 0.28 <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,Character) then
@@ -516,7 +516,7 @@ local function GetHitboxWithPrediction(Config)
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = NPC:FindFirstChild(HumanoidPart)
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    if Hitbox and Distance <= Config.Distance then
+                    if Hitbox and Distance * 0.28 <= Config.Distance then
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude < FieldOfView and WallCheck(Config.WallCheck,Hitbox,NPC) then
@@ -535,10 +535,8 @@ local function GetHitboxWithPrediction(Config)
                 for Index, HumanoidPart in pairs(Config.Priority) do
                     local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                    if Hitbox and Distance <= Config.Distance then
-                        local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-                        local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / PredictedVelocity
-
+                    if Hitbox and Distance * 0.28 <= Config.Distance then
+                        local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * Distance) / PredictedVelocity
                         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction
                         and Hitbox.Position + HitboxVelocityCorrection or Hitbox.Position)
 
