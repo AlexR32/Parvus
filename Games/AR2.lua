@@ -36,13 +36,14 @@ local Zombies = Workspace.Zombies.Mobs
 local Loot = Workspace.Loot
 local Places,ItemCategory = {
     "PartyTrailerTechnoGold","MilitaryConvoy01","SpecialForcesCrash01",
-    "StashWeaponMid01","StashWeaponMid02","StashWeaponMid03",
-    "StashWeaponHigh01","StashWeaponHigh02","StashWeaponHigh03",
+    --"StashWeaponMid01","StashWeaponMid02","StashWeaponMid03",
+    --"StashWeaponHigh01","StashWeaponHigh02","StashWeaponHigh03",
     "SeahawkCrashsite01","SeahawkCrashsite02","SeahawkCrashsite03",
     "SeahawkCrashsite04","SeahawkCrashsite05","SeahawkCrashsite06",
     "SeahawkCrashsite07","SeahawkCrashsite08","SeahawkCrashsite09",
-    "RandomCrashCessna01","RandomCrashCessna02","RandomCrashCessna03",
-    "ATVCrashsiteRenegade01","ATVCrashsiteRenegade02","ATVCrashsiteRenegade03"
+    --"RandomCrashCessna01","RandomCrashCessna02","RandomCrashCessna03",
+    "ATVCrashsiteRenegade01","ATVCrashsiteRenegade02","ATVCrashsiteRenegade03",
+    "LifePreserverMilitary01","LifePreserverSpecOps01","PirateTreasure01"
 },{
     "Containers","RandomPlaces",
     "Accessories","Ammo","Attachments","Backpacks","Belts","Clothing","Consumables",
