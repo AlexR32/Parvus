@@ -262,9 +262,6 @@ local Window = Parvus.Utilities.UI:Window({
             MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false,Callback = function(Bool)
                 if Bool then Interface:Get("Map"):EnableGodview() else Interface:Get("Map"):DisableGodview() end
             end})
-            MiscSection:Button({Name = "Spectate",Callback = function()
-                Events.Spectate(PlayerService["blaneze"].Character.PrimaryPart,PlayerService["blaneze"])
-            end})
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
