@@ -34,16 +34,14 @@ local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
 local Zombies = Workspace.Zombies.Mobs
 local Loot = Workspace.Loot
+
 local Places,ItemCategory = {
-    "PartyTrailerTechnoGold","MilitaryConvoy01","SpecialForcesCrash01",
-    --"StashWeaponMid01","StashWeaponMid02","StashWeaponMid03",
-    --"StashWeaponHigh01","StashWeaponHigh02","StashWeaponHigh03",
-    "SeahawkCrashsite01","SeahawkCrashsite02","SeahawkCrashsite03",
-    "SeahawkCrashsite04","SeahawkCrashsite05","SeahawkCrashsite06",
-    "SeahawkCrashsite07","SeahawkCrashsite08","SeahawkCrashsite09",
-    --"RandomCrashCessna01","RandomCrashCessna02","RandomCrashCessna03",
-    "ATVCrashsiteRenegade01","ATVCrashsiteRenegade02","ATVCrashsiteRenegade03",
-    "LifePreserverMilitary01","LifePreserverSpecOps01","PirateTreasure01"
+    "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
+    "LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
+    "MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
+    "PartyTrailerTechnoGold","PartyTrailerTechnoGoldDeagleMod1",
+    "PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
+    "SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01"
 },{
     "Containers","RandomPlaces",
     "Accessories","Ammo","Attachments","Backpacks","Belts","Clothing","Consumables",
@@ -397,6 +395,11 @@ local function Raycast(Origin,Direction)
     end return false
 end
 
+local function GetDistanceFromCamera(Position)
+    local Camera = Workspace.CurrentCamera
+    return (Position - Camera.CFrame.Position).Magnitude
+end
+
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
@@ -424,7 +427,7 @@ local function GetHitbox(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                local Distance = GetDistanceFromCamera(Hitbox.Position)
                 if Hitbox and Distance * 0.28 <= Config.Distance then
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -454,7 +457,7 @@ local function GetHitboxWithPrediction(Config)
         if Player ~= LocalPlayer and IsAlive and TeamCheck(Config.TeamCheck,Player) then
             for Index, HumanoidPart in pairs(Config.Priority) do
                 local Hitbox = Character and Character:FindFirstChild(HumanoidPart)
-                local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+                local Distance = GetDistanceFromCamera(Hitbox.Position)
                 if Hitbox and Distance * 0.28 <= Config.Distance then
                     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * Distance) / Config.Prediction.Velocity
                     local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
@@ -471,19 +474,23 @@ local function GetHitboxWithPrediction(Config)
 
     return ClosestHitbox
 end
-local function GetItemAllFOV(Config)
+local function GetItemsAllFOV(Config)
     local Camera = Workspace.CurrentCamera
-    local Distance,ClosestItem = Config.Distance,nil
+    local ClosestItems = {}
 
     for Index, Item in pairs(LootBins:GetChildren()) do
         for Index, Group in pairs(Item:GetChildren()) do
-            local Part = Group:FindFirstChild("Part") if not Part then continue end
-            local Magnitude = (Part.Position - Camera.CFrame.Position).Magnitude
-            if Magnitude < Distance  then
-                Distance,ClosestItem = Magnitude,Group
+            local Part = Group:FindFirstChild("Part")
+            if not Part then continue end
+
+            local Magnitude = GetDistanceFromCamera(Part.Position)
+            if Magnitude <= Config.Distance then
+                ClosestItems[#ClosestItems + 1] = Group
             end
         end
-    end return ClosestItem
+    end
+
+    return ClosestItems
 end
 local function CTS(Data)
     local String = Data.Name .. "\n"
@@ -505,7 +512,7 @@ local function AimAt(Hitbox,Config)
     local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
 
-    local HitboxDistance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+    local HitboxDistance = GetDistanceFromCamera(Hitbox.Position)
     local HitboxVelocityCorrection = (Hitbox.AssemblyLinearVelocity * HitboxDistance) / Config.Prediction.Velocity
 
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
@@ -611,19 +618,25 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end mouse1release()
     end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(2.5,function()
+Parvus.Utilities.Misc:NewThreadLoop(2,function()
     if not Window.Flags["AR2/Item/Containers/Enabled"] then return end
-    local Item = GetItemAllFOV({Distance = 90})
-    if Item and LocalPlayer.Character and not Interface:IsVisible("GameMenu") then
-        local ContainerAvailable = Network:Fetch("Inventory Container Group Connect", Item)
-        if ContainerAvailable then Network:Send("Inventory Container Group Disconnect") end
+    local Items = GetItemsAllFOV({Distance = 100})
+    if #Items > 0 and LocalPlayer.Character and not Interface:IsVisible("GameMenu") then
+        for Index,Item in pairs(Items) do
+            if not Interface:IsVisible("GameMenu") then
+                local ContainerAvailable = Network:Fetch("Inventory Container Group Connect",Item)
+                if ContainerAvailable and not Interface:IsVisible("GameMenu") then
+                    Network:Send("Inventory Container Group Disconnect")
+                end
+            end
+        end
     end
 end)
 
 for Index,Place in pairs(Randoms:GetChildren()) do
     if table.find(Places,Place.Name) then --print(Place.Name)
         Parvus.Utilities.Drawing:ItemESP(
-            {Place,Place.Name,Place.PrimaryPart.Position},
+            {Place,Place.Name,Place.Value.Position},
             "AR2/Item","AR2/Item/RandomPlaces",Window.Flags
         )
     end
@@ -640,15 +653,15 @@ end
 
 Randoms.ChildAdded:Connect(function(Place)
     if table.find(Places,Place.Name) then --print(Place.Name)
-        repeat task.wait() until Place.PrimaryPart
         Parvus.Utilities.Drawing:ItemESP(
-            {Place,Place.Name,Place.PrimaryPart.Position},
+            {Place,Place.Name,Place.Value.Position},
             "AR2/Item","AR2/Item/RandomPlaces",Window.Flags
         )
         if Window.Flags["AR2/Item/RandomPlaces/Enabled"] then
-            Parvus.Utilities.UI:Notification({
-                Title = "New Random Place Spawned!",
-                Description = "Look around you should see it\nIf not, change ESP Distance\n(" .. Place.Name .. ")"
+            local Camera = Workspace.CurrentCamera
+            Parvus.Utilities.UI:Notification2({
+                Title = string.format("%s spawned (~%i meters away)",Place.Name,
+                GetDistanceFromCamera(Place.Value.Position) * 0.28),Duration = 20
             })
         end
     end

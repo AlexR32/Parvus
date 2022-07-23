@@ -1514,7 +1514,7 @@ function Bracket:Notification(Notification)
     )
 
     if Notification.Duration then
-        coroutine.wrap(function()
+        task.spawn(function()
             for Time = Notification.Duration,1,-1 do
                 NotificationAsset.Title.Close.Text = Time
                 task.wait(1)
@@ -1525,7 +1525,7 @@ function Bracket:Notification(Notification)
                 Notification.Callback()
             end
             NotificationAsset:Destroy()
-        end)()
+        end)
     else
         NotificationAsset.Title.Close.MouseButton1Click:Connect(function()
             NotificationAsset:Destroy()
@@ -1536,6 +1536,7 @@ end
 function Bracket:Notification2(Notification)
     Notification = GetType(Notification,{},"table")
     Notification.Title = GetType(Notification.Title,"Title","string")
+    Notification.Duration = GetType(Notification.Duration,5,"number")
     Notification.Color = GetType(Notification.Color,Color3.new(1,0.5,0.25),"Color3")
 
     local NotificationAsset = GetAsset("Notification/NL")
@@ -1550,34 +1551,24 @@ function Bracket:Notification2(Notification)
         0,0,0,NotificationAsset.Main.Size.Y.Offset + 4
     )
 
-    NotificationAsset:TweenSize(
-        UDim2.new(
-            0,NotificationAsset.Main.Size.X.Offset + 4,
-            0,NotificationAsset.Main.Size.Y.Offset + 4
-        ),
-        Enum.EasingDirection.InOut,
-        Enum.EasingStyle.Linear,
-        0.25,
-        false,
-        coroutine.wrap(function()
-            task.wait(Notification.Duration or 5)
-            NotificationAsset:TweenSize(
-                UDim2.new(
-                    0,0,0,NotificationAsset.Main.Size.Y.Offset + 4
-                ),
-                Enum.EasingDirection.InOut,
-                Enum.EasingStyle.Linear,
-                0.25,
-                false,
-                function()
-                    if Notification.Callback then
-                        Notification.Callback()
-                    end
-                    NotificationAsset:Destroy()
-                end
-            )
+    local function TweenSize(X,Y,Callback)
+        NotificationAsset:TweenSize(
+            UDim2.new(0,X,0,Y),
+            Enum.EasingDirection.InOut,
+            Enum.EasingStyle.Linear,
+            0.25,false,Callback
+        )
+    end
+
+    TweenSize(NotificationAsset.Main.Size.X.Offset + 4,
+    NotificationAsset.Main.Size.Y.Offset + 4,function()
+        task.wait(Notification.Duration)TweenSize(0,
+        NotificationAsset.Main.Size.Y.Offset + 4,function()
+            if Notification.Callback then
+                Notification.Callback()
+            end NotificationAsset:Destroy()
         end)
-    )
+    end)
 end
 
 return Bracket
