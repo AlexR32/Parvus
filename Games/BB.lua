@@ -333,7 +333,7 @@ Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldNamecall,OldTaskSpawn,OldRandom,OldPluginManager,Message,DontBlock
+local OldNamecall,OldTaskSpawn,OldRandom,DontBlock
 for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) do
     setupvalue(Connection.Function,4,function() local String = ""
         for Index = 1, 10 do
@@ -392,13 +392,6 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
         end
     end
     return OldTaskSpawn(...)
-end) -- Thanks to Kiriot22
-task.spawn(function() SetIdentity(2)
-    local Success,Error = pcall(getrenv().PluginManager)
-    Message = Error
-end)
-OldPluginManager = hookfunction(getrenv().PluginManager, function()
-    return error(Message)
 end) end
 
 --This thing laggy as hell, dont use in your scripts

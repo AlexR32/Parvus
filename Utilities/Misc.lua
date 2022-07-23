@@ -33,6 +33,16 @@ local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 local LocalPlayer = PlayerService.LocalPlayer
 local Request = syn and syn.request or request
 
+do local SetIdentity = syn and syn.set_thread_identity or setidentity
+local OldPluginManager,Message -- Thanks to Kiriot22
+task.spawn(function() SetIdentity(2)
+    local Success,Error = pcall(getrenv().PluginManager)
+    Message = Error
+end)
+OldPluginManager = hookfunction(getrenv().PluginManager, function()
+    return error(Message)
+end) end
+
 function Misc:SetupFPS()
     local StartTime,TimeTable,
     LastTime = os.clock(), {}
