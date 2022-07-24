@@ -5,7 +5,7 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-if game.PlaceVersion > 1274 then
+if game.PlaceVersion > 1276 then
     local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
@@ -20,7 +20,7 @@ GravityCorrection,Tortoiseshell
 = false,nil,nil,1600,150,2,
 require(ReplicatedStorage.TS)
 
-repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui")
+repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
@@ -334,41 +334,44 @@ Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
 local OldNamecall,OldTaskSpawn,OldRandom,DontBlock
-for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) do
+--[[for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) do
     setupvalue(Connection.Function,4,function() local String = ""
         for Index = 1, 10 do
             String = String .. string.char(math.random(97, 121))
         end return String
     end)
-end
+end]]
 
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
-    if checkcaller() then return OldNamecall(Self, ...) end
+OldNamecall = hookmetamethod(game, "__namecall", function(Self,...)
+    if checkcaller() then return OldNamecall(Self,...) end
     local Method,Args = getnamecallmethod(),{...}
 
     if Method == "FireServer" then
+        --[[if type(Args[2]) == "string" and Args[2] ~= "Look" then
+            print(Args[2])
+        end]]
         if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
             for Index, Reason in pairs(BanReasons) do
                 if type(Args[2]) == "string" and string.match(Args[2],Reason) then
-                    --print("blocked",Args[2])
+                    print("blocked",Args[2])
                     return
                 end
             end
         end
     end
-    if Method == "Destroy" then
-        --[[if Self.Parent == LocalPlayer.Character then
+    --[[if Method == "Destroy" then
+        if Self.Parent == LocalPlayer.Character then
             print(Self)
-        end]]
+        end
         if Self.Parent == LocalPlayer.Character
         and Self.Name ~= DontBlock then
-            --print("blocked",Self)
+            print("blocked",Self)
             return
         end
-    end
-    return OldNamecall(Self, ...)
+    end]]
+    return OldNamecall(Self,...)
 end)
-OldRandom = hookfunction(getrenv().math.random, function(...)
+--[[OldRandom = hookfunction(getrenv().math.random, function(...)
     if checkcaller() then return OldRandom(...) end local Args = {...}
     if Args[1] == 1000 then return 1000 end
     if Args[1] == 97 and Args[2] == 122 then 
@@ -377,10 +380,10 @@ OldRandom = hookfunction(getrenv().math.random, function(...)
         return Random
     end
     if Args[1] == 1 and Args[2] == 1000 then
-        --print("random blocked")
+        print("random blocked")
         return math.huge
     end return OldRandom(...)
-end)
+end)]]
 OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
     if checkcaller() then return OldTaskSpawn(...) end local Args = {...}
     if type(Args[1]) == "function" then
@@ -388,7 +391,7 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
         if table.find(Constants,"task")
         and table.find(Constants,"wait") then
             --print("blocked",repr(Constants))
-            wait(9e9) -- big brain lmao
+            wait(31536000) -- 365 days
         end
     end
     return OldTaskSpawn(...)
