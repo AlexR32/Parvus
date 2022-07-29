@@ -765,7 +765,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
-    if not Window.Flags["AR2/Item/Containers/Enabled"] then return end
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return end
     local Items = GetItemsAllFOV({Distance = 100})
 
     if #Items > 0 and LocalPlayer.Character and not Interface:IsVisible("GameMenu") then
@@ -872,14 +872,14 @@ local OldICA, OldCC = Events["Inventory Container Added"], Events["Container Cha
 Events["Inventory Container Added"] = function(Id,Data,...)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
-        "AR2/Item","AR2/Item/Containers",Window.Flags)
+        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
 Events["Container Changed"] = function(Data,...)
     Parvus.Utilities.Drawing:RemoveESP(Data.Id)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
-        "AR2/Item","AR2/Item/Containers",Window.Flags)
+        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldCC(Data,...)
 end
 
