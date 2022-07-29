@@ -467,7 +467,7 @@ end
 local function WallCheck(Enabled,Hitbox,Character)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return Raycast(Camera.CFrame.Position,
+    return not Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,
     {LocalPlayer.Character,Character})
 end
@@ -485,7 +485,7 @@ local function GetHitbox(Config)
             local IsAlive = Humanoid and Humanoid.Health > 0
             if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
+                    local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
                     if WallCheck(Config.WallCheck,Hitbox,NPC)
@@ -537,7 +537,7 @@ local function GetHitboxWithPrediction(Config)
             local IsAlive = Humanoid and Humanoid.Health > 0
             if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
+                    local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
                     if WallCheck(Config.WallCheck,Hitbox,NPC)
@@ -845,11 +845,11 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self, ...)
         if math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
             local Camera = Workspace.CurrentCamera
             if Args[1] == Camera.CFrame.Position then
-                Args[2] = SilentAim.Position - Camera.CFrame.Position
+                Args[2] = SilentAim[3].Position - Camera.CFrame.Position
             elseif AircraftTip and Args[1] == AircraftTip.WorldCFrame.Position then
-                Args[2] = SilentAim.Position - AircraftTip.WorldCFrame.Position
+                Args[2] = SilentAim[3].Position - AircraftTip.WorldCFrame.Position
             elseif GroundTip and Args[1] == GroundTip.WorldCFrame.Position then
-                Args[2] = SilentAim.Position - GroundTip.WorldCFrame.Position
+                Args[2] = SilentAim[3].Position - GroundTip.WorldCFrame.Position
             end
         end
     end

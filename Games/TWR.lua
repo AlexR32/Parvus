@@ -270,7 +270,7 @@ end
 local function WallCheck(Enabled,Hitbox,Character)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return Raycast(Camera.CFrame.Position,
+    return not Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,
     {LocalPlayer.Character,Character})
 end

@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local RunService = game:GetService("RunService")
@@ -474,7 +475,7 @@ end
 local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return Raycast(Camera.CFrame.Position,
+    return not Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position)
 end
 
