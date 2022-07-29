@@ -134,17 +134,18 @@ end
 
 function Misc:SetupLighting(Flags) local OldNewIndex
     Lighting.Changed:Connect(function(Property) --pcall(function()
-        local LightingProperty = Lighting[Property]
-        if type(LightingProperty) == "number" then
+        local FormatedProperty = gethiddenproperty(Lighting,Property)
+        local NormalProperty = gethiddenproperty(Lighting,Property)
+        if type(FormatedProperty) == "number" then
             if Property == "EnvironmentSpecularScale"
             or Property == "EnvironmentDiffuseScale" then
-                LightingProperty = tonumber(string.format("%.3f",LightingProperty))
-            else LightingProperty = tonumber(string.format("%.2f",LightingProperty)) end
+                FormatedProperty = tonumber(string.format("%.3f",FormatedProperty))
+            else FormatedProperty = tonumber(string.format("%.2f",FormatedProperty)) end
         end
         
-        if LightingProperty ~= Parvus.Utilities.UI:TableToColor(Flags["Lighting/"..Property])
-        and Lighting[Property] ~= Misc.DefaultLighting[Property] then
-            Misc.DefaultLighting[Property] = Lighting[Property]
+        if FormatedProperty ~= Parvus.Utilities.UI:TableToColor(Flags["Lighting/"..Property])
+        and NormalProperty ~= Misc.DefaultLighting[Property] then
+            Misc.DefaultLighting[Property] = NormalProperty
         end
     end) --end)
     
