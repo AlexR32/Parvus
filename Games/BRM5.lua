@@ -264,7 +264,7 @@ local Window = Parvus.Utilities.UI:Window({
                         NoClip(true)
                     end)
                 elseif not Bool and NoClipEvent then
-                    NoClipEvent:Disconnect()
+                    NoClipEvent:Disconnect() NoClipEvent = nil
                     task.wait(0.1) NoClip(false)
                 end
             end}):Keybind()
@@ -426,13 +426,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-function NoClip(Enabled)
-    if LocalPlayer.Character then
-        for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
-            if Value:IsA("BasePart") then
-                Value.CanCollide = not Enabled
-            end
-        end
+function NoClip(Enabled) if not LocalPlayer.Character then return end
+    for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
+        if Value:IsA("BasePart") then Value.CanCollide = not Enabled end
     end
 end
 
@@ -654,7 +650,7 @@ local function HookSignal(Signal,Index,Callback)
     end)
 end
 
-local function Teleport(Position,Velocity)
+local function Teleport(Position,Orientation,Velocity)
 	if not LocalPlayer.Character then return end
 	local PrimaryPart = LocalPlayer.Character.PrimaryPart
 	if not PrimaryPart then return end
@@ -663,11 +659,16 @@ local function Teleport(Position,Velocity)
 	AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
 	AlignPosition.Attachment0 = PrimaryPart.RootRigAttachment
 
+    local AlignOrientation = Instance.new("AlignOrientation")
+	AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	AlignOrientation.Attachment0 = PrimaryPart.RootRigAttachment
+
     --AlignPosition.MaxForce = 10000
     AlignPosition.MaxVelocity = Velocity
-
 	AlignPosition.Position = Position
+
 	AlignPosition.Parent = PrimaryPart
+    AlignOrientation.Parent = PrimaryPart
 
 	local TPModule = {}
 	function TPModule:Update(Position,Velocity)
@@ -683,6 +684,7 @@ local function Teleport(Position,Velocity)
 	end
 	function TPModule:Destroy()
 		AlignPosition:Destroy()
+        AlignOrientation:Destroy()
 	end
 	
 	return TPModule
@@ -701,13 +703,18 @@ function TeleportCharacter(Position)
     Window:SetValue("BRM5/AntiFall",true)
     Window:SetValue("BRM5/NoClip",true)
 
+    LocalPlayer.Character.Humanoid.Sit = true
     Network:FireServer("ReplicateSkydive",1) Network:FireServer("ReplicateSkydive",2)
-    local TP = Teleport(PrimaryPart.Position + Vector3.new(0,1000,0),500)
+    local TP = Teleport(PrimaryPart.Position + Vector3.new(0,1000,0),
+    PrimaryPart.Orientation,500)
+
     TP:Wait() TP:Update(Position + Vector3.new(0,1000,0),500) TP:Wait()
     TP:Update(Position,250) TP:Wait() Controller:EndParachute() TP:Destroy()
 
     Window:SetValue("BRM5/AntiFall",OldAF)
     Window:SetValue("BRM5/NoClip",OldNC)
+
+    LocalPlayer.Character.Humanoid.Sit = false
 end
 function EnableSwitch(Switch)
     local CameraMod = RequireModule("CameraService")
