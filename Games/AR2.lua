@@ -295,7 +295,7 @@ local Window = Parvus.Utilities.UI:Window({
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
             Callback = function(Bool)
-                if Bool then
+                if Bool and not NoClipEvent then
                     NoClipEvent = RunService.Stepped:Connect(function()
                         NoClip(true)
                     end)

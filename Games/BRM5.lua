@@ -14,18 +14,19 @@ local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
+local NoClipEvent
 
 local Teleports,TI,TI2 = {
-    ["Forward Operating Base"] = CFrame.new(-4004.792, 64.188, 808.497),
-    ["Ronograd City"] = CFrame.new(3814.537, 176.622, -160.004),
-    ["El Chara"] = CFrame.new(-4789.463, 107.638, 5298.004),
-    ["Communications Tower"] = CFrame.new(-1487.503, 809.622, -4416.927),
-    ["Naval Docks"] = CFrame.new(6167.5, 129.622, 2092),
-    ["Quarry"] = CFrame.new(272.762, 85.563, 2208.969),
-    ["Department of Utilities"] = CFrame.new(1176.5, 60.247, -5206),
-    ["Fort Ronograd"] = CFrame.new(6269.501, 185.632, -1232.474),
-    ["Vietnama Village"] = CFrame.new(539.497, 117.622, -358.074)
-},TweenInfo.new(10,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0),
+    ["Forward Operating Base"] = Vector3.new(-4004.792, 64.188, 808.497),
+    ["Ronograd City"] = Vector3.new(3814.537, 176.622, -160.004),
+    ["El Chara"] = Vector3.new(-4789.463, 107.638, 5298.004),
+    ["Communications Tower"] = Vector3.new(-1487.503, 809.622, -4416.927),
+    ["Naval Docks"] = Vector3.new(6167.5, 129.622, 2092),
+    ["Quarry"] = Vector3.new(272.762, 85.563, 2208.969),
+    ["Department of Utilities"] = Vector3.new(1176.5, 60.247, -5206),
+    ["Fort Ronograd"] = Vector3.new(6269.501, 185.632, -1232.474),
+    ["Vietnama Village"] = Vector3.new(539.497, 117.622, -358.074)
+},TweenInfo.new(20,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0),
 TweenInfo.new(5,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0)
 
 local Window = Parvus.Utilities.UI:Window({
@@ -256,7 +257,18 @@ local Window = Parvus.Utilities.UI:Window({
             WeaponSection:Slider({Name = "Round Per Minute",Flag = "BRM5/RapidFire/Value",Min = 45,Max = 1000,Value = 1000})
         end
         local CharSection = MiscTab:Section({Name = "Character"}) do
-            CharSection:Toggle({Name = "Anti Fall",Flag = "BRM5/AntiFall",Value = false})
+            CharSection:Toggle({Name = "NoClip",Flag = "BRM5/NoClip",Value = false,
+            Callback = function(Bool)
+                if Bool and not NoClipEvent then
+                    NoClipEvent = RunService.Stepped:Connect(function()
+                        NoClip(true)
+                    end)
+                elseif not Bool and NoClipEvent then
+                    NoClipEvent:Disconnect()
+                    task.wait(0.1) NoClip(false)
+                end
+            end}):Keybind()
+            CharSection:Toggle({Name = "Anti Skydive",Flag = "BRM5/AntiFall",Value = false}):Keybind()
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
@@ -264,9 +276,9 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
         end
         local TPSection = MiscTab:Section({Name = "Teleports"}) do
-            for Name,CF in pairs(Teleports) do
+            for Name,Value in pairs(Teleports) do
                 TPSection:Button({Name = Name,Callback = function()
-                    TeleportCharacter(CF)
+                    TeleportCharacter(Value)
                 end})
             end
         end
@@ -410,6 +422,16 @@ local Window = Parvus.Utilities.UI:Window({
             CreditsSection:Label({Text = "Thanks to coasts for Universal ESP"})
             CreditsSection:Label({Text = "Thanks to el3tric for Bracket V2"})
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
+        end
+    end
+end
+
+function NoClip(Enabled)
+    if LocalPlayer.Character then
+        for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
+            if Value:IsA("BasePart") then
+                Value.CanCollide = not Enabled
+            end
         end
     end
 end
@@ -632,26 +654,60 @@ local function HookSignal(Signal,Index,Callback)
     end)
 end
 
-function TeleportCharacter(Target)
-    if not LocalPlayer.Character then return end
-    local HumanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not HumanoidRootPart then return end
+local function Teleport(Position,Velocity)
+	if not LocalPlayer.Character then return end
+	local PrimaryPart = LocalPlayer.Character.PrimaryPart
+	if not PrimaryPart then return end
+	
+	local AlignPosition = Instance.new("AlignPosition")
+	AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+	AlignPosition.Attachment0 = PrimaryPart.RootRigAttachment
 
-    local OldValue = Window:GetValue("BRM5/AntiFall")
+    --AlignPosition.MaxForce = 10000
+    AlignPosition.MaxVelocity = Velocity
+
+	AlignPosition.Position = Position
+	AlignPosition.Parent = PrimaryPart
+
+	local TPModule = {}
+	function TPModule:Update(Position,Velocity)
+        AlignPosition.MaxVelocity = Velocity
+		AlignPosition.Position = Position
+	end
+	function TPModule:Wait()
+		while task.wait() do
+			if (PrimaryPart.Position - AlignPosition.Position).Magnitude < 5 then
+				break
+			end
+		end
+	end
+	function TPModule:Destroy()
+		AlignPosition:Destroy()
+	end
+	
+	return TPModule
+end
+
+function TeleportCharacter(Position)
+    if not LocalPlayer.Character then return end
+    local PrimaryPart = LocalPlayer.Character.PrimaryPart
+    if not PrimaryPart then return end
+
+    local OldAF = Window:GetValue("BRM5/AntiFall")
+    local OldNC = Window:GetValue("BRM5/NoClip")
+
+    local ClientHandler = RequireModule("ClientHandler")
+    local Controller = ClientHandler._controller
     Window:SetValue("BRM5/AntiFall",true)
-    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
-        CFrame = HumanoidRootPart.CFrame + Vector3.new(0,1000,0),
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait()
-    local Tween = TweenService:Create(HumanoidRootPart,TI,{
-        CFrame = Target + Vector3.new(0,1000,0),
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait()
-    local Tween = TweenService:Create(HumanoidRootPart,TI2,{
-        CFrame = Target,
-        AssemblyLinearVelocity = Vector3.zero
-    }) Tween:Play() Tween.Completed:Wait() task.wait(1)
-    Window:SetValue("BRM5/AntiFall",OldValue)
+    Window:SetValue("BRM5/NoClip",true)
+
+    Network:FireServer("ReplicateSkydive",1) Network:FireServer("ReplicateSkydive",2)
+    local TP = Teleport(PrimaryPart.Position + Vector3.new(0,1000,0),500)
+    TP:Wait() TP:Update(Position + Vector3.new(0,1000,0),500) TP:Wait()
+    TP:Update(Position,250) TP:Wait() Controller:EndParachute() TP:Destroy()
+
+    Window:SetValue("BRM5/AntiFall",OldAF)
+    Window:SetValue("BRM5/NoClip",OldNC)
 end
 function EnableSwitch(Switch)
     local CameraMod = RequireModule("CameraService")
@@ -780,9 +836,9 @@ HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
         if Window.Flags["BRM5/NVGShape"] then
             Args[3] = ""
         end
-    elseif Args[1] == "InitInventory" then
+    --[[elseif Args[1] == "InitInventory" then
         if Window.Flags["BRM5/AntiFall"]
-        and Args[2] == true then return end
+        and Args[2] == true then return end]]
     end return Args
 end)
 
@@ -811,8 +867,8 @@ task.spawn(function()
             Table.FireServer = function(Self, ...) local Args = {...}
                 if checkcaller() then return OldFireServer(Self, ...) end
                 if Window.Flags["BRM5/AntiFall"] then
-                    if Args[1] == "ReplicateSkydive"
-                    and (Args[2] == 3 or Args[2] == 2) then
+                    if Args[1] == "ReplicateSkydive" and
+                    (Args[2] == 3 or Args[2] == 2) then
                         return
                     end
                 end
