@@ -174,7 +174,11 @@ if game.GameId == 580765040 then
 elseif game.GameId == 1054526971 then
     function GetTeam(Target,Character,Mode)
         if Mode == "Player" then
-            return not Target.Neutral and LocalPlayer.Team ~= Target.Team or true,Target.TeamColor.Color
+            if Target.Neutral then
+                return true,Target.TeamColor.Color
+            else
+                return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
+            end
         else
             return not Character:FindFirstChildWhichIsA("ProximityPrompt",true),Color3.new()
         end
@@ -201,7 +205,7 @@ elseif game.GameId == 1168263273 then
     end
     function GetTeam(Target,Character,Mode)
         local Team,LPTeam = GetPlayerTeam(Target),GetPlayerTeam(LocalPlayer)
-        return LPTeam ~= Team or tostring(Team) == "FFA",Tortoiseshell.Teams.Colors[Team]
+        return LPTeam ~= Team or Team == "FFA",Tortoiseshell.Teams.Colors[Team]
     end
 elseif game.GameId == 1586272220 then
     local function GetPlayerTank(Player)
@@ -267,11 +271,12 @@ local function PlayerESP(Target,ESP)
             InTheRange = CheckDistance(ConcatFlag("/DistanceCheck"),
             Distance,ConcatFlag("/Distance"))
 
-            local ESPColor = ConcatFlag("/TeamColor") and TeamColor
-            or (InEnemyTeam and ConcatFlag("/Enemy")[6] or ConcatFlag("/Ally")[6])
             if OnScreen and InTheRange then
                 Health,MaxHealth,IsAlive = GetHealth(Target,Character,ESP.Mode)
                 InEnemyTeam,TeamColor = GetTeam(Target,Character,ESP.Mode)
+
+                local ESPColor = ConcatFlag("/TeamColor") and TeamColor
+                or (InEnemyTeam and ConcatFlag("/Enemy")[6] or ConcatFlag("/Ally")[6])
 
                 if ESP.Highlight.Enabled then
                     ESP.Highlight.Adornee = Character

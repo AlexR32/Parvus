@@ -5,7 +5,7 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-if game.PlaceVersion > 1277 then
+if game.PlaceVersion > 1282 then
     local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
@@ -433,14 +433,14 @@ end
 local function GetPlayerTeam(Player)
     for Index,Team in pairs(TeamService:GetChildren()) do
         if Team.Players:FindFirstChild(Player.Name) then
-            return Team
+            return Team.Name
         end
     end
 end
 local function TeamCheck(Player)
     local Team = GetPlayerTeam(Player)
     local LPTeam = GetPlayerTeam(LocalPlayer)
-    return LPTeam ~= Team or tostring(Team) == "FFA"
+    return LPTeam ~= Team or Team == "FFA"
 end
 local function DistanceCheck(Enabled,Distance,MaxDistance)
     if not Enabled then return true end
@@ -472,6 +472,15 @@ local function GetCharacterInfo(Player,Shield)
         not Health:FindFirstChild("Shield")
     else
         return Character:FindFirstChild("Hitbox"),true
+    end
+end
+local function GetHitboxPart(Hitbox,Name)
+    for Index,Part in pairs(Hitbox:GetChildren()) do
+        local WeldConstraint = Part:FindFirstChildOfClass("WeldConstraint")
+        if not WeldConstraint then continue end
+        if tostring(WeldConstraint.Part0) == Name then
+            return Part
+        end
     end
 end
 local function GetEquippedController()
@@ -679,7 +688,7 @@ local function GetHitbox(Config)
         local Character,Shield = GetCharacterInfo(Player,Config.Shield)
         if Player ~= LocalPlayer and Character and Shield and TeamCheck(Player) then
             for Index,BodyPart in pairs(Config.BodyParts) do
-                local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
+                local Hitbox = GetHitboxPart(Character,BodyPart) if not Hitbox then continue end
                 local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
                 if WallCheck(Config.WallCheck,Hitbox)
@@ -707,7 +716,7 @@ local function GetHitboxWithPrediction(Config)
         local Character,Shield = GetCharacterInfo(Player,false)
         if Player ~= LocalPlayer and Character and Shield and TeamCheck(Player) then
             for Index,BodyPart in pairs(Config.BodyParts) do
-                local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
+                local Hitbox = GetHitboxPart(Character,BodyPart) if not Hitbox then continue end
                 local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
                 if WallCheck(Config.WallCheck,Hitbox)
@@ -736,7 +745,7 @@ local function GetHitboxAllFOV(Config)
         local Character,Shield = GetCharacterInfo(Player,true)
         if Player ~= LocalPlayer and Character and Shield and TeamCheck(Player) then
             for Index,BodyPart in pairs(Config.BodyParts) do
-                local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
+                local Hitbox = GetHitboxPart(Character,BodyPart) if not Hitbox then continue end
                 local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
                 if WallCheck(Config.WallCheck,Hitbox)

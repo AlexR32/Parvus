@@ -300,7 +300,7 @@ local Window = Parvus.Utilities.UI:Window({
                         NoClip(true)
                     end)
                 elseif not Bool and NoClipEvent then
-                    NoClipEvent:Disconnect()
+                    NoClipEvent:Disconnect() NoClipEvent = nil
                     task.wait(0.1) NoClip(false)
                 end
             end}):Keybind()

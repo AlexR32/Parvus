@@ -31,7 +31,8 @@ Stats.Network:FindFirstChild("ServerStatsItem")
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Request = syn and syn.request or request
+local Request = (syn and syn.request)
+or (http and http.request) or request
 
 do local SetIdentity = syn and syn.set_thread_identity or setidentity
 local OldPluginManager,Message -- Thanks to Kiriot22
