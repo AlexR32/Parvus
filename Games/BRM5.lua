@@ -293,9 +293,9 @@ local Window = Parvus.Utilities.UI:Window({
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
         local AirSection = MiscTab:Section({Name = "Aircraft"}) do
-            AirSection:Toggle({Name = "Enabled",Flag = "BRM5/Aircraft/Enabled",Value = false}):Keybind()
+            AirSection:Toggle({Name = "Speed Enabled",Flag = "BRM5/Aircraft/Enabled",Value = false}):Keybind()
             AirSection:Slider({Name = "Speed",Flag = "BRM5/Aircraft/Speed",Min = 130,Max = 950,Value = 130})
-            AirSection:Toggle({Name = "Enable Fly",Flag = "BRM5/Aircraft/FlyEnabled",Value = false}):Keybind()
+            AirSection:Toggle({Name = "Fly Enabled",Flag = "BRM5/Aircraft/FlyEnabled",Value = false}):Keybind()
             AirSection:Toggle({Name = "Fly Use Camera",Flag = "BRM5/Aircraft/Camera",Value = false})
             AirSection:Slider({Name = "Fly Speed",Flag = "BRM5/Aircraft/FlySpeed",Min = 145,Max = 500,Value = 200})
             AirSection:Button({Name = "Setup Switches/Engines",Callback = function()

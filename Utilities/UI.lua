@@ -1,3 +1,4 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local InsertService = game:GetService("InsertService")
 local HttpService = game:GetService("HttpService")
@@ -6,8 +7,8 @@ local PlayerService = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
 local Debug,LocalPlayer = false,PlayerService.LocalPlayer
-local MainAssetFolder = Debug and game.ReplicatedStorage["BracketV3.2"]
-or InsertService:LoadLocalAsset("rbxassetid://9153139105")
+local MainAssetFolder = Debug and ReplicatedStorage.BracketV32
+	or InsertService:LoadLocalAsset("rbxassetid://9153139105")
 
 local function GetAsset(AssetPath)
     AssetPath = AssetPath:split("/")
@@ -158,12 +159,12 @@ local function InitScreen()
     local ScreenAsset = GetAsset("Screen/Bracket")
     if not Debug then sethiddenproperty(ScreenAsset,"OnTopOfCoreBlur",true) end
     ScreenAsset.Name = "Bracket " .. game:GetService("HttpService"):GenerateGUID(false)
-    --ScreenAsset.Parent = Debug and game.Players.LocalPlayer.PlayerGui or CoreGui
-    if Debug then
-        ScreenAsset.Parent = game.Players.LocalPlayer.PlayerGui
+    ScreenAsset.Parent = Debug and LocalPlayer:FindFirstChildOfClass("PlayerGui") or CoreGui
+    --[[if Debug then
+        ScreenAsset.Parent = LocalPlayer.PlayerGui
     else
         Parvus.Utilities.Misc:HideObject(ScreenAsset)
-    end
+    end]]
     return {ScreenAsset = ScreenAsset}
 end
 local function InitWindow(ScreenAsset,Window)

@@ -34,6 +34,7 @@ local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
 local Zombies = Workspace.Zombies.Mobs
 local Loot = Workspace.Loot
+local OldPos,AnchorSafe = nil,true
 
 local Places,ItemCategory,ItemMemory = {
     "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
@@ -285,14 +286,23 @@ local Window = Parvus.Utilities.UI:Window({
             RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
+        local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
+            FlySection:Toggle({Name = "Enabled",Flag = "AR2/Fly/Enabled",Value = false,
+            Callback = function() if LocalPlayer.Character then
+            OldPos = LocalPlayer.Character.PrimaryPart.Position end
+            end}):Keybind({Flag = "BadBusiness/Fly/Keybind"})
+            FlySection:Slider({Name = "Speed",Flag = "AR2/Fly/Speed",Min = 1,Max = 10,Precise = 1,Value = 1})
+        end
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
             MiscSection:Toggle({Name = "No Fall Impact",Flag = "AR2/NoFallImpact",Value = false}):Keybind()
             MiscSection:Toggle({Name = "No Jump Delay",Flag = "AR2/NoJumpDelay",Value = false}):Keybind()
             MiscSection:Toggle({Name = "Always Run",Flag = "AR2/AlwaysRun",Value = false}):Keybind()
+
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false})
             SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
+
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
             Callback = function(Bool)
                 if Bool and not NoClipEvent then
@@ -455,6 +465,36 @@ local function CastBullet(Hitbox)
         RaycastResult.Position,
         RaycastResult.Normal
     end
+end
+
+local function FixUnit(Vector)
+    if Vector.Magnitude == 0 then
+    return Vector3.zero end
+    return Vector.Unit
+end
+local function FlatCameraVector()
+    local Camera = Workspace.CurrentCamera
+    return Camera.CFrame.LookVector * Vector3.new(1,0,1),
+        Camera.CFrame.RightVector * Vector3.new(1,0,1)
+end
+local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
+    Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+    Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+    Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+    Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,1,0) or Vector3.zero
+    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and Vector3.new(0,-1,0) or Vector3.zero
+    return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+end
+
+local function PlayerFly(Config)
+    local Character = PlayerClass.Character
+    if not Character or not OldPos then return end
+    if Character.RootPart.Anchored then
+        Character.RootPart.CFrame = CFrame.new(OldPos)
+    end if not Config.Enabled then return end
+    OldPos = OldPos + InputToVelocity() * Config.Speed
+    Character.RootPart.Position = OldPos
 end
 
 local function GetDistanceFromCamera(Position)
@@ -639,22 +679,26 @@ Network.Send = function(Self,Name,...)
                 Bullet.Direction = Unit
             end return OldSend(Self,Name,unpack(Args))
         end
-    end]]   
-    if Window.Flags["AR2/SSCS"] then
-        if Name == "Set Character State" then
-            for Index,Arg in pairs(Args[1]) do
+    end]]
+
+    if Name == "Set Character State" then
+        for Index,Arg in pairs(Args[1]) do
+            if Window.Flags["AR2/SSCS"] then
                 Arg[1] = "Walking"
             end
         end
+        return
     end
     return OldSend(Self,Name,...)
 end
+
 setupvalue(Bullets.Fire,1,function(...)
     local Return = SpreadFunction(...)
     if Window.Flags["AR2/Recoil/Enabled"] then
         Return = Return * (Window.Flags["AR2/Recoil/Spread"] / 100)
     end return Return
 end)
+
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
     PredictedVelocity = Args[3].FireConfig.MuzzleVelocity
@@ -664,6 +708,7 @@ Bullets.Fire = function(Self,...) local Args = {...}
     end
     return OldFire(Self,unpack(Args))
 end
+
 local OldPost = Animators.Post
 Animators.Post = function(Self,...) local Args = {...}
     if Args[1] == "FireImpulse" then
@@ -677,12 +722,14 @@ Animators.Post = function(Self,...) local Args = {...}
     end
     return OldPost(Self,unpack(Args))
 end
+
 local OldPlayAnimationReplicated = Animators.PlayAnimationReplicated
 Animators.PlayAnimationReplicated = function(Self,Path,...)
     if Path == "Actions.Fall Impact"
     and Window.Flags["AR2/NoFallImpact"] then return end
     return OldPlayAnimationReplicated(Self,Path,...)
 end
+
 PlayerClass.CharacterAdded:Connect(function(Character)
     Character.MoveStateChanged:Connect(function(Old,New)
         if Window.Flags["AR2/AlwaysRun"] then
@@ -732,6 +779,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
     local TriggerHitbox = GetHitboxWithPrediction({
@@ -764,6 +812,12 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
             end
         end mouse1release()
     end
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    PlayerFly({
+        Enabled = Window.Flags["AR2/Fly/Enabled"],
+        Speed = Window.Flags["AR2/Fly/Speed"]
+    })
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return end

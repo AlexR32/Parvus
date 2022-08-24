@@ -8,6 +8,7 @@ if Parvus and Parvus.Loaded then
 end
 
 local PlayerService = game:GetService("Players")
+repeat task.wait() until PlayerService.LocalPlayer
 local LocalPlayer = PlayerService.LocalPlayer
 
 local function GetSupportedGame() local Game
