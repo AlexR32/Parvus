@@ -687,7 +687,7 @@ Network.Send = function(Self,Name,...)
                 Arg[1] = "Walking"
             end
         end
-        return
+        --return
     end
     return OldSend(Self,Name,...)
 end
