@@ -662,8 +662,7 @@ local function CIIC(Data) -- ConcatItemsInContainer
 end
 
 local OldSend = Network.Send
-Network.Send = function(Self,Name,...)
-    local Args = {...}
+Network.Send = function(Self,Name,...) local Args = {...}
     --[[if Name == "Bullet Fired" and SilentAim
     and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
         local Hit,Position,Normal = CastBullet(SilentAim)
@@ -680,14 +679,12 @@ Network.Send = function(Self,Name,...)
             end return OldSend(Self,Name,unpack(Args))
         end
     end]]
-    if Window.Flags["AR2/SSCS"] then
-        if Name == "Set Character State" then
-            for Index,Arg in pairs(Args[1]) do
-                Arg[1] = "Walking"
-            end
+    if Name == "Set Character State" then
+        if Window.Flags["AR2/SSCS"] then
+            Args[1] = "Walking"
         end
     end
-    return OldSend(Self,Name,...)
+    return OldSend(Self,Name,unpack(Args))
 end
 
 setupvalue(Bullets.Fire,1,function(...)
