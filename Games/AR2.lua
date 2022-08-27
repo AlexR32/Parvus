@@ -23,7 +23,7 @@ local Bullets = Framework.Libraries.Bullets
 
 local SpreadFunction = getupvalue(Bullets.Fire,1)
 local Events = getupvalue(Network.Add,4)
-PredictedGravity = getupvalue(Events["Gravity Debug"],1)
+PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)
 
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
@@ -680,14 +680,12 @@ Network.Send = function(Self,Name,...)
             end return OldSend(Self,Name,unpack(Args))
         end
     end]]
-
-    if Name == "Set Character State" then
-        for Index,Arg in pairs(Args[1]) do
-            if Window.Flags["AR2/SSCS"] then
+    if Window.Flags["AR2/SSCS"] then
+        if Name == "Set Character State" then
+            for Index,Arg in pairs(Args[1]) do
                 Arg[1] = "Walking"
             end
         end
-        --return
     end
     return OldSend(Self,Name,...)
 end
@@ -923,14 +921,14 @@ Zombies.ChildRemoved:Connect(function(Zombie)
     Parvus.Utilities.Drawing:RemoveESP(Zombie)
 end)
 
-local OldICA, OldCC = Events["Inventory Container Added"], Events["Container Changed"]
-Events["Inventory Container Added"] = function(Id,Data,...)
+local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
+Events["Inventory Container Added\r"] = function(Id,Data,...)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
         "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
-Events["Container Changed"] = function(Data,...)
+Events["Container Changed\r"] = function(Data,...)
     Parvus.Utilities.Drawing:RemoveESP(Data.Id)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
