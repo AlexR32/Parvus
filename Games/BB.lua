@@ -779,9 +779,8 @@ local function AimAt(Hitbox,Config)
 end
 
 setreadonly(Tortoiseshell.Network,false)
-local OldNetworkFire = Tortoiseshell.Network.Fire
-Tortoiseshell.Network.Fire = function(Self,...) local Args = {...}
-    if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
+Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Network.Fire,function(Self,...)
+    local Args = {...} if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
         if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
             Args[4] = SilentAim[3].Position
@@ -800,20 +799,28 @@ Tortoiseshell.Network.Fire = function(Self,...) local Args = {...}
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
         or Window.Flags["BadBusiness/AntiAim/Pitch"] - Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
-    end return OldNetworkFire(Self,unpack(Args))
-end setreadonly(Tortoiseshell.Network,true)
+    end return Self,unpack(Args)
+end) setreadonly(Tortoiseshell.Network,true)
 
 setreadonly(Tortoiseshell.Projectiles,false)
-local OldInitProjectile = Tortoiseshell.Projectiles.InitProjectile
-Tortoiseshell.Projectiles.InitProjectile = function(Self,...) local Args = {...}
-    if Args[4] == LocalPlayer then PredictedVelocity = Projectiles[Args[1]].Speed
+Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
+    local Args = {...} if Args[4] == LocalPlayer then PredictedVelocity = Projectiles[Args[1]].Speed
         PredictedGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
-    end return OldInitProjectile(Self,...)
-end setreadonly(Tortoiseshell.Projectiles,true)
+    end return Self,...
+end) setreadonly(Tortoiseshell.Projectiles,true)
 
-local OldGetConfig = Tortoiseshell.Items.GetConfig
-Tortoiseshell.Items.GetConfig = function(Self,...) local Config = OldGetConfig(Self,...)
-    if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Config.Recoil and Config.Recoil.Default then
+
+setreadonly(Tortoiseshell.Raycast,false)
+Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Self,...)
+    local Args = {...} if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
+        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
+    end return Self,unpack(Args)
+end) setreadonly(Tortoiseshell.Raycast,true)
+
+Parvus.Utilities.Misc:CreateHook2(Tortoiseshell.Items.GetConfig,function(...)
+    local Args = {...} local Config = Args[1]
+    if Window.Flags["BadBusiness/WeaponMod/Enabled"]
+    and (Config.Recoil and Config.Recoil.Default) then
         Config.Recoil.Default.WeaponScale = 
         Config.Recoil.Default.WeaponScale * (Window.Flags["BadBusiness/WeaponMod/WeaponScale"] / 100)
 
@@ -822,22 +829,13 @@ Tortoiseshell.Items.GetConfig = function(Self,...) local Config = OldGetConfig(S
 
         Config.Recoil.Default.RecoilScale = 
         Config.Recoil.Default.RecoilScale * (Window.Flags["BadBusiness/WeaponMod/RecoilScale"] / 100)
-    end return Config
-end
+    end return unpack(Args)
+end)
 
-setreadonly(Tortoiseshell.Raycast,false)
-local OldCastGeometryAndEnemies = Tortoiseshell.Raycast.CastGeometryAndEnemies
-Tortoiseshell.Raycast.CastGeometryAndEnemies = function(Self,...) local Args = {...}
-    if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
-        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
-    end return OldCastGeometryAndEnemies(Self,unpack(Args))
-end setreadonly(Tortoiseshell.Raycast,true)
-
-for Index,Event in pairs(Events) do
+--[[for Index,Event in pairs(Events) do
     if Event.Event == "Votekick" then
-        local OldCallback = Event.Callback
-        Event.Callback = function(...) local Args = {...}
-            if Args[1] == "Message" then
+        OldCallback = Parvus.Utilities.Misc:CreateHook(Event.Callback,function(...)
+            local Args = {...} if Args[1] == "Message" then
                 if string.find(Args[2],LocalPlayer.Name)
                 and Window.Flags["BadBusiness/AntiKick"] then
                     Notify:Fire({
@@ -846,12 +844,10 @@ for Index,Event in pairs(Events) do
                     }) task.wait(10)
                     Parvus.Utilities.Misc:ReJoin()
                 end
-            end
-            return OldCallback(...)
-        end
-        break
+            end return OldCallback(...)
+        end) break
     end
-end
+end]]
 
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox({

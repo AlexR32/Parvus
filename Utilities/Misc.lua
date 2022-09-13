@@ -75,6 +75,18 @@ function Misc:NewThreadLoop(Wait,Function)
     end)
 end
 
+function Misc:CreateHook(fn,new) local oldFn
+    oldFn = hookfunction(fn,function(...)
+        return oldFn(new(...))
+    end)
+end
+
+function Misc:CreateHook2(fn,new) local oldFn
+    oldFn = hookfunction(fn,function(...)
+        return new(oldFn(...))
+    end)
+end
+
 function Misc:ReJoin()
     if #PlayerService:GetPlayers() <= 1 then
         LocalPlayer:Kick("\nParvus Hub\nRejoining...")
