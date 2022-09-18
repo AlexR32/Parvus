@@ -10,6 +10,7 @@ end
 local PlayerService = game:GetService("Players")
 repeat task.wait() until PlayerService.LocalPlayer
 local LocalPlayer = PlayerService.LocalPlayer
+local LoadArgs = {...}
 
 local function GetSupportedGame() local Game
     for Id,Info in pairs(Parvus.Games) do
@@ -32,8 +33,8 @@ local function LoadScript(Script)
 end
 
 getgenv().Parvus = {
+    Debug = LoadArgs[1],
     Loaded = false,
-    Debug = false,
     Utilities = {},
     Games = {
         ["Universal"] = {
@@ -89,6 +90,6 @@ if SupportedGame then
     Parvus.Utilities.UI:Notification({
         Title = "Parvus Hub",
         Description = Parvus.Game .. " loaded!",
-        Duration = 5
+        Duration = LoadArgs[2]
     }) Parvus.Loaded = true
 end
