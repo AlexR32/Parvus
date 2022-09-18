@@ -27,6 +27,15 @@ local function GetScript(Script)
     or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/" .. Script .. ".lua")
 end
 
+local function Concat(Table,Separator)
+    local String = ""
+    for Index,Value in pairs(Table) do
+        String = Index == #Table and String .. tostring(Value)
+        or String .. tostring(Value) .. Separator
+    end
+    return String
+end
+
 local function LoadScript(Script)
     return loadstring(Parvus.Debug and readfile("Parvus/" .. Script .. ".lua")
     or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/" .. Script .. ".lua"))()
@@ -79,7 +88,11 @@ Parvus.Utilities.Drawing = LoadScript("Utilities/Drawing")
 LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
         local QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport
-        QueueOnTeleport(GetScript("Loader"))
+        QueueOnTeleport(([[local LoadArgs = {%s}
+        local function LoadScript(Script)
+            return loadstring(LoadArgs[1] and readfile("Parvus/" .. Script .. ".lua")
+            or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/" .. Script .. ".lua"))(unpack(LoadArgs))
+        end LoadScript("LoaderWS")]]):format(Concat(LoadArgs,",")))
     end
 end)
 
