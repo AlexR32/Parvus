@@ -92,7 +92,7 @@ LocalPlayer.OnTeleport:Connect(function(State)
         local function LoadScript(Script)
             return loadstring(LoadArgs[1] and readfile("Parvus/" .. Script .. ".lua")
             or game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/" .. Script .. ".lua"))(unpack(LoadArgs))
-        end LoadScript("LoaderWS")]]):format(Concat(LoadArgs,",")))
+        end LoadScript("Loader")]]):format(Concat(LoadArgs,",")))
     end
 end)
 
