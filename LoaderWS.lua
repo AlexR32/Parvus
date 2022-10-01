@@ -43,8 +43,9 @@ local function LoadScript(Script)
 end
 
 getgenv().Parvus = {
-    Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/main",
-    Debug = LoadArgs[1],Game = "None",Loaded = false,Utilities = {},
+    Domain = "https://parvus.fun/script",
+    Debug = LoadArgs[1],Game = "None",
+    Loaded = false,Utilities = {},
     Games = {
         ["Universal"] = {
             Name = "Universal",
@@ -89,8 +90,8 @@ LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
         local QueueOnTeleport = (syn and syn.queue_on_teleport) or queue_on_teleport
         QueueOnTeleport(([[local LoadArgs = {%s}
-        loadstring(LoadArgs[1] and readfile("Parvus/Loader.lua") or
-        game:HttpGetAsync("%s/Loader.lua"))(unpack(LoadArgs))
+        loadstring(LoadArgs[1] and readfile("Parvus/LoaderWS.lua") or
+        game:HttpGetAsync("%s/LoaderWS.lua"))(unpack(LoadArgs))
         ]]):format(Concat(LoadArgs,","),Parvus.Domain))
     end
 end)

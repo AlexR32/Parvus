@@ -67,7 +67,7 @@ end
 function Misc:NewThreadLoop(Wait,Function)
     task.spawn(function()
         while task.wait(Wait) do
-            local Success, Error = pcall(Function)
+            local Success,Error = pcall(Function)
             if not Success then
                 warn("thread error " .. Error)
             end
@@ -108,7 +108,7 @@ function Misc:ServerHop()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
     else
         Parvus.Utilities.UI:Notification({
-            Title = "Parvus Hub",
+            Title = "🎃 Parvus Hub",
             Description = "Couldn't find a server",
             Duration = 5
         })
@@ -138,7 +138,7 @@ function Misc:SetupWatermark(Window)
     RunService.Heartbeat:Connect(function()
         if Window.Flags["UI/Watermark"] then
             Window.Watermark:SetTitle(string.format(
-                "Parvus Hub    %s    %i FPS    %i MS",
+                "🎃 Parvus Hub    %s    %i FPS    %i MS",
                 os.date("%X"),GetFPS(),math.round(Ping:GetValue())
             ))
         end
