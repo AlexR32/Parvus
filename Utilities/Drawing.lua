@@ -267,6 +267,9 @@ local function PlayerESP(Target,ESP)
         Character,PrimaryPart = GetCharacter(Target,ESP.Mode)
         if Character and PrimaryPart then local Camera = Workspace.CurrentCamera
             ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PrimaryPart.Position)
+
+            local ESPColor = ConcatFlag("/TeamColor") and TeamColor
+            or (InEnemyTeam and ConcatFlag("/Enemy")[6] or ConcatFlag("/Ally")[6])
             local Distance = GetDistanceFromCamera(PrimaryPart.Position) * 0.28
             InTheRange = CheckDistance(ConcatFlag("/DistanceCheck"),
             Distance,ConcatFlag("/Distance"))
@@ -274,9 +277,6 @@ local function PlayerESP(Target,ESP)
             if OnScreen and InTheRange then
                 Health,MaxHealth,IsAlive = GetHealth(Target,Character,ESP.Mode)
                 InEnemyTeam,TeamColor = GetTeam(Target,Character,ESP.Mode)
-
-                local ESPColor = ConcatFlag("/TeamColor") and TeamColor
-                or (InEnemyTeam and ConcatFlag("/Enemy")[6] or ConcatFlag("/Ally")[6])
 
                 if ESP.Highlight.Enabled then
                     ESP.Highlight.Adornee = Character
