@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -14,20 +13,19 @@ local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
-local NoClipEvent
 
-local Teleports,TI,TI2 = {
-    ["Forward Operating Base"] = Vector3.new(-4004.792, 64.188, 808.497),
-    ["Ronograd City"] = Vector3.new(3814.537, 176.622, -160.004),
-    ["El Chara"] = Vector3.new(-4789.463, 107.638, 5298.004),
-    ["Communications Tower"] = Vector3.new(-1487.503, 809.622, -4416.927),
-    ["Naval Docks"] = Vector3.new(6167.5, 129.622, 2092),
-    ["Quarry"] = Vector3.new(272.762, 85.563, 2208.969),
-    ["Department of Utilities"] = Vector3.new(1176.5, 60.247, -5206),
-    ["Fort Ronograd"] = Vector3.new(6269.501, 185.632, -1232.474),
-    ["Vietnama Village"] = Vector3.new(539.497, 117.622, -358.074)
-},TweenInfo.new(20,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0),
-TweenInfo.new(5,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,0,false,0)
+local Teleports,NoClipEvent = {
+    {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
+    {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
+    {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
+    {"Vietnama Village",Vector3.new(737.021, 117.422, -97.472)},
+    {"Fort Ronograd",Vector3.new(6269.501, 185.632, -1232.474)},
+    {"Ronograd City",Vector3.new(3536.074, 175.622, 1099.497)},
+    {"Sochraina City",Vector3.new(-918, 73.622, 4178.497)},
+    {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
+    {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
+    {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
+}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "🎃 Parvus Hub — "..Parvus.Game,
@@ -276,9 +274,9 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
         end
         local TPSection = MiscTab:Section({Name = "Teleports"}) do
-            for Name,Value in pairs(Teleports) do
-                TPSection:Button({Name = Name,Callback = function()
-                    TeleportCharacter(Value)
+            for Index,Table in pairs(Teleports) do
+                TPSection:Button({Name = Table[1],Callback = function()
+                    TeleportCharacter(Table[2])
                 end})
             end
         end
@@ -332,7 +330,7 @@ local Window = Parvus.Utilities.UI:Window({
                 CameraMod._handler._zoom = 128
             end})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc"}) do
+        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
                 local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
                 if not serverSettings.CHEATS_ENABLED then
@@ -357,7 +355,7 @@ local Window = Parvus.Utilities.UI:Window({
             Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
-            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
+            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = true})
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.0836667,1,1,0,false},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
@@ -505,7 +503,8 @@ local function GetHitbox(Config)
         for Index,NPC in pairs(NPCFolder:GetChildren()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
+            if not NPC:FindFirstChild("ProximityPrompt",true) and
+            NPC:FindFirstChild("AlignOrientation",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
                     local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
@@ -557,7 +556,8 @@ local function GetHitboxWithPrediction(Config)
         for Index,NPC in pairs(NPCFolder:GetCharacter()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and IsAlive then
+            if not NPC:FindFirstChild("ProximityPrompt",true) and
+            NPC:FindFirstChild("AlignOrientation",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
                     local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
@@ -654,11 +654,12 @@ local function HookSignal(Signal,Index,Callback)
     end)
 end
 
-local function Teleport(Position,Orientation,Velocity)
-	if not LocalPlayer.Character then return end
-	local PrimaryPart = LocalPlayer.Character.PrimaryPart
-	if not PrimaryPart then return end
-	
+local function Teleport(Position,Velocity)
+	local PrimaryPart = LocalPlayer.Character
+    and LocalPlayer.Character.PrimaryPart
+    if not PrimaryPart then return end
+    local TPModule = {}
+
 	local AlignPosition = Instance.new("AlignPosition")
 	AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
 	AlignPosition.Attachment0 = PrimaryPart.RootRigAttachment
@@ -674,7 +675,6 @@ local function Teleport(Position,Orientation,Velocity)
 	AlignPosition.Parent = PrimaryPart
     AlignOrientation.Parent = PrimaryPart
 
-	local TPModule = {}
 	function TPModule:Update(Position,Velocity)
         AlignPosition.MaxVelocity = Velocity
 		AlignPosition.Position = Position
@@ -687,38 +687,30 @@ local function Teleport(Position,Orientation,Velocity)
 		end
 	end
 	function TPModule:Destroy()
+        TPModule:Wait()
 		AlignPosition:Destroy()
         AlignOrientation:Destroy()
-	end
-	
-	return TPModule
+    end return TPModule
 end
 
 function TeleportCharacter(Position)
-    if not LocalPlayer.Character then return end
-    local PrimaryPart = LocalPlayer.Character.PrimaryPart
+    local PrimaryPart = LocalPlayer.Character
+    and LocalPlayer.Character.PrimaryPart
     if not PrimaryPart then return end
 
     local OldAF = Window:GetValue("BRM5/AntiFall")
     local OldNC = Window:GetValue("BRM5/NoClip")
-
-    local ClientHandler = RequireModule("ClientHandler")
-    local Controller = ClientHandler._controller
     Window:SetValue("BRM5/AntiFall",true)
     Window:SetValue("BRM5/NoClip",true)
 
     LocalPlayer.Character.Humanoid.Sit = true
-    Network:FireServer("ReplicateSkydive",1) Network:FireServer("ReplicateSkydive",2)
-    local TP = Teleport(PrimaryPart.Position + Vector3.new(0,1000,0),
-    PrimaryPart.Orientation,500)
-
-    TP:Wait() TP:Update(Position + Vector3.new(0,1000,0),500) TP:Wait()
-    TP:Update(Position,250) TP:Wait() Controller:EndParachute() TP:Destroy()
+    PrimaryPart.CFrame = CFrame.new(PrimaryPart.Position + Vector3.new(0,500,0))
+    local TP = Teleport(Position + Vector3.new(0,500,0),500)
+    TP:Destroy() PrimaryPart.CFrame = CFrame.new(Position)
+    LocalPlayer.Character.Humanoid.Sit = false
 
     Window:SetValue("BRM5/AntiFall",OldAF)
     Window:SetValue("BRM5/NoClip",OldNC)
-
-    LocalPlayer.Character.Humanoid.Sit = false
 end
 function EnableSwitch(Switch)
     local CameraMod = RequireModule("CameraService")
@@ -1002,10 +994,16 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do
-    Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+    if NPC:WaitForChild("HumanoidRootPart",5) and
+    NPC.HumanoidRootPart:FindFirstChild("AlignOrientation") then
+        Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+    end
 end
 NPCFolder.ChildAdded:Connect(function(NPC)
-    Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+    if NPC:WaitForChild("HumanoidRootPart",5) and
+    NPC.HumanoidRootPart:FindFirstChild("AlignOrientation") then
+        Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+    end
 end)
 NPCFolder.ChildRemoved:Connect(function(NPC)
     Parvus.Utilities.Drawing:RemoveESP(NPC)
