@@ -503,8 +503,8 @@ local function GetHitbox(Config)
         for Index,NPC in pairs(NPCFolder:GetChildren()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChild("ProximityPrompt",true) and
-            NPC:FindFirstChild("AlignOrientation",true) and IsAlive then
+            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and
+            NPC:FindFirstChildWhichIsA("AlignOrientation",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
                     local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
@@ -556,8 +556,8 @@ local function GetHitboxWithPrediction(Config)
         for Index,NPC in pairs(NPCFolder:GetCharacter()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChild("ProximityPrompt",true) and
-            NPC:FindFirstChild("AlignOrientation",true) and IsAlive then
+            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and
+            NPC:FindFirstChildWhichIsA("AlignOrientation",true) and IsAlive then
                 for Index,BodyPart in pairs(Config.BodyParts) do
                     local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
                     local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
