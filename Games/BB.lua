@@ -5,8 +5,8 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-if game.PlaceVersion > 1289 then
-    local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/PromptLibrary.lua"))()
+if game.PlaceVersion > 1311 then
+    local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
