@@ -247,9 +247,9 @@ local Window = Parvus.Utilities.UI:Window({
             AASection:Slider({Name = "Pitch Random",Flag = "BadBusiness/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
             AASection:Toggle({Name = "Lean Random",Flag = "BadBusiness/AntiAim/LeanRandom",Value = true})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+        --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Anti-Kick",Flag = "BadBusiness/AntiKick",Value = false})
-        end
+        end]]
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do

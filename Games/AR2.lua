@@ -84,8 +84,8 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
-            AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
-            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
+            --AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
+            --AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
             AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
@@ -116,7 +116,7 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
+            --SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
@@ -286,13 +286,13 @@ local Window = Parvus.Utilities.UI:Window({
             RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
-        local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
+        --[[local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
             FlySection:Toggle({Name = "Enabled",Flag = "AR2/Fly/Enabled",Value = false,
             Callback = function() if LocalPlayer.Character then
             OldPos = LocalPlayer.Character.PrimaryPart.Position end
             end}):Keybind({Flag = "BadBusiness/Fly/Keybind"})
             FlySection:Slider({Name = "Speed",Flag = "AR2/Fly/Speed",Min = 1,Max = 10,Precise = 1,Value = 1})
-        end
+        end]]
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
             MiscSection:Toggle({Name = "No Fall Impact",Flag = "AR2/NoFallImpact",Value = false}):Keybind()
@@ -424,35 +424,28 @@ Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
-local RaycastParams1 = RaycastParams.new()
-RaycastParams1.FilterType = Enum.RaycastFilterType.Blacklist
-RaycastParams1.FilterDescendantsInstances = {
+local RaycastParams = RaycastParams.new()
+RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+RaycastParams.FilterDescendantsInstances = {
     Workspace.Effects,
     Workspace.Sounds,
     Workspace.Locations,
     Workspace.Spawns
-} RaycastParams1.IgnoreWater = true
+} RaycastParams.IgnoreWater = true
 
 local function Raycast(Origin,Direction)
-    local RaycastResult = Workspace:Raycast(Origin,Direction,RaycastParams1)
+    local RaycastResult = Workspace:Raycast(Origin,Direction,RaycastParams)
     if RaycastResult then
-        if CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate") then
+		if (RaycastResult.Instance.Transparency == 1
+        and RaycastResult.Instance.CanCollide == false)
+        or not RaycastResult.Instance:IsDescendantOf(LocalPlayer.Character)
+        or CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate")
+        or CollectionService:HasTag(RaycastResult.Instance,"Window Part")
+        or CollectionService:HasTag(RaycastResult.Instance,"World Mesh")
+        or CollectionService:HasTag(RaycastResult.Instance,"World Water Part") then
 			return true
 		end
-		if CollectionService:HasTag(RaycastResult.Instance,"Window Part") then
-			return true
-		end
-		if CollectionService:HasTag(RaycastResult.Instance,"World Mesh") then
-			return true
-		end
-        if CollectionService:HasTag(RaycastResult.Instance,"World Water Part") then
-            return true
-        end
-		if RaycastResult.Instance.Transparency == 1
-        and RaycastResult.Instance.CanCollide == false then
-			return true
-		end return false
-    end return false
+    end
 end
 
 local function CastBullet(Hitbox)
@@ -491,15 +484,15 @@ local function InputToVelocity() local Velocities,LookVector,RightVector = {},Fl
     return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
 end
 
-local function PlayerFly(Config)
+--[[local function PlayerFly(Config)
     local Character = PlayerClass.Character
     if not Character or not OldPos then return end
     if Character.RootPart.Anchored then
-        Character.RootPart.CFrame = CFrame.new(OldPos)
+        Network:Fetch("Set Character Unanchored")
     end if not Config.Enabled then return end
     OldPos = OldPos + InputToVelocity() * Config.Speed
-    Character.RootPart.Position = OldPos
-end
+    Character.RootPart.CFrame = CFrame.new(OldPos)
+end]]
 
 local function GetDistanceFromCamera(Position)
     local Camera = Workspace.CurrentCamera
@@ -519,7 +512,7 @@ end
 local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
     local Camera = Workspace.CurrentCamera
-    return not Raycast(Camera.CFrame.Position,
+    return Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position)
 end
 
@@ -683,8 +676,8 @@ Network.Send = function(Self,Name,...) local Args = {...}
             end return OldSend(Self,Name,unpack(Args))
         end
     end]]
-    if Name == "Set Character State" then
-        if Window.Flags["AR2/SSCS"] then
+    if Window.Flags["AR2/SSCS"] then
+        if Name == "Set Character State" then
             Args[1] = "Walking"
         end
     end
@@ -812,12 +805,12 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         end mouse1release()
     end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+--[[Parvus.Utilities.Misc:NewThreadLoop(0,function()
     PlayerFly({
         Enabled = Window.Flags["AR2/Fly/Enabled"],
         Speed = Window.Flags["AR2/Fly/Speed"]
     })
-end)
+end)]]
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return end
     local Items = GetItemsAllFOV({Distance = 100})
