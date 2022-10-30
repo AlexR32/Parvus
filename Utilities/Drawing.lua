@@ -228,7 +228,8 @@ function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Config)
         }
     }
     local ESP = DrawingLibrary.ESPContainer[Item[1]]
-    ESP.Render = ItemESP(Item,ESP,typeof(Item[3]) ~= "Vector3") return ESP
+    ESP.Render = ItemESP(Item,ESP,typeof(Item[3]) ~= "Vector3")
+    return ESP
 end
 function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
     if DrawingLibrary.ESPContainer[Target] then return end
@@ -278,14 +279,14 @@ function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
 end
 
 function DrawingLibrary:RemoveESP(Target)
-    if not DrawingLibrary.ESPContainer[Target] then return end
     local ESP = DrawingLibrary.ESPContainer[Target]
+    if not ESP then return end
 
-    RemoveDrawing(ESP.Drawing)
-    if ESP.Highlight then
+    if ESP.Render then
+        ESP.Render:Disconnect()
+    end if ESP.Highlight then
         ESP.Highlight:Destroy()
-    end
-
+    end RemoveDrawing(ESP.Drawing)
     DrawingLibrary.ESPContainer[Target] = nil
 end
 
@@ -409,6 +410,7 @@ end
 
 RunService.Heartbeat:Connect(function()
     for Target,ESP in pairs(DrawingLibrary.ESPContainer) do
+        if not ESP.Target then continue end
         ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
         if ESP.Target.Character and ESP.Target.RootPart then local Camera = Workspace.CurrentCamera
             ESP.Target.ScreenPosition,ESP.Target.OnScreen = Camera:WorldToViewportPoint(ESP.Target.RootPart.Position)
