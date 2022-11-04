@@ -188,10 +188,13 @@ local function ItemESP(Item,ESP,IsBasePart)
         return ESP.Config[ESP.GlobalFlag .. Flag]
     end
 
-    return RunService.Heartbeat:Connect(function() local Camera = Workspace.CurrentCamera
-        ScreenPosition,OnScreen = Camera:WorldToViewportPoint(IsBasePart and Item[3].Position or Item[3])
-        local Distance = GetDistanceFromCamera(Camera,IsBasePart and Item[3].Position or Item[3]) * 0.28
-        InTheRange = CheckDistance(GlobalFlag("/DistanceCheck"),Distance,GlobalFlag("/Distance"))
+    return RunService.Heartbeat:Connect(function()
+        local Camera,Position = Workspace.CurrentCamera,IsBasePart and Item[3].Position or Item[3]
+        ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
+        local Distance = GetDistanceFromCamera(Camera,Position) * 0.28
+        InTheRange = CheckDistance(GlobalFlag("/DistanceCheck"),
+        Distance,GlobalFlag("/Distance"))
+        
         if OnScreen and InTheRange then
             if ESP.Drawing.Text.Visible then
                 local Color = ConcatFlag("/Color")

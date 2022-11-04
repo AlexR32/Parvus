@@ -14,17 +14,17 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
+        local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Right"}) do
             GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
         end
-        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Right"}) do
             AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
             AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
             AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.66666662693024,1,0.25,false}})
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 2})
         end
-        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Right"}) do
+        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
@@ -110,13 +110,14 @@ local Window = Parvus.Utilities.UI:Window({
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
             TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Enabled",Value = false})
-            TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0,false}})
+            TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0.5,false}})
+            TESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Thunderstruck/DistanceCheck",Value = true})
             TESPSection:Slider({Name = "Distance",Flag = "ESP/Thunderstruck/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
-
         end
         local LESPSection = MiscTab:Section({Name = "Legendary ESP",Side = "Right"}) do
             LESPSection:Toggle({Name = "Enabled",Flag = "ESP/Legendary/Enabled",Value = false})
-            LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0,false}})
+            LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0.5,false}})
+            LESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Legendary/DistanceCheck",Value = true})
             LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
         end
     end
@@ -325,13 +326,13 @@ end)
 for Index,Instance in pairs(Regions) do
     for Index,Instance in pairs(Instance.Trees:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
     for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance},
+            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
@@ -339,7 +340,7 @@ for Index,Instance in pairs(Regions) do
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
             Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent},
+            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart},
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
@@ -347,7 +348,7 @@ for Index,Instance in pairs(Regions) do
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
             Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent},
+            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart},
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
