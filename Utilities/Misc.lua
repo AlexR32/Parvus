@@ -6,7 +6,7 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local Stats = game:GetService("Stats")
 
-local Misc = {
+local Misc = {Hooks = {},
     DefaultLighting = {
         Ambient = Lighting.Ambient,
         Brightness = Lighting.Brightness,
@@ -74,17 +74,16 @@ function Misc:NewThreadLoop(Wait,Function)
         end
     end)
 end
-
-function Misc:CreateHook(fn,new) local oldFn
-    oldFn = hookfunction(fn,function(...)
-        return oldFn(new(...))
-    end)
-end
-
-function Misc:CreateHook2(fn,new) local oldFn
-    oldFn = hookfunction(fn,function(...)
-        return new(oldFn(...))
-    end)
+function Misc:FixUpValue(fn,new,reverse)
+    if not reverse then local oldFn
+        oldFn = hookfunction(fn,function(...)
+            return oldFn(new(...))
+        end)
+    else local oldFn
+        oldFn = hookfunction(fn,function(...)
+            return new(oldFn(...))
+        end)
+    end
 end
 
 function Misc:ReJoin()

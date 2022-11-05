@@ -5,7 +5,7 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-if game.PlaceVersion > 1314 then
+if game.PlaceVersion > 1317 then
     local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
@@ -14,39 +14,19 @@ if game.PlaceVersion > 1314 then
 end
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot,SilentAim,Trigger,
+local Aimbot,SilentAim,Trigger,GunModel,
 PredictedVelocity,PredictedGravity,
 GravityCorrection,Tortoiseshell
-= false,nil,nil,1600,150,2,
+= false,nil,nil,nil,1600,150,2,
 require(ReplicatedStorage.TS)
 
 repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
-local BanReasons,BanCommands = {
-    "Unsafe function",
-    "Camera object", -- Crash
-    "Geometry deleted", -- Crash
-    "Deleted remote", -- Crash
-    "Looking hard",
-    "Unbound gloop", -- Crash
-    "_G", -- Crash
-    "Hitbox extender",
-    "Alternate mode",
-    "Shooting hard",
-    "Fallback config",
-    "Int check",
-    "Thawed",
-    "Coregui instance",
-    "Floating",
-    "Root"
-},{
-    "GetUpdate",
-    "SetUpdate",
-    "GetSetting",
-    "FireProjectile",
-    "Invoke"
+local BanCommands = {
+    "GetUpdate","SetUpdate","Invoke",
+    "GetSetting","FireProjectile"
 }
 
 local Window = Parvus.Utilities.UI:Window({
@@ -247,7 +227,7 @@ local Window = Parvus.Utilities.UI:Window({
             AASection:Slider({Name = "Pitch Random",Flag = "BadBusiness/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
             AASection:Toggle({Name = "Lean Random",Flag = "BadBusiness/AntiAim/LeanRandom",Value = true})
         end
-        --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+        --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
             MiscSection:Toggle({Name = "Anti-Kick",Flag = "BadBusiness/AntiKick",Value = false})
         end]]
     end
@@ -345,68 +325,31 @@ Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
-do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldNamecall,OldTaskSpawn,OldRandom,DontBlock
---[[for Index,Connection in pairs(getconnections(workspace.Characters.ChildAdded)) do
-    setupvalue(Connection.Function,4,function() local String = ""
-        for Index = 1, 10 do
-            String = String .. string.char(math.random(97, 121))
-        end return String
-    end)
-end]]
-
-OldNamecall = hookmetamethod(game, "__namecall", function(Self,...)
+do local OldNamecall,OldTaskSpawn
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     if checkcaller() then return OldNamecall(Self,...) end
     local Method,Args = getnamecallmethod(),{...}
 
     if Method == "FireServer" then
-        --[[if type(Args[2]) == "string" and Args[2] ~= "Look" then
-            print(Args[2])
-        end]]
         if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
-            for Index, Reason in pairs(BanReasons) do
-                if type(Args[2]) == "string" and string.match(Args[2],Reason) then
-                    print("blocked",Args[2])
-                    return
-                end
-            end
+            print("blocked",Args[2]) return
         end
     end
-    --[[if Method == "Destroy" then
-        if Self.Parent == LocalPlayer.Character then
-            print(Self)
-        end
-        if Self.Parent == LocalPlayer.Character
-        and Self.Name ~= DontBlock then
-            print("blocked",Self)
-            return
-        end
-    end]]
+
     return OldNamecall(Self,...)
 end)
---[[OldRandom = hookfunction(getrenv().math.random, function(...)
-    if checkcaller() then return OldRandom(...) end local Args = {...}
-    if Args[1] == 1000 then return 1000 end
-    if Args[1] == 97 and Args[2] == 122 then 
-        local Random = OldRandom(...)
-        DontBlock = string.char(Random)
-        return Random
-    end
-    if Args[1] == 1 and Args[2] == 1000 then
-        print("random blocked")
-        return math.huge
-    end return OldRandom(...)
-end)]]
-OldTaskSpawn = hookfunction(getrenv().task.spawn, function(...)
-    if checkcaller() then return OldTaskSpawn(...) end local Args = {...}
+OldTaskSpawn = hookfunction(getrenv().task.spawn,function(...)
+    if checkcaller() then return OldTaskSpawn(...) end
+
+    local Args = {...}
     if type(Args[1]) == "function" then
         local Constants = getconstants(Args[1])
-        if table.find(Constants,"task")
-        and table.find(Constants,"wait") then
-            --print("blocked",repr(Constants))
-            wait(31536000) -- 365 days
+        if table.find(Constants,"wait") then
+            print("blocked wtd crash")
+            wait(31622400) -- 366 days
         end
     end
+
     return OldTaskSpawn(...)
 end) end
 
@@ -416,6 +359,11 @@ local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
 
+local Notify = Instance.new("BindableEvent")
+Notify.Event:Connect(function(Text)
+    Parvus.Utilities.UI:Notification2(Text)
+end)
+
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.Velocity = Vector3.zero
 BodyVelocity.MaxForce = Vector3.zero
@@ -423,11 +371,6 @@ BodyVelocity.MaxForce = Vector3.zero
 local RaycastParams = RaycastParams.new()
 RaycastParams.FilterType = Enum.RaycastFilterType.Whitelist
 RaycastParams.IgnoreWater = true
-
-local Notify = Instance.new("BindableEvent")
-Notify.Event:Connect(function(Text)
-    Parvus.Utilities.UI:Notification2(Text)
-end)
 
 local function Raycast(Origin,Direction,Table)
     RaycastParams.FilterDescendantsInstances = Table
@@ -552,29 +495,25 @@ end
 
 local function CustomizeGun(Config)
     if not Config.Enabled then return end
-    local GunModel = FindGunModel()
-    if GunModel then
-        for Index,Instance in pairs(GunModel.Body:GetDescendants()) do
-            if Config.HideTextures and Instance:IsA("Texture") then
-                Instance.Transparency = 1
-            elseif Instance:IsA("BasePart") and Instance.Transparency < 1
-            and Instance.Reflectance < 1 then
-                Instance.Color = Config.Color[6]
-                Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
-                Instance.Reflectance = Config.Reflectance
-                Instance.Material = Config.Material
-            end
+    if not GunModel then return end
+    for Index,Instance in pairs(GunModel.Body:GetDescendants()) do
+        if Config.HideTextures and Instance:IsA("Texture") then
+            Instance.Transparency = 1
+        elseif Instance:IsA("BasePart") and Instance.Transparency < 1
+        and Instance.Reflectance < 1 then
+            Instance.Color = Config.Color[6]
+            Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
+            Instance.Reflectance = Config.Reflectance
+            Instance.Material = Config.Material
         end
     end
 end
 local function CustomizeArms(Config)
     if not Config.Enabled then return end
     for Index,Instance in pairs(Workspace.Arms:GetDescendants()) do
-        if Config.HideTextures
-        and Instance:IsA("Texture") then
+        if Config.HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
-        elseif Instance:IsA("BasePart") 
-        and Instance.Transparency < 1
+        elseif Instance:IsA("BasePart") and Instance.Transparency < 1
         and Instance.Reflectance < 1 then
             Instance.Color = Config.Color[6]
             Instance.Transparency = Config.Color[4] > 0.95 and 0.95 or Config.Color[4]
@@ -782,8 +721,7 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-setreadonly(Tortoiseshell.Network,false)
-Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Network.Fire,function(Self,...)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Self,...)
     local Args = {...} if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
         if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
@@ -798,30 +736,32 @@ Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Network.Fire,function(Self,...)
         if Window.Flags["BadBusiness/AntiAim/LeanRandom"] then
             Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
         end
-        Args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < -0
+        Args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < 0
         and Window.Flags["BadBusiness/AntiAim/Pitch"] + Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
         or Window.Flags["BadBusiness/AntiAim/Pitch"] - Random.new():NextNumber(0,
         Window.Flags["BadBusiness/AntiAim/PitchRandom"])
     end return Self,unpack(Args)
-end) setreadonly(Tortoiseshell.Network,true)
+end)
 
-setreadonly(Tortoiseshell.Projectiles,false)
-Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
     local Args = {...} if Args[4] == LocalPlayer then PredictedVelocity = Projectiles[Args[1]].Speed
         PredictedGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
     end return Self,...
-end) setreadonly(Tortoiseshell.Projectiles,true)
+end)
 
-
-setreadonly(Tortoiseshell.Raycast,false)
-Parvus.Utilities.Misc:CreateHook(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Self,...)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Self,...)
     local Args = {...} if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
         Args[4].Gravity = Args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
     end return Self,unpack(Args)
-end) setreadonly(Tortoiseshell.Raycast,true)
+end)
 
-Parvus.Utilities.Misc:CreateHook2(Tortoiseshell.Items.GetConfig,function(...)
+OldGetAnimator = hookfunction(Tortoiseshell.Items.GetAnimator,function(Self,...)
+    local Args = {...} if Args[1] then GunModel = Args[3] end
+    return OldGetAnimator(Self,...)
+end)
+
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(...)
     local Args = {...} local Config = Args[1]
     if Window.Flags["BadBusiness/WeaponMod/Enabled"]
     and (Config.Recoil and Config.Recoil.Default) then
@@ -834,21 +774,22 @@ Parvus.Utilities.Misc:CreateHook2(Tortoiseshell.Items.GetConfig,function(...)
         Config.Recoil.Default.RecoilScale = 
         Config.Recoil.Default.RecoilScale * (Window.Flags["BadBusiness/WeaponMod/RecoilScale"] / 100)
     end return unpack(Args)
-end)
+end,true)
 
+-- Patched
 --[[for Index,Event in pairs(Events) do
     if Event.Event == "Votekick" then
-        OldCallback = Parvus.Utilities.Misc:CreateHook(Event.Callback,function(...)
+        Parvus.Utilities.Misc:FixUpValue(Event.Callback,function(...)
             local Args = {...} if Args[1] == "Message" then
                 if string.find(Args[2],LocalPlayer.Name)
                 and Window.Flags["BadBusiness/AntiKick"] then
                     Notify:Fire({
-                        Title = "Anti-Kick | Rejoining in 10 secs",
-                        Color = Color3.new(0.5,1,0.5),Duration = 10
-                    }) task.wait(10)
+                        Title = "Anti-Kick | Rejoining in 5 secs",
+                        Color = Color3.new(0.5,1,0.5),Duration = 5
+                    }) task.wait(5)
                     Parvus.Utilities.Misc:ReJoin()
                 end
-            end return OldCallback(...)
+            end return ...
         end) break
     end
 end]]
