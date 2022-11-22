@@ -1,6 +1,8 @@
 # Parvus  [![Discord Shield](https://discordapp.com/api/guilds/958056630321303602/widget.png)](https://discord.gg/sYqDpbPYb7)
-Free Roblox Script Hub designed for shooters.   
-Made With :heart: By ***AlexR32#0157***  
+Free Roblox Script Hub designed for shooters.  
+Made With :heart: By ***AlexR32#0157***
+
+***Parvus is still in beta stage of development so expect some bugs or lack of features.***  
 ***Skidding is very disrespectful to me, so please dont skid :slightly_smiling_face:***  
 ### Loadstring
 ```lua
