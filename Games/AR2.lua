@@ -74,7 +74,7 @@ Network.Fetch = function(Self,...)
 end]]
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "🎃 Parvus Hub — "..Parvus.Game,
+    Name = "Parvus Hub — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -330,7 +330,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
-            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.0836667,1,1,0,false},
+            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {1,0.25,1,0,true},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
         SettingsTab:AddConfigSection("Left")
@@ -367,11 +367,11 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Background.Image = "rbxassetid://6071575925"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
-                {Name = "Floral",Mode = "Button",Callback = function()
+                {Name = "Floral",Mode = "Button",Value = true,Callback = function()
                     Window.Background.Image = "rbxassetid://5553946656"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
-                {Name = "Halloween",Mode = "Button",Value = true,Callback = function()
+                {Name = "Halloween",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://11113209821"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
@@ -380,7 +380,7 @@ local Window = Parvus.Utilities.UI:Window({
             Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.0836667,1,1,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
-            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74, Max = 296,Value = 74,
+            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
@@ -412,9 +412,10 @@ function NoClip(Enabled)
     end
 end
 
+Window:SetValue("Background/Offset",74)
 Window:LoadDefaultConfig()
-Window:SetValue("Background/Offset",296)
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+Window:SetValue("UI/Toggle",
+Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Misc:SetupLighting(Window.Flags)
