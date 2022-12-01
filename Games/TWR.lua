@@ -9,15 +9,16 @@ local Aimbot,SilentAim,Trigger,NPCFolder
 = false,nil,nil,Workspace.Entities.Infected
 
 repeat task.wait() until LocalPlayer.PlayerScripts:FindFirstChild("Client")
-local Ray = require(ReplicatedStorage.SharedModules.Utilities.Ray)
+local RayModule = require(ReplicatedStorage.SharedModules.Utilities.Ray)
 local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
-local RemoteEvent = ReplicatedStorage:WaitForChild("RE")
+--[[local Client = getsenv(LocalPlayer.PlayerScripts.Client)
+local GlobalTable = getupvalue(Client.RHit,2)]]
 
-local OCIFunction for Index,Function in pairs(getgc()) do
+--[[local OCIFunction for Index,Function in pairs(getgc()) do
     if islclosure(Function) and getconstants(Function)[1] == "GetCC" then
         OCIFunction = Function
     end
-end if not OCIFunction then return end
+end if not OCIFunction then return end]]
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -26,7 +27,8 @@ local Window = Parvus.Utilities.UI:Window({
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
         local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
-            MiscSection:Toggle({Name = "Unlimited Ammo",Flag = "TWR/InfAmmo",Value = false})
+            MiscSection:Toggle({Name = "Unlimited Mag",Flag = "TWR/InfMag",Value = false})
+            MiscSection:Toggle({Name = "Unlimited Pool",Flag = "TWR/InfPool",Value = false})
             MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
             MiscSection:Toggle({Name = "Instant Hit",Flag = "TWR/NoBulletDrop",Value = false}):ToolTip("Silent Aim Required\nAlso Enables Wallbang")
         end
@@ -174,7 +176,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
-            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {1,0.25,1,0,true},
+            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
         SettingsTab:AddConfigSection("Left")
@@ -211,7 +213,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Background.Image = "rbxassetid://6071575925"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
-                {Name = "Floral",Mode = "Button",Value = true,Callback = function()
+                {Name = "Floral",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://5553946656"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
@@ -219,10 +221,14 @@ local Window = Parvus.Utilities.UI:Window({
                     Window.Background.Image = "rbxassetid://11113209821"
                     Window.Flags["Background/CustomImage"] = ""
                 end},
+                {Name = "Christmas",Mode = "Button",Callback = function()
+                    Window.Background.Image = "rbxassetid://11711560928"
+                    Window.Flags["Background/CustomImage"] = ""
+                end,Value = true}
             }})
             BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
             Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
-            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
+            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
@@ -246,10 +252,8 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-Window:SetValue("Background/Offset",74)
-Window:LoadDefaultConfig()
-Window:SetValue("UI/Toggle",
-Window.Flags["UI/OOL"])
+Window:SetValue("Background/Offset",296) Window:LoadDefaultConfig()
+Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
@@ -317,25 +321,29 @@ local function AimAt(Hitbox,Config)
     )
 end
 
-local OldNamecall,OldOCIFunction
+--[[local OldNamecall,OldOCIFunction
 OldOCIFunction = hookfunction(OCIFunction,function(...)
     local ToReturn = OldOCIFunction(...)
+    print("OCI",repr(ToReturn),repr({...}))
+
     for Index,Weapon in pairs(ToReturn.WC) do
         Weapon.Pool = 0
         Weapon.Mag = 1
     end return ToReturn
-end)
+end)]]
+
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
-        if Args[1] == "GlobalReplicate"
-        and Args[2].Mag then Args[2].Mag = 1
-        elseif Args[1] == "CheatKick" then return end
+        if Args[1] == "CheatKick" then return end
+        --[[if Args[1] == "GlobalReplicate" and Args[2].Mag then
+            Args[2].Mag = GlobalTable.WeaponModule.Stats.Mag
+        elseif Args[1] == "CheatKick" then return end]]
     end return OldNamecall(Self, unpack(Args))
 end)
 
-local OldCast = Ray.Cast
-Ray.Cast = function(...)
+local OldCast = RayModule.Cast
+RayModule.Cast = function(...)
     local Args = {...}
     if SilentAim and Args[4] == Enum.RaycastFilterType.Blacklist then
         if Window.Flags["TWR/Wallbang"] then
@@ -359,14 +367,26 @@ end
 
 local OldUpdateHUD = GuiModule.UpdateHUD
 GuiModule.UpdateHUD = function(...) local Args = {...}
-    if Window.Flags["TWR/InfAmmo"] then
-        if Args[1].Equipped == 3 then
-            return OldUpdateHUD(...)
-        end
+    if Args[1].Equipped == 3 then return OldUpdateHUD(...) end
+
+    if Args[1].Equipped then
         local Weapon = Args[4][Args[1].Equipped]
-        Weapon.Pool = Args[1].WeaponModule.Stats.Pool
-        Weapon.Mag = Args[1].WeaponModule.Stats.Mag
-    end return OldUpdateHUD(...)
+        local WeaponStats = Args[1].WeaponModule.Stats
+        if (WeaponStats.Mag and WeaponStats.Mag >= 1)
+        and WeaponStats.WeaponType then
+            if Window.Flags["TWR/InfMag"] then
+                Weapon.Mag = WeaponStats.Mag
+            end if Window.Flags["TWR/InfPool"] then
+                Weapon.Pool = WeaponStats.Pool
+            end
+        end
+    --[[elseif Args[1].GunnerInfo.Mounted then
+        if Window.Flags["TWR/InfMag"] then
+            Args[1].GunnerInfo.Mag = 300
+        end]]
+    end
+    
+    return OldUpdateHUD(...)
 end
 
 RunService.Heartbeat:Connect(function()

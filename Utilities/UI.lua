@@ -1361,6 +1361,7 @@ function Bracket:Window(Window)
             Dropdown.Flag = GetType(Dropdown.Flag,Dropdown.Name,"string")
             Dropdown.List = GetType(Dropdown.List,{},"table")
             Window.Elements[#Window.Elements + 1] = Dropdown
+            Window.Flags[Dropdown.Flag] = Dropdown.Value
 
             InitDropdown(ChooseTab(Dropdown.Side),Bracket.ScreenAsset,Window,Dropdown)
             return Dropdown
@@ -1468,6 +1469,7 @@ function Bracket:Window(Window)
                 Dropdown.Flag = GetType(Dropdown.Flag,Dropdown.Name,"string")
                 Dropdown.List = GetType(Dropdown.List,{},"table")
                 Window.Elements[#Window.Elements + 1] = Dropdown
+                Window.Flags[Dropdown.Flag] = Dropdown.Value
 
                 InitDropdown(SectionContainer,Bracket.ScreenAsset,Window,Dropdown)
                 return Dropdown
