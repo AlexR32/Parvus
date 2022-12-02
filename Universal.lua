@@ -248,7 +248,7 @@ local Window = Parvus.Utilities.UI:Window({
             }})
             BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
             Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
-            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0,false},
+            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
@@ -313,7 +313,7 @@ end
 local function GetHitbox(Config)
     if not Config.Enabled then return end
     local Camera = Workspace.CurrentCamera
-    
+
     local FieldOfView,ClosestHitbox = Config.DynamicFOV and
     ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView or Config.FieldOfView
 
@@ -324,6 +324,7 @@ local function GetHitbox(Config)
             for Index,BodyPart in pairs(Config.BodyParts) do
                 local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
                 local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
+
                 if WallCheck(Config.WallCheck,Hitbox,Character)
                 and DistanceCheck(Config.DistanceCheck,Distance,Config.Distance) then
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
@@ -380,7 +381,7 @@ local function AimAt(Hitbox,Config)
     local PredictionVelocity = (Hitbox[3].AssemblyLinearVelocity * Hitbox[4]) / Config.Prediction.Velocity
     local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction.Enabled
     and Hitbox[3].Position + PredictionVelocity or Hitbox[3].Position)
-    
+
     mousemoverel(
         (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
         (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
@@ -407,7 +408,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         if (Method == "Raycast" and Mode == "Raycast") then
             local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
             local Camera = Workspace.CurrentCamera
-            if Args[1] == Camera.CFrame.Position then
+            if Args[1] == Camera.CFrame.Position and HitChance then
                 Args[2] = SilentAim[3].Position - Camera.CFrame.Position
             end
             return OldNamecall(Self,unpack(Args))
@@ -417,7 +418,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         and Mode == "FindPartOnRayWithWhitelist") then
             local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
             local Camera = Workspace.CurrentCamera
-            if Args[1].Origin == Camera.CFrame.Position then
+            if Args[1].Origin == Camera.CFrame.Position and HitChance then
                 Args[1] = Ray.new(Args[1].Origin,SilentAim[3].Position - Camera.CFrame.Position)
             end
             return OldNamecall(Self,unpack(Args))
@@ -486,7 +487,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Distance = Window.Flags["Trigger/Distance"],
                     BodyParts = Window.Flags["Trigger/BodyParts"],
                     TeamCheck = Window.Flags["TeamCheck"],
-                    
+
                     Prediction = {
                         Enabled = Window.Flags["Trigger/Prediction/Enabled"],
                         Velocity = Window.Flags["Trigger/Prediction/Velocity"]

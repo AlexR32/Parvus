@@ -408,7 +408,7 @@ local Window = Parvus.Utilities.UI:Window({
             }})
             BackgroundSection:Textbox({Name = "Custom Image",Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
             Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
-            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0,false},
+            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.new(0,Number,0,Number) end})
@@ -638,10 +638,8 @@ local function HookFunction(ModuleName,Function,Callback)
         end
         Module = RequireModule(ModuleName)
     end
-    Module[Function] = function(...)
-        local Args = Callback({...})
-        if not Args then return end
-        return OldFunction(unpack(Args))
+    Module[Function] = function(...) local Args = Callback({...})
+        if Args then return OldFunction(unpack(Args)) end
     end
 end
 local function HookSignal(Signal,Index,Callback)
@@ -650,10 +648,8 @@ local function HookSignal(Signal,Index,Callback)
     local OldConnection = Connection.Function
     if not OldConnection then return end
     Connection:Disable()
-    Signal:Connect(function(...)
-        local Args = Callback({...})
-        if not Args then return end
-        OldConnection(unpack(Args))
+    Signal:Connect(function(...) local Args = Callback({...})
+        if Args then return OldConnection(unpack(Args)) end
     end)
 end
 
@@ -751,32 +747,41 @@ HookFunction("MovementService","Mount",function(Args)
         end
     end return Args
 end)
+HookFunction("CameraService","Activate",function(Args)
+    if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
+        Args[3] = Args[3] * (Window.Flags["BRM5/Recoil/Value"] / 100)
+    end
+    if Window.Flags["BRM5/NoBob"] and Args[2] == "Shake" then
+        Args[3] = {}
+    end
+    return Args
+end)
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
-        Args[1]._shakes = {}
         Args[1]._bob = 0
     end
+    --[[if Window.Flags["BRM5/Recoil/Enabled"] then
+        Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
+    end]] return Args
+end)
+--[[HookFunction("TurretCamera","Update",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] then
         Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
     end return Args
-end)
-HookFunction("TurretCamera","Update",function(Args)
-    if Window.Flags["BRM5/Recoil/Enabled"] then
-        Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
-    end return Args
-end)
-HookFunction("FirearmInventory","new",function(Args)
+end)]]
+HookFunction("FirearmInventory","_firemode",function(Args)
     if Window.Flags["BRM5/Firemodes"] then
-        if not table.find(Args[2].Tune.Firemodes,1) then
-            table.insert(Args[2].Tune.Firemodes,1)
+        local Config = Args[1]._config
+        if not table.find(Config.Tune.Firemodes,1) then
+            table.insert(Config.Tune.Firemodes,1)
         end
-        if not table.find(Args[2].Tune.Firemodes,2) then
-            table.insert(Args[2].Tune.Firemodes,2)
+        if not table.find(Config.Tune.Firemodes,2) then
+            table.insert(Config.Tune.Firemodes,2)
         end
-        if not table.find(Args[2].Tune.Firemodes,3) then
-            table.insert(Args[2].Tune.Firemodes,3)
+        if not table.find(Config.Tune.Firemodes,3) then
+            table.insert(Config.Tune.Firemodes,3)
         end
-        Args[2].Mode = 1
+        --Args[2].Mode = 1
     end return Args
 end)
 HookFunction("FirearmInventory","_discharge",function(Args)
@@ -785,8 +790,21 @@ HookFunction("FirearmInventory","_discharge",function(Args)
     end
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._config.Tune.Velocity = 1e6
+        Args[1]._config.Tune.Range = 1e6
     end PredictedVelocity = Args[1]._config.Tune.Velocity
     return Args
+end)
+HookFunction("TurretMovement","_discharge",function(Args)
+    if Window.Flags["BRM5/BulletDrop"] then
+        Args[1]._tune.Velocity = 1e6
+    end PredictedVelocity = Args[1]._tune.Velocity
+    GroundTip = Args[1]._tip return Args
+end)
+HookFunction("AircraftMovement","_discharge",function(Args)
+    if Window.Flags["BRM5/BulletDrop"] then
+        Args[1]._tune.Velocity = 1e6
+    end PredictedVelocity = Args[1]._tune.Velocity
+    AircraftTip = Args[1]._tip return Args
 end)
 HookFunction("GroundMovement","Update",function(Args)
     if Window.Flags["BRM5/Vehicle/Enabled"] then
@@ -798,12 +816,6 @@ HookFunction("HelicopterMovement","Update",function(Args)
     if Window.Flags["BRM5/Helicopter/Enabled"] then
         Args[1]._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
     end return Args
-end)
-HookFunction("AircraftMovement","_discharge",function(Args)
-    if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._tune.Velocity = 1e6
-    end PredictedVelocity = Args[1]._tune.Velocity
-    AircraftTip = Args[1]._tip return Args
 end)
 HookFunction("AircraftMovement","Update",function(Args)
     if Window.Flags["BRM5/Aircraft/Enabled"] then
@@ -818,12 +830,6 @@ HookFunction("AircraftMovement","Update",function(Args)
         Camera = Window.Flags["BRM5/Aircraft/Camera"],
         Speed = Window.Flags["BRM5/Aircraft/FlySpeed"]
     },Args) return Args
-end)
-HookFunction("TurretMovement","_discharge",function(Args)
-    if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._tune.Velocity = 1e6
-    end PredictedVelocity = Args[1]._tune.Velocity
-    GroundTip = Args[1]._tip return Args
 end)
 HookFunction("EnvironmentService","Update",function(Args)
     if Window.Flags["BRM5/Lighting/Enabled"] then
