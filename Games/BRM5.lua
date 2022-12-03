@@ -14,7 +14,7 @@ local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
 
-local Teleports,NoClipEvent = {
+local Teleports,NoClipEvent,WhiteColor = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
     {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
     {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
@@ -25,7 +25,7 @@ local Teleports,NoClipEvent = {
     {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
     {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
     {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
-}
+},nil,Color3.new(1,1,1)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -242,7 +242,7 @@ local Window = Parvus.Utilities.UI:Window({
                 Lighting.GlobalShadows = not Bool
             end})
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
-            EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 2,Value = 0.25})
+            EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
         end
         local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
@@ -326,8 +326,10 @@ local Window = Parvus.Utilities.UI:Window({
             AirSection:Button({Name = "Unlock Camera",Callback = function()
                 local Aircraft = RequireModule("MovementService")
                 local CameraMod = RequireModule("CameraService")
-                CameraMod:Mount(Aircraft._handler._controller, "Character")
-                CameraMod._handler._zoom = 128
+                if Aircraft._handler and Aircraft._handler._controller then
+                    CameraMod:Mount(Aircraft._handler._controller, "Character")
+                    CameraMod._handler._zoom = 128
+                end
             end})
         end
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
@@ -492,7 +494,7 @@ local function WallCheck(Enabled,Hitbox,Character)
     local Camera = Workspace.CurrentCamera
     return not Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,
-    {LocalPlayer.Character,Character})
+    {LocalPlayer.Character,Workspace.Raycast,Character})
 end
 
 local function GetHitbox(Config)
@@ -747,6 +749,11 @@ HookFunction("MovementService","Mount",function(Args)
         end
     end return Args
 end)
+HookFunction("ViewmodelClass","Update",function(Args)
+    if Window.Flags["BRM5/WalkSpeed/Enabled"] and Args[3] then
+        Args[3] = CFrame.new(Args[3].Position)
+    end return Args
+end)
 HookFunction("CameraService","Activate",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
         Args[3] = Args[3] * (Window.Flags["BRM5/Recoil/Value"] / 100)
@@ -840,6 +847,7 @@ HookFunction("EnvironmentService","Update",function(Args)
         end
     end return Args
 end)
+
 HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
     if Args[1] == "ReplicateNVG" then
         if Window.Flags["BRM5/DisableNVG"] then
@@ -953,16 +961,21 @@ RunService.Heartbeat:Connect(function()
             Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
         })
     end
+end)
 
-    if Window.Flags["BRM5/Lighting/Enabled"] then
+Lighting.Changed:Connect(function(Property)
+    if Property == "OutdoorAmbient" and
+    Window.Flags["BRM5/Lighting/Brightness"] and
+    Lighting.OutdoorAmbient ~= WhiteColor then
+        Lighting.OutdoorAmbient = WhiteColor
+    end
+    if Property == "ClockTime" and
+    Window.Flags["BRM5/Lighting/Enabled"] and
+    Lighting.ClockTime ~= Window.Flags["BRM5/Lighting/Time"] then
         Lighting.ClockTime = Window.Flags["BRM5/Lighting/Time"]
     end
 end)
-RunService.RenderStepped:Connect(function()
-    if Window.Flags["BRM5/Lighting/Brightness"] then
-        Lighting.OutdoorAmbient = Color3.new(1,1,1)
-    end
-end)
+
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     local Press = Window.Flags["Trigger/RMBMode"] and mouse2press or mouse1press
     local Release = Window.Flags["Trigger/RMBMode"] and mouse2release or mouse1release
