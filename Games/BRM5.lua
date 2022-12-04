@@ -14,7 +14,7 @@ local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
 
-local Teleports,NoClipEvent,WhiteColor = {
+local Teleports,NoClipEvent,WhiteColor,RaycastFolder,NilTable = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
     {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
     {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
@@ -25,7 +25,7 @@ local Teleports,NoClipEvent,WhiteColor = {
     {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
     {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
     {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
-},nil,Color3.new(1,1,1)
+},nil,Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),{}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -494,7 +494,7 @@ local function WallCheck(Enabled,Hitbox,Character)
     local Camera = Workspace.CurrentCamera
     return not Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,
-    {LocalPlayer.Character,Workspace.Raycast,Character})
+    {LocalPlayer.Character,RaycastFolder,Character})
 end
 
 local function GetHitbox(Config)
@@ -624,6 +624,11 @@ local function AimAt(Hitbox,Config)
     )
 end
 
+local function toScale(value, inputMin, inputMax, outputMin, outputMax)
+    local scaledOutput = outputMax - outputMin
+    local percentage = value / (inputMax - inputMin)
+    return percentage * scaledOutput + outputMin
+end
 function RequireModule(Name)
     for Index, Instance in pairs(getloadedmodules()) do
         if Instance.Name == Name then
@@ -754,28 +759,28 @@ HookFunction("ViewmodelClass","Update",function(Args)
         Args[3] = CFrame.new(Args[3].Position)
     end return Args
 end)
+
+local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
+local RecoilFunction = RequireModule("CharacterCamera").Recoil
+setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))
 HookFunction("CameraService","Activate",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
-        Args[3] = Args[3] * (Window.Flags["BRM5/Recoil/Value"] / 100)
-    end
-    if Window.Flags["BRM5/NoBob"] and Args[2] == "Shake" then
-        Args[3] = {}
-    end
-    return Args
+        local RecoilValue = Window.Flags["BRM5/Recoil/Value"]
+        Args[3] = Args[3] * (RecoilValue / 100)
+        if OldRecoilValue ~= RecoilValue then
+            OldRecoilValue = RecoilValue
+            setconstant(RecoilFunction,6,
+            toScale(RecoilValue,0,100,250,100))
+        end
+    end return Args
 end)
+
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
         Args[1]._bob = 0
-    end
-    --[[if Window.Flags["BRM5/Recoil/Enabled"] then
-        Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
-    end]] return Args
-end)
---[[HookFunction("TurretCamera","Update",function(Args)
-    if Window.Flags["BRM5/Recoil/Enabled"] then
-        Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
+        Args[1]._shakes = NilTable
     end return Args
-end)]]
+end)
 HookFunction("FirearmInventory","_firemode",function(Args)
     if Window.Flags["BRM5/Firemodes"] then
         local Config = Args[1]._config
@@ -788,7 +793,6 @@ HookFunction("FirearmInventory","_firemode",function(Args)
         if not table.find(Config.Tune.Firemodes,3) then
             table.insert(Config.Tune.Firemodes,3)
         end
-        --Args[2].Mode = 1
     end return Args
 end)
 HookFunction("FirearmInventory","_discharge",function(Args)
@@ -804,12 +808,14 @@ end)
 HookFunction("TurretMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
+        Args[1]._tune.Range = 1e6
     end PredictedVelocity = Args[1]._tune.Velocity
     GroundTip = Args[1]._tip return Args
 end)
 HookFunction("AircraftMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
+        Args[1]._tune.Range = 1e6
     end PredictedVelocity = Args[1]._tune.Velocity
     AircraftTip = Args[1]._tip return Args
 end)
