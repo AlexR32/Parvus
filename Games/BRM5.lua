@@ -14,7 +14,7 @@ local Aimbot,SilentAim,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
 = false,nil,Workspace.Bots,{},nil,nil,1000
 
-local Teleports,NoClipEvent,WhiteColor,RaycastFolder,NilTable = {
+local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
     {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
     {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
@@ -25,7 +25,7 @@ local Teleports,NoClipEvent,WhiteColor,RaycastFolder,NilTable = {
     {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
     {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
     {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
-},nil,Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),{}
+},nil,Color3.new(1,1,1),Workspace:FindFirstChild("Raycast")
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -778,7 +778,6 @@ end)
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
         Args[1]._bob = 0
-        Args[1]._shakes = NilTable
     end return Args
 end)
 HookFunction("FirearmInventory","_firemode",function(Args)
