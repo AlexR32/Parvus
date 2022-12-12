@@ -5,7 +5,14 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
-if game.PlaceVersion > 1321 then
+local Executor = identifyexecutor()
+if not Executor == "Synapse X" or not Executor == "Script-Ware" then
+    local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
+    PromptLib("Unsupported executor","You are on "..Executor..", expected Synapse X or Script-Ware",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    return
+end
+
+if game.PlaceVersion > 1323 then
     local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
