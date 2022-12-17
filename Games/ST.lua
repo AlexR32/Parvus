@@ -78,7 +78,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
-        SettingsTab:AddConfigSection("Left")
+        SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
         Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
@@ -151,11 +151,12 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-Window:SetValue("Background/Offset",296) Window:LoadDefaultConfig()
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
-
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Window:SetValue("Background/Offset",296)
+Window:LoadDefaultConfig("Parvus")
+Window:SetValue("UI/Toggle",
+Window.Flags["UI/OOL"])
 
 local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
 local BodyVelocity = Instance.new("BodyVelocity")

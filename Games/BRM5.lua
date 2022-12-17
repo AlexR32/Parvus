@@ -6,6 +6,7 @@ local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 
 repeat task.wait() until Workspace:FindFirstChild("Bots")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
@@ -26,6 +27,9 @@ local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
     {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
 },nil,Color3.new(1,1,1),Workspace:FindFirstChild("Raycast")
+
+local Server = require(Packages:WaitForChild("server"))
+local ServerSettings = getupvalue(Server.Get,1)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -333,6 +337,11 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+            MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
+            Value = ServerSettings["FIRSTPERSON_LOCKED"],Callback = function(Value)
+                ServerSettings["FIRSTPERSON_LOCKED"] = Value
+            end})
+
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
                 local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
                 if not serverSettings.CHEATS_ENABLED then
@@ -361,7 +370,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
-        SettingsTab:AddConfigSection("Left")
+        SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
         Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
@@ -440,23 +449,23 @@ function NoClip(Enabled) if not LocalPlayer.Character then return end
     end
 end
 
-Window:SetValue("Background/Offset",296) Window:LoadDefaultConfig()
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
-
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
-
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+Window:SetValue("Background/Offset",296)
+Window:LoadDefaultConfig("Parvus")
+Window:SetValue("UI/Toggle",
+Window.Flags["UI/OOL"])
 
-local RaycastParams = RaycastParams.new()
-RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-RaycastParams.IgnoreWater = true
+local WallCheckParams = RaycastParams.new()
+WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
+WallCheckParams.IgnoreWater = true
 
 local function Raycast(Origin,Direction,Table)
-    RaycastParams.FilterDescendantsInstances = Table
-    return Workspace:Raycast(Origin,Direction,RaycastParams)
+    WallCheckParams.FilterDescendantsInstances = Table
+    return Workspace:Raycast(Origin,Direction,WallCheckParams)
 end
 
 local function FixUnit(Vector)

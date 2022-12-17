@@ -179,7 +179,7 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window:SetColor(Color) end})
         end
-        SettingsTab:AddConfigSection("Left")
+        SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
         Callback = Parvus.Utilities.Misc.ReJoin})
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
@@ -252,23 +252,23 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-Window:SetValue("Background/Offset",296) Window:LoadDefaultConfig()
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
-
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
-
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+Window:SetValue("Background/Offset",296)
+Window:LoadDefaultConfig("Parvus")
+Window:SetValue("UI/Toggle",
+Window.Flags["UI/OOL"])
 
-local RaycastParams = RaycastParams.new()
-RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-RaycastParams.IgnoreWater = true
+local WallCheckParams = RaycastParams.new()
+WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
+WallCheckParams.IgnoreWater = true
 
 local function Raycast(Origin,Direction,Table)
-    RaycastParams.FilterDescendantsInstances = Table
-    return Workspace:Raycast(Origin,Direction,RaycastParams)
+    WallCheckParams.FilterDescendantsInstances = Table
+    return Workspace:Raycast(Origin,Direction,WallCheckParams)
 end
 
 local function DistanceCheck(Enabled,Distance,MaxDistance)

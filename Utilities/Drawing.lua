@@ -204,7 +204,9 @@ local function ItemESP(Item,ESP,IsBasePart)
                 ESP.Drawing.Text.Text = string.format("%s\n%i meters",Item[2],Distance)
                 ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
             end
-        end ESP.Drawing.Text.Visible = OnScreen and InTheRange and ConcatFlag("/Enabled") or false
+        end
+        ESP.Drawing.Text.Visible = OnScreen and InTheRange and
+        ConcatFlag("/Enabled") and GlobalFlag("/Enabled") or false
     end)
 end
 
@@ -244,37 +246,60 @@ function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
         Drawing = {
             Box = {
                 Main = AddDrawing("Square",{
+                    Transparency = 0,
+                    Visible = false,
                     ZIndex = 1
                 }),
-                Outline = AddDrawing("Square"),
+                Outline = AddDrawing("Square",{
+                    Transparency = 0,
+                    Visible = false
+                }),
                 Text = AddDrawing("Text",{
                     Center = true,
                     Color = Color3.new(1,1,1),
+                    Transparency = 0,
+                    Visible = false,
                     ZIndex = 1
                 })
             },
             Healthbar = {
                 Main = AddDrawing("Square",{
+                    Transparency = 0,
+                    Visible = false,
                     Filled = true,
                     ZIndex = 1
                 }),
                 Outline = AddDrawing("Square",{
+                    Transparency = 0,
+                    Visible = false,
                     Filled = true
                 })
             },
             Arrow = {
                 Main = AddDrawing("Triangle",{
+                    Transparency = 0,
+                    Visible = false,
                     ZIndex = 1
                 }),
-                Outline = AddDrawing("Triangle")
+                Outline = AddDrawing("Triangle",{
+                    Transparency = 0,
+                    Visible = false
+                })
             },
             Head = {
                 Main = AddDrawing("Circle",{
+                    Transparency = 0,
+                    Visible = false,
                     ZIndex = 1
                 }),
-                Outline = AddDrawing("Circle")
+                Outline = AddDrawing("Circle",{
+                    Transparency = 0,
+                    Visible = false,
+                })
             },
             Tracer = AddDrawing("Line",{
+                Transparency = 0,
+                Visible = false,
                 ZIndex = 1
             })
         }
