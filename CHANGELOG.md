@@ -1,3 +1,28 @@
+### Update 17/12/22
+```md
+# AR2
++ Added Fly
++ Added Master Toggle to Object ESP's
+- Removed Spread (broken)
++ Added unlock firemodes
++ Added no gun bob to recoil section
++ Added Vehicle mods
++ Added WalkSpeed changer
++ Added JumpPower changer
++ Added equip in water,air,vehicle (equip in vehicle a bit buggy)
++ Added Instant Search
+**SOME FLAGS CHANGED IF YOU HAD OLD CONFIGS PLEASE DELETE OR UPDATE THEM**
+
+# Drawing
+* Attempt to fix *white square*
+# Global
+* UI Code Small Refactor
+* Some Misc Improvements/Refactor
+* Improved Lighting changer (available in universal and ar2)
+# BRM5
++ Added Unlock FPS
+```
+
 ### Update 04/12/22
 ```md
 # BRM5
