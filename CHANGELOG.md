@@ -1,5 +1,5 @@
 ### Update 17/12/22
-```md
+```markdown
 # AR2
 + Added Fly
 + Added Master Toggle to Object ESP's
@@ -24,7 +24,7 @@
 ```
 
 ### Update 04/12/22
-```md
+```markdown
 # BRM5
 * Fixed Wallcheck
 * Small improvements
