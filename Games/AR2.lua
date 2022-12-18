@@ -5,7 +5,6 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,
@@ -40,21 +39,30 @@ local Vehicles = Workspace.Vehicles.Spawned
 local Zombies = Workspace.Zombies.Mobs
 local Loot = Workspace.Loot
 
+-- game data mess
 local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = {
-    "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
-    "LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
-    "MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
-    "PartyTrailerTechnoGold","PartyTrailerTechnoGoldDeagleMod1",
-    "PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
-    "SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01"
-},{
-    "Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
-    "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"
-},{
-    "Character Humanoid Update","Character Root Update",
-    "Get Player Stance Speed","Force Charcter Save",
-    "Update Character State","Sync Near Chunk Loot"
-},{},nil,nil
+"ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
+"LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
+"MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
+"PartyTrailerTechnoGold","PartyTrailerTechnoGoldDeagleMod1",
+"PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
+"SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01",
+"SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01"
+--[["CrashPrisonBus01","PoolsClosed01","PoliceBlockade01","SeahawkCrashsite04",
+"SeahawkCrashsite06","SeahawkCrashsite07","SeahawkCrashsite05","ATVCrashsiteRenegade01",
+"MilitaryBlockade01","GraveFresh01","LifePreserverSoviet01","PopupFishing01",
+"LifePreserverMilitary01","SedanHaul01","LifePreserverSpecOps01","GraveNumberOne1",
+"PopupCampsite01","FuneralProcession01","ConstructionWorksite01","ParamedicScene01",
+"MilitaryConvoy01","CampSovietBandit01","SpecialForcesCrash01","PirateTreasure01",
+"PartyTrailerTechnoGoldDeagleMod1","PartyTrailerTechnoGold","StrandedStationKeyboard01","BeechcraftGemBroker01",
+"BankTruckRobbery01","RandomCrashCessna01","SeahawkCrashsiteRogue01","StashWeaponMid03","StashGeneral03",
+"StashWeaponHigh02","StashMedical03","StashFood03","StashWeaponHigh03","StashWeaponMid02","StashGeneral02",
+"StashMedical02","StashFood02","StashWeaponHigh01","StashFood01","StashMedical01","StashGeneral01",
+"StashWeaponMid01","PopupFishing02","StrandedStation01","BeachedAluminumBoat01","PartyTrailerDisco01"]]
+},{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
+"Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
+{"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
+"Force Charcter Save","Update Character State","Sync Near Chunk Loot"},{},nil,nil
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -436,15 +444,19 @@ WallCheckParams.FilterDescendantsInstances = {
 } WallCheckParams.IgnoreWater = true
 
 local function Raycast(Origin,Direction)
+    WallCheckParams.FilterDescendantsInstances = {
+        Workspace.Effects,Workspace.Sounds,
+        Workspace.Locations,Workspace.Spawns,
+        LocalPlayer.Character
+    }
     local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
     if RaycastResult then
 		if (RaycastResult.Instance.Transparency == 1
         and RaycastResult.Instance.CanCollide == false)
-        or not RaycastResult.Instance:IsDescendantOf(LocalPlayer.Character)
-        or CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate")
+        or (CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate")
         or CollectionService:HasTag(RaycastResult.Instance,"Window Part")
         or CollectionService:HasTag(RaycastResult.Instance,"World Mesh")
-        or CollectionService:HasTag(RaycastResult.Instance,"World Water Part") then
+        or CollectionService:HasTag(RaycastResult.Instance,"World Water Part")) then
 			return true
 		end
     end
@@ -896,17 +908,15 @@ end)
 
 for Index,Item in pairs(Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
-        Parvus.Utilities.Drawing:ItemESP(
-            {Item.Parent,Item.Parent.Name,Item.Parent.Value.Position},
+    if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP({Item,Item.Name,Item.Value.Position},
             "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
         )
     end
 end
 for Index,Event in pairs(Randoms:GetChildren()) do
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
-        Parvus.Utilities.Drawing:ItemESP(
-            {Event,Event.Name,Event.Value.Position},
+        Parvus.Utilities.Drawing:ItemESP({Event,Event.Name,Event.Value.Position},
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
         )
     end
@@ -928,17 +938,15 @@ end
 
 Loot.DescendantAdded:Connect(function(Item)
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-    if Item:IsA("Model") and ItemData then --print(ItemData.Parent.Name)
-        Parvus.Utilities.Drawing:ItemESP(
-            {Item.Parent,Item.Parent.Name,Item.Parent.Value.Position},
+    if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
+        Parvus.Utilities.Drawing:ItemESP({Item,Item.Name,Item.Value.Position},
             "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
         )
     end
 end)
 Randoms.ChildAdded:Connect(function(Event)
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
-        Parvus.Utilities.Drawing:ItemESP(
-            {Event,Event.Name,Event.Value.Position},
+        Parvus.Utilities.Drawing:ItemESP({Event,Event.Name,Event.Value.Position},
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
         )
         if Window.Flags["AR2/ESP/RandomEvents/Enabled"] then
@@ -967,9 +975,7 @@ Zombies.ChildAdded:Connect(function(Zombie)
 end)
 
 Loot.DescendantRemoving:Connect(function(Item)
-    if Item:IsA("Model") then
-        Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
-    end
+    Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
 end)
 Randoms.ChildRemoved:Connect(function(Event)
     Parvus.Utilities.Drawing:RemoveESP(Event)
