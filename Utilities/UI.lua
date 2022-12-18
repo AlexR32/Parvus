@@ -6,17 +6,17 @@ local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
-local Debug,LocalPlayer = false,PlayerService.LocalPlayer
-local MainAssetFolder = Debug and ReplicatedStorage.BracketV32
-	or InsertService:LoadLocalAsset("rbxassetid://9153139105")
+local Debug,Assets,LocalPlayer = false,{},PlayerService.LocalPlayer
+local MainAssetFolder = Debug and ReplicatedStorage.BracketV33
+	or InsertService:LoadLocalAsset("rbxassetid://10827276896")
 
-	local function GetAsset(AssetPath)
-		AssetPath = AssetPath:split("/")
-		local Asset = MainAssetFolder
-		for Index,Name in pairs(AssetPath) do
-			Asset = Asset[Name]
-		end return Asset:Clone()
-	end
+local function GetAsset(AssetPath)
+	AssetPath = AssetPath:split("/")
+	local Asset = MainAssetFolder
+	for Index,Name in pairs(AssetPath) do
+		Asset = Asset[Name]
+	end return Asset:Clone()
+end
 local function GetLongest(A,B)
 	return A > B and A or B
 end
@@ -146,17 +146,7 @@ local function ConfigsToList(PFName)
 	return Configs
 end
 
-local function InitToolTip(Parent,ScreenAsset,Text)
-	Parent.MouseEnter:Connect(function()
-		ScreenAsset.ToolTip.Text = Text
-		ScreenAsset.ToolTip.Size = UDim2.new(0,ScreenAsset.ToolTip.TextBounds.X + 2,0,ScreenAsset.ToolTip.TextBounds.Y + 2)
-		ScreenAsset.ToolTip.Visible = true
-	end)
-	Parent.MouseLeave:Connect(function()
-		ScreenAsset.ToolTip.Visible = false
-	end)
-end
-local function InitScreen()
+function Assets:Screen()
 	local ScreenAsset = GetAsset("Screen/Bracket")
 	if not Debug then sethiddenproperty(ScreenAsset,"OnTopOfCoreBlur",true) end
 	ScreenAsset.Name = "Bracket " .. game:GetService("HttpService"):GenerateGUID(false)
@@ -168,7 +158,7 @@ local function InitScreen()
 	end]]
 	return {ScreenAsset = ScreenAsset}
 end
-local function InitWindow(ScreenAsset,Window)
+function Assets:Window(ScreenAsset,Window)
 	local WindowAsset = GetAsset("Window/Window")
 
 	WindowAsset.Parent = ScreenAsset
@@ -188,7 +178,7 @@ local function InitWindow(ScreenAsset,Window)
 		WindowAsset.TabButtonContainer.CanvasSize = UDim2.new(0,WindowAsset.TabButtonContainer.ListLayout.AbsoluteContentSize.X,0,0)
 	end)
 	RunService.RenderStepped:Connect(function()
-		if WindowAsset.Visible and ScreenAsset.ToolTip then
+		if WindowAsset.Visible then
 			ScreenAsset.ToolTip.Position = UDim2.new(0,UserInputService:GetMouseLocation().X + 5,0,UserInputService:GetMouseLocation().Y - 5)
 		end
 	end)
@@ -214,8 +204,8 @@ local function InitWindow(ScreenAsset,Window)
 	end
 	function Window:SetColor(Color)
 		if Color.R < 5/255
-		and Color.G < 5/255
-		and Color.B < 5/255 then
+			and Color.G < 5/255
+			and Color.B < 5/255 then
 			Color = Color3.fromRGB(5,5,5)
 		end
 
@@ -234,12 +224,12 @@ local function InitWindow(ScreenAsset,Window)
 		WindowAsset.Visible = Window.Enabled
 
 		if not Debug  then
-		RunService:SetRobloxGuiFocused(Window.Enabled and Window.Flags["UI/Blur"]) end
+			RunService:SetRobloxGuiFocused(Window.Enabled and Window.Flags["UI/Blur"]) end
 		if not Window.Enabled then for Index,Instance in pairs(ScreenAsset:GetChildren()) do
-			if Instance.Name == "Palette" or Instance.Name == "OptionContainer" then
-				Instance.Visible = false
-			end
-		end end
+				if Instance.Name == "Palette" or Instance.Name == "OptionContainer" then
+					Instance.Visible = false
+				end
+			end end
 	end
 
 	function Window:SetValue(Flag,Value)
@@ -265,15 +255,15 @@ local function InitWindow(ScreenAsset,Window)
 		Watermark.Flag = GetType(Watermark.Flag,"UI/Watermark/Position","string")
 
 		ScreenAsset.Watermark.Visible = Watermark.Enabled
-		ScreenAsset.Watermark.Title.Text = Watermark.Title
+		ScreenAsset.Watermark.Text = Watermark.Title
 		ScreenAsset.Watermark.Position = UDim2.new(0.95,0,0,10)
 		ScreenAsset.Watermark.Size = UDim2.new(
-		0,ScreenAsset.Watermark.Title.TextBounds.X + 6,
-		0,ScreenAsset.Watermark.Title.TextBounds.Y + 6)
+			0,ScreenAsset.Watermark.TextBounds.X + 6,
+			0,ScreenAsset.Watermark.TextBounds.Y + 6)
 		MakeDraggable(ScreenAsset.Watermark,ScreenAsset.Watermark,function(Position)
 			Window.Flags[Watermark.Flag] = 
-			{Position.X.Scale,Position.X.Offset,
-			Position.Y.Scale,Position.Y.Offset}
+				{Position.X.Scale,Position.X.Offset,
+					Position.Y.Scale,Position.Y.Offset}
 		end)
 
 		function Watermark:Toggle(Boolean)
@@ -283,12 +273,12 @@ local function InitWindow(ScreenAsset,Window)
 		function Watermark:Transparency(Number)
 			ScreenAsset.Watermark.BackgroundTransparency = Number
 			ScreenAsset.Watermark.Stroke.Transparency = Number
-			ScreenAsset.Watermark.Title.TextTransparency = Number
+			ScreenAsset.Watermark.TextTransparency = Number
 		end
 		function Watermark:SetTitle(Text)
 			Watermark.Title = Text
-			ScreenAsset.Watermark.Title.Text = Watermark.Title
-			ScreenAsset.Watermark.Size = UDim2.new(0,ScreenAsset.Watermark.Title.TextBounds.X + 6,0,ScreenAsset.Watermark.Title.TextBounds.Y + 6)
+			ScreenAsset.Watermark.Text = Watermark.Title
+			ScreenAsset.Watermark.Size = UDim2.new(0,ScreenAsset.Watermark.TextBounds.X + 6,0,ScreenAsset.Watermark.TextBounds.Y + 6)
 		end
 		function Watermark:SetValue(Table)
 			if not Table then return end
@@ -353,14 +343,14 @@ local function InitWindow(ScreenAsset,Window)
 	Window.Background = WindowAsset.Background
 	return WindowAsset
 end
-local function InitTab(ScreenAsset,WindowAsset,Window,Tab)
+function Assets:Tab(ScreenAsset,WindowAsset,Window,Tab)
 	local TabButtonAsset = GetAsset("Tab/TabButton")
 	local TabAsset = GetAsset("Tab/Tab")
 
 	TabButtonAsset.Parent = WindowAsset.TabButtonContainer
 	TabButtonAsset.Text = Tab.Name
 	TabButtonAsset.Highlight.BackgroundColor3 = Window.Color
-	TabButtonAsset.Size = UDim2.new(0,TabButtonAsset.TextBounds.X + 6,1,-1)
+	TabButtonAsset.Size = UDim2.new(0,TabButtonAsset.TextBounds.X + 12,1,-1)
 	TabAsset.Parent = WindowAsset.TabContainer
 	TabAsset.Visible = false
 
@@ -397,7 +387,7 @@ local function InitTab(ScreenAsset,WindowAsset,Window,Tab)
 		return ChooseTabSide(TabAsset,Side)
 	end
 end
-local function InitSection(Parent,Section)
+function Assets:Section(Parent,Section)
 	local SectionAsset = GetAsset("Section/Section")
 
 	SectionAsset.Parent = Parent
@@ -416,7 +406,17 @@ local function InitSection(Parent,Section)
 
 	return SectionAsset.Container
 end
-local function InitDivider(Parent,Divider)
+function Assets:ToolTip(Parent,ScreenAsset,Text)
+	Parent.MouseEnter:Connect(function()
+		ScreenAsset.ToolTip.Text = Text
+		ScreenAsset.ToolTip.Size = UDim2.new(0,ScreenAsset.ToolTip.TextBounds.X + 6,0,ScreenAsset.ToolTip.TextBounds.Y + 6)
+		ScreenAsset.ToolTip.Visible = true
+	end)
+	Parent.MouseLeave:Connect(function()
+		ScreenAsset.ToolTip.Visible = false
+	end)
+end
+function Assets:Divider(Parent,Divider)
 	local DividerAsset = GetAsset("Divider/Divider")
 
 	DividerAsset.Parent = Parent
@@ -441,7 +441,7 @@ local function InitDivider(Parent,Divider)
 		DividerAsset.Title.Text = Text
 	end
 end
-local function InitLabel(Parent,Label)
+function Assets:Label(Parent,Label)
 	local LabelAsset = GetAsset("Label/Label")
 
 	LabelAsset.Parent = Parent
@@ -456,7 +456,7 @@ local function InitLabel(Parent,Label)
 		LabelAsset.Text = Text
 	end
 end
-local function InitButton(Parent,ScreenAsset,Window,Button)
+function Assets:Button(Parent,ScreenAsset,Window,Button)
 	local ButtonAsset = GetAsset("Button/Button")
 
 	ButtonAsset.Parent = Parent
@@ -488,10 +488,10 @@ local function InitButton(Parent,ScreenAsset,Window,Button)
 		Button.Connection = ButtonAsset.MouseButton1Click:Connect(Callback)
 	end
 	function Button:ToolTip(Text)
-		InitToolTip(ButtonAsset,ScreenAsset,Text)
+		Assets:ToolTip(ButtonAsset,ScreenAsset,Text)
 	end
 end
-local function InitToggle(Parent,ScreenAsset,Window,Toggle)
+function Assets:Toggle(Parent,ScreenAsset,Window,Toggle)
 	local ToggleAsset = GetAsset("Toggle/Toggle")
 
 	ToggleAsset.Parent = Parent
@@ -507,6 +507,7 @@ local function InitToggle(Parent,ScreenAsset,Window,Toggle)
 	end)
 	ToggleAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 		ToggleAsset.Size = UDim2.new(1,0,0,ToggleAsset.Title.TextBounds.Y)
+		ToggleAsset.Layout.Size = UDim2.new(1,-ToggleAsset.Title.TextBounds.X - 21,1,0)
 	end)
 
 	function Toggle:SetName(Name)
@@ -523,120 +524,12 @@ local function InitToggle(Parent,ScreenAsset,Window,Toggle)
 		Toggle.Callback = Callback
 	end
 	function Toggle:ToolTip(Text)
-		InitToolTip(ToggleAsset,ScreenAsset,Text)
+		Assets:ToolTip(ToggleAsset,ScreenAsset,Text)
 	end
-	function Toggle:Keybind(Keybind)
-		Keybind = GetType(Keybind,{},"table")
-		Keybind.Flag = GetType(Keybind.Flag,Toggle.Flag.."/Keybind","string")
 
-		Keybind.Value = GetType(Keybind.Value,"NONE","string")
-		Keybind.Callback = GetType(Keybind.Callback,function() end,"function")
-		Keybind.Blacklist = GetType(Keybind.Blacklist,{"W","A","S","D","Slash","Tab","Backspace","Escape","Space","Delete","Unknown","Backquote"},"table")
-
-		Window.Elements[#Window.Elements + 1] = Keybind
-		Window.Flags[Keybind.Flag] = Keybind.Value
-
-		ToggleAsset.Keybind.Visible = true
-		ToggleAsset.Keybind.Text = "[ " .. Keybind.Value .. " ]"
-		Keybind.WaitingForBind = false
-
-		ToggleAsset.Keybind.MouseButton1Click:Connect(function()
-			ToggleAsset.Keybind.Text = "[ ... ]"
-			Keybind.WaitingForBind = true
-		end)
-		ToggleAsset.Keybind:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			ToggleAsset.Keybind.Size = UDim2.new(0,ToggleAsset.Keybind.TextBounds.X,1,0)
-			ToggleAsset.Title.Size = UDim2.new(1,-ToggleAsset.Keybind.Size.X.Offset - 20,1,0)
-		end)
-
-		UserInputService.InputBegan:Connect(function(Input)
-			local Key = tostring(Input.KeyCode):gsub("Enum.KeyCode.","")
-			if Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.Keyboard then
-				if not table.find(Keybind.Blacklist,Key) then
-					ToggleAsset.Keybind.Text = "[ " .. Key .. " ]"
-					Keybind.Value = Key
-				else
-					if Keybind.DoNotClear then
-						ToggleAsset.Keybind.Text = "[ " .. Keybind.Value .. " ]"
-					else
-						ToggleAsset.Keybind.Text = "[ NONE ]"
-						Keybind.Value = "NONE"
-					end
-				end
-
-				Keybind.WaitingForBind = false
-				Window.Flags[Keybind.Flag] = Keybind.Value
-				Keybind.Callback(Keybind.Value,false)
-			elseif Input.UserInputType == Enum.UserInputType.Keyboard then
-				if Key == Keybind.Value then
-					Toggle.Value = not Toggle.Value 
-					Window.Flags[Toggle.Flag] = Toggle.Value
-
-					Toggle.Callback(Toggle.Value)
-					Keybind.Callback(Keybind.Value,true)
-					ToggleAsset.Tick.BackgroundColor3 = Toggle.Value and Window.Color or Color3.fromRGB(60,60,60)
-				end
-			end
-			if Keybind.Mouse then
-				local Key = tostring(Input.UserInputType):gsub("Enum.UserInputType.","")
-				if Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton1
-					or Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton2
-					or Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton3 then
-					ToggleAsset.Keybind.Text = "[ " .. Key .. " ]"
-
-					Keybind.Value = Key
-					Keybind.WaitingForBind = false
-					Window.Flags[Keybind.Flag] = Keybind.Value
-					Keybind.Callback(Keybind.Value,false)
-				elseif Input.UserInputType == Enum.UserInputType.MouseButton1
-					or Input.UserInputType == Enum.UserInputType.MouseButton2
-					or Input.UserInputType == Enum.UserInputType.MouseButton3 then
-
-					if Key == Keybind.Value then
-						Toggle.Value = not Toggle.Value
-						Window.Flags[Toggle.Flag] = Toggle.Value
-
-						Toggle.Callback(Toggle.Value)
-						Keybind.Callback(Keybind.Value,true)
-						ToggleAsset.Tick.BackgroundColor3 = Toggle.Value and Window.Color or Color3.fromRGB(60,60,60)
-					end
-				end
-			end
-		end)
-		UserInputService.InputEnded:Connect(function(Input)
-			local Key = tostring(Input.KeyCode):gsub("Enum.KeyCode.","")
-			if Input.UserInputType == Enum.UserInputType.Keyboard then
-				if Key == Keybind.Value then
-					Keybind.Callback(Keybind.Value,false)
-				end
-			end
-			if Keybind.Mouse then
-				local Key = tostring(Input.UserInputType):gsub("Enum.UserInputType.","")
-				if Input.UserInputType == Enum.UserInputType.MouseButton1
-					or Input.UserInputType == Enum.UserInputType.MouseButton2
-					or Input.UserInputType == Enum.UserInputType.MouseButton3 then
-
-					if Key == Keybind.Value then
-						Keybind.Callback(Keybind.Value,false)
-					end
-				end
-			end
-		end)
-		function Keybind:SetValue(Key)
-			ToggleAsset.Keybind.Text = "[ " .. tostring(Key) .. " ]"
-			Keybind.Value = Key
-			Keybind.WaitingForBind = false
-			Window.Flags[Keybind.Flag] = Keybind.Value
-			Keybind.Callback(Keybind.Value,false)
-		end
-		function Keybind:SetCallback(Callback)
-			Keybind.Callback = Callback
-		end
-
-		return Keybind
-	end
+	return ToggleAsset
 end
-local function InitSlider(Parent,ScreenAsset,Window,Slider)
+function Assets:Slider(Parent,ScreenAsset,Window,Slider)
 	local SliderAsset = GetAsset("Slider/Slider")
 
 	SliderAsset.Parent = Parent
@@ -681,7 +574,7 @@ local function InitSlider(Parent,ScreenAsset,Window,Slider)
 		Slider.Callback = Callback
 	end
 	function Slider:ToolTip(Text)
-		InitToolTip(SliderAsset,ScreenAsset,Text)
+		Assets:ToolTip(SliderAsset,ScreenAsset,Text)
 	end
 
 	SliderAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
@@ -721,7 +614,92 @@ local function InitSlider(Parent,ScreenAsset,Window,Slider)
 		end
 	end)
 end
-local function InitTextbox(Parent,ScreenAsset,Window,Textbox)
+function Assets:HighSlider(Parent,ScreenAsset,Window,Slider)
+	local SliderAsset = GetAsset("Slider/HighSlider")
+
+	SliderAsset.Parent = Parent
+	SliderAsset.Title.Text = Slider.Name
+	Slider.Value = tonumber(string.format("%." .. Slider.Precise .. "f",Slider.Value))
+	SliderAsset.Background.Bar.Size = UDim2.new((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min),0,1,0)
+	SliderAsset.Background.Bar.BackgroundColor3 = Window.Color
+	table.insert(Window.Colorable,SliderAsset.Background.Bar)
+
+	if #Slider.Unit == 0 then
+		SliderAsset.Value.PlaceholderText = Slider.Value
+	else
+		SliderAsset.Value.PlaceholderText = Slider.Value .. " " .. Slider.Unit
+	end
+
+	local function UpdateVisual(Value)
+		Slider.Value = tonumber(string.format("%." .. Slider.Precise .. "f",Value))
+		SliderAsset.Background.Bar.Size = UDim2.new((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min),0,1,0)
+		if #Slider.Unit == 0 then
+			SliderAsset.Value.PlaceholderText = Slider.Value
+		else
+			SliderAsset.Value.PlaceholderText = Slider.Value .. " " .. Slider.Unit
+		end
+
+		Window.Flags[Slider.Flag] = Slider.Value
+		Slider.Callback(Slider.Value)
+	end
+	local function AttachToMouse(Input)
+		local XScale = math.clamp((Input.Position.X - SliderAsset.Background.AbsolutePosition.X) / SliderAsset.Background.AbsoluteSize.X,0,1)
+		local SliderPrecise = math.clamp(XScale * (Slider.Max - Slider.Min) + Slider.Min,Slider.Min,Slider.Max)
+		UpdateVisual(SliderPrecise)
+	end
+
+	function Slider:SetName(Name)
+		Slider.Name = Name
+		SliderAsset.Title.Text = Name
+	end
+	function Slider:SetValue(Value)
+		UpdateVisual(Value)
+	end
+	function Slider:SetCallback(Callback)
+		Slider.Callback = Callback
+	end
+	function Slider:ToolTip(Text)
+		Assets:ToolTip(SliderAsset,ScreenAsset,Text)
+	end
+
+	SliderAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		SliderAsset.Value.Size = UDim2.new(0,SliderAsset.Value.TextBounds.X,1,0)
+		SliderAsset.Title.Size = UDim2.new(1,-SliderAsset.Value.Size.X.Offset+10,1,0)
+		SliderAsset.Size = UDim2.new(1,0,0,SliderAsset.Title.TextBounds.Y + 2)
+	end)
+	SliderAsset.Value:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		SliderAsset.Value.Size = UDim2.new(0,SliderAsset.Value.TextBounds.X,1,0)
+		SliderAsset.Title.Size = UDim2.new(1,-SliderAsset.Value.Size.X.Offset+10,1,0)
+	end)
+	SliderAsset.Value.FocusLost:Connect(function()
+		if not tonumber(SliderAsset.Value.Text) then
+			SliderAsset.Value.Text = Slider.Value
+		elseif tonumber(SliderAsset.Value.Text) <= Slider.Min then
+			SliderAsset.Value.Text = Slider.Min
+		elseif tonumber(SliderAsset.Value.Text) >= Slider.Max then
+			SliderAsset.Value.Text = Slider.Max
+		end
+		UpdateVisual(SliderAsset.Value.Text)
+		SliderAsset.Value.Text = ""
+	end)
+	SliderAsset.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			AttachToMouse(Input)
+			Slider.Active = true
+		end
+	end)
+	SliderAsset.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			Slider.Active = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(Input)
+		if Slider.Active and Input.UserInputType == Enum.UserInputType.MouseMovement then
+			AttachToMouse(Input)
+		end
+	end)
+end
+function Assets:Textbox(Parent,ScreenAsset,Window,Textbox)
 	local TextboxAsset = GetAsset("Textbox/Textbox")
 
 	TextboxAsset.Parent = Parent
@@ -763,10 +741,10 @@ local function InitTextbox(Parent,ScreenAsset,Window,Textbox)
 		Textbox.Callback = Callback
 	end
 	function Textbox:ToolTip(Text)
-		InitToolTip(TextboxAsset,ScreenAsset,Text)
+		Assets:ToolTip(TextboxAsset,ScreenAsset,Text)
 	end
 end
-local function InitKeybind(Parent,ScreenAsset,Window,Keybind)
+function Assets:Keybind(Parent,ScreenAsset,Window,Keybind)
 	local KeybindAsset = GetAsset("Keybind/Keybind")
 
 	KeybindAsset.Parent = Parent
@@ -867,10 +845,101 @@ local function InitKeybind(Parent,ScreenAsset,Window,Keybind)
 		Keybind.Callback = Callback
 	end
 	function Keybind:ToolTip(Text)
-		InitToolTip(KeybindAsset,ScreenAsset,Text)
+		Assets:ToolTip(KeybindAsset,ScreenAsset,Text)
 	end
 end
-local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
+function Assets:ToggleKeybind(Parent,ScreenAsset,Window,Keybind,Toggle)
+	local KeybindAsset = GetAsset("Keybind/TKeybind")
+
+	KeybindAsset.Parent = Parent.Layout
+	KeybindAsset.Text = "[ " .. Keybind.Value .. " ]"
+	Keybind.WaitingForBind = false
+
+	KeybindAsset.MouseButton1Click:Connect(function()
+		KeybindAsset.Text = "[ ... ]"
+		Keybind.WaitingForBind = true
+	end)
+	KeybindAsset:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		KeybindAsset.Size = UDim2.new(0,KeybindAsset.TextBounds.X,1,0)
+	end)
+	UserInputService.InputBegan:Connect(function(Input)
+		local Key = tostring(Input.KeyCode):gsub("Enum.KeyCode.","")
+		if Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.Keyboard then
+			if not table.find(Keybind.Blacklist,Key) then
+				KeybindAsset.Text = "[ " .. Key .. " ]"
+				Keybind.Value = Key
+			else
+				if Keybind.DoNotClear then
+					KeybindAsset.Text = "[ " .. Keybind.Value .. " ]"
+				else
+					KeybindAsset.Text = "[ NONE ]"
+					Keybind.Value = "NONE"
+				end
+			end
+
+			Keybind.WaitingForBind = false
+			Window.Flags[Keybind.Flag] = Keybind.Value
+			Keybind.Callback(Keybind.Value,false,Toggle.Value)
+		elseif Input.UserInputType == Enum.UserInputType.Keyboard then
+			if Key == Keybind.Value then
+				Toggle:SetValue(not Toggle.Value)
+				Keybind.Callback(Keybind.Value,true,Toggle.Value)
+			end
+		end
+		if Keybind.Mouse then
+			local Key = tostring(Input.UserInputType):gsub("Enum.UserInputType.","")
+			if Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton2
+				or Keybind.WaitingForBind and Input.UserInputType == Enum.UserInputType.MouseButton3 then
+				KeybindAsset.Text = "[ " .. Key .. " ]"
+
+				Keybind.Value = Key
+				Keybind.WaitingForBind = false
+				Window.Flags[Keybind.Flag] = Keybind.Value
+				Keybind.Callback(Keybind.Value,false,Toggle.Value)
+			elseif Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Input.UserInputType == Enum.UserInputType.MouseButton2
+				or Input.UserInputType == Enum.UserInputType.MouseButton3 then
+
+				if Key == Keybind.Value then
+					Toggle:SetValue(not Toggle.Value)
+					Keybind.Callback(Keybind.Value,true,Toggle.Value)
+				end
+			end
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(Input)
+		local Key = tostring(Input.KeyCode):gsub("Enum.KeyCode.","")
+		if Input.UserInputType == Enum.UserInputType.Keyboard then
+			if Key == Keybind.Value then
+				Keybind.Callback(Keybind.Value,false,Toggle.Value)
+			end
+		end
+		if Keybind.Mouse then
+			local Key = tostring(Input.UserInputType):gsub("Enum.UserInputType.","")
+			if Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Input.UserInputType == Enum.UserInputType.MouseButton2
+				or Input.UserInputType == Enum.UserInputType.MouseButton3 then
+
+				if Key == Keybind.Value then
+					Keybind.Callback(Keybind.Value,false,Toggle.Value)
+				end
+			end
+		end
+	end)
+
+	function Keybind:SetValue(Key)
+		KeybindAsset.Text = "[ " .. tostring(Key) .. " ]"
+		Keybind.Value = Key
+		Keybind.WaitingForBind = false
+		Window.Flags[Keybind.Flag] = Keybind.Value
+		Keybind.Callback(Keybind.Value,false,Toggle.Value)
+	end
+	function Keybind:SetCallback(Callback)
+		Keybind.Callback = Callback
+	end
+end
+function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 	local DropdownAsset = GetAsset("Dropdown/Dropdown")
 	local OptionContainerAsset = GetAsset("Dropdown/OptionContainer")
 	DropdownAsset.Parent = Parent
@@ -883,7 +952,7 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 			ContainerRender = RunService.RenderStepped:Connect(function()
 				if not OptionContainerAsset.Visible then ContainerRender:Disconnect() end
 				OptionContainerAsset.Position = UDim2.new(0,DropdownAsset.Background.AbsolutePosition.X,0,
-				DropdownAsset.Background.AbsolutePosition.Y + DropdownAsset.Background.AbsoluteSize.Y + 42)
+					DropdownAsset.Background.AbsolutePosition.Y + DropdownAsset.Background.AbsoluteSize.Y + 42)
 				OptionContainerAsset.Size = UDim2.new(0,DropdownAsset.Background.AbsoluteSize.X,0,OptionContainerAsset.ListLayout.AbsoluteContentSize.Y + 2)
 			end)
 			OptionContainerAsset.Visible = true
@@ -903,7 +972,7 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 		DropdownAsset.Background.Size = UDim2.new(1,0,0,DropdownAsset.Background.Value.TextBounds.Y + 2)
 		DropdownAsset.Size = UDim2.new(1,0,0,DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
 	end)]]
-
+	
 	local function SetOptionState(Option,Toggle)
 		local Selected = {}
 
@@ -912,7 +981,7 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 			for Index, Option in pairs(Dropdown.List) do
 				if Option.Mode == "Button" then
 					if Option.Instance then
-						Option.Instance.BorderColor3 = Color3.fromRGB(60,60,60)
+						Option.Instance.Tick.BackgroundColor3 = Color3.fromRGB(60,60,60)
 					end
 					Option.Value = false
 				end
@@ -923,7 +992,7 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 			Option.Value = Toggle
 		end
 
-		Option.Instance.BorderColor3 = Option.Value
+		Option.Instance.Tick.BackgroundColor3 = Option.Value
 			and Window.Color or Color3.fromRGB(60,60,60)
 
 		-- Selected Setting
@@ -953,13 +1022,29 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 		OptionAsset.Title.Text = Option.Name
 		Option.Instance = OptionAsset
 
-		table.insert(Window.Colorable, OptionAsset)
+		table.insert(Window.Colorable, OptionAsset.Tick)
 		OptionAsset.MouseButton1Click:Connect(function()
 			SetOptionState(Option,not Option.Value)
 		end)
 		OptionAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			OptionAsset.Size = UDim2.new(1,0,0,OptionAsset.Title.TextBounds.Y + 2)
+			OptionAsset.Layout.Size = UDim2.new(1,-OptionAsset.Title.TextBounds.X - 22,1,0)
 		end)
+
+		for Index,Value in pairs(Option) do
+			if string.find(Index,"Colorpicker") then
+				Option[Index] = GetType(Option[Index],{},"table")
+				Option[Index].Flag = GetType(Option[Index].Flag,
+					Dropdown.Flag.."/"..Option.Name.."/Colorpicker","string")
+
+				Option[Index].Value = GetType(Option[Index].Value,{1,1,1,0,false},"table")
+				Option[Index].Callback = GetType(Option[Index].Callback,function() end,"function")
+				Window.Elements[#Window.Elements + 1] = Option[Index]
+				Window.Flags[Option[Index].Flag] = Option[Index].Value
+
+				Assets:ToggleColorpicker(OptionAsset,ScreenAsset,Window,Option[Index])
+			end
+		end
 	end
 	for Index, Option in pairs(Dropdown.List) do
 		if Option.Value then
@@ -982,6 +1067,21 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 			OptionAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 				OptionAsset.Size = UDim2.new(1,0,0,OptionAsset.Title.TextBounds.Y + 2)
 			end)
+
+			for Index,Value in pairs(Option) do
+				if string.find(Index,"Colorpicker") then
+					Option[Index] = GetType(Option[Index],{},"table")
+					Option[Index].Flag = GetType(Option[Index].Flag,
+						Dropdown.Flag.."/"..Option.Name.."/Colorpicker","string")
+
+					Option[Index].Value = GetType(Option[Index].Value,{1,1,1,0,false},"table")
+					Option[Index].Callback = GetType(Option[Index].Callback,function() end,"function")
+					Window.Elements[#Window.Elements + 1] = Option[Index]
+					Window.Flags[Option[Index].Flag] = Option[Index].Value
+
+					Assets:ToggleColorpicker(OptionAsset,ScreenAsset,Window,Option[Index])
+				end
+			end
 		end
 		for Index, Option in pairs(Dropdown.List) do
 			if Option.Value then
@@ -1024,10 +1124,10 @@ local function InitDropdown(Parent,ScreenAsset,Window,Dropdown)
 		DropdownAsset.Title.Text = Name
 	end
 	function Dropdown:ToolTip(Text)
-		InitToolTip(DropdownAsset,ScreenAsset,Text)
+		Assets:ToolTip(DropdownAsset,ScreenAsset,Text)
 	end
 end
-local function InitColorpicker(Parent,ScreenAsset,Window,Colorpicker)
+function Assets:Colorpicker(Parent,ScreenAsset,Window,Colorpicker)
 	local ColorpickerAsset = GetAsset("Colorpicker/Colorpicker")
 	local PaletteAsset = GetAsset("Colorpicker/Palette")
 	ColorpickerAsset.Parent = Parent
@@ -1159,7 +1259,7 @@ local function InitColorpicker(Parent,ScreenAsset,Window,Colorpicker)
 		Update()
 	end
 	function Colorpicker:ToolTip(Text)
-		InitToolTip(ColorpickerAsset,ScreenAsset,Text)
+		Assets:ToolTip(ColorpickerAsset,ScreenAsset,Text)
 	end
 
 	table.insert(Window.Colorable,PaletteAsset.Rainbow.Tick)
@@ -1203,8 +1303,173 @@ local function InitColorpicker(Parent,ScreenAsset,Window,Colorpicker)
 		Update()
 	end)
 end
+function Assets:ToggleColorpicker(Parent,ScreenAsset,Window,Colorpicker)
+	local ColorpickerAsset = GetAsset("Colorpicker/TColorpicker")
+	local PaletteAsset = GetAsset("Colorpicker/Palette")
+	ColorpickerAsset.Parent = Parent.Layout
+	PaletteAsset.Parent = ScreenAsset
 
-local Bracket = InitScreen()
+	local PaletteRender = nil
+	local SVRender = nil
+	local HueRender = nil
+	local AlphaRender = nil
+
+	local function TableToColor(Table)
+		if type(Table) ~= "table" then return Table end
+		return Color3.fromHSV(Table[1],Table[2],Table[3])
+	end
+	local function FormatToString(Color)
+		return math.round(Color.R * 255) .. "," .. math.round(Color.G * 255) .. "," .. math.round(Color.B * 255)
+	end
+
+	local function Update()
+		Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+		ColorpickerAsset.BackgroundColor3 = Colorpicker.Value[6]
+		PaletteAsset.SVPicker.BackgroundColor3 = Color3.fromHSV(Colorpicker.Value[1],1,1)
+		PaletteAsset.SVPicker.Pin.Position = UDim2.new(Colorpicker.Value[2],0,1 - Colorpicker.Value[3],0)
+		PaletteAsset.Hue.Pin.Position = UDim2.new(1 - Colorpicker.Value[1],0,0.5,0)
+
+		PaletteAsset.Alpha.Pin.Position = UDim2.new(Colorpicker.Value[4],0,0.5,0)
+		PaletteAsset.Alpha.Value.Text = Colorpicker.Value[4]
+		PaletteAsset.Alpha.BackgroundColor3 = Colorpicker.Value[6]
+
+		PaletteAsset.RGB.RGBBox.PlaceholderText = FormatToString(Colorpicker.Value[6])
+		PaletteAsset.HEX.HEXBox.PlaceholderText = Colorpicker.Value[6]:ToHex()
+		Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+		Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
+	end
+	Update()
+
+	ColorpickerAsset.MouseButton1Click:Connect(function()
+		if not PaletteAsset.Visible then
+			PaletteAsset.Visible = true
+			PaletteRender = RunService.RenderStepped:Connect(function()
+				if not PaletteAsset.Visible then PaletteRender:Disconnect() end
+				PaletteAsset.Position = UDim2.new(0,(ColorpickerAsset.AbsolutePosition.X - PaletteAsset.AbsoluteSize.X) + 20,0,ColorpickerAsset.AbsolutePosition.Y + 52)
+			end)
+		else
+			PaletteRender:Disconnect()
+			PaletteAsset.Visible = false
+		end
+	end)
+	PaletteAsset.SVPicker.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if SVRender then
+				SVRender:Disconnect()
+			end
+			SVRender = RunService.RenderStepped:Connect(function()
+				if not PaletteAsset.Visible then SVRender:Disconnect() end
+				local Mouse = UserInputService:GetMouseLocation()
+				local ColorX = math.clamp(Mouse.X - PaletteAsset.SVPicker.AbsolutePosition.X,0,PaletteAsset.SVPicker.AbsoluteSize.X) / PaletteAsset.SVPicker.AbsoluteSize.X
+
+				local ColorY = math.clamp(Mouse.Y - (PaletteAsset.SVPicker.AbsolutePosition.Y + 36),0,PaletteAsset.SVPicker.AbsoluteSize.Y) / PaletteAsset.SVPicker.AbsoluteSize.Y
+				Colorpicker.Value[2] = ColorX
+				Colorpicker.Value[3] = 1 - ColorY
+				Update()
+			end)
+		end
+	end)
+	PaletteAsset.SVPicker.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if SVRender then
+				SVRender:Disconnect()
+			end
+		end
+	end)
+	PaletteAsset.Hue.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if HueRender then
+				HueRender:Disconnect()
+			end
+			HueRender = RunService.RenderStepped:Connect(function()
+				if not PaletteAsset.Visible then HueRender:Disconnect() end
+				local Mouse = UserInputService:GetMouseLocation()
+				local ColorX = math.clamp(Mouse.X - PaletteAsset.Hue.AbsolutePosition.X,0,PaletteAsset.Hue.AbsoluteSize.X) / PaletteAsset.Hue.AbsoluteSize.X
+				Colorpicker.Value[1] = 1 - ColorX
+				Update()
+			end)
+		end
+	end)
+	PaletteAsset.Hue.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if HueRender then
+				HueRender:Disconnect()
+			end
+		end
+	end)
+	PaletteAsset.Alpha.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if AlphaRender then
+				AlphaRender:Disconnect()
+			end
+			AlphaRender = RunService.RenderStepped:Connect(function()
+				if not PaletteAsset.Visible then AlphaRender:Disconnect() end
+				local Mouse = UserInputService:GetMouseLocation()
+				local ColorX = math.clamp(Mouse.X - PaletteAsset.Alpha.AbsolutePosition.X,0,PaletteAsset.Alpha.AbsoluteSize.X) / PaletteAsset.Alpha.AbsoluteSize.X
+				Colorpicker.Value[4] = math.floor(ColorX * 10^2) / (10^2) -- idk %.2f little bit broken with this
+				Update()
+			end)
+		end
+	end)
+	PaletteAsset.Alpha.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if AlphaRender then
+				AlphaRender:Disconnect()
+			end
+		end
+	end)
+
+	function Colorpicker:SetCallback(Callback)
+		Colorpicker.Callback = Callback
+	end
+	function Colorpicker:SetValue(HSVAR)
+		Colorpicker.Value = HSVAR
+		Update()
+	end
+
+	table.insert(Window.Colorable,PaletteAsset.Rainbow.Tick)
+	PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5] and Window.Color or Color3.fromRGB(60,60,60)
+	PaletteAsset.Rainbow.MouseButton1Click:Connect(function()
+		Colorpicker.Value[5] = not Colorpicker.Value[5]
+		PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5] and Window.Color or Color3.fromRGB(60,60,60)
+	end)
+	RunService.Heartbeat:Connect(function()
+		if Colorpicker.Value[5] then
+			if PaletteAsset.Visible then
+				Colorpicker.Value[1] = Window.RainbowHue
+				Update()
+			else 
+				Colorpicker.Value[1] = Window.RainbowHue
+				Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+				ColorpickerAsset.BackgroundColor3 = Colorpicker.Value[6]
+				Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+				Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
+			end
+		end
+	end)
+
+	PaletteAsset.RGB.RGBBox.FocusLost:Connect(function(Enter)
+		if not Enter then return end
+		local ColorString = string.split(string.gsub(PaletteAsset.RGB.RGBBox.Text," ",""),",")
+		local Hue,Saturation,Value = Color3.fromRGB(ColorString[1],ColorString[2],ColorString[3]):ToHSV()
+		PaletteAsset.RGB.RGBBox.Text = ""
+		Colorpicker.Value[1] = Hue
+		Colorpicker.Value[2] = Saturation
+		Colorpicker.Value[3] = Value
+		Update()
+	end)
+	PaletteAsset.HEX.HEXBox.FocusLost:Connect(function(Enter)
+		if not Enter then return end
+		local Hue,Saturation,Value = Color3.fromHex("#" .. PaletteAsset.HEX.HEXBox.Text):ToHSV()
+		PaletteAsset.RGB.RGBBox.Text = ""
+		Colorpicker.Value[1] = Hue
+		Colorpicker.Value[2] = Saturation
+		Colorpicker.Value[3] = Value
+		Update()
+	end)
+end
+
+local Bracket = Assets:Screen()
 function Bracket:Window(Window)
 	Window = GetType(Window,{},"table")
 	Window.Name = GetType(Window.Name,"Window","string")
@@ -1218,11 +1483,11 @@ function Bracket:Window(Window)
 	Window.Elements = {}
 	Window.Flags = {}
 
-	local WindowAsset = InitWindow(Bracket.ScreenAsset,Window)
+	local WindowAsset = Assets:Window(Bracket.ScreenAsset,Window)
 	function Window:Tab(Tab)
 		Tab = GetType(Tab,{},"table")
 		Tab.Name = GetType(Tab.Name,"Tab","string")
-		local ChooseTab = InitTab(Bracket.ScreenAsset,WindowAsset,Window,Tab)
+		local ChooseTab = Assets:Tab(Bracket.ScreenAsset,WindowAsset,Window,Tab)
 
 		function Tab:AddConfigSection(PFName,Side)
 			local ConfigSection = Tab:Section({Name = "Configs",Side = Side}) do
@@ -1280,20 +1545,20 @@ function Bracket:Window(Window)
 		function Tab:Divider(Divider)
 			Divider = GetType(Divider,{},"table")
 			Divider.Text = GetType(Divider.Text,"","string")
-			InitDivider(ChooseTab(Divider.Side),Divider)
+			Assets:Divider(ChooseTab(Divider.Side),Divider)
 			return Divider
 		end
 		function Tab:Label(Label)
 			Label = GetType(Label,{},"table")
 			Label.Text = GetType(Label.Text,"Label","string")
-			InitLabel(ChooseTab(Label.Side),Label)
+			Assets:Label(ChooseTab(Label.Side),Label)
 			return Label
 		end
 		function Tab:Button(Button)
 			Button = GetType(Button,{},"table")
 			Button.Name = GetType(Button.Name,"Button","string")
 			Button.Callback = GetType(Button.Callback,function() end,"function")
-			InitButton(ChooseTab(Button.Side),Bracket.ScreenAsset,Window,Button)
+			Assets:Button(ChooseTab(Button.Side),Bracket.ScreenAsset,Window,Button)
 			return Button
 		end
 		function Tab:Toggle(Toggle)
@@ -1306,7 +1571,33 @@ function Bracket:Window(Window)
 			Window.Elements[#Window.Elements + 1] = Toggle
 			Window.Flags[Toggle.Flag] = Toggle.Value
 
-			InitToggle(ChooseTab(Toggle.Side),Bracket.ScreenAsset,Window,Toggle)
+			local ToggleAsset = Assets:Toggle(ChooseTab(Toggle.Side),Bracket.ScreenAsset,Window,Toggle)
+			function Toggle:Keybind(Keybind)
+				Keybind = GetType(Keybind,{},"table")
+				Keybind.Flag = GetType(Keybind.Flag,Toggle.Flag.."/Keybind","string")
+
+				Keybind.Value = GetType(Keybind.Value,"NONE","string")
+				Keybind.Mouse = GetType(Keybind.Mouse,false,"boolean")
+				Keybind.Callback = GetType(Keybind.Callback,function() end,"function")
+				Keybind.Blacklist = GetType(Keybind.Blacklist,{"W","A","S","D","Slash","Tab","Backspace","Escape","Space","Delete","Unknown","Backquote"},"table")
+				Window.Elements[#Window.Elements + 1] = Keybind
+				Window.Flags[Keybind.Flag] = Keybind.Value
+
+				Assets:ToggleKeybind(ToggleAsset,Bracket.ScreenAsset,Window,Keybind,Toggle)
+				return Toggle
+			end
+			function Toggle:Colorpicker(Colorpicker)
+				Colorpicker = GetType(Colorpicker,{},"table")
+				Colorpicker.Flag = GetType(Colorpicker.Flag,Toggle.Flag.."/Colorpicker","string")
+
+				Colorpicker.Value = GetType(Colorpicker.Value,{1,1,1,0,false},"table")
+				Colorpicker.Callback = GetType(Colorpicker.Callback,function() end,"function")
+				Window.Elements[#Window.Elements + 1] = Colorpicker
+				Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+
+				Assets:ToggleColorpicker(ToggleAsset,Bracket.ScreenAsset,Window,Colorpicker)
+				return Toggle
+			end
 			return Toggle
 		end
 		function Tab:Slider(Slider)
@@ -1322,9 +1613,12 @@ function Bracket:Window(Window)
 			Slider.Callback = GetType(Slider.Callback,function() end,"function")
 			Window.Elements[#Window.Elements + 1] = Slider
 			Window.Flags[Slider.Flag] = Slider.Value
-
-			InitSlider(ChooseTab(Slider.Side),Bracket.ScreenAsset,Window,Slider)
-			return Slider
+			
+			if Slider.HighType then
+				Assets:HighSlider(ChooseTab(Slider.Side),Bracket.ScreenAsset,Window,Slider)
+			else
+				Assets:Slider(ChooseTab(Slider.Side),Bracket.ScreenAsset,Window,Slider)
+			end return Slider
 		end
 		function Tab:Textbox(Textbox)
 			Textbox = GetType(Textbox,{},"table")
@@ -1338,7 +1632,7 @@ function Bracket:Window(Window)
 			Window.Elements[#Window.Elements + 1] = Textbox
 			Window.Flags[Textbox.Flag] = Textbox.Value
 
-			InitTextbox(ChooseTab(Textbox.Side),Bracket.ScreenAsset,Window,Textbox)
+			Assets:Textbox(ChooseTab(Textbox.Side),Bracket.ScreenAsset,Window,Textbox)
 			return Textbox
 		end
 		function Tab:Keybind(Keybind)
@@ -1353,7 +1647,7 @@ function Bracket:Window(Window)
 			Window.Elements[#Window.Elements + 1] = Keybind
 			Window.Flags[Keybind.Flag] = Keybind.Value
 
-			InitKeybind(ChooseTab(Keybind.Side),Bracket.ScreenAsset,Window,Keybind)
+			Assets:Keybind(ChooseTab(Keybind.Side),Bracket.ScreenAsset,Window,Keybind)
 			return Keybind
 		end
 		function Tab:Dropdown(Dropdown)
@@ -1364,7 +1658,7 @@ function Bracket:Window(Window)
 			Window.Elements[#Window.Elements + 1] = Dropdown
 			Window.Flags[Dropdown.Flag] = Dropdown.Value
 
-			InitDropdown(ChooseTab(Dropdown.Side),Bracket.ScreenAsset,Window,Dropdown)
+			Assets:Dropdown(ChooseTab(Dropdown.Side),Bracket.ScreenAsset,Window,Dropdown)
 			return Dropdown
 		end
 		function Tab:Colorpicker(Colorpicker)
@@ -1377,31 +1671,31 @@ function Bracket:Window(Window)
 			Window.Elements[#Window.Elements + 1] = Colorpicker
 			Window.Flags[Colorpicker.Flag] = Colorpicker.Value
 
-			InitColorpicker(ChooseTab(Colorpicker.Side),Bracket.ScreenAsset,Window,Colorpicker)
+			Assets:Colorpicker(ChooseTab(Colorpicker.Side),Bracket.ScreenAsset,Window,Colorpicker)
 			return Colorpicker
 		end
 		function Tab:Section(Section)
 			Section = GetType(Section,{},"table")
 			Section.Name = GetType(Section.Name,"Section","string")
-			local SectionContainer = InitSection(ChooseTab(Section.Side),Section)
+			local SectionContainer = Assets:Section(ChooseTab(Section.Side),Section)
 
 			function Section:Divider(Divider)
 				Divider = GetType(Divider,{},"table")
 				Divider.Text = GetType(Divider.Text,"","string")
-				InitDivider(SectionContainer,Divider)
+				Assets:Divider(SectionContainer,Divider)
 				return Divider
 			end
 			function Section:Label(Label)
 				Label = GetType(Label,{},"table")
 				Label.Text = GetType(Label.Text,"Label","string")
-				InitLabel(SectionContainer,Label)
+				Assets:Label(SectionContainer,Label)
 				return Label
 			end
 			function Section:Button(Button)
 				Button = GetType(Button,{},"table")
 				Button.Name = GetType(Button.Name,"Button","string")
 				Button.Callback = GetType(Button.Callback,function() end,"function")
-				InitButton(SectionContainer,Bracket.ScreenAsset,Window,Button)
+				Assets:Button(SectionContainer,Bracket.ScreenAsset,Window,Button)
 				return Button
 			end
 			function Section:Toggle(Toggle)
@@ -1414,7 +1708,33 @@ function Bracket:Window(Window)
 				Window.Elements[#Window.Elements + 1] = Toggle
 				Window.Flags[Toggle.Flag] = Toggle.Value
 
-				InitToggle(SectionContainer,Bracket.ScreenAsset,Window,Toggle)
+				local ToggleAsset = Assets:Toggle(SectionContainer,Bracket.ScreenAsset,Window,Toggle)
+				function Toggle:Keybind(Keybind)
+					Keybind = GetType(Keybind,{},"table")
+					Keybind.Flag = GetType(Keybind.Flag,Toggle.Flag.."/Keybind","string")
+
+					Keybind.Value = GetType(Keybind.Value,"NONE","string")
+					Keybind.Mouse = GetType(Keybind.Mouse,false,"boolean")
+					Keybind.Callback = GetType(Keybind.Callback,function() end,"function")
+					Keybind.Blacklist = GetType(Keybind.Blacklist,{"W","A","S","D","Slash","Tab","Backspace","Escape","Space","Delete","Unknown","Backquote"},"table")
+					Window.Elements[#Window.Elements + 1] = Keybind
+					Window.Flags[Keybind.Flag] = Keybind.Value
+
+					Assets:ToggleKeybind(ToggleAsset,Bracket.ScreenAsset,Window,Keybind,Toggle)
+					return Toggle
+				end
+				function Toggle:Colorpicker(Colorpicker)
+					Colorpicker = GetType(Colorpicker,{},"table")
+					Colorpicker.Flag = GetType(Colorpicker.Flag,Toggle.Flag.."/Colorpicker","string")
+
+					Colorpicker.Value = GetType(Colorpicker.Value,{1,1,1,0,false},"table")
+					Colorpicker.Callback = GetType(Colorpicker.Callback,function() end,"function")
+					Window.Elements[#Window.Elements + 1] = Colorpicker
+					Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+
+					Assets:ToggleColorpicker(ToggleAsset,Bracket.ScreenAsset,Window,Colorpicker)
+					return Toggle
+				end
 				return Toggle
 			end
 			function Section:Slider(Slider)
@@ -1430,9 +1750,11 @@ function Bracket:Window(Window)
 				Slider.Callback = GetType(Slider.Callback,function() end,"function")
 				Window.Elements[#Window.Elements + 1] = Slider
 				Window.Flags[Slider.Flag] = Slider.Value
-
-				InitSlider(SectionContainer,Bracket.ScreenAsset,Window,Slider)
-				return Slider
+				if Slider.HighType then
+					Assets:HighSlider(SectionContainer,Bracket.ScreenAsset,Window,Slider)
+				else
+					Assets:Slider(SectionContainer,Bracket.ScreenAsset,Window,Slider)
+				end return Slider
 			end
 			function Section:Textbox(Textbox)
 				Textbox = GetType(Textbox,{},"table")
@@ -1446,7 +1768,7 @@ function Bracket:Window(Window)
 				Window.Elements[#Window.Elements + 1] = Textbox
 				Window.Flags[Textbox.Flag] = Textbox.Value
 
-				InitTextbox(SectionContainer,Bracket.ScreenAsset,Window,Textbox)
+				Assets:Textbox(SectionContainer,Bracket.ScreenAsset,Window,Textbox)
 				return Textbox
 			end
 			function Section:Keybind(Keybind)
@@ -1461,7 +1783,7 @@ function Bracket:Window(Window)
 				Window.Elements[#Window.Elements + 1] = Keybind
 				Window.Flags[Keybind.Flag] = Keybind.Value
 
-				InitKeybind(SectionContainer,Bracket.ScreenAsset,Window,Keybind)
+				Assets:Keybind(SectionContainer,Bracket.ScreenAsset,Window,Keybind)
 				return Keybind
 			end
 			function Section:Dropdown(Dropdown)
@@ -1472,7 +1794,7 @@ function Bracket:Window(Window)
 				Window.Elements[#Window.Elements + 1] = Dropdown
 				Window.Flags[Dropdown.Flag] = Dropdown.Value
 
-				InitDropdown(SectionContainer,Bracket.ScreenAsset,Window,Dropdown)
+				Assets:Dropdown(SectionContainer,Bracket.ScreenAsset,Window,Dropdown)
 				return Dropdown
 			end
 			function Section:Colorpicker(Colorpicker)
@@ -1485,7 +1807,7 @@ function Bracket:Window(Window)
 				Window.Elements[#Window.Elements + 1] = Colorpicker
 				Window.Flags[Colorpicker.Flag] = Colorpicker.Value
 
-				InitColorpicker(SectionContainer,Bracket.ScreenAsset,Window,Colorpicker)
+				Assets:Colorpicker(SectionContainer,Bracket.ScreenAsset,Window,Colorpicker)
 				return Colorpicker
 			end
 			return Section

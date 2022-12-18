@@ -225,46 +225,46 @@ local Window = Parvus.Utilities.UI:Window({
             ItemSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Items/DistanceCheck",Value = true})
             ItemSection:Slider({Name = "Distance",Flag = "AR2/ESP/Items/Distance",Min = 25,Max = 5000,Value = 50,Unit = "meters"})
             for Index,Name in pairs(ItemCategory) do
-                local ItemFlag = "AR2/ESP/Items/" .. Name .. "/Enabled" Window.Flags[ItemFlag] = false
+                local ItemFlag = "AR2/ESP/Items/" .. Name Window.Flags[ItemFlag.."/Enabled"] = false
                 Items[#Items + 1] = {Name = Name,Mode = "Toggle",Value = false,
-                    --Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[ItemFlag] = Option.Value end
+                    Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0,false}},
+                    Callback = function(Selected,Option) Window.Flags[ItemFlag.."/Enabled"] = Option.Value end
                 }
             end ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
-        local ItemCSection = ESPTab:Section({Name = "Item Colors",Side = "Left"}) do
+        local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Left"}) do
+            ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
+            ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
+            ZombiesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Zombies/Color",Value = {1,0,1,0,false}})
+            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 250,Unit = "meters"})
+        end
+        --[[local ItemCSection = ESPTab:Section({Name = "Item Colors",Side = "Left"}) do
             for Index,Name in pairs(ItemCategory) do local ItemFlag = "AR2/ESP/Items/" .. Name
                 ItemCSection:Colorpicker({Name = Name,Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
             end
-        end
+        end]]
         local RESection = ESPTab:Section({Name = "Random Events ESP",Side = "Right"}) do local REs = {}
             RESection:Toggle({Name = "Enabled",Flag = "AR2/ESP/RandomEvents/Enabled",Value = false})
             RESection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/RandomEvents/DistanceCheck",Value = true})
             RESection:Slider({Name = "Distance",Flag = "AR2/ESP/RandomEvents/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "meters"})
             for Index,Name in pairs(RandomEvents) do
-                local REFlag = "AR2/ESP/RandomEvents/" .. Name .. "/Enabled" Window.Flags[REFlag] = false
+                local REFlag = "AR2/ESP/RandomEvents/" .. Name Window.Flags[REFlag.."/Enabled"] = false
                 REs[#REs + 1] = {Name = Name,Mode = "Toggle",Value = true,
-                    --Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[REFlag] = Option.Value end
+                    Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
+                    Callback = function(Selected,Option) Window.Flags[REFlag.."/Enabled"] = Option.Value end
                 }
             end RESection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = REs})
         end
-        local RECSection = ESPTab:Section({Name = "Random Events Colors",Side = "Right"}) do
+        --[[local RECSection = ESPTab:Section({Name = "Random Events Colors",Side = "Right"}) do
             for Index,Name in pairs(RandomEvents) do local REFlag = "AR2/ESP/RandomEvents/" .. Name
                 RECSection:Colorpicker({Name = Name,Flag = REFlag.."/Color",Value = {1,0,1,0,false}})
             end
-        end
+        end]]
         local VehiclesSection = ESPTab:Section({Name = "Vehicles ESP",Side = "Right"}) do
             VehiclesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Vehicles/Enabled",Value = false})
             VehiclesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Vehicles/DistanceCheck",Value = true})
             VehiclesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Vehicles/Color",Value = {1,0,1,0,false}})
             VehiclesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Vehicles/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "meters"})
-        end
-        local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Right"}) do
-            ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
-            ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
-            ZombiesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Zombies/Color",Value = {1,0,1,0,false}})
-            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 250,Unit = "meters"})
         end
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
@@ -331,14 +331,16 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
             Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
             :Keybind({Value = "RightControl",Flag = "UI/Keybind",DoNotClear = true})
+            :Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
+            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
-            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
-            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
+            MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = true})
+            --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
+            Callback = function(HSVAR,Color) Window:SetColor(Color) end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
@@ -396,7 +398,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
-            CrosshairSection:Colorpicker({Name = "Color",Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
+            :Colorpicker({Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
             CrosshairSection:Slider({Name = "Size",Flag = "Mouse/Crosshair/Size",Min = 0,Max = 20,Value = 4})
             CrosshairSection:Slider({Name = "Gap",Flag = "Mouse/Crosshair/Gap",Min = 0,Max = 10,Value = 2})
         end

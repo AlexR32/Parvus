@@ -243,14 +243,16 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
             Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
             :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
+            :Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
+            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function() Window:Toggle(Window.Enabled) end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
-            MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
+            --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
+            Callback = function(HSVAR,Color) Window:SetColor(Color) end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
@@ -308,7 +310,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
-            CrosshairSection:Colorpicker({Name = "Color",Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
+            :Colorpicker({Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
             CrosshairSection:Slider({Name = "Size",Flag = "Mouse/Crosshair/Size",Min = 0,Max = 20,Value = 4})
             CrosshairSection:Slider({Name = "Gap",Flag = "Mouse/Crosshair/Gap",Min = 0,Max = 10,Value = 2})
         end

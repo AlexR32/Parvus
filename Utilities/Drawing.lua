@@ -189,6 +189,7 @@ local function ItemESP(Item,ESP,IsBasePart)
     end
 
     return RunService.Heartbeat:Connect(function()
+        --print(IsBasePart,Item[3])
         local Camera,Position = Workspace.CurrentCamera,IsBasePart and Item[3].Position or Item[3]
         ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
         local Distance = GetDistanceFromCamera(Camera,Position) * 0.28
@@ -226,8 +227,8 @@ function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Config)
                 --Position = Vector2.zero,
                 --Size = 16,
                 --Text = "",
-                --Transparency = 1,
-                --Visible = false
+                Transparency = 0,
+                Visible = false,
                 ZIndex = 1
             })
         }
