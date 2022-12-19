@@ -55,6 +55,8 @@ function Misc:NewThreadLoop(Wait,Function)
             local Success,Error = pcall(Function)
             if not Success then
                 warn("thread error " .. Error)
+            elseif Error == "break" then
+                --[[print("thread stopped")]] break
             end
         end
     end)
@@ -206,7 +208,10 @@ function Misc:SetupLighting(Flags)
                 local CustomValue = Flags["Lighting/"..Property]
                 if type(CustomValue) == "table" then
                     CustomValue = Parvus.Utilities.UI:TableToColor(CustomValue)
-                end Lighting[Property] = CustomValue
+                end
+                if Lighting[Property] ~= CustomValue then
+                    Lighting[Property] = CustomValue
+                end
             end
         end
     end)

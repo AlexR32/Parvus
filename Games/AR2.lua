@@ -26,8 +26,8 @@ local Animators = Framework.Classes.Animators
 
 local Events = getupvalue(Network.Add,4)
 --[[local GetSpreadAngle = getupvalue(Bullets.Fire,1)
-local GetSpreadVector = getupvalue(Bullets.Fire,2)]]
---PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)
+local GetSpreadVector = getupvalue(Bullets.Fire,2)
+PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)]]
 
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
@@ -47,18 +47,12 @@ local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = 
 "PartyTrailerTechnoGold","PartyTrailerTechnoGoldDeagleMod1",
 "PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
 "SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01",
-"SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01"
---[["CrashPrisonBus01","PoolsClosed01","PoliceBlockade01","SeahawkCrashsite04",
-"SeahawkCrashsite06","SeahawkCrashsite07","SeahawkCrashsite05","ATVCrashsiteRenegade01",
-"MilitaryBlockade01","GraveFresh01","LifePreserverSoviet01","PopupFishing01",
-"LifePreserverMilitary01","SedanHaul01","LifePreserverSpecOps01","GraveNumberOne1",
-"PopupCampsite01","FuneralProcession01","ConstructionWorksite01","ParamedicScene01",
-"MilitaryConvoy01","CampSovietBandit01","SpecialForcesCrash01","PirateTreasure01",
-"PartyTrailerTechnoGoldDeagleMod1","PartyTrailerTechnoGold","StrandedStationKeyboard01","BeechcraftGemBroker01",
-"BankTruckRobbery01","RandomCrashCessna01","SeahawkCrashsiteRogue01","StashWeaponMid03","StashGeneral03",
-"StashWeaponHigh02","StashMedical03","StashFood03","StashWeaponHigh03","StashWeaponMid02","StashGeneral02",
-"StashMedical02","StashFood02","StashWeaponHigh01","StashFood01","StashMedical01","StashGeneral01",
-"StashWeaponMid01","PopupFishing02","StrandedStation01","BeachedAluminumBoat01","PartyTrailerDisco01"]]
+"SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01",
+-- Christmas Random Events
+"SnowmanStructure02","SnowmanStructure01","ChristmasTreeHouse01",
+"ChristmasTreeSpecialForces01","ChristmasTreeHouse03","ChristmasSantaSleigh03",
+"ChristmasTreeHouse02","ChristmasSantaSleigh02","ChristmasSantaSleigh01",
+"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"
 },{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
 "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
@@ -415,13 +409,9 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-function NoClip(Enabled)
-    if LocalPlayer.Character then
-        for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
-            if Value:IsA("BasePart") then
-                Value.CanCollide = not Enabled
-            end
-        end
+function NoClip(Enabled) if not LocalPlayer.Character then return end
+    for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
+        if Value:IsA("BasePart") then Value.CanCollide = not Enabled end
     end
 end
 
@@ -439,19 +429,16 @@ Window.Flags["UI/OOL"])
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
 WallCheckParams.FilterDescendantsInstances = {
-    Workspace.Effects,
-    Workspace.Sounds,
-    Workspace.Locations,
-    Workspace.Spawns
+    Workspace.Effects,Workspace.Sounds,
+    Workspace.Locations,Workspace.Spawns
 } WallCheckParams.IgnoreWater = true
 
 local function Raycast(Origin,Direction)
-    WallCheckParams.FilterDescendantsInstances = {
-        Workspace.Effects,Workspace.Sounds,
-        Workspace.Locations,Workspace.Spawns,
-        LocalPlayer.Character
-    }
-    local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
+    if not table.find(WallCheckParams.FilterDescendantsInstances,LocalPlayer.Character) then
+        --print("added character to raycast")
+        WallCheckParams.FilterDescendantsInstances = {Workspace.Effects,Workspace.Sounds,
+            Workspace.Locations,Workspace.Spawns,LocalPlayer.Character}
+    end local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
     if RaycastResult then
 		if (RaycastResult.Instance.Transparency == 1
         and RaycastResult.Instance.CanCollide == false)
@@ -464,32 +451,26 @@ local function Raycast(Origin,Direction)
     end
 end
 
-local function FixUnit(Vector)
-    if Vector.Magnitude == 0 then
-    return Vector3.zero end
-    return Vector.Unit
-end
-local function FlatCameraVector()
-    local Camera = Workspace.CurrentCamera
-    return Camera.CFrame.LookVector * Vector3.new(1,0,1),
-        Camera.CFrame.RightVector * Vector3.new(1,0,1)
-end
-local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
-    Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
-    Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
-    Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
-    Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
-    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
-    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and Vector3.new(0,-1,0) or Vector3.zero
-    return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
+-- Fly Logic
+local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
+local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
+local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Workspace.CurrentCamera.CFrame)
+    local Forward  = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+    local Backward = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+    local Left     = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+    local Right    = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
+    local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
+    return FixUnit(Forward + Backward + Left + Right + Up + Down)
 end
 
-local function PlayerFly(Config)
+local function PlayerFly(Enabled,Speed)
     local Character = PlayerClass.Character
-    if not Config.Enabled or not Character
+    if not Enabled or not Character
     or not FlyPosition then return end
 
-    FlyPosition += InputToVelocity() * Config.Speed
+    FlyPosition += InputToVelocity() * Speed
     Character.RootPart.AssemblyLinearVelocity = Vector3.zero
     Character.RootPart.CFrame = FlyPosition
 end
@@ -597,7 +578,7 @@ local function AimAt(Hitbox,Config)
 end
 
 local function GetZombiesAllFOV(Config)
-    local Camera = Workspace.CurrentCamera
+    --local Camera = Workspace.CurrentCamera
     local ClosestZombies = {}
 
     for Index,Zombie in pairs(Zombies:GetChildren()) do
@@ -613,7 +594,7 @@ local function GetZombiesAllFOV(Config)
     return ClosestZombies
 end
 local function GetItemsAllFOV(Config)
-    local Camera = Workspace.CurrentCamera
+    --local Camera = Workspace.CurrentCamera
     local ClosestItems = {}
 
     for Index,Item in pairs(LootBins:GetChildren()) do
@@ -632,9 +613,8 @@ local function GetItemsAllFOV(Config)
 end
 
 local function Length(Table) local Count = 0
-    for Index, Value in pairs(Table) do
-        Count += 1
-    end return Count
+    for Index, Value in pairs(Table) do Count += 1 end
+    return Count
 end
 local function CIIC(Data) -- ConcatItemsInContainer
     local Duplicates,Items = {},{Data.DisplayName}
@@ -736,6 +716,9 @@ Network.Send = function(Self,Name,...) local Args = {...}
     or Window.Flags["AR2/WalkSpeed/Enabled"])
     and Name == "Set Character State" then
         Args[1] = "Climbing"
+        --[[Args[2] = CFrame.new()
+        Args[3] = true
+        Args[4] = true]]
     end return OldSend(Self,Name,unpack(Args))
 end
 local OldFire = Bullets.Fire
@@ -839,17 +822,6 @@ RunService.Heartbeat:Connect(function()
             Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
         })
     end
-
-    if Window.Flags["AR2/AntiZombie/Enabled"] then
-        local ClosestZombies = GetZombiesAllFOV({Distance = 100})
-        for Index,Zombie in pairs(ClosestZombies) do
-            if isnetworkowner(Zombie) then
-                Zombie.Anchored = true
-            else
-                Zombie.Anchored = false
-            end
-        end
-    end
 end)
 
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
@@ -886,25 +858,43 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    PlayerFly({
-        Enabled = Window.Flags["AR2/Fly/Enabled"],
-        Speed = Window.Flags["AR2/Fly/Value"]
-    })
+    PlayerFly(Window.Flags["AR2/Fly/Enabled"],
+        Window.Flags["AR2/Fly/Value"])
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
-    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return end
-    local Items = GetItemsAllFOV({Distance = 100})
-
-    if #Items > 0 and LocalPlayer.Character and not Interface:IsVisible("GameMenu") then
-        for Index,Item in pairs(Items) do
-            if not Interface:IsVisible("GameMenu") and not ItemMemory[Item] then
-                local ContainerAvailable = Network:Fetch("Inventory Container Group Connect",Item)
-                if ContainerAvailable and not Interface:IsVisible("GameMenu") then
-                    Network:Send("Inventory Container Group Disconnect") ItemMemory[Item] = true
-                    task.spawn(function() task.wait(120) ItemMemory[Item] = nil end)
-                end
-            end
+    if not Window.Flags["AR2/AntiZombie/Enabled"] then return end
+    local ClosestZombies = GetZombiesAllFOV({Distance = 100})
+    for Index,Zombie in pairs(ClosestZombies) do
+        if isnetworkowner(Zombie) then
+            --Zombie.CFrame = PlayerClass.Character.RootPart.CFrame - Vector3.new(0,5,0)
+            --Zombie.AssemblyLinearVelocity = Vector3.zero
+            Zombie.Anchored = true
+        else
+            Zombie.Anchored = false
         end
+    end
+end)
+Parvus.Utilities.Misc:NewThreadLoop(1,function()
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
+    or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
+
+    local Items = GetItemsAllFOV({Distance = 100})
+    if Interface:IsVisible("GameMenu")
+    or not PlayerClass.Character or
+    #Items == 0 then return end
+
+    for Index,Item in pairs(Items) do
+        if Interface:IsVisible("GameMenu")
+        or ItemMemory[Item] then continue end
+
+        task.spawn(function()
+            --local ContainerAvailable = Network:Fetch("Inventory Container Group Connect",Item)
+            --if ContainerAvailable and not Interface:IsVisible("GameMenu") then
+            if Network:Fetch("Inventory Container Group Connect",Item) then
+                Network:Send("Inventory Container Group Disconnect")
+                ItemMemory[Item] = true task.wait(120) ItemMemory[Item] = nil
+            end
+        end)
     end
 end)
 
@@ -991,12 +981,15 @@ end)
 
 local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
 Events["Inventory Container Added\r"] = function(Id,Data,...)
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
         "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
 Events["Container Changed\r"] = function(Data,...)
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
+
     Parvus.Utilities.Drawing:RemoveESP(Data.Id)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},

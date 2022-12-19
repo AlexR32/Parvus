@@ -180,7 +180,7 @@ elseif game.GameId == 1586272220 then
 end
 
 local function ItemESP(Item,ESP,IsBasePart)
-    local ScreenPosition,OnScreen,InTheRange
+    local Camera,Position,ScreenPosition,OnScreen,Distance,InTheRange
     local function ConcatFlag(Flag)
         return ESP.Config[ESP.FlagConcat .. Flag]
     end
@@ -188,26 +188,29 @@ local function ItemESP(Item,ESP,IsBasePart)
         return ESP.Config[ESP.GlobalFlag .. Flag]
     end
 
-    return RunService.Heartbeat:Connect(function()
-        --print(IsBasePart,Item[3])
-        local Camera,Position = Workspace.CurrentCamera,IsBasePart and Item[3].Position or Item[3]
+    Parvus.Utilities.Misc:NewThreadLoop(0.01,function()
+        if ESP.Destroyed then return "break" end
+        if not GlobalFlag("/Enabled") or not ConcatFlag("/Enabled") then
+            ESP.Drawing.Text.Visible = false return
+        end
+
+        Camera,Position = Workspace.CurrentCamera,IsBasePart and Item[3].Position or Item[3]
         ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
-        local Distance = GetDistanceFromCamera(Camera,Position) * 0.28
+        Distance = GetDistanceFromCamera(Camera,Position) * 0.28
         InTheRange = CheckDistance(GlobalFlag("/DistanceCheck"),
         Distance,GlobalFlag("/Distance"))
-        
-        if OnScreen and InTheRange then
-            if ESP.Drawing.Text.Visible then
-                local Color = ConcatFlag("/Color")
-                ESP.Drawing.Text.Color = Color[6]
-                ESP.Drawing.Text.Transparency = 1-Color[4]
 
-                ESP.Drawing.Text.Text = string.format("%s\n%i meters",Item[2],Distance)
-                ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
-            end
-        end
         ESP.Drawing.Text.Visible = OnScreen and InTheRange and
         ConcatFlag("/Enabled") and GlobalFlag("/Enabled") or false
+
+        if ESP.Drawing.Text.Visible then
+            local Color = ConcatFlag("/Color")
+            ESP.Drawing.Text.Color = Color[6]
+            ESP.Drawing.Text.Transparency = 1-Color[4]
+
+            ESP.Drawing.Text.Text = string.format("%s\n%i meters",Item[2],Distance)
+            ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
+        end
     end)
 end
 
@@ -234,7 +237,7 @@ function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Config)
         }
     }
     local ESP = DrawingLibrary.ESPContainer[Item[1]]
-    ESP.Render = ItemESP(Item,ESP,typeof(Item[3]) ~= "Vector3")
+    ItemESP(Item,ESP,typeof(Item[3]) ~= "Vector3")
     return ESP
 end
 function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
@@ -311,9 +314,8 @@ function DrawingLibrary:RemoveESP(Target)
     local ESP = DrawingLibrary.ESPContainer[Target]
     if not ESP then return end
 
-    if ESP.Render then
-        ESP.Render:Disconnect()
-    end if ESP.Highlight then
+    ESP.Destroyed = true
+    if ESP.Highlight then
         ESP.Highlight:Destroy()
     end RemoveDrawing(ESP.Drawing)
     DrawingLibrary.ESPContainer[Target] = nil
