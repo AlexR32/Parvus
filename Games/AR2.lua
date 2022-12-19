@@ -27,7 +27,7 @@ local Animators = Framework.Classes.Animators
 local Events = getupvalue(Network.Add,4)
 --[[local GetSpreadAngle = getupvalue(Bullets.Fire,1)
 local GetSpreadVector = getupvalue(Bullets.Fire,2)]]
-PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)
+--PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)
 
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
