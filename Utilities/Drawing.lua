@@ -7,6 +7,7 @@ repeat task.wait() until PlayerService.LocalPlayer
 local LocalPlayer = PlayerService.LocalPlayer
 local DrawingLibrary = {ESPContainer = {}}
 local WhiteColor = Color3.new(1,1,1)
+local BlackColor = Color3.new(0,0,0)
 local GreenColor = Color3.new(0,1,0)
 local RedColor = Color3.new(1,0,0)
 
@@ -182,13 +183,13 @@ end
 local function ItemESP(Item,ESP,IsBasePart)
     local Camera,Position,ScreenPosition,OnScreen,Distance,InTheRange
     local function ConcatFlag(Flag)
-        return ESP.Config[ESP.FlagConcat .. Flag]
+        return ESP.Flags[ESP.FlagConcat .. Flag]
     end
     local function GlobalFlag(Flag)
-        return ESP.Config[ESP.GlobalFlag .. Flag]
+        return ESP.Flags[ESP.GlobalFlag .. Flag]
     end
 
-    Parvus.Utilities.Misc:NewThreadLoop(0.01,function()
+    Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
         if ESP.Destroyed then return "break" end
         if not GlobalFlag("/Enabled") or not ConcatFlag("/Enabled") then
             ESP.Drawing.Text.Visible = false return
@@ -214,24 +215,18 @@ local function ItemESP(Item,ESP,IsBasePart)
     end)
 end
 
-function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Config)
+function DrawingLibrary:ItemESP(Item,GlobalFlag,FlagConcat,Flags)
     if DrawingLibrary.ESPContainer[Item[1]] then return end
     DrawingLibrary.ESPContainer[Item[1]] = {
         FlagConcat = FlagConcat,
         GlobalFlag = GlobalFlag,
-        Config = Config,
+        Flags = Flags,
         Drawing = {
             Text = AddDrawing("Text", {
-                Center = true,
-                --Color = Color3.new(1,1,1),
-                --Font = 0,
-                Outline = true,
-                --OutlineColor = Color3.new(),
-                --Position = Vector2.zero,
-                --Size = 16,
-                --Text = "",
                 Transparency = 0,
                 Visible = false,
+                Outline = true,
+                Center = true,
                 ZIndex = 1
             })
         }
@@ -244,9 +239,10 @@ function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
     if DrawingLibrary.ESPContainer[Target] then return end
 
     DrawingLibrary.ESPContainer[Target] = {
-        FlagConcat = FlagConcat,Target = {},
+        FlagConcat = FlagConcat,
         Flags = Flags,Mode = Mode,
         Highlight = AddHighlight(),
+        Target = {},
         Drawing = {
             Box = {
                 Main = AddDrawing("Square",{
@@ -259,10 +255,10 @@ function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
                     Visible = false
                 }),
                 Text = AddDrawing("Text",{
-                    Center = true,
-                    Color = Color3.new(1,1,1),
+                    Color = WhiteColor,
                     Transparency = 0,
                     Visible = false,
+                    Center = true,
                     ZIndex = 1
                 })
             },
@@ -307,7 +303,7 @@ function DrawingLibrary:AddESP(Target,Mode,FlagConcat,Flags)
                 ZIndex = 1
             })
         }
-    } return DrawingLibrary.ESPContainer[Target]
+    } --return DrawingLibrary.ESPContainer[Target]
 end
 
 function DrawingLibrary:RemoveESP(Target)
@@ -323,7 +319,7 @@ end
 
 function DrawingLibrary:SetupCursor(Config)
     local Cursor = AddDrawing("Triangle", {
-        Color = Color3.new(1,1,1),
+        Color = WhiteColor,
         Filled = true,
         Thickness = 1,
         Transparency = 1,
@@ -332,7 +328,7 @@ function DrawingLibrary:SetupCursor(Config)
     })
 
     local CursorOutline = AddDrawing("Triangle", {
-        Color = Color3.new(0,0,0),
+        Color = BlackColor,
         Filled = true,
         Thickness = 1,
         Transparency = 1,
@@ -368,7 +364,7 @@ function DrawingLibrary:SetupCursor(Config)
         ZIndex = 3
     })
 
-    RunService.RenderStepped:Connect(function()
+    Parvus.Utilities.Misc:NewThreadLoop(0,function()
         local CursorEnabled = Config["Mouse/Enabled"] and UserInputService.MouseBehavior == Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
         local CrosshairEnabled = Config["Mouse/Crosshair/Enabled"] and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
         local Mouse = UserInputService:GetMouseLocation()
@@ -415,7 +411,7 @@ function DrawingLibrary:FOVCircle(Name,Config)
     local FOVCircle = AddDrawing("Circle",{ZIndex = 4})
     local Outline = AddDrawing("Circle",{ZIndex = 3})
 
-    RunService.RenderStepped:Connect(function()
+    Parvus.Utilities.Misc:NewThreadLoop(0,function()
         FOVCircle.Visible = Config[Name.."/Enabled"] and Config[Name.."/Circle/Enabled"]
         Outline.Visible = Config[Name.."/Enabled"] and Config[Name.."/Circle/Enabled"]
 
@@ -439,9 +435,9 @@ function DrawingLibrary:FOVCircle(Name,Config)
     end)
 end
 
-RunService.Heartbeat:Connect(function()
-    for Target,ESP in pairs(DrawingLibrary.ESPContainer) do
-        if not ESP.Target then continue end
+Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
+    for Target,ESP in pairs(DrawingLibrary.ESPContainer) do if not ESP.Target then continue end
+
         ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
         if ESP.Target.Character and ESP.Target.RootPart then local Camera = Workspace.CurrentCamera
             ESP.Target.ScreenPosition,ESP.Target.OnScreen = Camera:WorldToViewportPoint(ESP.Target.RootPart.Position)
@@ -458,8 +454,7 @@ RunService.Heartbeat:Connect(function()
 
             if ESP.Target.OnScreen and ESP.Target.InTheRange then
                 if ESP.Highlight.Enabled then
-                    ESP.Highlight.Adornee = ESP.Target.Character
-                    ESP.Highlight.FillColor = ESP.Target.Color
+                    ESP.Highlight.Adornee = ESP.Target.Character ESP.Highlight.FillColor = ESP.Target.Color
                     ESP.Highlight.FillTransparency = ConcatFlag(ESP.Flags,ESP.FlagConcat,"/Highlight/Transparency")
                     ESP.Highlight.OutlineColor = ConcatFlag(ESP.Flags,ESP.FlagConcat,"/Highlight/OutlineColor")[6]
                     ESP.Highlight.OutlineTransparency = ConcatFlag(ESP.Flags,ESP.FlagConcat,"/Highlight/OutlineColor")[4]
@@ -594,4 +589,5 @@ RunService.Heartbeat:Connect(function()
         ESP.Drawing.Tracer.Visible = Visible and ConcatFlag(ESP.Flags,ESP.FlagConcat,"/Tracer/Enabled") or false
     end
 end)
+
 return DrawingLibrary

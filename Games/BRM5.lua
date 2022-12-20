@@ -11,9 +11,9 @@ local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot,SilentAim,NPCFolder,Network,
+local SilentAim,Aimbot,Trigger,NPCFolder,Network,
 GroundTip,AircraftTip,PredictedVelocity
-= false,nil,Workspace.Bots,{},nil,nil,1000
+= nil,false,false,Workspace.Bots,{},nil,nil,1000
 
 local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
@@ -465,29 +465,29 @@ local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
 WallCheckParams.IgnoreWater = true
 
+-- Fly Logic
+local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
+local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
+local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Workspace.CurrentCamera.CFrame)
+    local Forward  = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+    local Backward = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+    local Left     = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+    local Right    = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
+    local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
+    return FixUnit(Forward + Backward + Left + Right + Up + Down)
+end
+
+local function toScale(value, inputMin, inputMax, outputMin, outputMax)
+    local scaledOutput = outputMax - outputMin
+    local percentage = value / (inputMax - inputMin)
+    return percentage * scaledOutput + outputMin
+end
+
 local function Raycast(Origin,Direction,Table)
     WallCheckParams.FilterDescendantsInstances = Table
     return Workspace:Raycast(Origin,Direction,WallCheckParams)
-end
-
-local function FixUnit(Vector)
-	if Vector.Magnitude == 0 then
-	return Vector3.zero end
-	return Vector.Unit
-end
-local function FlatCameraVector()
-    local Camera = Workspace.CurrentCamera
-	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
-		Camera.CFrame.RightVector * Vector3.new(1,0,1)
-end
-local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
-	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
-	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
-	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
-	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
-    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
-    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
-	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
 end
 
 local function TeamCheck(Enabled,Player)
@@ -500,38 +500,36 @@ local function DistanceCheck(Enabled,Distance,MaxDistance)
     return Distance * 0.28 <= MaxDistance
 end
 
-local function WallCheck(Enabled,Hitbox,Character)
+local function WallCheck(Enabled,Camera,Hitbox,Character)
     if not Enabled then return true end
-    local Camera = Workspace.CurrentCamera
-    return not Raycast(Camera.CFrame.Position,
-    Hitbox.Position - Camera.CFrame.Position,
+    return not Raycast(Camera.Position,
+    Hitbox.Position - Camera.Position,
     {LocalPlayer.Character,RaycastFolder,Character})
 end
 
-local function GetHitbox(Config)
-    if not Config.Enabled then return end
-    local Camera = Workspace.CurrentCamera
+local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
+    -- DynamicFieldOfView,FieldOfView,TeamCheck
+    -- BodyParts,WallCheck,DistanceCheck,MaxDistance
+    -- PredictionEnabled,PredictionVelocity
 
-    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
-    ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView or Config.FieldOfView
+    if not Enabled then return end
+    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
-    if Config.NPCMode then
+    if NPCMode then
         for Index,NPC in pairs(NPCFolder:GetChildren()) do
             local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
             local IsAlive = Humanoid and Humanoid.Health > 0
             if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and
             NPC:FindFirstChildWhichIsA("AlignOrientation",true) and IsAlive then
-                for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
-                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-
-                    if WallCheck(Config.WallCheck,Hitbox,NPC)
-                    and DistanceCheck(Config.DistanceCheck,Distance,Config.Distance) then
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
-                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude < FieldOfView then
-                            FieldOfView,ClosestHitbox = Magnitude,{NPC,NPC,Hitbox,Distance,ScreenPosition}
-                        end
+                for Index,BodyPart in pairs(BP) do
+                    BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
+                    local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                    if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
+                        local PredictionVelocity = (BodyPart.AssemblyLinearVelocity * Distance) / PredictedVelocity
+                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
+                        local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,Distance,ScreenPosition} end
                     end
                 end
             end
@@ -539,19 +537,19 @@ local function GetHitbox(Config)
     else
         for Index,Player in pairs(PlayerService:GetPlayers()) do
             local Character = Player.Character if not Character then continue end
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid") if not Humanoid then continue end
-            if Player ~= LocalPlayer and Humanoid.Health > 0 and TeamCheck(Config.TeamCheck,Player) then
-                for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
-                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
 
-                    if WallCheck(Config.WallCheck,Hitbox,Character)
-                    and DistanceCheck(Config.DistanceCheck,Distance,Config.Distance) then
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Hitbox.Position)
-                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude < FieldOfView then
-                            FieldOfView,ClosestHitbox = Magnitude,{Player,Character,Hitbox,Distance,ScreenPosition}
-                        end
+            if Player ~= LocalPlayer and TeamCheck(TC,Player) then
+                local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+                if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+    
+                for Index,BodyPart in pairs(BP) do
+                    BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
+                    local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                    if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+                        local PredictionVelocity = (BodyPart.AssemblyLinearVelocity * Distance) / PredictedVelocity
+                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
+                        local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
                     end
                 end
             end
@@ -561,85 +559,16 @@ local function GetHitbox(Config)
     return ClosestHitbox
 end
 
-local function GetHitboxWithPrediction(Config)
-    if not Config.Enabled then return end
-    local Camera = Workspace.CurrentCamera
-
-    local FieldOfView,ClosestHitbox = Config.DynamicFOV and
-    ((120 - Camera.FieldOfView) * 4) + Config.FieldOfView or Config.FieldOfView
-    
-    if Config.NPCMode then
-        for Index,NPC in pairs(NPCFolder:GetCharacter()) do
-            local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
-            local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and
-            NPC:FindFirstChildWhichIsA("AlignOrientation",true) and IsAlive then
-                for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = NPC:FindFirstChild(BodyPart) if not Hitbox then continue end
-                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-
-                    if WallCheck(Config.WallCheck,Hitbox,NPC)
-                    and DistanceCheck(Config.DistanceCheck,Distance,Config.Distance) then
-                        local PredictionVelocity = (Hitbox.AssemblyLinearVelocity * Distance) / PredictedVelocity
-                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction
-                        and Hitbox.Position + PredictionVelocity or Hitbox.Position)
-    
-                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude < FieldOfView then
-                            FieldOfView,ClosestHitbox = Magnitude,{NPC,NPC,Hitbox,Distance,ScreenPosition}
-                        end
-                    end
-                end
-            end
-        end
-    else
-        for Index,Player in pairs(PlayerService:GetPlayers()) do
-            local Character = Player.Character if not Character then continue end
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid") if not Humanoid then continue end
-            if Player ~= LocalPlayer and Humanoid.Health > 0 and TeamCheck(Config.TeamCheck,Player) then
-                for Index,BodyPart in pairs(Config.BodyParts) do
-                    local Hitbox = Character:FindFirstChild(BodyPart) if not Hitbox then continue end
-                    local Distance = (Hitbox.Position - Camera.CFrame.Position).Magnitude
-
-                    if WallCheck(Config.WallCheck,Hitbox,Character)
-                    and DistanceCheck(Config.DistanceCheck,Distance,Config.Distance) then
-                        local PredictionVelocity = (Hitbox.AssemblyLinearVelocity * Distance) / Config.Prediction.Velocity
-                        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Config.Prediction
-                        and Hitbox.Position + PredictionVelocity or Hitbox.Position)
-    
-                        local Magnitude = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude < FieldOfView then
-                            FieldOfView,ClosestHitbox = Magnitude,{Player,Character,Hitbox,Distance,ScreenPosition}
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    return ClosestHitbox
-end
-
-local function AimAt(Hitbox,Config)
+local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Camera = Workspace.CurrentCamera
     local Mouse = UserInputService:GetMouseLocation()
 
-    local PredictionVelocity = (Hitbox[3].AssemblyLinearVelocity * Hitbox[4]) / PredictedVelocity
-    local HitboxOnScreen = Camera:WorldToViewportPoint(Config.Prediction
-    and Hitbox[3].Position + PredictionVelocity or Hitbox[3].Position)
-
     mousemoverel(
-        (HitboxOnScreen.X - Mouse.X) * Config.Sensitivity,
-        (HitboxOnScreen.Y - Mouse.Y) * Config.Sensitivity
+        (Hitbox[5].X - Mouse.X) * Smoothness,
+        (Hitbox[5].Y - Mouse.Y) * Smoothness
     )
 end
 
-local function toScale(value, inputMin, inputMax, outputMin, outputMax)
-    local scaledOutput = outputMax - outputMin
-    local percentage = value / (inputMax - inputMin)
-    return percentage * scaledOutput + outputMin
-end
 function RequireModule(Name)
     for Index, Instance in pairs(getloadedmodules()) do
         if Instance.Name == Name then
@@ -742,12 +671,12 @@ function EnableSwitch(Switch)
         end
     end
 end
-local function AircraftFly(Config,Args)
-    if not Config.Enabled then return Args end
+local function AircraftFly(Enabled,Speed,CameraControl,Args)
+    if not Enabled then return Args end
     local Camera = Workspace.CurrentCamera
     Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
-    Args[1]._force.Velocity = InputToVelocity() * Config.Speed
-    if Config.Camera then
+    Args[1]._force.Velocity = InputToVelocity() * Speed
+    if CameraControl then
         Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
         Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
     end
@@ -848,11 +777,11 @@ HookFunction("AircraftMovement","Update",function(Args)
         Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000 * Args[1]._speed 
         Args[1]._force.Velocity = Args[1]._main.CFrame.LookVector * -Window.Flags["BRM5/Aircraft/Speed"]]
         Args[1]._model.RPM.Value = Window.Flags["BRM5/Aircraft/Speed"]
-    end Args = AircraftFly({
-        Enabled = Window.Flags["BRM5/Aircraft/FlyEnabled"],
-        Camera = Window.Flags["BRM5/Aircraft/Camera"],
-        Speed = Window.Flags["BRM5/Aircraft/FlySpeed"]
-    },Args) return Args
+    end Args = AircraftFly(
+        Window.Flags["BRM5/Aircraft/FlyEnabled"],
+        Window.Flags["BRM5/Aircraft/FlySpeed"],
+        Window.Flags["BRM5/Aircraft/Camera"],Args
+    ) return Args
 end)
 HookFunction("EnvironmentService","Update",function(Args)
     if Window.Flags["BRM5/Lighting/Enabled"] then
@@ -950,32 +879,30 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self, ...)
 end)
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox({
-        Enabled = Window.Flags["SilentAim/Enabled"],
-        WallCheck = Window.Flags["SilentAim/WallCheck"],
-        DistanceCheck = Window.Flags["SilentAim/DistanceCheck"],
-        DynamicFOV = Window.Flags["SilentAim/DynamicFOV"],
-        FieldOfView = Window.Flags["SilentAim/FieldOfView"],
-        Distance = Window.Flags["SilentAim/Distance"],
-        BodyParts = Window.Flags["SilentAim/BodyParts"],
-        NPCMode = Window.Flags["BRM5/NPCMode"],
-        TeamCheck = Window.Flags["TeamCheck"]
-    })
-    if Aimbot then AimAt(
-        GetHitbox({
-            Enabled = Window.Flags["Aimbot/Enabled"],
-            WallCheck = Window.Flags["Aimbot/WallCheck"],
-            DistanceCheck = Window.Flags["Aimbot/DistanceCheck"],
-            DynamicFOV = Window.Flags["Aimbot/DynamicFOV"],
-            FieldOfView = Window.Flags["Aimbot/FieldOfView"],
-            Distance = Window.Flags["Aimbot/Distance"],
-            BodyParts = Window.Flags["Aimbot/BodyParts"],
-            NPCMode = Window.Flags["BRM5/NPCMode"],
-            TeamCheck = Window.Flags["TeamCheck"]
-        }),{
-            Prediction = Window.Flags["Aimbot/Prediction"],
-            Sensitivity = Window.Flags["Aimbot/Smoothness"] / 100
-        })
+    SilentAim = GetHitbox(
+        Window.Flags["SilentAim/Enabled"],
+        Window.Flags["BRM5/NPCMode"],
+        Window.Flags["SilentAim/DynamicFOV"],
+        Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["TeamCheck"],
+        Window.Flags["SilentAim/BodyParts"],
+        Window.Flags["SilentAim/WallCheck"],
+        Window.Flags["SilentAim/DistanceCheck"],
+        Window.Flags["SilentAim/Distance"]
+    )
+    if Aimbot then
+        AimAt(GetHitbox(
+            Window.Flags["Aimbot/Enabled"],
+            Window.Flags["BRM5/NPCMode"],
+            Window.Flags["Aimbot/DynamicFOV"],
+            Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["TeamCheck"],
+            Window.Flags["Aimbot/BodyParts"],
+            Window.Flags["Aimbot/WallCheck"],
+            Window.Flags["Aimbot/DistanceCheck"],
+            Window.Flags["Aimbot/Distance"],
+            Window.Flags["Aimbot/Prediction/Enabled"]
+        ),Window.Flags["Aimbot/Smoothness"] / 100)
     end
 end)
 
@@ -997,35 +924,35 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     local Release = Window.Flags["Trigger/RMBMode"] and mouse2release or mouse1release
 
     if not Trigger then return end
-    local TriggerHitbox = GetHitboxWithPrediction({
-        Enabled = Window.Flags["Trigger/Enabled"],
-        Prediction = Window.Flags["Trigger/Prediction"],
-        WallCheck = Window.Flags["Trigger/WallCheck"],
-        DistanceCheck = Window.Flags["Trigger/DistanceCheck"],
-        DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
-        FieldOfView = Window.Flags["Trigger/FieldOfView"],
-        Distance = Window.Flags["Trigger/Distance"],
-        BodyParts = Window.Flags["Trigger/BodyParts"],
-        NPCMode = Window.Flags["BRM5/NPCMode"],
-        TeamCheck = Window.Flags["TeamCheck"]
-    })
+    local TriggerHitbox = GetHitbox(
+        Window.Flags["Trigger/Enabled"],
+        Window.Flags["BRM5/NPCMode"],
+        Window.Flags["Trigger/DynamicFOV"],
+        Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["TeamCheck"],
+        Window.Flags["Trigger/BodyParts"],
+        Window.Flags["Trigger/WallCheck"],
+        Window.Flags["Trigger/DistanceCheck"],
+        Window.Flags["Trigger/Distance"],
+        Window.Flags["Trigger/Prediction/Enabled"]
+    )
 
     if TriggerHitbox then Press()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitboxWithPrediction({
-                    Enabled = Window.Flags["Trigger/Enabled"],
-                    Prediction = Window.Flags["Trigger/Prediction"],
-                    WallCheck = Window.Flags["Trigger/WallCheck"],
-                    DistanceCheck = Window.Flags["Trigger/DistanceCheck"],
-                    DynamicFOV = Window.Flags["Trigger/DynamicFOV"],
-                    FieldOfView = Window.Flags["Trigger/FieldOfView"],
-                    Distance = Window.Flags["Trigger/Distance"],
-                    BodyParts = Window.Flags["Trigger/BodyParts"],
-                    NPCMode = Window.Flags["BRM5/NPCMode"],
-                    TeamCheck = Window.Flags["TeamCheck"]
-                }) if not TriggerHitbox or not Trigger then break end
+                TriggerHitbox = GetHitbox(
+                    Window.Flags["Trigger/Enabled"],
+                    Window.Flags["BRM5/NPCMode"],
+                    Window.Flags["Trigger/DynamicFOV"],
+                    Window.Flags["Trigger/FieldOfView"],
+                    Window.Flags["TeamCheck"],
+                    Window.Flags["Trigger/BodyParts"],
+                    Window.Flags["Trigger/WallCheck"],
+                    Window.Flags["Trigger/DistanceCheck"],
+                    Window.Flags["Trigger/Distance"],
+                    Window.Flags["Trigger/Prediction/Enabled"]
+                ) if not TriggerHitbox or not Trigger then break end
             end
         end Release()
     end

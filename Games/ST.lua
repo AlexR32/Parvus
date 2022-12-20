@@ -165,6 +165,47 @@ local BodyVelocity = Instance.new("BodyVelocity")
 local BodyGyro = Instance.new("BodyGyro")
 BodyGyro.P = 50000
 
+-- Fly Logic
+local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
+local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
+local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Workspace.CurrentCamera.CFrame)
+    local Forward  = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
+    local Backward = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
+    local Left     = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
+    local Right    = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
+    local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
+    local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
+    return FixUnit(Forward + Backward + Left + Right + Up + Down)
+end
+
+local function GetPlayerTank(Player)
+    local Char = Player:WaitForChild("Char")
+    if not Char then return end
+    if not Char.Value then return end
+    return Char.Value.Parent.Parent.Parent
+end
+
+local function PlayerFly(Enabled,Camera,Speed)
+    if not Enabled then
+        BodyVelocity.MaxForce = Vector3.zero
+        BodyGyro.MaxTorque = Vector3.zero
+        return
+    end
+    local LPTank = GetPlayerTank(LocalPlayer)
+    local Camera = Workspace.CurrentCamera
+    if LPTank and LPTank.PrimaryPart then
+        if Camera then
+            BodyGyro.Parent = LPTank.PrimaryPart
+            BodyGyro.MaxTorque = MaxVector
+            BodyGyro.CFrame = Camera.CFrame
+        else BodyGyro.MaxTorque = Vector3.zero end
+        BodyVelocity.Parent = LPTank.PrimaryPart
+        BodyVelocity.MaxForce = MaxVector
+        BodyVelocity.Velocity = InputToVelocity() * Speed
+    end
+end
+
 local OldNamecall
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
@@ -180,59 +221,12 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     return OldNamecall(Self, ...)
 end)
 
-local function GetPlayerTank(Player)
-    local Char = Player:WaitForChild("Char")
-    if not Char then return end
-    if not Char.Value then return end
-    return Char.Value.Parent.Parent.Parent
-end
-
-local function FixUnit(Vector)
-	if Vector.Magnitude == 0 then
-	return Vector3.zero end
-	return Vector.Unit
-end
-local function FlatCameraVector()
-    local Camera = Workspace.CurrentCamera
-	return Camera.CFrame.LookVector * Vector3.new(1,0,1),
-		Camera.CFrame.RightVector * Vector3.new(1,0,1)
-end
-local function InputToVelocity() local Velocities,LookVector,RightVector = {},FlatCameraVector()
-	Velocities[1] = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
-	Velocities[2] = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
-	Velocities[3] = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
-	Velocities[4] = UserInputService:IsKeyDown(Enum.KeyCode.D) and RightVector or Vector3.zero
-    Velocities[5] = UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0,1,0) or Vector3.zero
-    Velocities[6] = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0,-1,0) or Vector3.zero
-	return FixUnit(Velocities[1] + Velocities[2] + Velocities[3] + Velocities[4] + Velocities[5] + Velocities[6])
-end
-
-local function PlayerFly(Config)
-    if not Config.Enabled then
-        BodyVelocity.MaxForce = Vector3.zero
-        BodyGyro.MaxTorque = Vector3.zero
-        return
-    end
-    local LPTank = GetPlayerTank(LocalPlayer)
-    local Camera = Workspace.CurrentCamera
-    if LPTank and LPTank.PrimaryPart then
-        if Config.Camera then
-            BodyGyro.Parent = LPTank.PrimaryPart
-            BodyGyro.MaxTorque = MaxVector
-            BodyGyro.CFrame = Camera.CFrame
-        else BodyGyro.MaxTorque = Vector3.zero end
-        BodyVelocity.Parent = LPTank.PrimaryPart
-        BodyVelocity.MaxForce = MaxVector
-        BodyVelocity.Velocity = InputToVelocity() * Config.Speed
-    end
-end
-
 RunService.Heartbeat:Connect(function()
-    PlayerFly({
-        Enabled = Window.Flags["ST/Fly/Enabled"],
-        Camera = Window.Flags["ST/Fly/Camera"],
-        Speed = Window.Flags["ST/Fly/Speed"]
-    })
+    PlayerFly(
+        Window.Flags["ST/Fly/Enabled"],
+        Window.Flags["ST/Fly/Camera"],
+        Window.Flags["ST/Fly/Speed"]
+    )
 end)
 
 --[[local function highlight(object, color, fill)
