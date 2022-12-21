@@ -1499,15 +1499,15 @@ function Bracket:Window(Window)
 				end
 
 				local ConfigTextbox = ConfigSection:Textbox({Name = "Config Name",
-					IgnoreFlag = true,AutoClear = true,Placeholder = "Name"})
-				
+					Placeholder = "Name",IgnoreFlag = true})
+
 				ConfigSection:Button({Name = "Create",Callback = function()
 					Window:SaveConfig(FolderName,ConfigTextbox.Value) UpdateList(ConfigTextbox.Value)
 				end})
-				
+
 				ConfigDropdown = ConfigSection:Dropdown({Name = "List",
 					IgnoreFlag = true,List = ConfigList})
-				
+
 				ConfigSection:Button({Name = "Save",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
 						Window:SaveConfig(FolderName,ConfigDropdown.Value[1])
@@ -1546,8 +1546,8 @@ function Bracket:Window(Window)
 				local DefaultConfig = Window:GetDefaultConfig(FolderName)
 				local ConfigDivider = ConfigSection:Divider({Text = not DefaultConfig and "Default Config" or
 					"Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>"})
-				
-				ConfigSection:Button({Name = "Set Autoexec Config",Callback = function()
+
+				ConfigSection:Button({Name = "Set Default Config",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
 						DefaultConfig = ConfigDropdown.Value[1] writefile(FolderName.."\\DefaultConfig.txt",DefaultConfig)
 						ConfigDivider:SetText("Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>")
@@ -1559,7 +1559,7 @@ function Bracket:Window(Window)
 						})
 					end
 				end})
-				ConfigSection:Button({Name = "Clear Autoexec Config",Callback = function()
+				ConfigSection:Button({Name = "Clear Default Config",Callback = function()
 					writefile(FolderName.."\\DefaultConfig.txt","") ConfigDivider:SetText("Default Config")
 				end})
 			end
