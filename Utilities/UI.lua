@@ -117,31 +117,33 @@ local function ChooseTabSide(TabAsset,Mode)
 	end
 end
 
-local function GetConfigs(PFName)
-	if not isfolder(PFName) then makefolder(PFName) end
-	if not isfolder(PFName.."\\Configs") then makefolder(PFName.."\\Configs") end
-	if not isfile(PFName.."\\DefaultConfig.txt") then writefile(PFName.."\\DefaultConfig.txt","") end
+local function GetConfigs(FolderName)
+	if not isfolder(FolderName) then makefolder(FolderName) end
+	if not isfolder(FolderName.."\\Configs") then makefolder(FolderName.."\\Configs") end
+	if not isfile(FolderName.."\\DefaultConfig.txt") then writefile(FolderName.."\\DefaultConfig.txt","") end
 
 	local Configs = {}
-	for Index,Config in pairs(listfiles(PFName.."\\Configs") or {}) do
-		Config = Config:gsub(PFName.."\\Configs\\","")
+	for Index,Config in pairs(listfiles(FolderName.."\\Configs") or {}) do
+		Config = Config:gsub(FolderName.."\\Configs\\","")
 		Config = Config:gsub(".json","")
-		Configs[Index] = Config
+		Configs[#Configs + 1] = Config
 	end
 	return Configs
 end
-local function ConfigsToList(PFName)
-	if not isfolder(PFName) then makefolder(PFName) end
-	if not isfolder(PFName.."\\Configs") then makefolder(PFName.."\\Configs") end
-	if not isfile(PFName.."\\DefaultConfig.txt") then writefile(PFName.."\\DefaultConfig.txt","") end
+local function ConfigsToList(FolderName)
+	if not isfolder(FolderName) then makefolder(FolderName) end
+	if not isfolder(FolderName.."\\Configs") then makefolder(FolderName.."\\Configs") end
+	if not isfile(FolderName.."\\DefaultConfig.txt") then writefile(FolderName.."\\DefaultConfig.txt","") end
 
 	local Configs = {}
-	for Index,Config in pairs(listfiles(PFName.."\\Configs") or {}) do
-		Config = Config:gsub(PFName.."\\Configs\\","")
+	local DefaultConfig = readfile(FolderName.."\\DefaultConfig.txt")
+	for Index,Config in pairs(listfiles(FolderName.."\\Configs") or {}) do
+		Config = Config:gsub(FolderName.."\\Configs\\","")
 		Config = Config:gsub(".json","")
-		local DefaultConfig = readfile(PFName.."\\DefaultConfig.txt")
-		Configs[Index] = {Name = Config,Mode = "Button",
-			Value = Config == DefaultConfig}
+		Configs[#Configs + 1] = {
+			Name = Config,Mode = "Button",
+			Value = Config == DefaultConfig
+		}
 	end
 	return Configs
 end
@@ -292,51 +294,51 @@ function Assets:Window(ScreenAsset,Window)
 		Window.Watermark = Watermark
 	end
 
-	function Window:SaveConfig(PFName,Name)
+	function Window:SaveConfig(FolderName,Name)
 		local Config = {}
-		if table.find(GetConfigs(PFName),Name) then
-			Config = HttpService:JSONDecode(readfile(PFName.."\\Configs\\"..Name..".json"))
-		end
+		--[[if table.find(GetConfigs(FolderName),Name) then
+			Config = HttpService:JSONDecode(readfile(FolderName.."\\Configs\\"..Name..".json"))
+		end]]
 		for Index,Element in pairs(Window.Elements) do
 			if not Element.IgnoreFlag then
 				Config[Element.Flag] = Window.Flags[Element.Flag]
 			end
 		end
-		writefile(PFName.."\\Configs\\"..Name..".json",HttpService:JSONEncode(Config))
+		writefile(
+			FolderName.."\\Configs\\"..Name..".json",
+			HttpService:JSONEncode(Config)
+		)
 	end
-	function Window:LoadConfig(PFName,Name)
-		if table.find(GetConfigs(PFName),Name) then
-			local DecodedJSON = HttpService:JSONDecode(readfile(PFName.."\\Configs\\"..Name..".json"))
+	function Window:LoadConfig(FolderName,Name)
+		if table.find(GetConfigs(FolderName),Name) then
+			local DecodedJSON = HttpService:JSONDecode(readfile(FolderName.."\\Configs\\"..Name..".json"))
 			for Index,Element in pairs(Window.Elements) do
-				if DecodedJSON[Element.Flag] ~= nil then
-					Element:SetValue(DecodedJSON[Element.Flag])
-				end
+				local Value = DecodedJSON[Element.Flag]
+				if Value ~= nil then Element:SetValue(Value) end
 			end
 		end
 	end
-	function Window:DeleteConfig(PFName,Name)
-		if table.find(GetConfigs(PFName),Name) then
-			delfile(PFName.."\\Configs\\"..Name..".json")
+	function Window:DeleteConfig(FolderName,Name)
+		if table.find(GetConfigs(FolderName),Name) then
+			delfile(FolderName.."\\Configs\\"..Name..".json")
 		end
 	end
-	function Window:GetDefaultConfig(PFName)
-		if not isfolder(PFName) then makefolder(PFName) end
-		if not isfolder(PFName.."\\Configs") then makefolder(PFName.."\\Configs") end
-		if not isfile(PFName.."\\DefaultConfig.txt") then writefile(PFName.."\\DefaultConfig.txt","") end
+	function Window:GetDefaultConfig(FolderName)
+		if not isfolder(FolderName) then makefolder(FolderName) end
+		if not isfolder(FolderName.."\\Configs") then makefolder(FolderName.."\\Configs") end
+		if not isfile(FolderName.."\\DefaultConfig.txt") then writefile(FolderName.."\\DefaultConfig.txt","") end
 
-		local DefaultConfig = readfile(PFName.."\\DefaultConfig.txt")
-		if table.find(GetConfigs(PFName),DefaultConfig) then
-			return DefaultConfig
-		end
+		local DefaultConfig = readfile(FolderName.."\\DefaultConfig.txt")
+		if table.find(GetConfigs(FolderName),DefaultConfig) then return DefaultConfig end
 	end
-	function Window:LoadDefaultConfig(PFName)
-		if not isfolder(PFName) then makefolder(PFName) end
-		if not isfolder(PFName.."\\Configs") then makefolder(PFName.."\\Configs") end
-		if not isfile(PFName.."\\DefaultConfig.txt") then writefile(PFName.."\\DefaultConfig.txt","") end
+	function Window:LoadDefaultConfig(FolderName)
+		if not isfolder(FolderName) then makefolder(FolderName) end
+		if not isfolder(FolderName.."\\Configs") then makefolder(FolderName.."\\Configs") end
+		if not isfile(FolderName.."\\DefaultConfig.txt") then writefile(FolderName.."\\DefaultConfig.txt","") end
 
-		local DefaultConfig = readfile(PFName.."\\DefaultConfig.txt")
-		if table.find(GetConfigs(PFName),DefaultConfig) then
-			Window:LoadConfig(PFName,DefaultConfig)
+		local DefaultConfig = readfile(FolderName.."\\DefaultConfig.txt")
+		if table.find(GetConfigs(FolderName),DefaultConfig) then
+			Window:LoadConfig(FolderName,DefaultConfig)
 		end
 	end
 
@@ -714,13 +716,10 @@ function Assets:Textbox(Parent,ScreenAsset,Window,Textbox)
 		TextboxAsset.Background.Size = UDim2.new(1,0,0,TextboxAsset.Background.Input.TextBounds.Y + 2)
 	end)
 	TextboxAsset.Background.Input.FocusLost:Connect(function(EnterPressed)
-		if not EnterPressed then return end
 		Textbox.Value = TextboxAsset.Background.Input.Text
 		Window.Flags[Textbox.Flag] = Textbox.Value
-		Textbox.Callback(Textbox.Value)
-		if Textbox.AutoClear then
-			TextboxAsset.Background.Input.Text = ""
-		end
+		if Textbox.AutoClear then TextboxAsset.Background.Input.Text = "" end
+		if EnterPressed then Textbox.Callback(Textbox.Value) end
 	end)
 
 	function Textbox:SetName(Name)
@@ -972,7 +971,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 		DropdownAsset.Background.Size = UDim2.new(1,0,0,DropdownAsset.Background.Value.TextBounds.Y + 2)
 		DropdownAsset.Size = UDim2.new(1,0,0,DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
 	end)]]
-	
+
 	local function SetOptionState(Option,Toggle)
 		local Selected = {}
 
@@ -1489,55 +1488,79 @@ function Bracket:Window(Window)
 		Tab.Name = GetType(Tab.Name,"Tab","string")
 		local ChooseTab = Assets:Tab(Bracket.ScreenAsset,WindowAsset,Window,Tab)
 
-		function Tab:AddConfigSection(PFName,Side)
+		function Tab:AddConfigSection(FolderName,Side)
 			local ConfigSection = Tab:Section({Name = "Configs",Side = Side}) do
-				local ConfigList, ConfigDropdown = ConfigsToList(PFName), nil
+				local ConfigList,ConfigDropdown = ConfigsToList(FolderName),nil
 				local function UpdateList(Name)
 					ConfigDropdown:Clear()
-					ConfigList = ConfigsToList(PFName)
+					ConfigList = ConfigsToList(FolderName)
 					ConfigDropdown:BulkAdd(ConfigList)
 					ConfigDropdown:SetValue({Name or (ConfigList[1] and ConfigList[1].Name) or nil})
 				end
 
-				ConfigSection:Textbox({Name = "Create",IgnoreFlag = true,
-					AutoClear = true,Placeholder = "Name",Callback = function(Text)
-						Window:SaveConfig(PFName,Text)
-						UpdateList(Text)
-					end})
-				ConfigDropdown = ConfigSection:Dropdown({Name = "List",IgnoreFlag = true,
-					List = ConfigList})
+				local ConfigTextbox = ConfigSection:Textbox({Name = "Config Name",
+					IgnoreFlag = true,AutoClear = true,Placeholder = "Name"})
+				
+				ConfigSection:Button({Name = "Create",Callback = function()
+					Window:SaveConfig(FolderName,ConfigTextbox.Value) UpdateList(ConfigTextbox.Value)
+				end})
+				
+				ConfigDropdown = ConfigSection:Dropdown({Name = "List",
+					IgnoreFlag = true,List = ConfigList})
+				
 				ConfigSection:Button({Name = "Save",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
-						Window:SaveConfig(PFName,ConfigDropdown.Value[1])
+						Window:SaveConfig(FolderName,ConfigDropdown.Value[1])
+					else
+						Bracket:Notification({
+							Title = "Config System",
+							Description = "First Select Config",
+							Duration = 10
+						})
 					end
 				end})
 				ConfigSection:Button({Name = "Load",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
-						Window:LoadConfig(PFName,ConfigDropdown.Value[1])
+						Window:LoadConfig(FolderName,ConfigDropdown.Value[1])
+					else
+						Bracket:Notification({
+							Title = "Config System",
+							Description = "First Select Config",
+							Duration = 10
+						})
 					end
 				end})
 				ConfigSection:Button({Name = "Delete",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
-						Window:DeleteConfig(PFName,ConfigDropdown.Value[1])
+						Window:DeleteConfig(FolderName,ConfigDropdown.Value[1])
 						UpdateList()
+					else
+						Bracket:Notification({
+							Title = "Config System",
+							Description = "First Select Config",
+							Duration = 10
+						})
 					end
 				end})
 
-				local DefaultConfig = Window:GetDefaultConfig(PFName)
-				local ConfigDivider = ConfigSection:Divider({Text = DefaultConfig
-					and "Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>"
-					or "Default Config"})
-				ConfigSection:Button({Name = "Set",Callback = function()
+				local DefaultConfig = Window:GetDefaultConfig(FolderName)
+				local ConfigDivider = ConfigSection:Divider({Text = not DefaultConfig and "Default Config" or
+					"Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>"})
+				
+				ConfigSection:Button({Name = "Set Autoexec Config",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
-						DefaultConfig = ConfigDropdown.Value[1]
-						writefile(PFName.."\\DefaultConfig.txt",DefaultConfig)
-						ConfigDivider:SetText(
-							"Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>")
+						DefaultConfig = ConfigDropdown.Value[1] writefile(FolderName.."\\DefaultConfig.txt",DefaultConfig)
+						ConfigDivider:SetText("Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>")
+					else
+						Bracket:Notification({
+							Title = "Config System",
+							Description = "First Select Config",
+							Duration = 10
+						})
 					end
 				end})
-				ConfigSection:Button({Name = "Clear",Callback = function()
-					writefile(PFName.."\\DefaultConfig.txt","")
-					ConfigDivider:SetText("Default Config")
+				ConfigSection:Button({Name = "Clear Autoexec Config",Callback = function()
+					writefile(FolderName.."\\DefaultConfig.txt","") ConfigDivider:SetText("Default Config")
 				end})
 			end
 		end
@@ -1613,7 +1636,7 @@ function Bracket:Window(Window)
 			Slider.Callback = GetType(Slider.Callback,function() end,"function")
 			Window.Elements[#Window.Elements + 1] = Slider
 			Window.Flags[Slider.Flag] = Slider.Value
-			
+
 			if Slider.HighType then
 				Assets:HighSlider(ChooseTab(Slider.Side),Bracket.ScreenAsset,Window,Slider)
 			else
