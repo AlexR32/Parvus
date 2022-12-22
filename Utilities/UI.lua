@@ -1489,7 +1489,7 @@ function Bracket:Window(Window)
 		local ChooseTab = Assets:Tab(Bracket.ScreenAsset,WindowAsset,Window,Tab)
 
 		function Tab:AddConfigSection(FolderName,Side)
-			local ConfigSection = Tab:Section({Name = "Configs",Side = Side}) do
+			local ConfigSection = Tab:Section({Name = "Config System",Side = Side}) do
 				local ConfigList,ConfigDropdown = ConfigsToList(FolderName),nil
 				local function UpdateList(Name)
 					ConfigDropdown:Clear()
@@ -1547,7 +1547,7 @@ function Bracket:Window(Window)
 				local ConfigDivider = ConfigSection:Divider({Text = not DefaultConfig and "Default Config" or
 					"Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>"})
 
-				ConfigSection:Button({Name = "Set Default Config",Callback = function()
+				ConfigSection:Button({Name = "Set Default",Callback = function()
 					if ConfigDropdown.Value and ConfigDropdown.Value[1] then
 						DefaultConfig = ConfigDropdown.Value[1] writefile(FolderName.."\\DefaultConfig.txt",DefaultConfig)
 						ConfigDivider:SetText("Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>")
@@ -1559,7 +1559,7 @@ function Bracket:Window(Window)
 						})
 					end
 				end})
-				ConfigSection:Button({Name = "Clear Default Config",Callback = function()
+				ConfigSection:Button({Name = "Clear Default",Callback = function()
 					writefile(FolderName.."\\DefaultConfig.txt","") ConfigDivider:SetText("Default Config")
 				end})
 			end

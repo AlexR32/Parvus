@@ -21,7 +21,7 @@ end
 
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger,GunModel,
-PredictedVelocity,PredictedGravity,
+ProjectileSpeed,ProjectileGravity,
 GravityCorrection,Tortoiseshell
 = nil,false,false,nil,1600,150,2,
 require(ReplicatedStorage.TS)
@@ -618,10 +618,14 @@ local function AutoShoot(Hitbox,Enabled)
     end
 end
 
+local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
+end
+
 local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE,Shield)
-    -- DynamicFieldOfView,FieldOfView,TeamCheck
-    -- BodyParts,WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,PredictionVelocity
+    -- DynamicFieldOfView,FieldOfView,BodyParts
+    -- WallCheck,DistanceCheck,MaxDistance
+    -- PredictionEnabled,Shield
 
     if not Enabled then return end
     local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
@@ -635,10 +639,8 @@ local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE,Shield)
                 BodyPart = GetHitboxPart(Character,BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
-                    local PredictionGravity = Vector3.new(0,(Distance + GravityCorrection / 1000) / PredictedGravity,0)
-                    local PredictionVelocity = (BodyPart.AssemblyLinearVelocity * Distance) / PredictedVelocity
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE
-                    and BodyPart.Position + PredictionGravity + PredictionVelocity or BodyPart.Position)
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
                 end
@@ -706,8 +708,8 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Self,...)
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
-    local Args = {...} if Args[4] == LocalPlayer then PredictedVelocity = Projectiles[Args[1]].Speed
-        PredictedGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
+    local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
+        ProjectileGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
     end return Self,...
 end)
 

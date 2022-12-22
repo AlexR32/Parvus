@@ -308,7 +308,7 @@ local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE,PV)
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                 if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(
-                        PE and BodyPart.Position + ((BodyPart.AssemblyLinearVelocity * Distance) / PV) or BodyPart.Position)
+                        PE and BodyPart.Position + BodyPart.AssemblyLinearVelocity * (Distance / PV) or BodyPart.Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
                 end

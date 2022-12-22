@@ -510,7 +510,7 @@ end
 local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
     -- DynamicFieldOfView,FieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,PredictionVelocity
+    -- PredictionEnabled
 
     if not Enabled then return end
     local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
@@ -526,7 +526,7 @@ local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                     BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
-                        local PredictionVelocity = (BodyPart.AssemblyLinearVelocity * Distance) / PredictedVelocity
+                        local PredictionVelocity = BodyPart.AssemblyLinearVelocity * Distance / PredictedVelocity
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,Distance,ScreenPosition} end
@@ -546,7 +546,7 @@ local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                     BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                        local PredictionVelocity = (BodyPart.AssemblyLinearVelocity * Distance) / PredictedVelocity
+                        local PredictionVelocity = BodyPart.AssemblyLinearVelocity * Distance / PredictedVelocity
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end

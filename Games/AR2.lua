@@ -8,8 +8,8 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,
-PredictedVelocity,PredictedGravity
-= false,nil,nil,1050,30.901500701904297
+MuzzleVelocity,ProjectileGravity
+= false,nil,nil,1000,Vector3.zero
 
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
@@ -21,13 +21,13 @@ local Network = Framework.Libraries.Network
 local Bullets = Framework.Libraries.Bullets
 local Cameras = Framework.Libraries.Cameras
 
+ProjectileGravity = Vector3.new(0,Framework.Configs.Globals.ProjectileGravity,0)
 local VehicleController = Framework.Classes.VehicleControler
 local Animators = Framework.Classes.Animators
 
 local Events = getupvalue(Network.Add,4)
---[[local GetSpreadAngle = getupvalue(Bullets.Fire,1)
-local GetSpreadVector = getupvalue(Bullets.Fire,2)
-PredictedGravity = getupvalue(Events["Gravity Debug\r"],1)]]
+local GetSpreadAngle = getupvalue(Bullets.Fire,1)
+--local GetSpreadVector = getupvalue(Bullets.Fire,2)
 
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
@@ -73,12 +73,12 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
+        --[[local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
-        end
+        end]]
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
-            --AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
+            AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = true})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
@@ -88,8 +88,8 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
             AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle"},
-                {Name = "HeadCollider",Mode = "Toggle",Value = true},
+                {Name = "Head",Mode = "Toggle",Value = true},
+                --{Name = "HeadCollider",Mode = "Toggle"},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
         end
@@ -111,6 +111,7 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
+            SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = true})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
@@ -118,8 +119,8 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
             SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle"},
-                {Name = "HeadCollider",Mode = "Toggle",Value = true},
+                {Name = "Head",Mode = "Toggle",Value = true},
+                --{Name = "HeadCollider",Mode = "Toggle"},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
         end
@@ -265,7 +266,8 @@ local Window = Parvus.Utilities.UI:Window({
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
             RecoilSection:Toggle({Name = "Unlock Firemodes",Flag = "AR2/Firemodes",Value = false})
             RecoilSection:Divider()
-            RecoilSection:Toggle({Name = "Recoil Enabled",Flag = "AR2/Recoil/Enabled",Value = false})
+            RecoilSection:Toggle({Name = "Recoil Control",Flag = "AR2/Recoil/Enabled",Value = false})
+            RecoilSection:Slider({Name = "Spread",Flag = "AR2/Recoil/Spread",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Gun Bob A",Flag = "AR2/Recoil/BobA",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Gun Bob B",Flag = "AR2/Recoil/BobB",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -496,10 +498,14 @@ local function WallCheck(Enabled,Camera,Hitbox)
     Hitbox.Position - Camera.Position)
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE,PV)
+local function CalculateTrajectory(Origin,Velocity,Gravity,TravelTime)
+    return Origin + Velocity * Time + Gravity * TravelTime * Time / 2
+end
+
+local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE)
     -- DynamicFieldOfView,FieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,PredictionVelocity
+    -- PredictionEnabled
 
     if not Enabled then return end
     local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
@@ -516,10 +522,13 @@ local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE,PV)
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(
-                        PE and BodyPart.Position + ((BodyPart.AssemblyLinearVelocity * Distance) / PV) or BodyPart.Position)
+                    local Position = PE and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,
+                    Distance / MuzzleVelocity) or BodyPart.Position
+
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
+                    if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,Position,ScreenPosition} end
                 end
             end
         end
@@ -533,8 +542,8 @@ local function AimAt(Hitbox,Smoothness)
     local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[5].X - Mouse.X) * Smoothness,
-        (Hitbox[5].Y - Mouse.Y) * Smoothness
+        (Hitbox[6].X - Mouse.X) * Smoothness,
+        (Hitbox[6].Y - Mouse.Y) * Smoothness
     )
 end
 
@@ -605,6 +614,9 @@ local function HookCharacter(Character)
     end]]
     local OldEquip = Character.Equip
     Character.Equip = function(Self,Item,...)
+        if Item.FireConfig then
+            MuzzleVelocity = Item.FireConfig.MuzzleVelocity
+        end
         if Window.Flags["AR2/EquipInVehicle"] and Self.Sitting then
             local OldCanEquipInVehicles = Item.CanEquipInVehicles
             Item.CanEquipInVehicles = true Self.Sitting = false OldEquip(Self,Item,...)
@@ -668,23 +680,23 @@ end
 local OldSend = Network.Send
 Network.Send = function(Self,Name,...) local Args = {...}
     if table.find(SanityBans,Name) then return end
-    if (Window.Flags["AR2/SSCS"]
-    or Window.Flags["AR2/Fly/Enabled"]
-    or Window.Flags["AR2/WalkSpeed/Enabled"])
-    and Name == "Set Character State" then
-        Args[1] = "Climbing"
-        --[[Args[2] = CFrame.new()
-        Args[3] = true
-        Args[4] = true]]
+    if Name == "Set Character State" then
+        if Window.Flags["AR2/SSCS"]
+        or Window.Flags["AR2/Fly/Enabled"]
+        or Window.Flags["AR2/WalkSpeed/Enabled"] then
+            Args[1] = "Climbing"
+        end
+        if Window.Flags["AR2/Recoil/Enabled"] then
+            Args[3] = true Args[4] = true
+        end
     end return OldSend(Self,Name,unpack(Args))
 end
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
-    PredictedVelocity = Args[3].FireConfig.MuzzleVelocity
     if SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-        local Camera = Workspace.CurrentCamera
-        Args[4] = Camera.CFrame.Position + Camera.CFrame.LookVector
-        Args[5] = (SilentAim[3].Position - Args[4]).Unit
+        --local Camera = Workspace.CurrentCamera
+        --Args[4] = Camera.CFrame.Position + Camera.CFrame.LookVector
+        Args[5] = (SilentAim[5] - Args[4]).Unit
     end
     return OldFire(Self,unpack(Args))
 end
@@ -739,6 +751,14 @@ VehicleController.new = function(...)
     end
 end
 
+getupvalue(Bullets.Fire,1,function(...)
+    if Window.Flags["AR2/Recoil/Enabled"] then
+        local Return = GetSpreadAngle(...)
+        return Return * (Window.Flags["AR2/Recoil/Spread"] / 100)
+    end
+    return GetSpreadAngle(...)
+end)
+
 setupvalue(InteractHeartbeat,11,function(...)
     local Args = {FindItemData(...)}
     if Window.Flags["AR2/InstantSearch"] then
@@ -762,7 +782,8 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
-        Window.Flags["SilentAim/Distance"]
+        Window.Flags["SilentAim/Distance"],
+        Window.Flags["SilentAim/Prediction"]
     )
     if Aimbot then
         AimAt(GetHitbox(
@@ -774,8 +795,7 @@ RunService.Heartbeat:Connect(function()
             Window.Flags["Aimbot/WallCheck"],
             Window.Flags["Aimbot/DistanceCheck"],
             Window.Flags["Aimbot/Distance"],
-            Window.Flags["Aimbot/Prediction/Enabled"],
-            Window.Flags["Aimbot/Prediction/Velocity"]
+            Window.Flags["Aimbot/Prediction"]
         ),Window.Flags["Aimbot/Smoothness"] / 100)
     end
 end)
@@ -790,8 +810,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Trigger/WallCheck"],
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/Distance"],
-        Window.Flags["Trigger/Prediction/Enabled"],
-        Window.Flags["Trigger/Prediction/Velocity"]
+        Window.Flags["Trigger/Prediction"]
     )
 
     if TriggerHitbox then mouse1press()
@@ -807,8 +826,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Window.Flags["Trigger/WallCheck"],
                     Window.Flags["Trigger/DistanceCheck"],
                     Window.Flags["Trigger/Distance"],
-                    Window.Flags["Trigger/Prediction/Enabled"],
-                    Window.Flags["Trigger/Prediction/Velocity"]
+                    Window.Flags["Trigger/Prediction"]
                 ) if not TriggerHitbox or not Trigger then break end
             end
         end mouse1release()
