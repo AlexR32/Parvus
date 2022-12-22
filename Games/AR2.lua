@@ -498,8 +498,8 @@ local function WallCheck(Enabled,Camera,Hitbox)
     Hitbox.Position - Camera.Position)
 end
 
-local function CalculateTrajectory(Origin,Velocity,Gravity,TravelTime)
-    return Origin + Velocity * Time + Gravity * TravelTime * Time / 2
+local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    return Origin + Velocity * Time + Gravity * Time * Time / 2
 end
 
 local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE)
@@ -687,6 +687,7 @@ Network.Send = function(Self,Name,...) local Args = {...}
             Args[1] = "Climbing"
         end
         if Window.Flags["AR2/Recoil/Enabled"] then
+            --print(Args[3],Args[4])
             Args[3] = true Args[4] = true
         end
     end return OldSend(Self,Name,unpack(Args))
@@ -694,8 +695,6 @@ end
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
     if SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-        --local Camera = Workspace.CurrentCamera
-        --Args[4] = Camera.CFrame.Position + Camera.CFrame.LookVector
         Args[5] = (SilentAim[5] - Args[4]).Unit
     end
     return OldFire(Self,unpack(Args))
@@ -751,12 +750,13 @@ VehicleController.new = function(...)
     end
 end
 
-getupvalue(Bullets.Fire,1,function(...)
+getupvalue(Bullets.Fire,1,function(Self,A,...)
     if Window.Flags["AR2/Recoil/Enabled"] then
-        local Return = GetSpreadAngle(...)
+        local Return = GetSpreadAngle(Self,A,...)
+        --[[Network:Send("Animator State Report",PlayerClass.Character.Instance,
+        {Zooming = true,FirstPerson = true})]]
         return Return * (Window.Flags["AR2/Recoil/Spread"] / 100)
-    end
-    return GetSpreadAngle(...)
+    end return GetSpreadAngle(Self,A,...)
 end)
 
 setupvalue(InteractHeartbeat,11,function(...)
