@@ -23,7 +23,8 @@ local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger,GunModel,
 ProjectileSpeed,ProjectileGravity,
 GravityCorrection,Tortoiseshell
-= nil,false,false,nil,1600,150,2,
+= nil,false,false,nil,
+1600,Vector3.new(0,150,0),2,
 require(ReplicatedStorage.TS)
 
 repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
@@ -47,6 +48,7 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
+            AimbotSection:Slider({Name = "PredictionVel",Flag = "PredictionVel",Min = 0,Max = 10000,Value = 0})
             AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
@@ -619,6 +621,7 @@ local function AutoShoot(Hitbox,Enabled)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    print(Gravity * Time^2 / GravityCorrection,Gravity * Time * Time / GravityCorrection)
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
@@ -709,7 +712,8 @@ end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
     local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
-        ProjectileGravity = Projectiles[Args[1]].Gravity ~= 0 and Projectiles[Args[1]].Gravity or 1
+        ProjectileGravity = Vector3.new(0,Projectiles[Args[1]].Gravity,0)
+        --print(ProjectileGravity,ProjectileSpeed,GravityCorrection)
     end return Self,...
 end)
 
@@ -777,7 +781,7 @@ RunService.Heartbeat:Connect(function()
             Window.Flags["Aimbot/WallCheck"],
             Window.Flags["Aimbot/DistanceCheck"],
             Window.Flags["Aimbot/Distance"],
-            Window.Flags["Aimbot/Prediction/Enabled"],
+            Window.Flags["Aimbot/Prediction"],
             false
         ),Window.Flags["Aimbot/Smoothness"] / 100)
     end
@@ -831,7 +835,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Trigger/WallCheck"],
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/Distance"],
-        Window.Flags["Trigger/Prediction/Enabled"],
+        Window.Flags["Trigger/Prediction"],
         false
     )
 
@@ -847,7 +851,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Window.Flags["Trigger/WallCheck"],
                     Window.Flags["Trigger/DistanceCheck"],
                     Window.Flags["Trigger/Distance"],
-                    Window.Flags["Trigger/Prediction/Enabled"],
+                    Window.Flags["Trigger/Prediction"],
                     false
                 ) if not TriggerHitbox or not Trigger then break end
             end

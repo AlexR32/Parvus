@@ -901,7 +901,7 @@ RunService.Heartbeat:Connect(function()
             Window.Flags["Aimbot/WallCheck"],
             Window.Flags["Aimbot/DistanceCheck"],
             Window.Flags["Aimbot/Distance"],
-            Window.Flags["Aimbot/Prediction/Enabled"]
+            Window.Flags["Aimbot/Prediction"]
         ),Window.Flags["Aimbot/Smoothness"] / 100)
     end
 end)
@@ -934,7 +934,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Trigger/WallCheck"],
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/Distance"],
-        Window.Flags["Trigger/Prediction/Enabled"]
+        Window.Flags["Trigger/Prediction"]
     )
 
     if TriggerHitbox then Press()
@@ -951,7 +951,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Window.Flags["Trigger/WallCheck"],
                     Window.Flags["Trigger/DistanceCheck"],
                     Window.Flags["Trigger/Distance"],
-                    Window.Flags["Trigger/Prediction/Enabled"]
+                    Window.Flags["Trigger/Prediction"]
                 ) if not TriggerHitbox or not Trigger then break end
             end
         end Release()
