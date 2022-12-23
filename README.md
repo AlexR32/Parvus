@@ -109,7 +109,26 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
   - Trigger Bot Inherited
   - Aimbot Inherited
   - ESP Inherited
+  - Anti-Zombie
+  - Anti-Zombie MeleeAura
+  - No Fall Impact
+  - Unlock Firemodes
+  - No Spread
+  - No Camera Shake
   - Recoil Mods
+  - Vehicle Mods
+  - NoClip
+  - Fly
+  - WalkSpeed
+  - JumpPower
+  - No Jump Delay
+  - Equip In Air
+  - Equip In Water
+  - Equip In Vehicle
+  - Instant Search
+  - Random Events ESP
+  - Vehicle ESP
+  - Zombie ESP
   - Item ESP
   - Map ESP
 ```
