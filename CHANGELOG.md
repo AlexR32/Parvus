@@ -1,3 +1,39 @@
+### Update 23/12/22
+```markdown
+# AR2
+* Fixed no spread
++ Added no camera flinch
++ Added Zombie kill aura
+* now synapse x only
+```
+### Update 22/12/22
+```markdown
+# BB & AR2 & BRM5
+* Fixed Prediction now actually should predict
+# AR2
++ Added back no spread (need tests)
+```
+### Update 20/12/22
+```markdown
+# Global
+* Some attempts to increase fps once again
+# BB
+* now synapse x only
+```
+### Update 19/12/22
+```markdown
+# AR2
+* Fixed for latest update
++ Added new Random Events
+* Some attempts to increase fps for potato pc's
+```
+### Update 18/12/22
+```markdown
+# AR2
+* Fixed Wallcheck
+* Fixed random itemesp errors in console
++ Added some new random events
+```
 ### Update 17/12/22
 ```markdown
 # AR2
