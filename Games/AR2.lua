@@ -11,6 +11,12 @@ local Aimbot,SilentAim,Trigger,
 MuzzleVelocity,ProjectileGravity
 = false,nil,nil,1000,Vector3.zero
 
+if identifyexecutor() ~= "Synapse X" then
+    local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
+    PromptLib("Unsupported Executor","Synapse X Only\nFor Safety Measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    return
+end
+
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
@@ -27,7 +33,10 @@ local Animators = Framework.Classes.Animators
 
 local Events = getupvalue(Network.Add,4)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
---local GetSpreadVector = getupvalue(Bullets.Fire,2)
+--local GetSpreadVector = getupvalue(Bullets.Fire,3)
+--local CastLocalBullet = getupvalue(Bullets.Fire,4)
+local FlinchCamera = getupvalue(Bullets.Fire,5)
+local GetFireImpulse = getupvalue(Bullets.Fire,7)
 
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
@@ -265,16 +274,17 @@ local Window = Parvus.Utilities.UI:Window({
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
             RecoilSection:Toggle({Name = "Unlock Firemodes",Flag = "AR2/Firemodes",Value = false})
+            RecoilSection:Toggle({Name = "No Spread",Flag = "AR2/NoSpread",Value = false})
+            RecoilSection:Toggle({Name = "No Camera Flinch",Flag = "AR2/NoFlinch",Value = false})
             RecoilSection:Divider()
             RecoilSection:Toggle({Name = "Recoil Control",Flag = "AR2/Recoil/Enabled",Value = false})
-            RecoilSection:Slider({Name = "Spread",Flag = "AR2/Recoil/Spread",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            RecoilSection:Slider({Name = "Gun Bob A",Flag = "AR2/Recoil/BobA",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            RecoilSection:Slider({Name = "Gun Bob B",Flag = "AR2/Recoil/BobB",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            RecoilSection:Slider({Name = "Recoil Random",Flag = "AR2/Recoil/RandomInt",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Roll Bias",Flag = "AR2/Recoil/RollBias",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Raise Force",Flag = "AR2/Recoil/RaiseForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Bob Force",Flag = "AR2/Bob/Force",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Bob Damping",Flag = "AR2/Bob/Damping",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
         local VehSection = MiscTab:Section({Name = "Vehicle",Side = "Left"}) do
             VehSection:Toggle({Name = "Enabled",Flag = "AR2/Vehicle/Enabled",Value = false})
@@ -290,7 +300,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "Fly Value",Flag = "AR2/Fly/Value",Min = 1,Max = 10,Precise = 1,Value = 1})
             CharSection:Divider()
             CharSection:Toggle({Name = "WalkSpeed Enabled",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
-            CharSection:Slider({Name = "WalkSpeed Value",Flag = "AR2/WalkSpeed/Value",Min = 26,Max = 500,Value = 32})
+            CharSection:Slider({Name = "WalkSpeed Value",Flag = "AR2/WalkSpeed/Value",Min = 26,Max = 500,Value = 26})
             CharSection:Divider()
             CharSection:Toggle({Name = "JumpPower Enabled",Flag = "AR2/JumpPower/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "JumpPower Value",Flag = "AR2/JumpPower/Value",Min = 32,Max = 500,Value = 32})
@@ -304,6 +314,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
+            MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
@@ -547,7 +558,7 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
-local function GetZombiesAllFOV(Distance)
+local function GetZombies(Distance)
     local ClosestZombies = {}
 
     for Index,Zombie in pairs(Zombies:GetChildren()) do
@@ -555,13 +566,13 @@ local function GetZombiesAllFOV(Distance)
         if not PrimaryPart then continue end
 
         if GetDistanceFromCamera(PrimaryPart.Position) <= Distance then
-            ClosestZombies[#ClosestZombies + 1] = PrimaryPart
+            ClosestZombies[#ClosestZombies + 1] = Zombie
         end
     end
 
     return ClosestZombies
 end
-local function GetItemsAllFOV(Distance)
+local function GetItems(Distance)
     local ClosestItems = {}
 
     for Index,Item in pairs(LootBins:GetChildren()) do
@@ -606,6 +617,7 @@ end
 
 local function HookCharacter(Character)
     FlyPosition = Character.RootPart.CFrame
+    -- Old Equip In Air
     --[[local OldFalling = Character.Falling.Fire
     Character.Falling.Fire = function(Self,Time,...)
         if Window.Flags["AR2/Fly/Enabled"] then
@@ -645,12 +657,11 @@ local function HookCharacter(Character)
     end
     for Index,Spring in pairs({"WobblePos","WobbleRot","RotationVelocity","MoveVelocity"}) do
         local OldSpring = Character.Animator.Springs[Spring].Retune
-        Character.Animator.Springs[Spring].Retune = function(Self,A,B,...)
+        Character.Animator.Springs[Spring].Retune = function(Self,Force,Damping,...)
             if Window.Flags["AR2/Recoil/Enabled"] then
-                A = A * (Window.Flags["AR2/Recoil/BobA"] / 100)
-                B = B * (Window.Flags["AR2/Recoil/BobB"] / 100)
-            end
-            return OldSpring(Self,A,B,...)
+                Force = Force * (Window.Flags["AR2/Bob/Force"] / 100)
+                Damping = Damping * (Window.Flags["AR2/Bob/Damping"] / 100)
+            end return OldSpring(Self,Force,Damping,...)
         end
     end
     local OldToolAction = Character.Actions.ToolAction
@@ -677,39 +688,73 @@ local function HookCharacter(Character)
     end
 end
 
+setupvalue(Bullets.Fire,1,function(Character,Camera,...)
+    if Window.Flags["AR2/NoSpread"] then
+        return GetSpreadAngle(
+            {MoveState = "Walking",Zooming = true},
+            {FirstPerson = true},...
+        )
+    end return GetSpreadAngle(Character,Camera,...)
+end)
+
+setupvalue(Bullets.Fire,5,function(...)
+    if Window.Flags["AR2/NoFlinch"] then return end
+    return FlinchCamera(...)
+end)
+
+setupvalue(Bullets.Fire,7,function(Character,Item,...)
+    if Window.Flags["AR2/Recoil/Enabled"] then
+        local FireImpulse = GetFireImpulse(Character,Item,...)
+        FireImpulse[1] = FireImpulse[1] * (Window.Flags["AR2/Recoil/ShiftForce"] / 100)
+        FireImpulse[2] = FireImpulse[2] * (Window.Flags["AR2/Recoil/RollBias"] / 100)
+        FireImpulse[3] = FireImpulse[3] * (Window.Flags["AR2/Recoil/RaiseForce"] / 100)
+        FireImpulse[4] = FireImpulse[4] * (Window.Flags["AR2/Recoil/SlideForce"] / 100)
+        FireImpulse[5] = FireImpulse[5] * (Window.Flags["AR2/Recoil/KickUpForce"] / 100)
+        return FireImpulse
+    end return GetFireImpulse(Character,Item,...)
+end)
+
+setupvalue(InteractHeartbeat,11,function(...)
+    if Window.Flags["AR2/InstantSearch"] then
+        local Args = {FindItemData(...)}
+        Args[4] = 0 return unpack(Args)
+    end return FindItemData(...)
+end)
+
 local OldSend = Network.Send
 Network.Send = function(Self,Name,...) local Args = {...}
     if table.find(SanityBans,Name) then return end
+
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"]
         or Window.Flags["AR2/Fly/Enabled"]
         or Window.Flags["AR2/WalkSpeed/Enabled"] then
             Args[1] = "Climbing"
         end
-        if Window.Flags["AR2/Recoil/Enabled"] then
-            --print(Args[3],Args[4])
+        if Window.Flags["AR2/NoSpread"] then
             Args[3] = true Args[4] = true
         end
-    end return OldSend(Self,Name,unpack(Args))
+    end
+
+    return OldSend(Self,Name,unpack(Args))
 end
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
     if SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
         Args[5] = (SilentAim[5] - Args[4]).Unit
-    end
-    return OldFire(Self,unpack(Args))
+    end return OldFire(Self,unpack(Args))
 end
-local OldPost = Animators.Post
+-- Old Recoil Control
+--[[local OldPost = Animators.Post
 Animators.Post = function(Self,Name,...) local Args = {...}
     if Window.Flags["AR2/Recoil/Enabled"] and Name == "FireImpulse" then
         Args[1][1] = Args[1][1] * (Window.Flags["AR2/Recoil/ShiftForce"] / 100)
-        Args[1][2] = Args[1][2] * (Window.Flags["AR2/Recoil/RandomInt"] / 100)
+        Args[1][2] = Args[1][2] * (Window.Flags["AR2/Recoil/RollBias"] / 100)
         Args[1][3] = Args[1][3] * (Window.Flags["AR2/Recoil/RaiseForce"] / 100)
         Args[1][4] = Args[1][4] * (Window.Flags["AR2/Recoil/SlideForce"] / 100)
         Args[1][5] = Args[1][5] * (Window.Flags["AR2/Recoil/KickUpForce"] / 100)
-    end
-    return OldPost(Self,Name,unpack(Args))
-end
+    end return OldPost(Self,Name,unpack(Args))
+end]]
 local OldCharacterGroundCast = Raycasting.CharacterGroundCast
 Raycasting.CharacterGroundCast = function(Self,Position,LengthDown,...)
     if PlayerClass.Character and Position == PlayerClass.Character.RootPart.CFrame then
@@ -749,22 +794,6 @@ VehicleController.new = function(...)
         end return OldStep(Self,...)
     end
 end
-
-getupvalue(Bullets.Fire,1,function(Self,A,...)
-    if Window.Flags["AR2/Recoil/Enabled"] then
-        local Return = GetSpreadAngle(Self,A,...)
-        --[[Network:Send("Animator State Report",PlayerClass.Character.Instance,
-        {Zooming = true,FirstPerson = true})]]
-        return Return * (Window.Flags["AR2/Recoil/Spread"] / 100)
-    end return GetSpreadAngle(Self,A,...)
-end)
-
-setupvalue(InteractHeartbeat,11,function(...)
-    local Args = {FindItemData(...)}
-    if Window.Flags["AR2/InstantSearch"] then
-        Args[4] = 0
-    end return unpack(Args)
-end)
 
 if PlayerClass.Character then
     HookCharacter(PlayerClass.Character)
@@ -837,24 +866,27 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     PlayerFly(Window.Flags["AR2/Fly/Enabled"],
         Window.Flags["AR2/Fly/Value"])
 end)
-Parvus.Utilities.Misc:NewThreadLoop(1,function()
+Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/AntiZombie/Enabled"] then return end
-    local ClosestZombies = GetZombiesAllFOV(100)
+    local ClosestZombies = GetZombies(50)
     for Index,Zombie in pairs(ClosestZombies) do
-        if isnetworkowner(Zombie) then
-            --Zombie.CFrame = PlayerClass.Character.RootPart.CFrame - Vector3.new(0,5,0)
-            --Zombie.AssemblyLinearVelocity = Vector3.zero
-            Zombie.Anchored = true
-        else
-            Zombie.Anchored = false
-        end
+        local ZombieOwned = isnetworkowner(Zombie.PrimaryPart)
+        if Window.Flags["AR2/AntiZombie/KillAura"] and ZombieOwned then
+            --Zombie.PrimaryPart.CFrame = PlayerClass.Character.RootPart.CFrame * CFrame.new(0,0,5)
+            --Zombie.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
+            local Melee = PlayerClass.Character.Inventory.Equipment.Melee
+            if Melee then Network:Send("Melee Swing",Melee.Id,1)
+                Network:Send("Melee Hit Register",Melee.Id,
+                Zombie.UpperTorso,"Flesh")
+            end
+        else Zombie.PrimaryPart.Anchored = ZombieOwned end
     end ClosestZombies = nil
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
     or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
 
-    local Items = GetItemsAllFOV(100)
+    local Items = GetItems(100)
     if Interface:IsVisible("GameMenu")
     or not PlayerClass.Character or
     #Items == 0 then return end
