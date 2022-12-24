@@ -176,6 +176,27 @@ function Assets:Window(ScreenAsset,Window)
 		Window.Size = Size
 	end)
 
+	local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/src/ParticleEmitter/init.lua"))()
+	local snowflake = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
+	local random = Random.new() snowflake.rate = 20
+
+	snowflake.onSpawn = function(particle)
+		local randomPosition = random:NextNumber()
+		local randomSize = random:NextInteger(10,50)
+		local randomYVelocity = random:NextInteger(10,50)
+		local randomXVelocity = random:NextInteger(-50,50)
+
+		particle.element.ImageTransparency = randomSize / 50
+		particle.element.Size = UDim2.fromOffset(randomSize,randomSize)
+		particle.velocity = Vector2.new(randomXVelocity,randomYVelocity)
+		particle.position = Vector2.new(randomPosition * WindowAsset.Background.AbsoluteSize.X,0)
+		particle.maxAge = 50 particle.element.Visible = true
+	end
+
+	snowflake.onUpdate = function(particle,deltaTime)
+		particle.position += particle.velocity * deltaTime
+	end
+
 	WindowAsset.TabButtonContainer.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		WindowAsset.TabButtonContainer.CanvasSize = UDim2.new(0,WindowAsset.TabButtonContainer.ListLayout.AbsoluteContentSize.X,0,0)
 	end)
