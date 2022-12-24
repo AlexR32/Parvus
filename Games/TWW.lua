@@ -308,58 +308,58 @@ for Index,Instance in pairs(Workspace.WORKSPACE_Geometry:GetChildren()) do
 end
 for Index,Instance in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
     if Instance:WaitForChild("Health").Value > 300 then print(Instance.Name)
-        Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
+        Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
         "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end
 Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Instance)
     if Instance:WaitForChild("Health").Value > 300 then print(Instance.Name)
-        Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
+        Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
         "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end)
 Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
-    Parvus.Utilities.Drawing:RemoveESP(Instance)
+    Parvus.Utilities.Drawing:RemoveObject(Instance)
 end)
 for Index,Instance in pairs(Regions) do
     for Index,Instance in pairs(Instance.Trees:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
+            Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
     for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
         if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance,Instance.Name,Instance.PrimaryPart},
+            Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
     Instance.Trees.DescendantAdded:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart},
+            Parvus.Utilities.Drawing:AddObject(Instance.Parent.Parent,
+            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Vegetation.DescendantAdded:Connect(function()
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:ItemESP({Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart},
+            Parvus.Utilities.Drawing:AddObject(Instance.Parent.Parent,
+            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
     Instance.Trees.DescendantRemoving:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:RemoveESP(Instance.Parent.Parent)
+            Parvus.Utilities.Drawing:RemoveObject(Instance.Parent.Parent)
         end
     end)
     Instance.Vegetation.DescendantRemoving:Connect(function(Instance)
         if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
             print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:RemoveESP(Instance.Parent.Parent)
+            Parvus.Utilities.Drawing:RemoveObject(Instance.Parent.Parent)
         end
     end)
 end

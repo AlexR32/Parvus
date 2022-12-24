@@ -13,7 +13,7 @@ MuzzleVelocity,ProjectileGravity
 
 if identifyexecutor() ~= "Synapse X" then
     local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported Executor","Synapse X Only\nFor Safety Measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    PromptLib("Unsupported executor","Synapse X Only\nFor safety measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
     return
 end
 
@@ -45,7 +45,7 @@ setupvalue(Network.Fetch,6,NullFunction)
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
-local Zombies = Workspace.Zombies.Mobs
+local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
 -- game data mess
@@ -561,7 +561,7 @@ end
 local function GetZombies(Distance)
     local ClosestZombies = {}
 
-    for Index,Zombie in pairs(Zombies:GetChildren()) do
+    for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
         local PrimaryPart = Zombie.PrimaryPart
         if not PrimaryPart then continue end
 
@@ -909,28 +909,29 @@ end)
 for Index,Item in pairs(Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
-        Parvus.Utilities.Drawing:ItemESP({Item,Item.Name,Item.Value.Position},
+        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
             "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
         )
     end
 end
 for Index,Event in pairs(Randoms:GetChildren()) do
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
-        Parvus.Utilities.Drawing:ItemESP({Event,Event.Name,Event.Value.Position},
+        Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
         )
     end
 end
 for Index,Vehicle in pairs(Vehicles:GetChildren()) do
-    Parvus.Utilities.Drawing:ItemESP(
-        {Vehicle,Vehicle.Name,Vehicle.PrimaryPart},
+    Parvus.Utilities.Drawing:AddObject(
+        Vehicle,Vehicle.Name,Vehicle.PrimaryPart,
         "AR2/ESP/Vehicles","AR2/ESP/Vehicles",Window.Flags
     )
 end
-for Index,Zombie in pairs(Zombies:GetChildren()) do
-    if string.match(Zombie.Name,"Unique") then
-        Parvus.Utilities.Drawing:ItemESP(
-            {Zombie,Zombie.Name,Zombie.PrimaryPart},
+for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
+    local Config = require(Zombies.Configs[Zombie.Name])
+    if #Config.Inherits >= 1 then
+        Parvus.Utilities.Drawing:AddObject(
+            Zombie,Zombie.Name,Zombie.PrimaryPart,
             "AR2/ESP/Zombies","AR2/ESP/Zombies",Window.Flags
         )
     end
@@ -939,14 +940,14 @@ end
 Loot.DescendantAdded:Connect(function(Item)
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
-        Parvus.Utilities.Drawing:ItemESP({Item,Item.Name,Item.Value.Position},
+        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
             "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
         )
     end
 end)
 Randoms.ChildAdded:Connect(function(Event)
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
-        Parvus.Utilities.Drawing:ItemESP({Event,Event.Name,Event.Value.Position},
+        Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
         )
         if Window.Flags["AR2/ESP/RandomEvents/Enabled"] then
@@ -959,48 +960,49 @@ Randoms.ChildAdded:Connect(function(Event)
 end)
 Vehicles.ChildAdded:Connect(function(Vehicle)
     repeat task.wait() until Vehicle.PrimaryPart
-    Parvus.Utilities.Drawing:ItemESP(
-        {Vehicle,Vehicle.Name,Vehicle.PrimaryPart},
+    Parvus.Utilities.Drawing:AddObject(
+        Vehicle,Vehicle.Name,Vehicle.PrimaryPart,
         "AR2/ESP/Vehicles","AR2/ESP/Vehicles",Window.Flags
     )
 end)
-Zombies.ChildAdded:Connect(function(Zombie)
+Zombies.Mobs.ChildAdded:Connect(function(Zombie)
     repeat task.wait() until Zombie.PrimaryPart
-    if string.match(Zombie.Name,"Unique") then
-        Parvus.Utilities.Drawing:ItemESP(
-            {Zombie,Zombie.Name,Zombie.PrimaryPart},
+    local Config = require(Zombies.Configs[Zombie.Name])
+    if #Config.Inherits >= 1 then
+        Parvus.Utilities.Drawing:AddObject(
+            Zombie,Zombie.Name,Zombie.PrimaryPart,
             "AR2/ESP/Zombies","AR2/ESP/Zombies",Window.Flags
         )
     end
 end)
 
 Loot.DescendantRemoving:Connect(function(Item)
-    Parvus.Utilities.Drawing:RemoveESP(Item.Parent)
+    Parvus.Utilities.Drawing:RemoveObject(Item)
 end)
 Randoms.ChildRemoved:Connect(function(Event)
-    Parvus.Utilities.Drawing:RemoveESP(Event)
+    Parvus.Utilities.Drawing:RemoveObject(Event)
 end)
 Vehicles.ChildRemoved:Connect(function(Vehicle)
-    Parvus.Utilities.Drawing:RemoveESP(Vehicle)
+    Parvus.Utilities.Drawing:RemoveObject(Vehicle)
 end)
-Zombies.ChildRemoved:Connect(function(Zombie)
-    Parvus.Utilities.Drawing:RemoveESP(Zombie)
+Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
+    Parvus.Utilities.Drawing:RemoveObject(Zombie)
 end)
 
 local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
 Events["Inventory Container Added\r"] = function(Id,Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
+        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
         "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
 Events["Container Changed\r"] = function(Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
 
-    Parvus.Utilities.Drawing:RemoveESP(Data.Id)
+    Parvus.Utilities.Drawing:RemoveObject(Data.Id)
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:ItemESP({Data.Id,CIIC(Data),Data.WorldPosition},
+        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
         "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldCC(Data,...)
 end

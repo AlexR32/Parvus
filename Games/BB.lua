@@ -7,7 +7,7 @@ local TeamService = game:GetService("Teams")
 
 if identifyexecutor() ~= "Synapse X" then
     local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported executor","Synapse X Only\nFor Safety Measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    PromptLib("Unsupported executor","Synapse X only\nFor safety measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
     return
 end
 
@@ -558,30 +558,32 @@ local function AutoShoot(Hitbox,Enabled)
     if Weapon and Config then
         if Config.Controller == "Melee" then
             local Camera = Workspace.CurrentCamera
-            if (Hitbox[3].Position - Camera.CFrame.Position).Magnitude < 22.5 then
-                local Backstab = Hitbox[3].CFrame * CFrame.new(0,0,-Config.Melee.Range)
-                local RayResult =  Raycast(Backstab.Position,
-                Hitbox[3].Position - Backstab.Position,{Hitbox[3]})
-
+            if (Hitbox[3].Position - Camera.CFrame.Position).Magnitude <= 15 then
                 Tortoiseshell.Network:Fire("Item_Melee","StabBegin",Weapon)
-                task.wait(Config.Melee.Delay + Config.Melee.Time)
-                Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[3],
-                RayResult.Position,Backstab.LookVector * (Config.Melee.Range + 1))
+                Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[3],Hitbox[3].Position,
+                (Hitbox[3].Position - Camera.CFrame.Position).Unit * (Config.Melee.Range + 1))
+                Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
+
+                Parvus.Utilities.UI:Notification2({
+                    Title = ("Autoshoot | Stab %s"):format(Hitbox[1].Name),
+                    Color = Color3.new(1,0.5,0.25),Duration = 3
+                }) task.wait(1 / Config.Melee.Speed)
             end return
         end
-        
+
         local State = Weapon.State
         local Ammo = State.Ammo.Server
-        local FireMode = State.FireMode.Server
-        local Reloading = State.Reloading.Server
+        if Ammo.Value > 0 and Config.Controller == "Paintball" then
+            local FireMode = State.FireMode.Server
+            local OldAmmo = Ammo.Value
 
-        local OldAmmo = Ammo.Value
-        if Ammo.Value > 0 then
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
+
             local CameraPosition,ShootProjectiles,RayPosition,
             RayNormal = ComputeProjectiles(Config,Hitbox[3])
             if not CameraPosition then return end
+
             Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
             Weapon,CameraPosition,ShootProjectiles)
 
@@ -592,18 +594,20 @@ local function AutoShoot(Hitbox,Enabled)
                 Tortoiseshell.Network:Fire("Projectiles","__Hit",
                 Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1])
             end
-            
+
             Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
             Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
             Config.Projectile.Amount and Config.Projectile.Amount > 3)
             task.wait(60/CurrentFireMode.FireRate)
+
             if (OldAmmo - Ammo.Value) >= 1 then
                 Parvus.Utilities.UI:Notification2({
-                    Title = "Autoshoot | Hit " .. Hitbox[1].Name .. " | Remaining Ammo: " .. Ammo.Value,
-                    Color = Color3.new(1,0.5,0.25),Duration = 3
+                    Title = ("Autoshoot | Hit %s | Ammo %s"):format(
+                        Hitbox[1].Name,Ammo.Value
+                    ),Color = Color3.new(1,0.5,0.25),Duration = 3
                 })
             end
-        else
+        else local Reloading = State.Reloading.Server
             if Reloading.Value then
                 local ReloadTime = Config.Magazine.ReloadTime
                 local Milliseconds = (ReloadTime % 1) * 10
@@ -611,7 +615,7 @@ local function AutoShoot(Hitbox,Enabled)
 
                 Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
                 Parvus.Utilities.UI:Notification2({
-                    Title = "Autoshoot | Reloading | Approx Time: " .. string.format("%d sec. %d msec.",Seconds,Milliseconds),
+                    Title = ("Autoshoot | Reloading | Approx Time: %d.%d sec."):format(Seconds,Milliseconds),
                     Color = Color3.new(1,0.25,0.25),Duration = 3
                 }) task.wait(ReloadTime)
             end
