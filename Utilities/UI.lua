@@ -176,7 +176,7 @@ function Assets:Window(ScreenAsset,Window)
 		Window.Size = Size
 	end)
 
-	local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/src/ParticleEmitter/init.lua"))()
+	local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
 	local snowflake = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
 	local random = Random.new() snowflake.rate = 20
 
