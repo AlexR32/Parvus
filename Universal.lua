@@ -5,6 +5,7 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger = nil,false,false
+local Mouse = LocalPlayer:GetMouse()
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -18,8 +19,8 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Raycast",Mode = "Button",Value = true},
                 {Name = "FindPartOnRayWithIgnoreList",Mode = "Button"},
                 {Name = "FindPartOnRayWithWhitelist",Mode = "Button"},
-                {Name = "Hit",Mode = "Button"},
-                {Name = "Target",Mode = "Button"}
+                {Name = "FindPartOnRay",Mode = "Button"},
+                {Name = "Hit/Target",Mode = "Button"},
             }})
         end
         local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
@@ -164,18 +165,18 @@ local Window = Parvus.Utilities.UI:Window({
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
-            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
             :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             :Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
+            Callback = function(HSVAR,Color) Window.Color = Color end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
-            Callback = function() Window:Toggle(Window.Enabled) end})
+            Callback = function() Window.Enabled = Window.Enabled end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
-            Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
+            Callback = function(Bool) Window.Watermark.Enabled = Bool end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
             --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})]]
+            Callback = function(HSVAR,Color) Window.Color = Color end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
@@ -329,43 +330,41 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
+
+-- Universal Silent Aim by Averiias
 local OldIndex,OldNamecall
 OldIndex = hookmetamethod(game,"__index",function(Self,Index)
     local Mode = Window.Flags["SilentAim/Mode"][1]
-    if Index == "Hit" and Mode == "Hit" and SilentAim then
-        local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
-        if HitChance then return SilentAim[3].Position end
-    elseif Index == "Target" and Mode == "Target" and SilentAim then
-        local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
-        if HitChance then return SilentAim[3] end
-    end
-    return OldIndex(Self,Index)
+    if Self == Mouse and not checkcaller() and Mode == "Hit/Target" and SilentAim
+    and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+        if Index == "Target" or Index == "target" then
+            return SilentAim[3]
+        elseif Index == "Hit" or Index == "hit" then
+            return SilentAim[3].CFrame
+        elseif Index == "X" or Index == "x" then
+            return Self.X
+        elseif Index == "Y" or Index == "y" then
+            return Self.Y
+        elseif Index == "UnitRay" then
+            return Ray.new(Self.Origin,(Self.Hit - Self.Origin).Unit)
+        end
+    end return OldIndex(Self,Index)
 end)
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Args,Method = {...},getnamecallmethod()
-    local Mode = Window.Flags["SilentAim/Mode"][1]
-    local Script = getcallingscript()
-    if SilentAim and Script and Script.Name ~= "ControlModule" then
-        if (Method == "Raycast" and Mode == "Raycast") then
-            local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
-            local Camera = Workspace.CurrentCamera
-            if Args[1] == Camera.CFrame.Position and HitChance then
-                Args[2] = SilentAim[3].Position - Camera.CFrame.Position
-            end
+    if Self == Workspace and not checkcaller() and SilentAim
+    and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+        local Mode = Window.Flags["SilentAim/Mode"][1]
+        if (Method == "Raycast" and Mode == Method) then
+            Args[2] = (SilentAim[3].Position - Args[1]).Unit * 1000
             return OldNamecall(Self,unpack(Args))
-        elseif (Method == "FindPartOnRayWithIgnoreList"
-        and Mode == "FindPartOnRayWithIgnoreList")
-        or (Method == "FindPartOnRayWithWhitelist"
-        and Mode == "FindPartOnRayWithWhitelist") then
-            local HitChance = math.random(0,100) <= Window.Flags["SilentAim/HitChance"]
-            local Camera = Workspace.CurrentCamera
-            if Args[1].Origin == Camera.CFrame.Position and HitChance then
-                Args[1] = Ray.new(Args[1].Origin,SilentAim[3].Position - Camera.CFrame.Position)
-            end
+        elseif (Method == "FindPartOnRayWithIgnoreList" and Mode == Method)
+        or (Method == "FindPartOnRayWithWhitelist" and Mode == Method)
+        or ((Method == "FindPartOnRay" or Method == "findPartOnRay") and Mode:lower() == Method:lower()) then
+            Args[1] = Ray.new(Args[1].Origin,(SilentAim[3].Position - Args[1].Origin).Unit * 1000)
             return OldNamecall(Self,unpack(Args))
         end
-    end
-    return OldNamecall(Self,...)
+    end return OldNamecall(Self,...)
 end)
 
 RunService.Heartbeat:Connect(function()

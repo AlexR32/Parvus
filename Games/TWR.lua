@@ -10,6 +10,7 @@ local SilentAim,Aimbot,Trigger,NPCFolder
 
 repeat task.wait() until LocalPlayer.PlayerScripts:FindFirstChild("Client")
 local RayModule = require(ReplicatedStorage.SharedModules.Utilities.Ray)
+--local Bullets = require(LocalPlayer.PlayerScripts.Client.Bullets)
 local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
 --[[local Client = getsenv(LocalPlayer.PlayerScripts.Client)
 local GlobalTable = getupvalue(Client.RHit,2)]]
@@ -168,18 +169,18 @@ local Window = Parvus.Utilities.UI:Window({
     local SettingsTab = Window:Tab({Name = "Settings"}) do
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
-            Value = Window.Enabled,Callback = function(Bool) Window:Toggle(Bool) end})
+            Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
             :Keybind({Value = "RightShift",Flag = "UI/Keybind",DoNotClear = true})
             :Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})
+            Callback = function(HSVAR,Color) Window.Color = Color end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
-            Callback = function() Window:Toggle(Window.Enabled) end})
+            Callback = function() Window.Enabled = Window.Enabled end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
-            Callback = function(Bool) Window.Watermark:Toggle(Bool) end})
+            Callback = function(Bool) Window.Watermark.Enabled = Bool end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
             --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window:SetColor(Color) end})]]
+            Callback = function(HSVAR,Color) Window.Color = Color end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
@@ -278,6 +279,7 @@ local function DistanceCheck(Enabled,Distance,MaxDistance)
     return Distance * 0.28 <= MaxDistance
 end
 
+-- Bullets.GetIgnoreCache()
 local function WallCheck(Enabled,Camera,Hitbox,Character)
     if not Enabled then return true end
     return not Raycast(Camera.Position,
@@ -297,7 +299,7 @@ local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD)
         for Index,BodyPart in pairs(BP) do
             BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
             local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-            if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+            if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                 local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
                 local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                 if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,BodyPart,Distance,ScreenPosition} end

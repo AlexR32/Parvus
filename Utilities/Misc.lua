@@ -122,11 +122,11 @@ end
 function Misc:SetupWatermark(Window)
     local GetFPS = Misc:SetupFPS()
     RunService.Heartbeat:Connect(function()
-        if Window.Flags["UI/Watermark"] then
-            Window.Watermark:SetTitle(string.format(
+        if Window.Watermark.Enabled then
+            Window.Watermark.Title = string.format(
                 "Parvus Hub    %s    %i FPS    %i MS",
                 os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-            ))
+            )
         end
     end)
 end
