@@ -110,14 +110,14 @@ local Window = Parvus.Utilities.UI:Window({
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
             TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Enabled",Value = false})
-            TESPSection:Colorpicker({Name = "Color",Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0.5,false}})
-            TESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Thunderstruck/DistanceCheck",Value = true})
+            :Colorpicker({Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0.5,false}})
+            TESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Thunderstruck/DistanceCheck",Value = false})
             TESPSection:Slider({Name = "Distance",Flag = "ESP/Thunderstruck/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
         end
         local LESPSection = MiscTab:Section({Name = "Legendary ESP",Side = "Right"}) do
             LESPSection:Toggle({Name = "Enabled",Flag = "ESP/Legendary/Enabled",Value = false})
-            LESPSection:Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0.5,false}})
-            LESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Legendary/DistanceCheck",Value = true})
+            :Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0.5,false}})
+            LESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Legendary/DistanceCheck",Value = false})
             LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
         end
     end
@@ -134,8 +134,6 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark.Enabled = Bool end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})
-            --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window.Color = Color end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",

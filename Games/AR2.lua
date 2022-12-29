@@ -337,7 +337,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
             Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
-            :Keybind({Value = "RightControl",Flag = "UI/Keybind",DoNotClear = true})
+            :Keybind({Value = "Period",Flag = "UI/Keybind",DoNotClear = true})
             :Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window.Color = Color end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
@@ -346,8 +346,6 @@ local Window = Parvus.Utilities.UI:Window({
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark.Enabled = Bool end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = true})
-            --[[MenuSection:Colorpicker({Name = "Color",Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
-            Callback = function(HSVAR,Color) Window.Color = Color end})]]
         end
         SettingsTab:AddConfigSection("Parvus","Left")
         SettingsTab:Button({Name = "Rejoin",Side = "Left",
