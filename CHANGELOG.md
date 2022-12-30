@@ -1,3 +1,20 @@
+### Update 24-30/12/22
+```markdown
+# Universal
+* Improvements to universal silent aim
+# RU
+* new more powerful silent aim
++ added prediction to every aimbot type (silent, aimbot, trigger)
+# AR2
+* changed ui key to period
+# BB
+* improved autoshoot and knife aura (part of autoshoot)
+# Drawing
+* various optimizations
+# UI
+* Added snowflakes to background (enables every december)
+* fixes and other things
+```
 ### Update 23/12/22
 ```markdown
 # AR2
