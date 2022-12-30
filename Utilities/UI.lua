@@ -1008,7 +1008,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 
         for Index,Value in pairs(Option) do
             if string.find(Index,"Colorpicker") then
-                Option[Index] = GetType(Option[Index],{},"table",true)
+                Option[Index] = GetType(Option[Index],{},"table")
                 Option[Index].Flag = GetType(Option[Index].Flag,
                     Dropdown.Flag.."/"..Option.Name.."/Colorpicker","string")
 
@@ -1479,7 +1479,7 @@ function Bracket:Window(Window)
                 ConfigSection:Button({Name = "Set Default Config",Callback = function()
                     if ConfigDropdown.Value and ConfigDropdown.Value[1] then
                         DefaultConfig = ConfigDropdown.Value[1] writefile(FolderName.."\\DefaultConfig.txt",DefaultConfig)
-                        ConfigDivider:SetText("Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>")
+                        ConfigDivider.Text = "Default Config\n<font color=\"rgb(189,189,189)\">[ "..DefaultConfig.." ]</font>"
                     else
                         Bracket:Notification({
                             Title = "Config System",
@@ -1489,7 +1489,7 @@ function Bracket:Window(Window)
                     end
                 end})
                 ConfigSection:Button({Name = "Clear Default Config",Callback = function()
-                    writefile(FolderName.."\\DefaultConfig.txt","") ConfigDivider:SetText("Default Config")
+                    writefile(FolderName.."\\DefaultConfig.txt","") ConfigDivider.Text = "Default Config"
                 end})
             end
         end

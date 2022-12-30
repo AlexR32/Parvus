@@ -283,7 +283,7 @@ local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
     return Origin + Velocity * Time + Gravity * Time * Time / 2
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD)
+local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE)
     -- DynamicFieldOfView,FieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
 
@@ -358,7 +358,6 @@ local function CharacterChildAdded(Character)
             local Configuration = Child:WaitForChild("Configuration",5)
             ProjectileSpeed = Configuration:WaitForChild("BulletSpeed",5).Value
             ProjectileGravity = Configuration:WaitForChild("BulletGravity",5).Value
-            print(ProjectileGravity)
         end
     end)
 end
