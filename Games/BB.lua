@@ -11,7 +11,7 @@ if identifyexecutor() ~= "Synapse X" then
     return
 end
 
-if game.PlaceVersion > 1328 then
+if game.PlaceVersion > 1330 then
     local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
@@ -163,7 +163,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HeadSection = VisualsTab:Section({Name = "Head Circles",Side = "Right"}) do
+        local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Head/Enabled",Value = false})
             HeadSection:Toggle({Name = "Filled",Flag = "ESP/Player/Head/Filled",Value = true})
             HeadSection:Toggle({Name = "Outline",Flag = "ESP/Player/Head/Outline",Value = true})

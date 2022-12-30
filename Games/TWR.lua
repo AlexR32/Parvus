@@ -141,7 +141,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HeadSection = VisualsTab:Section({Name = "Head Circles",Side = "Right"}) do
+        local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Head/Enabled",Value = false})
             HeadSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Head/Filled",Value = true})
             HeadSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Head/Outline",Value = true})

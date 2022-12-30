@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local InsertService = game:GetService("InsertService")
 local HttpService = game:GetService("HttpService")
+local TextService = game:GetService("TextService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -77,6 +78,11 @@ local function GetType(Object,Default,Type,UseProxify)
     return UseProxify and
     Proxify(Default) or Default
 end
+local function GetTextBounds(Text,Font,Size)
+    return TextService:GetTextSize(Text,
+    Size.Y,Font,Vector2.new(Size.X,1e6))
+end
+
 
 local function MakeDraggable(Dragger,Object,OnTick,OnStop)
     local StartPosition,StartDrag = nil,nil
@@ -128,29 +134,6 @@ local function MakeResizeable(Dragger,Object,MinSize,OnTick,OnStop)
             if OnStop then OnStop(Object.Size) end
         end
     end)
-end
-
-local function InitSnowflakes(WindowAsset)
-    local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
-    local Emitter = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
-    local random = Random.new() Emitter.rate = 20
-
-    Emitter.onSpawn = function(particle)
-        local randomPosition = random:NextNumber()
-        local randomSize = random:NextInteger(10,50)
-        local randomYVelocity = random:NextInteger(10,50)
-        local randomXVelocity = random:NextInteger(-50,50)
-
-        particle.element.ImageTransparency = randomSize / 50
-        particle.element.Size = UDim2.fromOffset(randomSize,randomSize)
-        particle.velocity = Vector2.new(randomXVelocity,randomYVelocity)
-        particle.position = Vector2.new(randomPosition * WindowAsset.Background.AbsoluteSize.X,0)
-        particle.maxAge = 50 particle.element.Visible = true
-    end
-
-    Emitter.onUpdate = function(particle,deltaTime)
-        particle.position += particle.velocity * deltaTime
-    end
 end
 
 local function ChooseTab(ScreenAsset,TabButtonAsset,TabAsset)
@@ -244,7 +227,7 @@ function Assets:Window(ScreenAsset,Window)
         Window.Size = Size
     end)
 
-    if os.date("%m") == "12" then task.spawn(InitSnowflakes,WindowAsset) end
+    if os.date("%m") == "12" then task.spawn(Assets.Snowflakes,WindowAsset) end
     WindowAsset.TabButtonContainer.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         WindowAsset.TabButtonContainer.CanvasSize = UDim2.new(
             0,WindowAsset.TabButtonContainer.ListLayout.AbsoluteContentSize.X,
@@ -491,6 +474,28 @@ function Assets:ToolTip(Parent,ScreenAsset,Text)
         ScreenAsset.ToolTip.Visible = false
     end)
 end
+function Assets.Snowflakes(WindowAsset)
+    local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
+    local Emitter = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
+    local random = Random.new() Emitter.rate = 20
+
+    Emitter.onSpawn = function(particle)
+        local randomPosition = random:NextNumber()
+        local randomSize = random:NextInteger(10,50)
+        local randomYVelocity = random:NextInteger(10,50)
+        local randomXVelocity = random:NextInteger(-50,50)
+
+        particle.element.ImageTransparency = randomSize / 50
+        particle.element.Size = UDim2.fromOffset(randomSize,randomSize)
+        particle.velocity = Vector2.new(randomXVelocity,randomYVelocity)
+        particle.position = Vector2.new(randomPosition * WindowAsset.Background.AbsoluteSize.X,0)
+        particle.maxAge = 50 particle.element.Visible = true
+    end
+
+    Emitter.onUpdate = function(particle,deltaTime)
+        particle.position += particle.velocity * deltaTime
+    end
+end
 function Assets:Divider(Parent,Divider)
     local DividerAsset = GetAsset("Divider/Divider")
 
@@ -696,12 +701,21 @@ function Assets:Textbox(Parent,ScreenAsset,Window,Textbox)
     TextboxAsset.Title.Text = Textbox.Name
     TextboxAsset.Background.Input.Text = Textbox.Value
     TextboxAsset.Background.Input.PlaceholderText = Textbox.Placeholder
+    TextboxAsset.Title.Visible = not Textbox.HideName
 
     TextboxAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        TextboxAsset.Size = UDim2.new(1,0,0,(TextboxAsset.Title.TextBounds.Y + 2) + (TextboxAsset.Background.Input.TextBounds.Y + 2))
+        TextboxAsset.Title.Size = Textbox.HideName and UDim2.new(1,0,0,0)
+        or UDim2.new(1,0,0,TextboxAsset.Title.TextBounds.Y + 2)
+
+        TextboxAsset.Background.Position = UDim2.new(0.5,0,0,TextboxAsset.Title.Size.Y.Offset)
+        TextboxAsset.Size = UDim2.new(1,0,0,TextboxAsset.Title.Size.Y.Offset + TextboxAsset.Background.Size.Y.Offset)
     end)
-    TextboxAsset.Background.Input:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        TextboxAsset.Background.Size = UDim2.new(1,0,0,TextboxAsset.Background.Input.TextBounds.Y + 2)
+    TextboxAsset.Background.Input:GetPropertyChangedSignal("Text"):Connect(function()
+        local TextBounds = GetTextBounds(TextboxAsset.Background.Input.Text,TextboxAsset.Background.Input.Font.Name,
+        Vector2.new(TextboxAsset.Background.Input.AbsoluteSize.X,TextboxAsset.Background.Input.TextSize))
+
+        TextboxAsset.Background.Size = UDim2.new(1,0,0,TextBounds.Y + 2)
+        TextboxAsset.Size = UDim2.new(1,0,0,TextboxAsset.Title.Size.Y.Offset + TextboxAsset.Background.Size.Y.Offset)
     end)
     TextboxAsset.Background.Input.FocusLost:Connect(function(EnterPressed)
         Textbox.Value = TextboxAsset.Background.Input.Text
@@ -923,6 +937,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
     local OptionContainerAsset = GetAsset("Dropdown/OptionContainer")
     DropdownAsset.Parent = Parent
     DropdownAsset.Title.Text = Dropdown.Name
+    DropdownAsset.Title.Visible = not Dropdown.HideName
     OptionContainerAsset.Parent = ScreenAsset
     local ContainerRender = nil
 
@@ -943,7 +958,9 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         end
     end)
     DropdownAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        DropdownAsset.Title.Size = UDim2.new(1,0,0,DropdownAsset.Title.TextBounds.Y + 2)
+        DropdownAsset.Title.Size = Dropdown.HideName and UDim2.new(1,0,0,0)
+        or UDim2.new(1,0,0,DropdownAsset.Title.TextBounds.Y + 2)
+
         DropdownAsset.Background.Position = UDim2.new(0.5,0,0,DropdownAsset.Title.Size.Y.Offset)
         DropdownAsset.Size = UDim2.new(1,0,0,DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
     end)
@@ -975,7 +992,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
             and Window.Color or Color3.fromRGB(60,60,60)
 
         -- Selected Setting
-        for Index, Option in pairs(Dropdown.List) do
+        for Index,Option in pairs(Dropdown.List) do
             if Option.Value then
                 Selected[#Selected + 1] = Option.Name
             end
@@ -991,13 +1008,15 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         end
         Window.Flags[Dropdown.Flag] = Dropdown.Value
     end
-    local function AddOption(Option)
+    local function AddOption(Option,AddToList)
         local OptionAsset = GetAsset("Dropdown/Option")
         OptionAsset.Parent = OptionContainerAsset
         OptionAsset.Title.Text = Option.Name
         Option.Instance = OptionAsset
 
         table.insert(Window.Colorable, OptionAsset.Tick)
+        if AddToList then table.insert(Dropdown.List,Option) end
+
         OptionAsset.MouseButton1Click:Connect(function()
             SetOptionState(Option,not Option.Value)
         end)
@@ -1025,7 +1044,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
     for Index,Option in pairs(Dropdown.List) do
         AddOption(Option)
     end
-    for Index, Option in pairs(Dropdown.List) do
+    for Index,Option in pairs(Dropdown.List) do
         if Option.Value then
             SetOptionState(Option,Option.Value)
         end
@@ -1033,7 +1052,7 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 
     function Dropdown:BulkAdd(Table)
         for Index,Option in pairs(Table) do
-            AddOption(Option)
+            AddOption(Option,true)
         end
         for Index,Option in pairs(Dropdown.List) do
             if Option.Value then
@@ -1042,13 +1061,13 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         end
     end
     function Dropdown:AddOption(Option)
-        AddOption(Option)
+        AddOption(Option,true)
         if Option.Value then
             SetOptionState(Option,Option.Value)
         end
     end
     function Dropdown:RemoveOption(Name)
-        for Index, Option in pairs(Dropdown.List) do
+        for Index,Option in pairs(Dropdown.List) do
             if Option.Name == Name then
                 Option.Instance:Destroy()
                 Dropdown.List[Index] = nil
@@ -1056,17 +1075,18 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         end
     end
     function Dropdown:Clear()
-        for Index, Option in pairs(Dropdown.List) do
+        for Index,Option in pairs(Dropdown.List) do
             Option.Instance:Destroy()
             Dropdown.List[Index] = nil
         end
     end
     function Dropdown:SetValue(Options)
+        Dropdown.Value = Options
         if #Options == 0 then
             DropdownAsset.Background.Value.Text = "..."
             return
         end
-        for Index, Option in pairs(Dropdown.List) do
+        for Index,Option in pairs(Dropdown.List) do
             if table.find(Options,Option.Name) then
                 SetOptionState(Option,true)
             else
@@ -1418,24 +1438,23 @@ function Bracket:Window(Window)
         local TabAsset = Assets:Tab(Bracket.ScreenAsset,WindowAsset,Window,Tab)
 
         function Tab:AddConfigSection(FolderName,Side)
-            local ConfigSection = Tab:Section({Name = "Configs",Side = Side}) do
+            local ConfigSection = Tab:Section({Name = "Config System",Side = Side}) do
                 local ConfigList,ConfigDropdown = ConfigsToList(FolderName),nil
-                local function UpdateList(Name)
-                    ConfigDropdown:Clear()
-                    ConfigList = ConfigsToList(FolderName)
-                    ConfigDropdown:BulkAdd(ConfigList)
-                    ConfigDropdown:SetValue({Name or (ConfigList[1] and ConfigList[1].Name) or nil})
+
+                local function UpdateList(Name) ConfigDropdown:Clear()
+                    ConfigList = ConfigsToList(FolderName) ConfigDropdown:BulkAdd(ConfigList)
+                    ConfigDropdown:SetValue({Name or (ConfigList[#ConfigList] and ConfigList[#ConfigList].Name)})
                 end
 
-                local ConfigTextbox = ConfigSection:Textbox({Name = "Config Name",
-                    Placeholder = "Name",IgnoreFlag = true})
-
+                local ConfigTextbox = ConfigSection:Textbox({HideName = true,Placeholder = "Config Name",IgnoreFlag = true})
                 ConfigSection:Button({Name = "Create",Callback = function()
                     Window:SaveConfig(FolderName,ConfigTextbox.Value) UpdateList(ConfigTextbox.Value)
                 end})
 
-                ConfigDropdown = ConfigSection:Dropdown({Name = "List",
-                    IgnoreFlag = true,List = ConfigList})
+                ConfigSection:Divider({Text = "Configs"})
+
+                ConfigDropdown = ConfigSection:Dropdown({HideName = true,IgnoreFlag = true,List = ConfigList})
+                ConfigDropdown:SetValue({ConfigList[#ConfigList] and ConfigList[#ConfigList].Name})
 
                 ConfigSection:Button({Name = "Save",Callback = function()
                     if ConfigDropdown.Value and ConfigDropdown.Value[1] then
@@ -1471,6 +1490,7 @@ function Bracket:Window(Window)
                         })
                     end
                 end})
+                ConfigSection:Button({Name = "Refresh",Callback = UpdateList})
 
                 local DefaultConfig = Window:GetDefaultConfig(FolderName)
                 local ConfigDivider = ConfigSection:Divider({Text = not DefaultConfig and "Default Config"
