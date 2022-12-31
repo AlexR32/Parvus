@@ -5,6 +5,14 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = PlayerService.LocalPlayer
 
+local StarterPlayer = game:GetService("StarterPlayer")
+local StarterPlayerScripts = StarterPlayer.StarterPlayerScripts
+local FrameWork = StarterPlayerScripts.FrameWork
+local Functions = require(FrameWork.Functions)
+
+local FXModule = require(FrameWork.NewModules.FXModule)
+local proceedArmor = getupvalue(FXModule.ViewArmor,8)
+
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-173),
@@ -57,11 +65,23 @@ local Window = Parvus.Utilities.UI:Window({
         end
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
-        local FlySection = MiscTab:Section({Name = "Fly"}) do
-            FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false})
-            :Keybind({Flag = "ST/Fly/Keybind"})
+        local FlySection = MiscTab:Section({Name = "Fly",Side = "Left"}) do
+            FlySection:Toggle({Name = "Enabled",Flag = "ST/Fly/Enabled",Value = false}):Keybind()
             FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
-            FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 10,Max = 500,Value = 100})
+            FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 100,Max = 500,Value = 100})
+        end
+        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+            MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
+                Bool = Bool and 1 or 0
+                for Index,Child in pairs(Workspace:GetChildren()) do
+                    if Child:FindFirstChild("Owner") and
+                    Child.Owner.Value ~= LocalPlayer.Name
+                    and Child.Alive.Value then
+                        proceedArmor(Child,Bool,0,true)
+                        Functions.DisableUpperVisuals(Child)
+                    end
+                end
+            end}):Keybind()
         end
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
@@ -151,17 +171,24 @@ local Window = Parvus.Utilities.UI:Window({
     end
 end
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
-Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+function GetPlayerTank(Player)
+    local Char = Player:WaitForChild("Char")
+    if not Char then return end
+    if not Char.Value then return end
+    return Char.Value.Parent.Parent.Parent
+end
+
 Window:SetValue("Background/Offset",296)
 Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",
-Window.Flags["UI/OOL"])
+Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
 
-local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
+Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+
+--[[local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
 local BodyVelocity = Instance.new("BodyVelocity")
 local BodyGyro = Instance.new("BodyGyro")
-BodyGyro.P = 50000
+BodyGyro.P = 50000]]
 
 -- Fly Logic
 local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
@@ -177,30 +204,15 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
 end
 
-local function GetPlayerTank(Player)
-    local Char = Player:WaitForChild("Char")
-    if not Char then return end
-    if not Char.Value then return end
-    return Char.Value.Parent.Parent.Parent
-end
-
-local function PlayerFly(Enabled,Camera,Speed)
-    if not Enabled then
-        BodyVelocity.MaxForce = Vector3.zero
-        BodyGyro.MaxTorque = Vector3.zero
-        return
-    end
+local function PlayerFly(Enabled,Speed,EnableCamera)
+    if not Enabled then return end
     local LPTank = GetPlayerTank(LocalPlayer)
-    local Camera = Workspace.CurrentCamera
     if LPTank and LPTank.PrimaryPart then
-        if Camera then
-            BodyGyro.Parent = LPTank.PrimaryPart
-            BodyGyro.MaxTorque = MaxVector
-            BodyGyro.CFrame = Camera.CFrame
-        else BodyGyro.MaxTorque = Vector3.zero end
-        BodyVelocity.Parent = LPTank.PrimaryPart
-        BodyVelocity.MaxForce = MaxVector
-        BodyVelocity.Velocity = InputToVelocity() * Speed
+        if EnableCamera then
+            local Camera = Workspace.CurrentCamera
+            LPTank:PivotTo(CFrame.new(LPTank:GetPivot().Position) * Camera.CFrame.Rotation)
+        end
+        LPTank.PrimaryPart.AssemblyLinearVelocity = (InputToVelocity() * Speed)
     end
 end
 
@@ -211,10 +223,11 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
         if Self.Name == "XEvent" then
             return
         end
-    elseif Method == "addItem" then
-        if Args[1] == BodyGyro or Args[1] == BodyVelocity then
+    --[[elseif Method == "addItem" then
+        if Args[1] == BodyVelocity
+        or Args[1] == BodyGyro then
             return
-        end
+        end]]
     end
     return OldNamecall(Self, ...)
 end)
@@ -222,45 +235,29 @@ end)
 RunService.Heartbeat:Connect(function()
     PlayerFly(
         Window.Flags["ST/Fly/Enabled"],
-        Window.Flags["ST/Fly/Camera"],
-        Window.Flags["ST/Fly/Speed"]
+        Window.Flags["ST/Fly/Speed"],
+        Window.Flags["ST/Fly/Camera"]
     )
 end)
 
---[[local function highlight(object, color, fill)
-    local highlight = Instance.new('Highlight', object)
-    highlight.FillColor = color
-    highlight.FillTransparency = fill
-    highlight.OutlineColor = color
-    highlight.OutlineTransparency = 0.98
-end
-
-local Ammo = Instance.new("Model", Workspace)
-highlight(Ammo, Color3.fromRGB(255, 0, 0), 0.7)
-local Fuel = Instance.new("Model", Workspace)
-highlight(Fuel, Color3.fromRGB(255, 255, 0), 0.9)
-local Barrel = Instance.new("Model", Workspace)
-highlight(Barrel, Color3.fromRGB(0, 0, 255), 0.7)
-
-local parts = {
-    ["Ammo rack"] = Ammo,
-    ["Fuel tank"] = Fuel,
-    ["Barrel"] = Barrel
-}
-
-for _,v in pairs(Workspace:GetDescendants()) do
-    if parts[v.Name] and ((GetPlayerTank(LocalPlayer) and not v:IsDescendantOf(GetPlayerTank(LocalPlayer))) or (not GetPlayerTank(LocalPlayer) and not v:IsDescendantOf(Workspace.Ignore))) then
-        v.Transparency = 0
-        v.Parent = parts[v.Name]
+for Index,Child in pairs(Workspace:GetChildren()) do
+    if not Window.Flags["ST/XRay"] then continue end
+    if Child:FindFirstChild("Owner") and
+    Child.Owner.Value ~= LocalPlayer.Name
+    and Child.Alive.Value then
+        proceedArmor(Child,1,0,true)
+        Functions.DisableUpperVisuals(Child)
     end
 end
 
-Workspace.DescendantAdded:Connect(function(v) task.wait(5)
-    if parts[v.Name] and ((GetPlayerTank(LocalPlayer) and not v:IsDescendantOf(GetPlayerTank(LocalPlayer))) or (not GetPlayerTank(LocalPlayer) and not v:IsDescendantOf(Workspace.Ignore))) then
-        v.Transparency = 0
-        v.Parent = parts[v.Name]
+Workspace.ChildAdded:Connect(function(Child)
+    if not Window.Flags["ST/XRay"] then return end
+    task.wait(0.5) if Child:FindFirstChild("Owner") and
+    Child.Owner.Value ~= LocalPlayer.Name then
+        proceedArmor(Child,1,0,true)
+        Functions.DisableUpperVisuals(Child)
     end
-end)]]
+end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end

@@ -165,7 +165,7 @@ elseif game.GameId == 1586272220 then
     local function GetPlayerTank(Player)
         local Character = Player:FindFirstChild("Char")
         if not Character then return end
-        if not Character.Value then return end
+        if Character.Value == nil then return end
         return Character.Value.Parent.Parent.Parent
     end
     function GetCharacter(Target,Mode)

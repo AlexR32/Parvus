@@ -297,6 +297,7 @@ function Assets:Window(ScreenAsset,Window)
     function Window:GetValue(Flag)
         for Index,Element in pairs(Window.Elements) do
             if Element.Flag == Flag then
+                --return Element.Value
                 return Window.Flags[Element.Flag]
             end
         end
