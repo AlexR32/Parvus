@@ -227,7 +227,8 @@ function Assets:Window(ScreenAsset,Window)
         Window.Size = Size
     end)
 
-    if os.date("%m") == "12" then task.spawn(Assets.Snowflakes,WindowAsset) end
+    local Month = tonumber(os.date("%m"))
+    if Month == 12 or Month == 1 or Month == 2 then task.spawn(Assets.Snowflakes,WindowAsset) end
     WindowAsset.TabButtonContainer.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         WindowAsset.TabButtonContainer.CanvasSize = UDim2.new(
             0,WindowAsset.TabButtonContainer.ListLayout.AbsoluteContentSize.X,
@@ -478,7 +479,7 @@ end
 function Assets.Snowflakes(WindowAsset)
     local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
     local Emitter = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
-    local random = Random.new() Emitter.rate = 20
+    local random = Random.new() Emitter.rate = 50
 
     Emitter.onSpawn = function(particle)
         local randomPosition = random:NextNumber()
