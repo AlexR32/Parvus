@@ -58,7 +58,7 @@ local function Proxify(Table) local Proxy,Events = {},{}
             return Table[Key]
         end,
         __newindex = function(Self,Key,Value)
-            ChangedEvent:Fire(Key)
+            ChangedEvent:Fire(Key,Value)
             if Events[Key] then
                 for Index,Event in ipairs(Events[Key]) do
                     Event:Fire(Value)
@@ -69,6 +69,12 @@ local function Proxify(Table) local Proxy,Events = {},{}
     })
 
     return Proxy
+
+    --[[function Table:GetPropertyChangedSignal()
+        local PropertyEvent = Instance.new("BindableEvent")
+        return PropertyEvent.Event
+    end
+    return Table]]
 end
 local function GetType(Object,Default,Type,UseProxify)
     if typeof(Object) == Type then
@@ -479,7 +485,7 @@ end
 function Assets.Snowflakes(WindowAsset)
     local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
     local Emitter = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
-    local random = Random.new() Emitter.rate = 50
+    local random = Random.new() Emitter.rate = 20
 
     Emitter.onSpawn = function(particle)
         local randomPosition = random:NextNumber()
@@ -491,7 +497,7 @@ function Assets.Snowflakes(WindowAsset)
         particle.element.Size = UDim2.fromOffset(randomSize,randomSize)
         particle.velocity = Vector2.new(randomXVelocity,randomYVelocity)
         particle.position = Vector2.new(randomPosition * WindowAsset.Background.AbsoluteSize.X,0)
-        particle.maxAge = 50 particle.element.Visible = true
+        particle.maxAge = 20 particle.element.Visible = true
     end
 
     Emitter.onUpdate = function(particle,deltaTime)
@@ -620,6 +626,7 @@ function Assets:Slider(Parent,ScreenAsset,Window,Slider)
     SliderAsset.Value.PlaceholderText = #Slider.Unit == 0
     and Slider.Value or Slider.Value .. " " .. Slider.Unit
     table.insert(Window.Colorable,SliderAsset.Background.Bar)
+    --local Active = false
 
     local function UpdateVisual(Value)
         Slider.Value = tonumber(string.format("%." .. Slider.Precise .. "f",Value))
@@ -1242,6 +1249,23 @@ function Assets:Colorpicker(Parent,ScreenAsset,Window,Colorpicker)
         Update()
     end)
 
+    --[[task.spawn(function()
+        while task.wait(0.5) do
+            if Colorpicker.Value[5] then
+                if PaletteAsset.Visible then
+                    Colorpicker.Value[1] = Window.RainbowHue
+                    Update()
+                else 
+                    Colorpicker.Value[1] = Window.RainbowHue
+                    Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+                    ColorpickerAsset.Color.BackgroundColor3 = Colorpicker.Value[6]
+                    Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+                    Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
+                end
+            end
+        end
+    end)]]
+
     RunService.Heartbeat:Connect(function()
         if Colorpicker.Value[5] then
             if PaletteAsset.Visible then
@@ -1399,6 +1423,23 @@ function Assets:ToggleColorpicker(Parent,ScreenAsset,Window,Colorpicker)
         Colorpicker.Value[3] = Value
         Update()
     end)
+
+    --[[task.spawn(function()
+        while task.wait(0.5) do
+            if Colorpicker.Value[5] then
+                if PaletteAsset.Visible then
+                    Colorpicker.Value[1] = Window.RainbowHue
+                    Update()
+                else 
+                    Colorpicker.Value[1] = Window.RainbowHue
+                    Colorpicker.Value[6] = TableToColor(Colorpicker.Value)
+                    ColorpickerAsset.Color.BackgroundColor3 = Colorpicker.Value[6]
+                    Window.Flags[Colorpicker.Flag] = Colorpicker.Value
+                    Colorpicker.Callback(Colorpicker.Value,Colorpicker.Value[6])
+                end
+            end
+        end
+    end)]]
 
     RunService.Heartbeat:Connect(function()
         if Colorpicker.Value[5] then
