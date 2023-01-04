@@ -1,3 +1,28 @@
+### Update 04/01/23
+```markdown
+# AR2
+* Improved Prediction
+* Jump now not decreasing hunger and thrist when spoof scs enabled
+# BB
+* Changed config flags (update your configs)
+* Improved Prediction
+* some code improvements (might affect free exploits in good way)
+# BRM5
++ Added support for squads in teamcheck (finally)
+* Improved Prediction
+```
+
+### Update 30-31/12/22
+```markdown
+# Global
+* fixed open on load little flickering on load (bruh)
+# Steel Titans
+* Changed how fly works a bit
++ Added XRay (shows enemy and friendly tanks modules)
+# UI
+* extended time for snowflakes and increased rate of particles per sec (snowflakes will remain until february)
+* changed config section a bit + fixed some bugs related to config section
+```
 ### Update 24-30/12/22
 ```markdown
 # Universal

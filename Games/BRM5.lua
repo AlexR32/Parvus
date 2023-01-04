@@ -12,7 +12,7 @@ local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger,ProjectileSpeed,ProjectileGravity
-= nil,false,false,1000,Vector3.new(0,-Workspace.Gravity,0)
+= nil,false,false,1000,Vector3.new(0,Workspace.Gravity,0)
 local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
 

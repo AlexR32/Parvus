@@ -311,9 +311,9 @@ local Window = Parvus.Utilities.UI:Window({
                 --[[if Bool and PlayerClass.Character then BodyVelocity.Parent = PlayerClass.Character.RootPart
                 else BodyVelocity.Parent = nil end]]
 
-                if Bool and PlayerClass.Character then FlyPosition = PlayerClass.Character.RootPart.CFrame  end
+                if Bool and PlayerClass.Character then FlyPosition = PlayerClass.Character.RootPart.CFrame end
             end}):Keybind({Flag = "AR2/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Value",Flag = "AR2/Fly/Value",Min = 1,Max = 5,Precise = 1,Value = 1})
+            CharSection:Slider({Name = "Fly Value",Flag = "AR2/Fly/Value",Min = 1,Max = 10,Precise = 1,Value = 1})
             CharSection:Divider()
             CharSection:Toggle({Name = "WalkSpeed Enabled",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "WalkSpeed Value",Flag = "AR2/WalkSpeed/Value",Min = 26,Max = 500,Value = 26})
