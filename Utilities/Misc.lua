@@ -61,14 +61,14 @@ function Misc:NewThreadLoop(Wait,Function)
         end
     end)
 end
-function Misc:FixUpValue(fn,new,reverse)
-    if not reverse then local oldFn
-        oldFn = hookfunction(fn,function(...)
-            return oldFn(new(...))
+function Misc:FixUpValue(fn,hook,global)
+    if global then
+        old = hookfunction(fn,function(...)
+            return hook(old,...)
         end)
-    else local oldFn
-        oldFn = hookfunction(fn,function(...)
-            return new(oldFn(...))
+    else local old
+        old = hookfunction(fn,function(...)
+            return hook(old,...)
         end)
     end
 end

@@ -11,9 +11,10 @@ local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SilentAim,Aimbot,Trigger,NPCFolder,Network,
-GroundTip,AircraftTip,PredictedVelocity
-= nil,false,false,Workspace.Bots,{},nil,nil,1000
+local SilentAim,Aimbot,Trigger,ProjectileSpeed,ProjectileGravity
+= nil,false,false,1000,Vector3.new(0,-Workspace.Gravity,0)
+local NPCFolder,Network,GroundTip,AircraftTip
+= Workspace.Bots,{},nil,nil
 
 local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
@@ -117,7 +118,7 @@ local Window = Parvus.Utilities.UI:Window({
         local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
-            GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
+            GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = true})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
             GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
@@ -449,6 +450,16 @@ function NoClip(Enabled) if not LocalPlayer.Character then return end
     end
 end
 
+function RequireModule(Name)
+    for Index, Instance in pairs(getloadedmodules()) do
+        if Instance.Name == Name then
+            return require(Instance)
+        end
+    end
+end
+
+local Squads = RequireModule("SquadInterface")
+
 Window:SetValue("Background/Offset",296)
 Window:LoadDefaultConfig("Parvus")
 Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
@@ -490,7 +501,13 @@ end
 
 local function TeamCheck(Enabled,Player)
     if not Enabled then return true end
-    return LocalPlayer.Team ~= Player.Team
+    if Player.Neutral then
+        local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
+        local TargetColor = Squads._tags[Player] and Squads._tags[Player].Tag.TextLabel.TextColor3 or WhiteColor
+        return LPColor ~= TargetColor,TargetColor
+    else
+        return LocalPlayer.Team ~= Player.Team
+    end
 end
 
 local function DistanceCheck(Enabled,Distance,MaxDistance)
@@ -503,6 +520,13 @@ local function WallCheck(Enabled,Camera,Hitbox,Character)
     return not Raycast(Camera.Position,
     Hitbox.Position - Camera.Position,
     {LocalPlayer.Character,RaycastFolder,Character})
+end
+
+local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    local PredictedPosition = Origin + Velocity * Time
+    local Delta = (PredictedPosition - Origin).Magnitude
+    Time = Time + Delta / ProjectileSpeed
+    return Origin + Velocity * Time + Gravity * Time * Time / 2
 end
 
 local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
@@ -524,8 +548,8 @@ local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                     BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
-                        local PredictionVelocity = BodyPart.AssemblyLinearVelocity * Distance / PredictedVelocity
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
+                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
+                        BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,Distance,ScreenPosition} end
                     end
@@ -539,13 +563,13 @@ local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
             if Player ~= LocalPlayer and TeamCheck(TC,Player) then
                 local Humanoid = Character:FindFirstChildOfClass("Humanoid")
                 if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
-    
+
                 for Index,BodyPart in pairs(BP) do
                     BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                        local PredictionVelocity = BodyPart.AssemblyLinearVelocity * Distance / PredictedVelocity
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and BodyPart.Position + PredictionVelocity or BodyPart.Position)
+                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
+                        BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
                         local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                         if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
                     end
@@ -567,13 +591,6 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
-function RequireModule(Name)
-    for Index, Instance in pairs(getloadedmodules()) do
-        if Instance.Name == Name then
-            return require(Instance)
-        end
-    end
-end
 local function HookFunction(ModuleName,Function,Callback)
     local Module,OldFunction = RequireModule(ModuleName)
     while task.wait() do
@@ -596,6 +613,16 @@ local function HookSignal(Signal,Index,Callback)
     Signal:Connect(function(...) local Args = Callback({...})
         if Args then return OldConnection(unpack(Args)) end
     end)
+end
+local function AircraftFly(Enabled,Speed,CameraControl,Args)
+    if not Enabled then return Args end
+    local Camera = Workspace.CurrentCamera
+    Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
+    Args[1]._force.Velocity = InputToVelocity() * Speed
+    if CameraControl then
+        Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
+        Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
+    end
 end
 
 local function Teleport(Position,Velocity)
@@ -636,7 +663,6 @@ local function Teleport(Position,Velocity)
         AlignOrientation:Destroy()
     end return TPModule
 end
-
 function TeleportCharacter(Position)
     local PrimaryPart = LocalPlayer.Character
     and LocalPlayer.Character.PrimaryPart
@@ -667,16 +693,6 @@ function EnableSwitch(Switch)
             CameraMod._switch:Activate()
             CameraMod._switch:Unselect()
         end
-    end
-end
-local function AircraftFly(Enabled,Speed,CameraControl,Args)
-    if not Enabled then return Args end
-    local Camera = Workspace.CurrentCamera
-    Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
-    Args[1]._force.Velocity = InputToVelocity() * Speed
-    if CameraControl then
-        Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
-        Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
     end
 end
 
@@ -739,21 +755,21 @@ HookFunction("FirearmInventory","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._config.Tune.Velocity = 1e6
         Args[1]._config.Tune.Range = 1e6
-    end PredictedVelocity = Args[1]._config.Tune.Velocity
+    end ProjectileSpeed = Args[1]._config.Tune.Velocity
     return Args
 end)
 HookFunction("TurretMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
         Args[1]._tune.Range = 1e6
-    end PredictedVelocity = Args[1]._tune.Velocity
+    end ProjectileSpeed = Args[1]._tune.Velocity
     GroundTip = Args[1]._tip return Args
 end)
 HookFunction("AircraftMovement","_discharge",function(Args)
     if Window.Flags["BRM5/BulletDrop"] then
         Args[1]._tune.Velocity = 1e6
         Args[1]._tune.Range = 1e6
-    end PredictedVelocity = Args[1]._tune.Velocity
+    end ProjectileSpeed = Args[1]._tune.Velocity
     AircraftTip = Args[1]._tip return Args
 end)
 HookFunction("GroundMovement","Update",function(Args)

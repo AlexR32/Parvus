@@ -130,11 +130,27 @@ if game.GameId == 580765040 then
         end return false,Character.PrimaryPart.Color
     end
 elseif game.GameId == 1054526971 then
+    local function RequireModule(Name)
+        for Index, Instance in pairs(getloadedmodules()) do
+            if Instance.Name == Name then
+                return require(Instance)
+            end
+        end
+    end
+
+    repeat task.wait() until RequireModule("SquadInterface")
+    local Squads = RequireModule("SquadInterface")
     function GetTeam(Target,Character,Mode)
         if Mode == "Player" then
-            if Target.Neutral then return true,Target.TeamColor.Color else
+            if Target.Neutral then
+                local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
+                local TargetColor = Squads._tags[Target] and Squads._tags[Target].Tag.TextLabel.TextColor3 or WhiteColor
+                return TargetColor == WhiteColor and true or LPColor == TargetColor,TargetColor
+            else
                 return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
-            end else return not Character:FindFirstChildWhichIsA("ProximityPrompt",true),WhiteColor
+            end
+        else
+            return not Character:FindFirstChildWhichIsA("ProximityPrompt",true),WhiteColor
         end
     end
 elseif game.GameId == 1168263273 then
@@ -641,6 +657,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
                 if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Text.Visible then
                     local BoxPosition,BoxSize = CalculateBox(ESP.Target.Character,ESP.Target.ScreenPosition)
                     ESP.Target.HealthPercent,ESP.Target.BoxTooSmall = ESP.Target.Health / ESP.Target.MaxHealth,BoxSize.Y <= 12
+                    
                     if ESP.Drawing.Box.Main.Visible then
                         ESP.Drawing.Box.Main.Color = ESP.Target.Color
                         ESP.Drawing.Box.Main.Filled = GetFlag(ESP.Flags,ESP.Flag,"/Box/Filled")

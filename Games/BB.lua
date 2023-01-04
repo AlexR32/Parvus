@@ -7,7 +7,15 @@ local TeamService = game:GetService("Teams")
 
 if identifyexecutor() ~= "Synapse X" then
     local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported executor","Synapse X only\nFor safety measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Copy script\"",{
+        {Text = "Close",LayoutOrder = 0,Primary = true},
+        {Text = "Copy script",LayoutOrder = 1,Callback = function()
+            setclipboard("hookfunction(identifyexecutor,function() return \"Synapse X\" end)\nloadstring(game:HttpGetAsync(\"https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua\"))(false,5)")
+            PromptLib("How to make script work","You have copied the script, paste it into your executor, join and press execute",{
+                {Text = "Close",LayoutOrder = 0,Primary = true}
+            })
+        end}
+    })
     return
 end
 
@@ -27,14 +35,29 @@ GravityCorrection,Tortoiseshell
 1600,Vector3.new(0,150,0),2,
 require(ReplicatedStorage.TS)
 
-repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
---local ReplicatedStorage = game:GetService("ReplicatedStorage")
---local Tortoiseshell = require(ReplicatedStorage.TS)
-
 local BanCommands = {
     "GetUpdate","SetUpdate","Invoke",
     "GetSetting","FireProjectile"
 }
+
+local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
+local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
+local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
+--local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
+local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
+
+local BodyVelocity = Instance.new("BodyVelocity")
+BodyVelocity.MaxForce = Vector3.one * math.huge
+BodyVelocity.Velocity = Vector3.zero
+
+local Notify = Instance.new("BindableEvent")
+Notify.Event:Connect(function(Text)
+    Parvus.Utilities.UI:Notification2(Text)
+end)
+
+repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
+--local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--local Tortoiseshell = require(ReplicatedStorage.TS)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -79,8 +102,8 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "AutoShoot",Flag = "BadBusiness/AutoShoot",Value = false})
-            SilentAimSection:Toggle({Name = "AutoShoot 360 Mode",Flag = "BadBusiness/AutoShoot/AllFOV",Value = false})
+            SilentAimSection:Toggle({Name = "AutoShoot",Flag = "BB/AutoShoot/Enabled",Value = false})
+            SilentAimSection:Toggle({Name = "AutoShoot 360 Mode",Flag = "BB/AutoShoot/AllFOV",Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
@@ -190,11 +213,11 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            WCSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponCustom/Enabled",Value = false})
-            WCSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/WeaponCustom/Texture",Value = true})
-            WCSection:Colorpicker({Name = "Color",Flag = "BadBusiness/WeaponCustom/Color",Value = {1,0.75,1,0.5,true}})
-            WCSection:Slider({Name = "Reflectance",Flag = "BadBusiness/WeaponCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            WCSection:Dropdown({Name = "Material",Flag = "BadBusiness/WeaponCustom/Material",List = {
+            WCSection:Toggle({Name = "Enabled",Flag = "BB/WeaponCustom/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/WeaponCustom/Color",Value = {1,0.75,1,0.5,true}})
+            WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WeaponCustom/Texture",Value = true})
+            WCSection:Slider({Name = "Reflectance",Flag = "BB/WeaponCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            WCSection:Dropdown({Name = "Material",Flag = "BB/WeaponCustom/Material",List = {
                 {Name = "SmoothPlastic",Mode = "Button"},
                 {Name = "ForceField",Mode = "Button"},
                 {Name = "Neon",Mode = "Button",Value = true},
@@ -202,40 +225,43 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
         local WMSection = MiscTab:Section({Name = "Weapon Modification",Side = "Left"}) do
-            WMSection:Toggle({Name = "Enabled",Flag = "BadBusiness/WeaponMod/Enabled",Value = false})
-            WMSection:Slider({Name = "Weapon Shake",Flag = "BadBusiness/WeaponMod/WeaponScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Camera Shake",Flag = "BadBusiness/WeaponMod/CameraScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Recoil Scale",Flag = "BadBusiness/WeaponMod/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Bullet Drop",Flag = "BadBusiness/WeaponMod/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WMSection:Toggle({Name = "Enabled",Flag = "BB/WeaponMod/Enabled",Value = false})
+            WMSection:Slider({Name = "Weapon Shake",Flag = "BB/WeaponMod/WeaponScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WMSection:Slider({Name = "Camera Shake",Flag = "BB/WeaponMod/CameraScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WMSection:Slider({Name = "Recoil Scale",Flag = "BB/WeaponMod/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WMSection:Slider({Name = "Bullet Drop",Flag = "BB/WeaponMod/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Label({Text = "Respawn to make it work"})
         end
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
-            ACSection:Toggle({Name = "Enabled",Flag = "BadBusiness/ArmsCustom/Enabled",Value = false})
-            ACSection:Toggle({Name = "Hide Textures",Flag = "BadBusiness/ArmsCustom/Texture",Value = true})
-            ACSection:Colorpicker({Name = "Color",Flag = "BadBusiness/ArmsCustom/Color",Value = {1,0,1,1,false}})
-            ACSection:Slider({Name = "Reflectance",Flag = "BadBusiness/ArmsCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            ACSection:Dropdown({Name = "Material",Flag = "BadBusiness/ArmsCustom/Material",List = {
+            ACSection:Toggle({Name = "Enabled",Flag = "BB/ArmsCustom/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/ArmsCustom/Color",Value = {1,0,1,1,false}})
+            ACSection:Toggle({Name = "Hide Textures",Flag = "BB/ArmsCustom/Texture",Value = true})
+            ACSection:Slider({Name = "Reflectance",Flag = "BB/ArmsCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            ACSection:Dropdown({Name = "Material",Flag = "BB/ArmsCustom/Material",List = {
                 {Name = "SmoothPlastic",Mode = "Button"},
                 {Name = "ForceField",Mode = "Button"},
                 {Name = "Neon",Mode = "Button",Value = true},
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local FlySection = MiscTab:Section({Name = "Fly",Side = "Right"}) do
-            FlySection:Toggle({Name = "Enabled",Flag = "BadBusiness/Fly/Enabled",Value = false})
-            :Keybind({Flag = "BadBusiness/Fly/Keybind"})
-            FlySection:Slider({Name = "Speed",Flag = "BadBusiness/Fly/Speed",Min = 10,Max = 100,Value = 100})
-            FlySection:Toggle({Name = "No Clip",Flag = "BadBusiness/Fly/NoClip",Value = false})
+        local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
+            CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
+                if Bool and Characters[LocalPlayer] then BodyVelocity.Parent = Characters[LocalPlayer].PrimaryPart
+                else BodyVelocity.Parent = nil end
+            end}):Keybind({Flag = "BB/Fly/Keybind"})
+            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 10,Max = 100,Value = 100})
+            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
+                if Characters[LocalPlayer] then Characters[LocalPlayer].PrimaryPart.CanCollide = not Bool end
+            end})
         end
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
-            AASection:Toggle({Name = "Enabled",Flag = "BadBusiness/AntiAim/Enabled",Value = false})
-            :Keybind({Flag = "BadBusiness/AntiAim/Keybind"})
-            AASection:Slider({Name = "Pitch",Flag = "BadBusiness/AntiAim/Pitch",Min = -1.5,Max = 1.5,Precise = 2,Value = -1.5})
-            AASection:Slider({Name = "Pitch Random",Flag = "BadBusiness/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
-            AASection:Toggle({Name = "Lean Random",Flag = "BadBusiness/AntiAim/LeanRandom",Value = true})
+            AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false})
+            :Keybind({Flag = "BB/AntiAim/Keybind"})
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -1.5,Max = 1.5,Precise = 2,Value = -1.5})
+            AASection:Slider({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
+            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = true})
         end
         --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
-            MiscSection:Toggle({Name = "Anti-Kick",Flag = "BadBusiness/AntiKick",Value = false})
         end]]
     end
     local SettingsTab = Window:Tab({Name = "Settings"}) do
@@ -363,21 +389,6 @@ OldTaskSpawn = hookfunction(getrenv().task.spawn,function(...)
     return OldTaskSpawn(...)
 end) end
 
-local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
-local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
-local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
---local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
-local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
-
-local Notify = Instance.new("BindableEvent")
-Notify.Event:Connect(function(Text)
-    Parvus.Utilities.UI:Notification2(Text)
-end)
-
-local BodyVelocity = Instance.new("BodyVelocity")
-BodyVelocity.Velocity = Vector3.zero
-BodyVelocity.MaxForce = Vector3.zero
-
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Whitelist
 WallCheckParams.IgnoreWater = true
@@ -423,6 +434,7 @@ local function WallCheck(Enabled,Camera,Hitbox)
     Hitbox.Position - Camera.Position,
     {Workspace.Geometry,Workspace.Terrain})
 end
+
 local function FindGunModel()
     for Index,Instance in pairs(Workspace:GetChildren()) do
         if Instance:FindFirstChild("AnimationController") then
@@ -469,31 +481,13 @@ local function GetEquippedWeapon()
         end
     end
 end
-
-local function ToggleShoot(Toggle)
-    if Toggle then
-        Tortoiseshell.Input:AutomateBegan("Shoot")
-    else
-        Tortoiseshell.Input:AutomateEnded("Shoot")
-    end
-end
-
+--[[local function ToggleShoot(Toggle)
+    Tortoiseshell.Input[Toggle and "AutomateBegan"
+    or "AutomateEnded"](Tortoiseshell.Input,"Shoot")
+end]]
 local function PlayerFly(Enabled,Speed)
-    local Character = Characters[LocalPlayer]
-    if not Character then return end
-    
-    if not Enabled then BodyVelocity.MaxForce = Vector3.zero
-        if Character and Character.PrimaryPart
-        and not Character.PrimaryPart.CanCollide then
-            Character.PrimaryPart.CanCollide = true
-        end return
-    end
-    if Character and Character.PrimaryPart then
-        BodyVelocity.Parent = Character.PrimaryPart
-        BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
-        BodyVelocity.Velocity = InputToVelocity() * Speed
-        Character.PrimaryPart.CanCollide = not Window.Flags["BadBusiness/Fly/NoClip"]
-    end
+    if not Enabled then return end
+    BodyVelocity.Velocity = InputToVelocity() * Speed
 end
 
 local function CustomizeGun(Enabled,HideTextures,Color,Reflectance,Material)
@@ -526,18 +520,18 @@ local function CustomizeArms(Enabled,HideTextures,Color,Reflectance,Material)
     end
 end
 
+local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    local PredictedPosition = Origin + Velocity * Time
+    local Delta = (PredictedPosition - Origin).Magnitude
+    Time = Time + Delta / ProjectileSpeed
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
+end
 local function ComputeProjectiles(Config,Hitbox)
     local Projectiles = {}
     local Camera = Workspace.CurrentCamera
     local RayResult =  Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,{Hitbox})
 
-    --[[for Index = 1,Config.Projectile.Amount do
-        table.insert(Projectiles,{
-            (Tortoiseshell.Input.Reticle:LookVector(Config.Projectile.Choke)
-            + Vector3.new(0,Config.Projectile.GravityCorrection/1000,0)).Unit,ID
-        })
-    end]]
     for Index = 1,Config.Projectile.Amount do
         table.insert(Projectiles,{
             (Hitbox.Position - Camera.CFrame.Position).Unit,
@@ -621,10 +615,6 @@ local function AutoShoot(Hitbox,Enabled)
     end
 end
 
-local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end
-
 local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE,Shield)
     -- DynamicFieldOfView,FieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
@@ -687,8 +677,8 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Self,...)
-    local Args = {...} if SilentAim and not Window.Flags["BadBusiness/AutoShoot"] then
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
+    local Args = {...} if SilentAim and not Window.Flags["BB/AutoShoot/Enabled"] then
         if Args[2] == "__Hit" and math.random(0,100)
         <= Window.Flags["SilentAim/HitChance"] then
             Args[4] = SilentAim[3].Position
@@ -698,67 +688,49 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Self,...)
             SilentAim[3],SilentAim[3].Position)
         end
     end
-    if Window.Flags["BadBusiness/AntiAim/Enabled"] and Args[3] == "Look" then
-        if Window.Flags["BadBusiness/AntiAim/LeanRandom"] then
+    if Window.Flags["BB/AntiAim/Enabled"] and Args[3] == "Look" then
+        if Window.Flags["BB/AntiAim/LeanRandom"] then
             Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
         end
-        Args[4] = Window.Flags["BadBusiness/AntiAim/Pitch"] < 0
-        and Window.Flags["BadBusiness/AntiAim/Pitch"] + Random.new():NextNumber(0,
-        Window.Flags["BadBusiness/AntiAim/PitchRandom"])
-        or Window.Flags["BadBusiness/AntiAim/Pitch"] - Random.new():NextNumber(0,
-        Window.Flags["BadBusiness/AntiAim/PitchRandom"])
-    end return Self,unpack(Args)
+        Args[4] = Window.Flags["BB/AntiAim/Pitch"] < 0
+        and Window.Flags["BB/AntiAim/Pitch"] + Random.new():NextNumber(0,
+        Window.Flags["BB/AntiAim/PitchRandom"])
+        or Window.Flags["BB/AntiAim/Pitch"] - Random.new():NextNumber(0,
+        Window.Flags["BB/AntiAim/PitchRandom"])
+    end return Old(Self,unpack(Args))
 end)
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Self,...)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
     local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
         ProjectileGravity = Vector3.new(0,Projectiles[Args[1]].Gravity,0)
-    end return Self,...
+    end return Old(Self,...)
 end)
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Self,...)
-    local Args = {...} if Window.Flags["BadBusiness/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
-        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BadBusiness/WeaponMod/BulletDrop"] / 100)
-    end return Self,unpack(Args)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Old,Self,...)
+    local Args = {...} if Window.Flags["BB/WeaponMod/Enabled"] and Args[4] and Args[4].Gravity then
+        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BB/WeaponMod/BulletDrop"] / 100)
+    end return Old(Self,unpack(Args))
 end)
 
-OldGetAnimator = hookfunction(Tortoiseshell.Items.GetAnimator,function(Self,...)
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,...)
     local Args = {...} if Args[1] then GunModel = Args[3] end
-    return OldGetAnimator(Self,...)
-end)
-
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(...)
-    local Args = {...} local Config = Args[1]
-    if Window.Flags["BadBusiness/WeaponMod/Enabled"]
-    and (Config.Recoil and Config.Recoil.Default) then
-        Config.Recoil.Default.WeaponScale = 
-        Config.Recoil.Default.WeaponScale * (Window.Flags["BadBusiness/WeaponMod/WeaponScale"] / 100)
-
-        Config.Recoil.Default.CameraScale = 
-        Config.Recoil.Default.CameraScale * (Window.Flags["BadBusiness/WeaponMod/CameraScale"] / 100)
-
-        Config.Recoil.Default.RecoilScale = 
-        Config.Recoil.Default.RecoilScale * (Window.Flags["BadBusiness/WeaponMod/RecoilScale"] / 100)
-    end return unpack(Args)
+    return Old(Self,...)
 end,true)
 
--- Patched
---[[for Index,Event in pairs(Events) do
-    if Event.Event == "Votekick" then
-        Parvus.Utilities.Misc:FixUpValue(Event.Callback,function(...)
-            local Args = {...} if Args[1] == "Message" then
-                if string.find(Args[2],LocalPlayer.Name)
-                and Window.Flags["BadBusiness/AntiKick"] then
-                    Notify:Fire({
-                        Title = "Anti-Kick | Rejoining in 5 secs",
-                        Color = Color3.new(0.5,1,0.5),Duration = 5
-                    }) task.wait(5)
-                    Parvus.Utilities.Misc:ReJoin()
-                end
-            end return ...
-        end) break
-    end
-end]]
+Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
+    local Args = {Old(Self,...)} local Config = Args[1]
+    if Window.Flags["BB/WeaponMod/Enabled"]
+    and (Config.Recoil and Config.Recoil.Default) then
+        Config.Recoil.Default.WeaponScale = 
+        Config.Recoil.Default.WeaponScale * (Window.Flags["BB/WeaponMod/WeaponScale"] / 100)
+
+        Config.Recoil.Default.CameraScale = 
+        Config.Recoil.Default.CameraScale * (Window.Flags["BB/WeaponMod/CameraScale"] / 100)
+
+        Config.Recoil.Default.RecoilScale = 
+        Config.Recoil.Default.RecoilScale * (Window.Flags["BB/WeaponMod/RecoilScale"] / 100)
+    end return unpack(Args)
+end)
 
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox(
@@ -769,7 +741,7 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
         Window.Flags["SilentAim/Distance"],
-        nil,true
+        false,true
     )
     if Aimbot then
         AimAt(GetHitbox(
@@ -794,35 +766,37 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
         end
     end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    PlayerFly(
-        Window.Flags["BadBusiness/Fly/Enabled"],
-        Window.Flags["BadBusiness/Fly/Speed"]
-    )
+Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
     CustomizeGun(
-        Window.Flags["BadBusiness/WeaponCustom/Enabled"],
-        Window.Flags["BadBusiness/WeaponCustom/Texture"],
-        Window.Flags["BadBusiness/WeaponCustom/Color"],
-        Window.Flags["BadBusiness/WeaponCustom/Reflectance"],
-        Window.Flags["BadBusiness/WeaponCustom/Material"][1]
+        Window.Flags["BB/WeaponCustom/Enabled"],
+        Window.Flags["BB/WeaponCustom/Texture"],
+        Window.Flags["BB/WeaponCustom/Color"],
+        Window.Flags["BB/WeaponCustom/Reflectance"],
+        Window.Flags["BB/WeaponCustom/Material"][1]
     )
     CustomizeArms(
-        Window.Flags["BadBusiness/ArmsCustom/Enabled"],
-        Window.Flags["BadBusiness/ArmsCustom/Texture"],
-        Window.Flags["BadBusiness/ArmsCustom/Color"],
-        Window.Flags["BadBusiness/ArmsCustom/Reflectance"],
-        Window.Flags["BadBusiness/ArmsCustom/Material"][1]
+        Window.Flags["BB/ArmsCustom/Enabled"],
+        Window.Flags["BB/ArmsCustom/Texture"],
+        Window.Flags["BB/ArmsCustom/Color"],
+        Window.Flags["BB/ArmsCustom/Reflectance"],
+        Window.Flags["BB/ArmsCustom/Material"][1]
     )
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    if not Window.Flags["BadBusiness/AutoShoot"] then return end
-    AutoShoot(Window.Flags["BadBusiness/AutoShoot/AllFOV"]
+    PlayerFly(
+        Window.Flags["BB/Fly/Enabled"],
+        Window.Flags["BB/Fly/Speed"]
+    )
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not Window.Flags["BB/AutoShoot/Enabled"] then return end
+    AutoShoot(Window.Flags["BB/AutoShoot/AllFOV"]
     and GetHitboxAllFOV(
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
         Window.Flags["SilentAim/Distance"]
-    ) or SilentAim,Window.Flags["BadBusiness/AutoShoot"])
+    ) or SilentAim,Window.Flags["BB/AutoShoot/Enabled"])
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
@@ -838,7 +812,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         false
     )
 
-    if TriggerHitbox then ToggleShoot(true)
+    if TriggerHitbox then --ToggleShoot(true)
+        Tortoiseshell.Input:AutomateBegan("Shoot")
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
@@ -854,7 +829,18 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     false
                 ) if not TriggerHitbox or not Trigger then break end
             end
-        end ToggleShoot(false)
+        end --ToggleShoot(false)
+        Tortoiseshell.Input:AutomateEnded("Shoot")
+    end
+end)
+
+Workspace.Characters.ChildAdded:Connect(function(Child)
+    if Child.Name == LocalPlayer.Name then
+        repeat task.wait() until Child.PrimaryPart
+        Child.PrimaryPart.CanCollide = not Window.Flags["BB/NoClip"]
+        if Window.Flags["BB/Fly/Enabled"] then
+            BodyVelocity.Parent = Child.PrimaryPart
+        end
     end
 end)
 

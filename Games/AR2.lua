@@ -6,16 +6,24 @@ local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
-local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot,SilentAim,Trigger,
-MuzzleVelocity,ProjectileGravity
-= false,nil,nil,1000,Vector3.zero
-
 if identifyexecutor() ~= "Synapse X" then
     local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported executor","Synapse X Only\nFor safety measures",{{Text = "Close",LayoutOrder = 0,Primary = true}})
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Copy script\"",{
+        {Text = "Close",LayoutOrder = 0,Primary = true},
+        {Text = "Copy script",LayoutOrder = 1,Callback = function()
+            setclipboard("hookfunction(identifyexecutor,function() return \"Synapse X\" end)\nloadstring(game:HttpGetAsync(\"https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua\"))(false,5)")
+            PromptLib("How to make script work","You have copied the script, paste it into your executor, join and press execute",{
+                {Text = "Close",LayoutOrder = 0,Primary = true}
+            })
+        end}
+    })
     return
 end
+
+local LocalPlayer = PlayerService.LocalPlayer
+local Aimbot,SilentAim,Trigger,
+ProjectileSpeed,ProjectileGravity
+= false,nil,nil,1000,Vector3.zero
 
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
@@ -65,7 +73,8 @@ local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = 
 },{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
 "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
-"Force Charcter Save","Update Character State","Sync Near Chunk Loot"},{},nil,nil
+"Force Charcter Save","Update Character State","Sync Near Chunk Loot",
+"Resync Character Physics","Update Character Position"},{},nil,nil
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -75,6 +84,10 @@ for Index,Table in pairs(getgc(true)) do
         FindItemData = getupvalue(InteractHeartbeat,11)
     end
 end
+
+--[[local BodyVelocity = Instance.new("BodyVelocity")
+BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
+BodyVelocity.Velocity = Vector3.zero]]
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -295,9 +308,12 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly Enabled",Flag = "AR2/Fly/Enabled",Value = false,Callback = function(Bool)
-                if Bool and PlayerClass.Character then FlyPosition = PlayerClass.Character.RootPart.CFrame end
+                --[[if Bool and PlayerClass.Character then BodyVelocity.Parent = PlayerClass.Character.RootPart
+                else BodyVelocity.Parent = nil end]]
+
+                if Bool and PlayerClass.Character then FlyPosition = PlayerClass.Character.RootPart.CFrame  end
             end}):Keybind({Flag = "AR2/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Value",Flag = "AR2/Fly/Value",Min = 1,Max = 10,Precise = 1,Value = 1})
+            CharSection:Slider({Name = "Fly Value",Flag = "AR2/Fly/Value",Min = 1,Max = 5,Precise = 1,Value = 1})
             CharSection:Divider()
             CharSection:Toggle({Name = "WalkSpeed Enabled",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "WalkSpeed Value",Flag = "AR2/WalkSpeed/Value",Min = 26,Max = 500,Value = 26})
@@ -481,6 +497,7 @@ local function PlayerFly(Enabled,Speed)
     if not Enabled or not Character
     or not FlyPosition then return end
 
+    --BodyVelocity.Velocity = InputToVelocity() * Speed
     FlyPosition += InputToVelocity() * Speed
     Character.RootPart.AssemblyLinearVelocity = Vector3.zero
     Character.RootPart.CFrame = FlyPosition
@@ -508,6 +525,9 @@ local function WallCheck(Enabled,Camera,Hitbox)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
+    local PredictedPosition = Origin + Velocity * Time
+    local Delta = (PredictedPosition - Origin).Magnitude
+    Time = Time + Delta / ProjectileSpeed
     return Origin + Velocity * Time + Gravity * Time * Time / 2
 end
 
@@ -533,7 +553,7 @@ local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
                     local Position = PE and CalculateTrajectory(BodyPart.Position,
                     BodyPart.AssemblyLinearVelocity,ProjectileGravity,
-                    Distance / MuzzleVelocity) or BodyPart.Position
+                    Distance / ProjectileSpeed) or BodyPart.Position
 
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -615,6 +635,10 @@ end
 
 local function HookCharacter(Character)
     FlyPosition = Character.RootPart.CFrame
+    --[[if Window.Flags["AR2/Fly/Enabled"] then
+        BodyVelocity.Parent = Character.RootPart
+    end]]
+
     -- Old Equip In Air
     --[[local OldFalling = Character.Falling.Fire
     Character.Falling.Fire = function(Self,Time,...)
@@ -625,7 +649,7 @@ local function HookCharacter(Character)
     local OldEquip = Character.Equip
     Character.Equip = function(Self,Item,...)
         if Item.FireConfig then
-            MuzzleVelocity = Item.FireConfig.MuzzleVelocity
+            ProjectileSpeed = Item.FireConfig.MuzzleVelocity
         end
         if Window.Flags["AR2/EquipInVehicle"] and Self.Sitting then
             local OldCanEquipInVehicles = Item.CanEquipInVehicles
@@ -722,6 +746,11 @@ end)
 local OldSend = Network.Send
 Network.Send = function(Self,Name,...) local Args = {...}
     if table.find(SanityBans,Name) then return end
+
+    if Name == "Character Jumped"
+    and Window.Flags["AR2/SSCS"] then
+        return
+    end
 
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"]

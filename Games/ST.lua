@@ -212,7 +212,7 @@ local function PlayerFly(Enabled,Speed,EnableCamera)
             local Camera = Workspace.CurrentCamera
             LPTank:PivotTo(CFrame.new(LPTank:GetPivot().Position) * Camera.CFrame.Rotation)
         end
-        LPTank.PrimaryPart.AssemblyLinearVelocity = (InputToVelocity() * Speed)
+        LPTank.PrimaryPart.AssemblyLinearVelocity = InputToVelocity() * Speed
     end
 end
 
