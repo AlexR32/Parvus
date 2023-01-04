@@ -353,7 +353,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
             local UIToggle = MenuSection:Toggle({Name = "Enabled",IgnoreFlag = true,Flag = "UI/Toggle",
             Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
-            :Keybind({Value = "Period",Flag = "UI/Keybind",DoNotClear = true})
+            UIToggle:Keybind({Value = "Period",Flag = "UI/Keybind",DoNotClear = true})
             UIToggle:Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
             Callback = function(HSVAR,Color) Window.Color = Color end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
