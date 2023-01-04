@@ -278,19 +278,8 @@ function Assets:Window(ScreenAsset,Window)
         end
     end)
     Window:GetPropertyChangedSignal("Color"):Connect(function(Color)
-        if Color.R < 5/255
-            and Color.G < 5/255
-            and Color.B < 5/255 then
-            Color = Color3.fromRGB(5,5,5)
-        end
-
-        for Index,Object in pairs(Window.Colorable) do
-            if Object.BackgroundColor3 == Window.Color then
-                Object.BackgroundColor3 = Color
-            end
-            if Object.BorderColor3 == Window.Color then
-                Object.BorderColor3 = Color
-            end
+        for Object,ColorConfig in pairs(Window.Colorable) do
+            if ColorConfig[1] then Object[ColorConfig[2]] = Color end
         end
     end)
 
@@ -416,7 +405,9 @@ function Assets:Tab(ScreenAsset,WindowAsset,Window,Tab)
 
     TabButtonAsset.Size = UDim2.new(0,TabButtonAsset.TextBounds.X + 12,1,-1)
     TabAsset.Parent = WindowAsset.TabContainer TabAsset.Visible = false
-    table.insert(Window.Colorable,TabButtonAsset.Highlight)
+
+    Tab.ColorConfig = {true,"BackgroundColor3"}
+    Window.Colorable[TabButtonAsset.Highlight] = Tab.ColorConfig
 
     TabAsset.LeftSide.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         if ChooseTabSide(TabAsset,"Longest") == TabAsset.LeftSide then
@@ -547,17 +538,22 @@ function Assets:Button(Parent,ScreenAsset,Window,Button)
 
     ButtonAsset.Parent = Parent
     ButtonAsset.Title.Text = Button.Name
-    table.insert(Window.Colorable,ButtonAsset)
+
+    Button.ColorConfig = {false,"BorderColor3"}
+    Window.Colorable[ButtonAsset] = Button.ColorConfig
 
     Button.Connection = ButtonAsset.MouseButton1Click:Connect(Button.Callback)
 
     ButtonAsset.MouseButton1Down:Connect(function()
+        Button.ColorConfig[1] = true
         ButtonAsset.BorderColor3 = Window.Color
     end)
     ButtonAsset.MouseButton1Up:Connect(function()
+        Button.ColorConfig[1] = false
         ButtonAsset.BorderColor3 = Color3.new(0,0,0)
     end)
     ButtonAsset.MouseLeave:Connect(function()
+        Button.ColorConfig[1] = false
         ButtonAsset.BorderColor3 = Color3.new(0,0,0)
     end)
     ButtonAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
@@ -583,10 +579,13 @@ function Assets:Toggle(Parent,ScreenAsset,Window,Toggle)
     ToggleAsset.Title.Text = Toggle.Name
     ToggleAsset.Tick.BackgroundColor3 = Toggle.Value
     and Window.Color or Color3.fromRGB(60,60,60)
-    table.insert(Window.Colorable,ToggleAsset.Tick)
+
+    Toggle.ColorConfig = {Toggle.Value,"BackgroundColor3"}
+    Window.Colorable[ToggleAsset.Tick] = Toggle.ColorConfig
 
     ToggleAsset.MouseButton1Click:Connect(function()
         Toggle.Value = not Toggle.Value
+        Toggle.ColorConfig[1] = Toggle.Value
         Window.Flags[Toggle.Flag] = Toggle.Value
         Toggle.Callback(Toggle.Value)
         ToggleAsset.Tick.BackgroundColor3 = Toggle.Value
@@ -603,6 +602,7 @@ function Assets:Toggle(Parent,ScreenAsset,Window,Toggle)
 
     function Toggle:SetValue(Boolean)
         Toggle.Value = Boolean
+        Toggle.ColorConfig[1] = Toggle.Value
         Window.Flags[Toggle.Flag] = Toggle.Value
         Toggle.Callback(Toggle.Value)
         ToggleAsset.Tick.BackgroundColor3 = Toggle.Value
@@ -625,7 +625,9 @@ function Assets:Slider(Parent,ScreenAsset,Window,Slider)
     SliderAsset.Background.Bar.BackgroundColor3 = Window.Color
     SliderAsset.Value.PlaceholderText = #Slider.Unit == 0
     and Slider.Value or Slider.Value .. " " .. Slider.Unit
-    table.insert(Window.Colorable,SliderAsset.Background.Bar)
+
+    Slider.ColorConfig = {true,"BackgroundColor3"}
+    Window.Colorable[SliderAsset.Background.Bar] = Slider.ColorConfig
     --local Active = false
 
     local function UpdateVisual(Value)
@@ -937,9 +939,6 @@ function Assets:ToggleKeybind(Parent,ScreenAsset,Window,Keybind,Toggle)
         Window.Flags[Keybind.Flag] = Keybind.Value
         Keybind.Callback(Keybind.Value,false,Toggle.Value)
     end
-    function Keybind:SetCallback(Callback)
-        Keybind.Callback = Callback
-    end
 end
 function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
     local DropdownAsset = GetAsset("Dropdown/Dropdown")
@@ -985,20 +984,19 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         if Option.Mode == "Button" then
             for Index, Option in pairs(Dropdown.List) do
                 if Option.Mode == "Button" then
-                    if Option.Instance then
-                        Option.Instance.Tick.BackgroundColor3 = Color3.fromRGB(60,60,60)
-                    end
                     Option.Value = false
+                    Option.ColorConfig[1] = Option.Value
+                    Option.Instance.Tick.BackgroundColor3 = Option.Value
+                    and Window.Color or Color3.fromRGB(60,60,60)
                 end
             end
-            Option.Value = true
             OptionContainerAsset.Visible = false
-        elseif Option.Mode == "Toggle" then
-            Option.Value = Toggle
         end
 
+        Option.Value = Toggle
+        Option.ColorConfig[1] = Option.Value
         Option.Instance.Tick.BackgroundColor3 = Option.Value
-            and Window.Color or Color3.fromRGB(60,60,60)
+        and Window.Color or Color3.fromRGB(60,60,60)
 
         -- Selected Setting
         for Index,Option in pairs(Dropdown.List) do
@@ -1012,18 +1010,26 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         and "..." or table.concat(Selected,", ")
 
         Dropdown.Value = Selected
+        Window.Flags[Dropdown.Flag] = Dropdown.Value
+
         if Option.Callback then
             Option.Callback(Dropdown.Value,Option)
         end
-        Window.Flags[Dropdown.Flag] = Dropdown.Value
     end
     local function AddOption(Option,AddToList)
+        --[[Option = GetType(Option,{},"table",true)
+        Option.Name = GetType(Option.Name,"Option","string")
+        Option.Mode = GetType(Option.Mode,"Button","string")
+        Option.Value = GetType(Option.Value,false,"boolean")
+        Option.Callback = GetType(Option.Callback,function() end,"function")]]
+
         local OptionAsset = GetAsset("Dropdown/Option")
         OptionAsset.Parent = OptionContainerAsset
         OptionAsset.Title.Text = Option.Name
         Option.Instance = OptionAsset
 
-        table.insert(Window.Colorable, OptionAsset.Tick)
+        Option.ColorConfig = {Option.Value,"BackgroundColor3"}
+        Window.Colorable[OptionAsset.Tick] = Option.ColorConfig
         if AddToList then table.insert(Dropdown.List,Option) end
 
         OptionAsset.MouseButton1Click:Connect(function()
@@ -1033,6 +1039,15 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
             OptionAsset.Size = UDim2.new(1,0,0,OptionAsset.Title.TextBounds.Y + 2)
             OptionAsset.Layout.Size = UDim2.new(1,-OptionAsset.Title.TextBounds.X - 22,1,0)
         end)
+
+        --[[Option:GetPropertyChangedSignal("Name"):Connect(function(Name)
+            OptionAsset.Title.Text = Name
+        end)
+        Option:GetPropertyChangedSignal("Value"):Connect(function(Value)
+            Option.ColorConfig[1] = Value
+            Option.Instance.Tick.BackgroundColor3 = Value
+            and Window.Color or Color3.fromRGB(60,60,60)
+        end)]]
 
         for Index,Value in pairs(Option) do
             if string.find(Index,"Colorpicker") then
@@ -1120,7 +1135,8 @@ function Assets:Colorpicker(Parent,ScreenAsset,Window,Colorpicker)
     ColorpickerAsset.Title.Text = Colorpicker.Name
     PaletteAsset.Parent = ScreenAsset
 
-    table.insert(Window.Colorable,PaletteAsset.Rainbow.Tick)
+    Colorpicker.ColorConfig = {Colorpicker.Value[5],"BackgroundColor3"}
+    Window.Colorable[PaletteAsset.Rainbow.Tick] = Colorpicker.ColorConfig
     local PaletteRender,SVRender,HueRender,AlphaRender = nil,nil,nil,nil
     PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
     and Window.Color or Color3.fromRGB(60,60,60)
@@ -1148,7 +1164,9 @@ function Assets:Colorpicker(Parent,ScreenAsset,Window,Colorpicker)
 
     PaletteAsset.Rainbow.MouseButton1Click:Connect(function()
         Colorpicker.Value[5] = not Colorpicker.Value[5]
-        PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5] and Window.Color or Color3.fromRGB(60,60,60)
+        Colorpicker.ColorConfig[1] = Colorpicker.Value[5]
+        PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
+        and Window.Color or Color3.fromRGB(60,60,60)
     end)
     ColorpickerAsset.MouseButton1Click:Connect(function()
         if not PaletteAsset.Visible then
@@ -1299,7 +1317,8 @@ function Assets:ToggleColorpicker(Parent,ScreenAsset,Window,Colorpicker)
     ColorpickerAsset.Parent = Parent.Layout
     PaletteAsset.Parent = ScreenAsset
 
-    table.insert(Window.Colorable,PaletteAsset.Rainbow.Tick)
+    Colorpicker.ColorConfig = {Colorpicker.Value[5],"BackgroundColor3"}
+    Window.Colorable[PaletteAsset.Rainbow.Tick] = Colorpicker.ColorConfig
     local PaletteRender,SVRender,HueRender,AlphaRender = nil,nil,nil,nil
     PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
     and Window.Color or Color3.fromRGB(60,60,60)
@@ -1323,7 +1342,9 @@ function Assets:ToggleColorpicker(Parent,ScreenAsset,Window,Colorpicker)
 
     PaletteAsset.Rainbow.MouseButton1Click:Connect(function()
         Colorpicker.Value[5] = not Colorpicker.Value[5]
-        PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5] and Window.Color or Color3.fromRGB(60,60,60)
+        Colorpicker.ColorConfig[1] = Colorpicker.Value[5]
+        PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
+        and Window.Color or Color3.fromRGB(60,60,60)
     end)
     ColorpickerAsset.MouseButton1Click:Connect(function()
         if not PaletteAsset.Visible then
@@ -1599,7 +1620,7 @@ function Bracket:Window(Window)
                 Window.Flags[Keybind.Flag] = Keybind.Value
 
                 Assets:ToggleKeybind(ToggleAsset,Bracket.ScreenAsset,Window,Keybind,Toggle)
-                return Toggle
+                return Keybind
             end
             function Toggle:Colorpicker(Colorpicker)
                 Colorpicker = GetType(Colorpicker,{},"table",true)
@@ -1611,7 +1632,7 @@ function Bracket:Window(Window)
                 Window.Flags[Colorpicker.Flag] = Colorpicker.Value
 
                 Assets:ToggleColorpicker(ToggleAsset,Bracket.ScreenAsset,Window,Colorpicker)
-                return Toggle
+                return Colorpicker
             end
             return Toggle
         end
@@ -1733,7 +1754,7 @@ function Bracket:Window(Window)
                     Window.Flags[Keybind.Flag] = Keybind.Value
 
                     Assets:ToggleKeybind(ToggleAsset,Bracket.ScreenAsset,Window,Keybind,Toggle)
-                    return Toggle
+                    return Keybind
                 end
                 function Toggle:Colorpicker(Colorpicker)
                     Colorpicker = GetType(Colorpicker,{},"table",true)
@@ -1745,7 +1766,7 @@ function Bracket:Window(Window)
                     Window.Flags[Colorpicker.Flag] = Colorpicker.Value
 
                     Assets:ToggleColorpicker(ToggleAsset,Bracket.ScreenAsset,Window,Colorpicker)
-                    return Toggle
+                    return Colorpicker
                 end
                 return Toggle
             end
