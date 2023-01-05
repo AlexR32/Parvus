@@ -93,7 +93,7 @@ local Window = Parvus.Utilities.UI:Window({
             Callback = function(HSVAR,Color) Window.Color = Color end})
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
-            Callback = function() Window.Enabled = Window.Enabled end})
+            Callback = function(Bool) Window.Blur = Bool end})
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
             Callback = function(Bool) Window.Watermark.Enabled = Bool end})
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = false})

@@ -186,7 +186,7 @@ function Misc:SetupLighting(Flags)
         local DefaultValue = Misc.DefaultLighting[Property]
 
         if type(CustomValue) == "table" then
-            CustomValue = Parvus.Utilities.UI:TableToColor(CustomValue)
+            CustomValue = Parvus.Utilities.UI.TableToColor(CustomValue)
         end
 
         if type(FormatedValue) == "number" then
@@ -207,7 +207,7 @@ function Misc:SetupLighting(Flags)
             for Property in pairs(Misc.DefaultLighting) do
                 local CustomValue = Flags["Lighting/"..Property]
                 if type(CustomValue) == "table" then
-                    CustomValue = Parvus.Utilities.UI:TableToColor(CustomValue)
+                    CustomValue = Parvus.Utilities.UI.TableToColor(CustomValue)
                 end
                 if Lighting[Property] ~= CustomValue then
                     Lighting[Property] = CustomValue
