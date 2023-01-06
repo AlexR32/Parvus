@@ -163,7 +163,16 @@ local function ChooseTab(ScreenAsset,TabButtonAsset,TabAsset)
     end
 end
 local function GetLongestSide(TabAsset)
-    if TabAsset.LeftSide.ListLayout.AbsoluteContentSize.Y > TabAsset.RightSide.ListLayout.AbsoluteContentSize.Y then
+    if TabAsset.LeftSide.ListLayout.AbsoluteContentSize.Y >=
+    TabAsset.RightSide.ListLayout.AbsoluteContentSize.Y then
+        return TabAsset.LeftSide
+    else
+        return TabAsset.RightSide
+    end
+end
+local function GetShortestSide(TabAsset)
+    if TabAsset.LeftSide.ListLayout.AbsoluteContentSize.Y <=
+    TabAsset.RightSide.ListLayout.AbsoluteContentSize.Y then
         return TabAsset.LeftSide
     else
         return TabAsset.RightSide
@@ -175,7 +184,7 @@ local function ChooseTabSide(TabAsset,Mode)
     elseif Mode == "Right" then
         return TabAsset.RightSide
     else
-        return GetLongestSide(TabAsset)
+        return GetShortestSide(TabAsset)
     end
 end
 
@@ -428,18 +437,12 @@ function Assets:Tab(ScreenAsset,WindowAsset,Window,Tab)
     Window.Colorable[TabButtonAsset.Highlight] = Tab.ColorConfig
 
     TabAsset.LeftSide.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        if ChooseTabSide(TabAsset,"Longest") == TabAsset.LeftSide then
-            TabAsset.CanvasSize = UDim2.new(0,0,0,TabAsset.LeftSide.ListLayout.AbsoluteContentSize.Y + 21)
-        else
-            TabAsset.CanvasSize = UDim2.new(0,0,0,TabAsset.RightSide.ListLayout.AbsoluteContentSize.Y + 21)
-        end
+        local Side = GetLongestSide(TabAsset)
+        TabAsset.CanvasSize = UDim2.new(0,0,0,Side.ListLayout.AbsoluteContentSize.Y + 21)
     end)
     TabAsset.RightSide.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        if ChooseTabSide(TabAsset,"Longest") == TabAsset.LeftSide then
-            TabAsset.CanvasSize = UDim2.new(0,0,0,TabAsset.LeftSide.ListLayout.AbsoluteContentSize.Y + 21)
-        else
-            TabAsset.CanvasSize = UDim2.new(0,0,0,TabAsset.RightSide.ListLayout.AbsoluteContentSize.Y + 21)
-        end
+        local Side = GetLongestSide(TabAsset)
+        TabAsset.CanvasSize = UDim2.new(0,0,0,Side.ListLayout.AbsoluteContentSize.Y + 21)
     end)
     TabButtonAsset.MouseButton1Click:Connect(function()
         ChooseTab(ScreenAsset,TabButtonAsset,TabAsset)
