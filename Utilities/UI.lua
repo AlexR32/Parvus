@@ -953,7 +953,7 @@ function Assets:ToggleKeybind(Parent,ScreenAsset,Window,Keybind,Toggle)
 
         Keybind.WaitingForBind = false
         Window.Flags[Keybind.Flag] = Value
-        Keybind.Callback(Value,false,Keybind.Toggle)
+        Keybind.Callback(Value,false,Toggle.Value)
     end)
 
     --[[function Keybind:SetValue(Key)
