@@ -186,8 +186,10 @@ local Window = Parvus.Utilities.UI:Window({
         SettingsTab:Button({Name = "Server Hop",Side = "Left",
         Callback = Parvus.Utilities.Misc.ServerHop})
         SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
-        Callback = Parvus.Utilities.Misc.JoinDiscord})
-        :ToolTip("Join for support, updates and more!")
+        Callback = Parvus.Utilities.Misc.JoinDiscord}):ToolTip("Join for support, updates and more!")
+        SettingsTab:Button({Name = "Copy Discord Invite",Side = "Left",Callback = function()
+            setclipboard("https://discord.com/invite/sYqDpbPYb7")
+        end}):ToolTip("Join for support, updates and more!")
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Dropdown({Name = "Image",Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
