@@ -1080,7 +1080,6 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 
         for Index,Value in pairs(Option.Internal) do
             if string.find(Index,"Colorpicker") then
-                print(Index)
                 Option[Index] = GetType(Option[Index],{},"table",true)
                 Option[Index].Flag = GetType(Option[Index].Flag,
                 Dropdown.Flag.."/"..Option.Name.."/Colorpicker","string")
