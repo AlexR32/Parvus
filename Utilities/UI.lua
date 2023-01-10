@@ -495,25 +495,25 @@ function Assets:ToolTip(Parent,ScreenAsset,Text)
     end)
 end
 function Assets.Snowflakes(WindowAsset)
-    local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/ParticleEmitter.lua"))()
+    local ParticleEmitter = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/rParticle/master/Main.lua"))()
     local Emitter = ParticleEmitter.new(WindowAsset.Background,WindowAsset.Snowflake)
-    local random = Random.new() Emitter.rate = 20
+    local NewRandom = Random.new() Emitter.SpawnRate = 20
 
-    Emitter.onSpawn = function(particle)
-        local randomPosition = random:NextNumber()
-        local randomSize = random:NextInteger(10,50)
-        local randomYVelocity = random:NextInteger(10,50)
-        local randomXVelocity = random:NextInteger(-50,50)
+    Emitter.OnSpawn = function(Particle)
+        local RandomPosition = NewRandom:NextNumber()
+        local RandomSize = NewRandom:NextInteger(10,50)
+        local RandomYVelocity = NewRandom:NextInteger(10,50)
+        local RandomXVelocity = NewRandom:NextInteger(-50,50)
 
-        particle.element.ImageTransparency = randomSize / 50
-        particle.element.Size = UDim2.fromOffset(randomSize,randomSize)
-        particle.velocity = Vector2.new(randomXVelocity,randomYVelocity)
-        particle.position = Vector2.new(randomPosition * WindowAsset.Background.AbsoluteSize.X,0)
-        particle.maxAge = 20 particle.element.Visible = true
+        Particle.Object.ImageTransparency = RandomSize / 50
+        Particle.Object.Size = UDim2.fromOffset(RandomSize,RandomSize)
+        Particle.Velocity = Vector2.new(RandomXVelocity,RandomYVelocity)
+        Particle.Position = Vector2.new(RandomPosition * WindowAsset.Background.AbsoluteSize.X,0)
+        Particle.MaxAge = 20 task.wait(0.5) Particle.Object.Visible = true
     end
 
-    Emitter.onUpdate = function(particle,deltaTime)
-        particle.position += particle.velocity * deltaTime
+    Emitter.OnUpdate = function(Particle,Delta)
+        Particle.Position += Particle.Velocity * Delta
     end
 end
 function Assets:Divider(Parent,Divider)
