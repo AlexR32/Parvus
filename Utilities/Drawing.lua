@@ -284,10 +284,10 @@ end
 function DrawingLibrary:RemoveESP(Target)
     local ESP = DrawingLibrary.ESP[Target]
     if not ESP then return end
+    RemoveDrawing(ESP.Drawing)
+    ESP.Highlight:Destroy()
 
-    if ESP.Highlight then
-        ESP.Highlight:Destroy()
-    end RemoveDrawing(ESP.Drawing)
+    table.clear(DrawingLibrary.ESP[Target])
     DrawingLibrary.ESP[Target] = nil
 end
 
@@ -295,6 +295,8 @@ function DrawingLibrary:RemoveObject(Target)
     local Object = DrawingLibrary.ObjectESP[Target]
     if not Object then return end
     RemoveDrawing(Object.Drawing)
+
+    table.clear(DrawingLibrary.ObjectESP[Target])
     DrawingLibrary.ObjectESP[Target] = nil
 end
 
@@ -445,160 +447,6 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
         end
     end
 end)
-
---[[Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
-    for Target,ESP in pairs(DrawingLibrary.ESP) do
-
-        local Character,RootPart = GetCharacter(Target,ESP.Mode)
-        if Character and RootPart then
-            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
-
-            local Distance = GetDistanceFromCamera(RootPart.Position)
-            local InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),
-            Distance,GetFlag(ESP.Flags,ESP.Flag,"/Distance"))
-
-            local InEnemyTeam,TeamColor = GetTeam(Target,Character,ESP.Mode)
-            local Health,MaxHealth,IsAlive = GetHealth(Target,Character,ESP.Mode)
-            local Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and TeamColor
-            or (InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
-            or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
-
-            if OnScreen and InTheRange then
-                if ESP.Highlight.Enabled then
-                    ESP.Highlight.Adornee = Character ESP.Highlight.FillColor = Color
-                    ESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
-                    ESP.Highlight.OutlineColor = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")[6]
-                    ESP.Highlight.OutlineTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")[4]
-                end
-                if ESP.Drawing.Head.Main.Visible or ESP.Drawing.Tracer.Visible then
-                    local Head = Character:FindFirstChild("Head",true)
-                    if Head then local HeadPosition = Camera:WorldToViewportPoint(Head.Position)
-                        if ESP.Drawing.Head.Main.Visible then
-                            ESP.Drawing.Head.Main.Color = Color
-                            ESP.Drawing.Head.Main.Radius = ClampDistance(GetFlag(ESP.Flags,ESP.Flag,"/Head/Autoscale"),
-                            GetFlag(ESP.Flags,ESP.Flag,"/Head/Radius"),Distance)
-                            ESP.Drawing.Head.Main.Filled = GetFlag(ESP.Flags,ESP.Flag,"/Head/Filled")
-                            ESP.Drawing.Head.Main.NumSides = GetFlag(ESP.Flags,ESP.Flag,"/Head/NumSides")
-                            ESP.Drawing.Head.Main.Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Head/Thickness")
-                            ESP.Drawing.Head.Main.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Head/Transparency")
-                            ESP.Drawing.Head.Outline.Radius = ESP.Drawing.Head.Main.Radius
-                            ESP.Drawing.Head.Outline.NumSides = ESP.Drawing.Head.Main.NumSides
-                            ESP.Drawing.Head.Outline.Thickness = ESP.Drawing.Head.Main.Thickness + 2
-                            ESP.Drawing.Head.Outline.Transparency = ESP.Drawing.Head.Main.Transparency
-
-                            ESP.Drawing.Head.Main.Position = Vector2.new(HeadPosition.X,HeadPosition.Y)
-                            ESP.Drawing.Head.Outline.Position = ESP.Drawing.Head.Main.Position
-                        end
-                        if ESP.Drawing.Tracer.Visible then
-                            local TracerMode = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Mode")
-                            ESP.Drawing.Tracer.Color = Color
-                            ESP.Drawing.Tracer.Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Thickness")
-                            ESP.Drawing.Tracer.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Transparency")
-                            ESP.Drawing.Tracer.From = TracerMode[1] == "From Mouse" and UserInputService:GetMouseLocation()
-                            or TracerMode[1] == "From Bottom" and Vector2.new(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y)
-                            ESP.Drawing.Tracer.To = Vector2.new(HeadPosition.X,HeadPosition.Y)
-                        end
-                    end
-                end
-                if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Text.Visible then
-                    local BoxPosition,BoxSize = CalculateBox(Character,ScreenPosition)
-                    local HealthPercent,BoxTooSmall = Health / MaxHealth,BoxSize.Y <= 12
-                    if ESP.Drawing.Box.Main.Visible then
-                        ESP.Drawing.Box.Main.Color = Color
-                        ESP.Drawing.Box.Main.Filled = GetFlag(ESP.Flags,ESP.Flag,"/Box/Filled")
-                        ESP.Drawing.Box.Main.Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Box/Thickness")
-                        ESP.Drawing.Box.Main.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Box/Transparency")
-                        ESP.Drawing.Box.Outline.Thickness = ESP.Drawing.Box.Main.Thickness + 2
-                        ESP.Drawing.Box.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
-                        ESP.Drawing.Box.Main.Size = BoxSize
-                        ESP.Drawing.Box.Main.Position = BoxPosition
-                        ESP.Drawing.Box.Outline.Size = ESP.Drawing.Box.Main.Size
-                        ESP.Drawing.Box.Outline.Position = ESP.Drawing.Box.Main.Position
-                    end
-                    if ESP.Drawing.Healthbar.Main.Visible and not BoxTooSmall then
-                        ESP.Drawing.Healthbar.Main.Color = RedColor:Lerp(GreenColor,HealthPercent)
-
-                        ESP.Drawing.Healthbar.Outline.Size = Vector2.new(3,BoxSize.Y + 2)
-
-                        ESP.Drawing.Healthbar.Outline.Position = Vector2.new(
-                        BoxPosition.X - ESP.Drawing.Healthbar.Outline.Size.X - 2,BoxPosition.Y - 1)
-
-                        ESP.Drawing.Healthbar.Main.Size = Vector2.new(ESP.Drawing.Healthbar.Outline.Size.X - 2,
-                        -HealthPercent * (ESP.Drawing.Healthbar.Outline.Size.Y - 2))
-
-                        ESP.Drawing.Healthbar.Main.Position = ESP.Drawing.Healthbar.Outline.Position
-                        + Vector2.new(1,ESP.Drawing.Healthbar.Outline.Size.Y - 1)
-                    end
-                    if ESP.Drawing.Box.Text.Visible then
-                        ESP.Drawing.Box.Text.Size = ClampDistance(GetFlag(ESP.Flags,ESP.Flag,"/Text/Autoscale"),
-                        GetFlag(ESP.Flags,ESP.Flag,"/Text/Size"),Distance)
-                        ESP.Drawing.Box.Text.Outline = GetFlag(ESP.Flags,ESP.Flag,"/Text/Outline")
-                        ESP.Drawing.Box.Text.Font = GetFontFromName(GetFlag(ESP.Flags,ESP.Flag,"/Text/Font")[1])
-                        ESP.Drawing.Box.Text.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Text/Transparency")
-                        ESP.Drawing.Box.Text.Text = string.format("%s\n%i meters",ESP.Mode == "Player" and Target.Name
-                        or (InEnemyTeam and "Enemy NPC" or "Ally NPC"),Distance)
-                        ESP.Drawing.Box.Text.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
-                    end
-                end
-            else
-                if ESP.Drawing.Arrow.Main.Visible then
-                    local Relative = GetRelative(RootPart.Position)
-                    local SideLength = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Width") / 2
-
-                    local Direction = Relative.Unit
-                    local Base = Direction * GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Distance")
-                    local BaseL = Base + RotateDirection(Direction,90) * SideLength
-                    local BaseR = Base + RotateDirection(Direction,-90) * SideLength
-                    local Tip = Direction * (GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Distance") + GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Height"))
-
-                    local RTCBL = RelativeToCenter(BaseL)
-                    local RTCBR = RelativeToCenter(BaseR)
-                    local RTCT = RelativeToCenter(Tip)
-
-                    ESP.Drawing.Arrow.Main.Color = Color
-                    ESP.Drawing.Arrow.Main.Filled = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Filled")
-                    ESP.Drawing.Arrow.Main.Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Thickness")
-                    ESP.Drawing.Arrow.Main.Transparency = 1 - GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Transparency")
-                    ESP.Drawing.Arrow.Outline.Thickness = ESP.Drawing.Arrow.Main.Thickness + 1
-                    ESP.Drawing.Arrow.Outline.Transparency = ESP.Drawing.Arrow.Main.Transparency
-
-                    ESP.Drawing.Arrow.Main.PointA = RTCBL
-                    ESP.Drawing.Arrow.Main.PointB = RTCBR
-                    ESP.Drawing.Arrow.Main.PointC = RTCT
-                    ESP.Drawing.Arrow.Outline.PointA = RTCBL
-                    ESP.Drawing.Arrow.Outline.PointB = RTCBR
-                    ESP.Drawing.Arrow.Outline.PointC = RTCT
-                end
-            end
-        end
-
-        local TeamCheck = not GetFlag(ESP.Flags,ESP.Flag,"/TeamCheck") and not InEnemyTeam or InEnemyTeam
-        local Visible = OnScreen and InTheRange and RootPart and IsAlive and TeamCheck
-        local ArrowVisible = not OnScreen and InTheRange and RootPart and IsAlive and TeamCheck
-
-        ESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
-
-        ESP.Drawing.Box.Main.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/Enabled") or false
-        ESP.Drawing.Box.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
-        and ESP.Drawing.Box.Main.Visible or false
-        ESP.Drawing.Box.Text.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Text/Enabled") or false
-
-        ESP.Drawing.Healthbar.Main.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Healthbar")
-        and not BoxTooSmall and ESP.Drawing.Box.Main.Visible or false
-        ESP.Drawing.Healthbar.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
-        and ESP.Drawing.Healthbar.Main.Visible or false
-
-        ESP.Drawing.Arrow.Main.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
-        ESP.Drawing.Arrow.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Outline")
-        and ESP.Drawing.Arrow.Main.Visible or false
-
-        ESP.Drawing.Head.Main.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Head/Enabled") or false
-        ESP.Drawing.Head.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Head/Outline")
-        and ESP.Drawing.Head.Main.Visible or false
-
-        ESP.Drawing.Tracer.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Enabled") or false
-    end
-end)]]
 
 Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
     for Target,ESP in pairs(DrawingLibrary.ESP) do

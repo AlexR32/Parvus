@@ -16,27 +16,29 @@ repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Request = (syn and syn.request)
-or (http and http.request) or request
+local SetIdentity = syn and syn.set_thread_identity or setidentity
+local Request = (syn and syn.request) or (http and http.request) or request
 
-do local SetIdentity = syn and syn.set_thread_identity or setidentity
-local OldPluginManager,Message -- Thanks to Kiriot22
-task.spawn(function() SetIdentity(2)
-    local Success,Error = pcall(getrenv().PluginManager)
-    Message = Error
-end)
-OldPluginManager = hookfunction(getrenv().PluginManager, function()
-    return error(Message)
-end) end
+do -- Thanks to Kiriot22
+    local OldPluginManager,Message = nil,nil
+    task.spawn(function() SetIdentity(2)
+        local Success,Error = pcall(getrenv().PluginManager)
+        Message = Error
+    end)
+    OldPluginManager = hookfunction(getrenv().PluginManager,function()
+        return error(Message)
+    end)
+end
 
 function Misc:SetupFPS()
-    local StartTime,TimeTable,
-    LastTime = os.clock(), {}, nil
+    local StartTime,TimeTable,LastTime = os.clock(),{},nil
     return function() LastTime = os.clock()
         for Index = #TimeTable, 1, -1 do
-            TimeTable[Index + 1] = TimeTable[Index] >= LastTime - 1 and TimeTable[Index] or nil
+            TimeTable[Index + 1] = TimeTable[Index] >= LastTime - 1
+            and TimeTable[Index] or nil
         end TimeTable[1] = LastTime
-        return os.clock() - StartTime >= 1 and #TimeTable or #TimeTable / (os.clock() - StartTime)
+        return os.clock() - StartTime >= 1 and #TimeTable
+        or #TimeTable / (os.clock() - StartTime)
     end
 end
 
@@ -66,7 +68,7 @@ function Misc:FixUpValue(fn,hook,global)
         old = hookfunction(fn,function(...)
             return hook(old,...)
         end)
-    else local old
+    else local old = nil
         old = hookfunction(fn,function(...)
             return hook(old,...)
         end)
@@ -83,15 +85,18 @@ function Misc:ReJoin()
 end
 
 function Misc:ServerHop()
-    local Request = game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
-    local DataDecoded,Servers = HttpService:JSONDecode(Request).data,{}
+    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGetAsync(
+        "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/0?sortOrder=2&excludeFullGames=true&limit=100"
+    )).data,{}
     for Index,ServerData in ipairs(DataDecoded) do
         if type(ServerData) == "table" and ServerData.id ~= game.JobId then
             table.insert(Servers,ServerData.id)
         end
     end
     if #Servers > 0 then
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
+        TeleportService:TeleportToPlaceInstance(
+            game.PlaceId,Servers[math.random(#Servers)]
+        )
     else
         Parvus.Utilities.UI:Notification({
             Title = "Parvus Hub",
