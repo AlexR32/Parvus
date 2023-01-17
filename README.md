@@ -2,8 +2,7 @@
 Free Roblox Script Hub designed for shooters.  
 Made With :heart: By ***AlexR32#0157***
 
-***Parvus is still in beta stage of development so expect some bugs or lack of features.***  
-***Skidding is very disrespectful to me, so please dont skid :slightly_smiling_face:***  
+***Parvus is still in beta stage of development so expect some bugs or lack of features.***   
 ### Loadstring
 ```lua
 loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))()
@@ -19,7 +18,7 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
 ### Features
 ```markdown
 # Universal
-  - Aimbot
+  * Aimbot
     - Visibility Check
     - Distance Check
     - Smoothness
@@ -27,16 +26,16 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
     - Prediction
     - Body Parts
     - FOV Circle Customization
-  - Silent Aim
+  * Silent Aim
     - Visibility Check
     - Distance Check
     - Team Check
     - Hit Chance
     - Body Parts
     - FOV Circle Customization
-  - Trigger Bot
+  * Trigger Bot
     - Features same as Aimbot
-  - Visuals (ESP)
+  * Visuals (ESP)
     - Distance Check
     - Ally Color
     - Enemy Color
@@ -44,91 +43,91 @@ loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/m
     - Team Color
     - Boxes
     - Offscreen Arrows
-    - Head Circles
+    - Head Dots
     - Tracers
     - Chams
-  - Misc
+  * Misc
     - Custom Mouse
     - Custom Crosshair
     - Rejoin
     - Server Hop
 # Blackhawk Rescue Mission 5
-  - Silent Aim Inherited
-  - Trigger Bot Inherited
-  - Aimbot Inherited
-  - ESP Inherited
-  - NPC ESP
-  - Clock Time Changer
-  - Fog Density Changer
-  - No Recoil
-  - Instant Hit (No Bullet Drop)
-  - Unlock FireModes
-  - Rapid Fire
-  - WalkSpeed Changer
-  - Vehicle Modification
-  - Helicopter Modification
-  - No NVG Shape (UI)
-  - No NVG
-  - Fake RGE
+  * Silent Aim Inherited
+  * Trigger Bot Inherited
+  * Aimbot Inherited
+  * ESP Inherited
+  * NPC ESP
+  * Clock Time Changer
+  * Fog Density Changer
+  * No Recoil
+  * Instant Hit (No Bullet Drop)
+  * Unlock FireModes
+  * Rapid Fire
+  * WalkSpeed Changer
+  * Vehicle Modification
+  * Helicopter Modification
+  * No NVG Shape (UI)
+  * No NVG
+  * Fake RGE
 # Bad Business
-  - Silent Aim Inherited
-  - Trigger Bot Inherited
-  - Aimbot Inherited
-  - ESP Inherited
-  - Autoshoot (Rage Bot)
-  - Weapon Customization
-  - Arms Customization
-  - Weapon Modification
-  - Pitch Anti-Aim
-  - QE Lean Anti-Aim
-  - Fly + NoClip
-  - Anti-Kick
+  * Silent Aim Inherited
+  * Trigger Bot Inherited
+  * Aimbot Inherited
+  * ESP Inherited
+  * Autoshoot (Rage Bot)
+  * Weapon Customization
+  * Arms Customization
+  * Weapon Modification
+  * Pitch Anti-Aim
+  * QE Lean Anti-Aim
+  * Fly + NoClip
+  * Anti-Kick
 # The Wild West
-  - Aimbot Inherited
-  - ESP Inherited
-  - Thunderstruck ESP
-  - Legendary Animals ESP
+  * Aimbot Inherited
+  * ESP Inherited
+  * Thunderstruck ESP
+  * Legendary Animals ESP
 # Steel Titans
-  - ESP Inherited
-  - Tank Fly
+  * ESP Inherited
+  * Tank Fly
 # RAGDOLL UNIVERSE
-  - Silent Aim Inherited
-  - Trigger Bot Inherited
-  - Aimbot Inherited
-  - ESP Inherited
+  * Silent Aim Inherited
+  * Trigger Bot Inherited
+  * Aimbot Inherited
+  * ESP Inherited
 # Those Who Remain
-  - Silent Aim Inherited
-  - Trigger Bot Inherited
-  - Aimbot Inherited
-  - ESP Inherited
-  - Wallbang
-  - Instant Hit
-  - Infinite Ammo
+  * Silent Aim Inherited
+  * Trigger Bot Inherited
+  * Aimbot Inherited
+  * ESP Inherited
+  * Wallbang
+  * Instant Hit
+  * Infinite Ammo
 # Apocalypse Rising 2
-  - Silent Aim Inherited
-  - Trigger Bot Inherited
-  - Aimbot Inherited
-  - ESP Inherited
-  - Anti-Zombie
-  - Anti-Zombie MeleeAura
-  - No Fall Impact
-  - Unlock Firemodes
-  - No Spread
-  - No Camera Shake
-  - Recoil Mods
-  - Vehicle Mods
-  - NoClip
-  - Fly
-  - WalkSpeed
-  - JumpPower
-  - No Jump Delay
-  - Equip In Air
-  - Equip In Water
-  - Equip In Vehicle
-  - Instant Search
-  - Random Events ESP
-  - Vehicle ESP
-  - Zombie ESP
-  - Item ESP
-  - Map ESP
+  * Silent Aim Inherited
+  * Trigger Bot Inherited
+  * Aimbot Inherited
+  * ESP Inherited
+  * Anti-Zombie
+  * Anti-Zombie MeleeAura
+  * No Fall Impact
+  * Unlock Firemodes
+  * No Spread
+  * No Camera Shake
+  * Recoil Mods
+  * Vehicle Mods
+  * NoClip
+  * Fly
+  * WalkSpeed
+  * JumpPower
+  * No Jump Delay
+  * Equip In Air
+  * Equip In Water
+  * Equip In Vehicle
+  * Instant Search
+  * Random Events ESP
+  * Vehicle ESP
+  * Zombie ESP
+  * Item ESP
+  * Map ESP
 ```
