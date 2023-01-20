@@ -215,9 +215,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD)
             if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                 local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
 
-                ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
-                local NewFOV = ScreenPosition.Magnitude
-
+                local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                 if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{NPC,BodyPart,ScreenPosition} end
             end
         end
@@ -228,10 +226,11 @@ end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
+    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        Hitbox[3].X * Smoothness,
-        Hitbox[3].Y * Smoothness
+        (Hitbox[3].X - Mouse.X) * Smoothness,
+        (Hitbox[3].Y - Mouse.Y) * Smoothness
     )
 end
 

@@ -36,6 +36,7 @@ local Network = Framework.Libraries.Network
 local Bullets = Framework.Libraries.Bullets
 local Cameras = Framework.Libraries.Cameras
 
+local CharacterCamera = Cameras.CameraList.Character
 ProjectileGravity = Vector3.new(0,Framework.Configs.Globals.ProjectileGravity,0)
 local VehicleController = Framework.Classes.VehicleControler
 local Animators = Framework.Classes.Animators
@@ -331,7 +332,7 @@ local Window = Parvus.Utilities.UI:Window({
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
-            MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
+            --MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
@@ -473,8 +474,7 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
                     Distance / ProjectileSpeed) or BodyPart.Position
 
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
-                    ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
-                    local NewFOV = ScreenPosition.Magnitude
+                    local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,BPPosition,ScreenPosition} end
                 end
             end
@@ -486,10 +486,11 @@ end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
+    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        Hitbox[5].X * Smoothness,
-        Hitbox[5].Y * Smoothness
+        (Hitbox[5].X - Mouse.X) * Smoothness,
+        (Hitbox[5].Y - Mouse.Y) * Smoothness
     )
 end
 
@@ -669,6 +670,16 @@ Network.Send = function(Self,Name,...) local Args = {...}
         return
     end
 
+    --[[if Name == "Animator State Report" then
+        if Window.Flags["AR2/EquipInAir"] then
+            print(repr(Args[2]))
+            if Args[2].MoveState == "Falling" then
+                print("Falling bypass")
+                return
+            end
+        end
+    end]]
+
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"]
         or Window.Flags["AR2/Fly/Enabled"]
@@ -705,10 +716,15 @@ Raycasting.CharacterGroundCast = function(Self,Position,LengthDown,...)
         if Window.Flags["AR2/EquipInAir"] then LengthDown = 1e6 end
     end return OldCharacterGroundCast(Self,Position,LengthDown,...)
 end
-local OldConnectVehicle = Cameras.CameraList.Character.ConnectVehicle
-Cameras.CameraList.Character.ConnectVehicle = function(...)
+local OldConnectVehicle = CharacterCamera.ConnectVehicle
+CharacterCamera.ConnectVehicle = function(...)
     if Window.Flags["AR2/EquipInVehicle"] then return end
     return OldConnectVehicle(...)
+end
+local OldFlinch = CharacterCamera.Flinch
+CharacterCamera.Flinch = function(Self,...)
+    if Window.Flags["AR2/NoFlinch"] then return end
+    return OldFlinch(...)
 end
 local OldSwimCheckCast = Raycasting.SwimCheckCast
 Raycasting.SwimCheckCast = function(Self,...)
@@ -814,16 +830,17 @@ Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/AntiZombie/Enabled"] then return end
     local ClosestZombies = GetZombies(50)
     for Index,Zombie in pairs(ClosestZombies) do
-        local ZombieOwned = isnetworkowner(Zombie.PrimaryPart)
+        Zombie.PrimaryPart.Anchored = isnetworkowner(Zombie.PrimaryPart)
+        --[[local ZombieOwned = isnetworkowner(Zombie.PrimaryPart)
         if Window.Flags["AR2/AntiZombie/KillAura"] and ZombieOwned then
             --Zombie.PrimaryPart.CFrame = PlayerClass.Character.RootPart.CFrame * CFrame.new(0,0,5)
             --Zombie.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
             local Melee = PlayerClass.Character.Inventory.Equipment.Melee
             if Melee then Network:Send("Melee Swing",Melee.Id,1)
                 Network:Send("Melee Hit Register",Melee.Id,
-                Zombie.UpperTorso,"Flesh")
+                Zombie.PrimaryPart,"Flesh")
             end
-        else Zombie.PrimaryPart.Anchored = ZombieOwned end
+        else Zombie.PrimaryPart.Anchored = ZombieOwned end]]
     end ClosestZombies = nil
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()

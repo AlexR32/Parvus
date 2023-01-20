@@ -203,45 +203,11 @@ local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
+--[[local LiveRagdolls = Workspace.LiveRagdolls
 local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE)
     -- FieldOfView,DynamicFieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
-
-    if not Enabled then return end
-    local Camera,Closest = Workspace.CurrentCamera,nil
-    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
-
-    for Index,Player in pairs(PlayerService:GetPlayers()) do
-        if Player == LocalPlayer then continue end
-        local Character = Player.Character
-
-        if Character and TeamCheck(Character) then
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-            if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
-
-            for Index,BodyPart in pairs(BP) do
-                BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                    local BPPosition = PE and CalculateTrajectory(BodyPart.Position,BodyPart.AssemblyLinearVelocity,
-                    ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
-                    ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
-                    local NewFOV = ScreenPosition.Magnitude
-                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,BPPosition,ScreenPosition} end
-                end
-            end
-        end
-    end
-
-    return Closest
-end
-
---[[local LiveRagdolls = Workspace.LiveRagdolls
-local function GetClosest(Enabled,DFOV,FOV,BP,WC,DC,MD,PE)
-    -- DynamicFieldOfView,FieldOfView,BodyParts
-    -- WallCheck,DistanceCheck,MaxDistance
 
     if not Enabled then return end
     local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
@@ -265,12 +231,49 @@ local function GetClosest(Enabled,DFOV,FOV,BP,WC,DC,MD,PE)
     return ClosestHitbox
 end]]
 
+local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE)
+    -- FieldOfView,DynamicFieldOfView,BodyParts
+    -- WallCheck,DistanceCheck,MaxDistance
+    -- PredictionEnabled
+
+    if not Enabled then return end
+    local Camera,Closest = Workspace.CurrentCamera,nil
+    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
+
+    for Index,Player in pairs(PlayerService:GetPlayers()) do
+        if Player == LocalPlayer then continue end
+        local Character = Player.Character
+
+        if Character and TeamCheck(Character) then
+            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+            if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+
+            for Index,BodyPart in pairs(BP) do
+                BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
+                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+                    local BPPosition = PE and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,
+                    Distance / ProjectileSpeed) or BodyPart.Position
+
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
+                    local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,BPPosition,ScreenPosition} end
+                end
+            end
+        end
+    end
+
+    return Closest
+end
+
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
+    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        Hitbox[5].X * Smoothness,
-        Hitbox[5].Y * Smoothness
+        (Hitbox[5].X - Mouse.X) * Smoothness,
+        (Hitbox[5].Y - Mouse.Y) * Smoothness
     )
 end
 
