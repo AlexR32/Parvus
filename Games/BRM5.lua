@@ -15,6 +15,7 @@ local SilentAim,Aimbot,Trigger,ProjectileSpeed,ProjectileGravity
 = nil,false,false,1000,Vector3.new(0,Workspace.Gravity,0)
 local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
+local GravityCorrection = 2
 
 local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
@@ -441,16 +442,16 @@ local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
     local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
     Time = Time + Delta / ProjectileSpeed
-    return Origin + Velocity * Time + Gravity * Time * Time / 2
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
-local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
-    -- DynamicFieldOfView,FieldOfView,TeamCheck
+local function GetClosest(Enabled,NPCMode,FOV,DFOV,TC,BP,WC,DC,MD,PE)
+    -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
 
     if not Enabled then return end
-    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    local Camera,Closest = Workspace.CurrentCamera,nil
     FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
     if NPCMode then
@@ -465,44 +466,50 @@ local function GetHitbox(Enabled,NPCMode,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                     if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                         BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
-                        local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,Distance,ScreenPosition} end
+    
+                        ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                        local NewFOV = ScreenPosition.Magnitude
+    
+                        if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{NPC,NPC,BodyPart,ScreenPosition} end
                     end
                 end
             end
         end
     else
         for Index,Player in pairs(PlayerService:GetPlayers()) do
-            local Character = Player.Character if not Character then continue end
-
-            if Player ~= LocalPlayer and TeamCheck(TC,Player) then
+            if Player == LocalPlayer then continue end
+            local Character = Player.Character
+    
+            if Character and TeamCheck(TC,Player) then
                 local Humanoid = Character:FindFirstChildOfClass("Humanoid")
                 if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
-
+    
                 for Index,BodyPart in pairs(BP) do
                     BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                         BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
-                        local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
+    
+                        ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                        local NewFOV = ScreenPosition.Magnitude
+    
+                        if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                     end
                 end
             end
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[5].X - Mouse.X) * Smoothness,
-        (Hitbox[5].Y - Mouse.Y) * Smoothness
+        Hitbox[4].X * Smoothness,
+        Hitbox[4].Y * Smoothness
     )
 end
 
@@ -811,8 +818,8 @@ RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["BRM5/NPCMode"],
-        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["TeamCheck"],
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
@@ -823,8 +830,8 @@ RunService.Heartbeat:Connect(function()
         AimAt(GetHitbox(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["BRM5/NPCMode"],
-            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["TeamCheck"],
             Window.Flags["Aimbot/BodyParts"],
             Window.Flags["Aimbot/WallCheck"],
@@ -856,8 +863,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     local TriggerHitbox = GetHitbox(
         Window.Flags["Trigger/Enabled"],
         Window.Flags["BRM5/NPCMode"],
-        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["TeamCheck"],
         Window.Flags["Trigger/BodyParts"],
         Window.Flags["Trigger/WallCheck"],
@@ -873,8 +880,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                 TriggerHitbox = GetHitbox(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["BRM5/NPCMode"],
-                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/FieldOfView"],
+                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["TeamCheck"],
                     Window.Flags["Trigger/BodyParts"],
                     Window.Flags["Trigger/WallCheck"],

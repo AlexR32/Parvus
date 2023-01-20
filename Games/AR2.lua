@@ -24,6 +24,7 @@ local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger,
 ProjectileSpeed,ProjectileGravity
 = false,nil,nil,1000,Vector3.zero
+local GravityCorrection = 2
 
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
@@ -446,19 +447,20 @@ local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
     return Origin + Velocity * Time + Gravity * Time * Time / 2
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE)
-    -- DynamicFieldOfView,FieldOfView,TeamCheck
+local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
+    -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
 
     if not Enabled then return end
-    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    local Camera,Closest = Workspace.CurrentCamera,nil
     FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
-        local Character = Player.Character if not Character then continue end
+        if Player == LocalPlayer then continue end
+        local Character = Player.Character
 
-        if Player ~= LocalPlayer and TeamCheck(TC,Player) then
+        if Character and TeamCheck(TC,Player) then
             local Humanoid = Character:FindFirstChildOfClass("Humanoid")
             if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
 
@@ -466,13 +468,14 @@ local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE)
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
-                    local Position = PE and CalculateTrajectory(BodyPart.Position,
+                    local BPPosition = PE and CalculateTrajectory(BodyPart.Position,
                     BodyPart.AssemblyLinearVelocity,ProjectileGravity,
                     Distance / ProjectileSpeed) or BodyPart.Position
 
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,Position,ScreenPosition} end
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
+                    ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                    local NewFOV = ScreenPosition.Magnitude
+                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,BPPosition,ScreenPosition} end
                 end
             end
         end
@@ -483,11 +486,10 @@ end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[6].X - Mouse.X) * Smoothness,
-        (Hitbox[6].Y - Mouse.Y) * Smoothness
+        Hitbox[5].X * Smoothness,
+        Hitbox[5].Y * Smoothness
     )
 end
 
@@ -747,8 +749,8 @@ end)
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox(
         Window.Flags["SilentAim/Enabled"],
-        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["TeamCheck"],
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
@@ -759,8 +761,8 @@ RunService.Heartbeat:Connect(function()
     if Aimbot then
         AimAt(GetHitbox(
             Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["TeamCheck"],
             Window.Flags["Aimbot/BodyParts"],
             Window.Flags["Aimbot/WallCheck"],
@@ -774,8 +776,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
     local TriggerHitbox = GetHitbox(
         Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["TeamCheck"],
         Window.Flags["Trigger/BodyParts"],
         Window.Flags["Trigger/WallCheck"],
@@ -790,8 +792,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
             while task.wait() do
                 TriggerHitbox = GetHitbox(
                     Window.Flags["Trigger/Enabled"],
-                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/FieldOfView"],
+                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["TeamCheck"],
                     Window.Flags["Trigger/BodyParts"],
                     Window.Flags["Trigger/WallCheck"],

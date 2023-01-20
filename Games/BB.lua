@@ -371,7 +371,7 @@ local function GetCharacterInfo(Player,Shield)
         return Character:FindFirstChild("Hitbox"),true
     end
 end
-local function GetHitboxPart(Hitbox,Name)
+local function GetHitbox(Hitbox,Name)
     for Index,Part in pairs(Hitbox:GetChildren()) do
         local WeldConstraint = Part:FindFirstChildOfClass("WeldConstraint")
         if not WeldConstraint then continue end
@@ -530,65 +530,70 @@ local function AutoShoot(Hitbox,Enabled)
     end
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE,Shield)
-    -- DynamicFieldOfView,FieldOfView,BodyParts
+local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
+    -- FieldOfView,DynamicFieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,Shield
+    -- PredictionEnabled
 
     if not Enabled then return end
-    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    local Camera,Closest = Workspace.CurrentCamera,nil
     FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
-        local Character,Shield = GetCharacterInfo(Player,Shield)
+        if Player == LocalPlayer then continue end
 
-        if Player ~= LocalPlayer and Character and Shield and TeamCheck(Player) then
+        local Character,Shield = GetCharacterInfo(Player,Shield)
+        if Character and Shield and TeamCheck(Player) then
             for Index,BodyPart in pairs(BP) do
-                BodyPart = GetHitboxPart(Character,BodyPart) if not BodyPart then continue end
+                BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                     BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
+                    ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                    local NewFOV = ScreenPosition.Magnitude
+
+                    if OnScreen and NewFOV < FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                 end
             end
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
-local function GetHitboxAllFOV(BP,WC,DC,MD)
+local function GetClosestAllFOV(BP,WC,DC,MD)
     local Camera = Workspace.CurrentCamera
-    local InTheRange,ClosestHitbox = math.huge,nil
+    local Distance,Closest = math.huge,nil
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
+        if Player == LocalPlayer then continue end
+
         local Character,Shield = GetCharacterInfo(Player,true)
-        if Player ~= LocalPlayer and Character and Shield and TeamCheck(Player) then
+        if Character and Shield and TeamCheck(Player) then
             for Index,BodyPart in pairs(BP) do
-                BodyPart = GetHitboxPart(Character,BodyPart) if not BodyPart then continue end
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
+                local NewDistance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
 
                 if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
-                    if Distance < InTheRange then
-                        InTheRange,ClosestHitbox = Distance,{Player,Character,BodyPart,Distance}
+                    if NewDistance < Distance then
+                        Distance,Closest = NewDistance,{Player,Character,BodyPart}
                     end
                 end
             end
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[5].X - Mouse.X) * Smoothness,
-        (Hitbox[5].Y - Mouse.Y) * Smoothness
+        Hitbox[4].X * Smoothness,
+        Hitbox[4].Y * Smoothness
     )
 end
 
@@ -648,10 +653,10 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self
 end)
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox(
+    SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
-        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
@@ -659,10 +664,10 @@ RunService.Heartbeat:Connect(function()
         false,true
     )
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/BodyParts"],
             Window.Flags["Aimbot/WallCheck"],
             Window.Flags["Aimbot/DistanceCheck"],
@@ -706,7 +711,7 @@ end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Window.Flags["BB/AutoShoot/Enabled"] then return end
     AutoShoot(Window.Flags["BB/AutoShoot/AllFOV"]
-    and GetHitboxAllFOV(
+    and GetClosestAllFOV(
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
@@ -715,10 +720,10 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
-    local TriggerHitbox = GetHitbox(
+    local TriggerHitbox = GetClosest(
         Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/BodyParts"],
         Window.Flags["Trigger/WallCheck"],
         Window.Flags["Trigger/DistanceCheck"],
@@ -732,10 +737,10 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitbox(
+                TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
-                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/FieldOfView"],
+                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/BodyParts"],
                     Window.Flags["Trigger/WallCheck"],
                     Window.Flags["Trigger/DistanceCheck"],

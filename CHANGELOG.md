@@ -11,7 +11,6 @@
 + Added support for squads in teamcheck (finally)
 * Improved Prediction
 ```
-
 ### Update 30-31/12/22
 ```markdown
 # Global

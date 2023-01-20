@@ -200,8 +200,8 @@ local function WallCheck(Enabled,Camera,Hitbox,Character)
     {LocalPlayer.Character,Character})
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD)
-    -- DynamicFieldOfView,FieldOfView,BodyParts
+local function GetHitbox(Enabled,FOV,DFOV,BP,WC,DC,MD)
+    -- FieldOfView,DynamicFieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
 
     if not Enabled then return end
@@ -214,8 +214,11 @@ local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD)
             local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
             if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                 local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
-                local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,BodyPart,Distance,ScreenPosition} end
+
+                ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                local NewFOV = ScreenPosition.Magnitude
+
+                if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{NPC,BodyPart,ScreenPosition} end
             end
         end
     end
@@ -225,11 +228,10 @@ end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothness,
-        (Hitbox[4].Y - Mouse.Y) * Smoothness
+        Hitbox[3].X * Smoothness,
+        Hitbox[3].Y * Smoothness
     )
 end
 
@@ -304,8 +306,8 @@ end
 RunService.Heartbeat:Connect(function()
     SilentAim = GetHitbox(
         Window.Flags["SilentAim/Enabled"],
-        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/DynamicFOV"],
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
@@ -314,8 +316,8 @@ RunService.Heartbeat:Connect(function()
     if Aimbot then
         AimAt(GetHitbox(
             Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/BodyParts"],
             Window.Flags["Aimbot/WallCheck"],
             Window.Flags["Aimbot/DistanceCheck"],
@@ -327,8 +329,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
     local TriggerHitbox = GetHitbox(
         Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/DynamicFOV"],
         Window.Flags["Trigger/BodyParts"],
         Window.Flags["Trigger/WallCheck"],
         Window.Flags["Trigger/DistanceCheck"],
@@ -341,8 +343,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
             while task.wait() do
                 TriggerHitbox = GetHitbox(
                     Window.Flags["Trigger/Enabled"],
-                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/FieldOfView"],
+                    Window.Flags["Trigger/DynamicFOV"],
                     Window.Flags["Trigger/BodyParts"],
                     Window.Flags["Trigger/WallCheck"],
                     Window.Flags["Trigger/DistanceCheck"],

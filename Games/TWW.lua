@@ -38,9 +38,6 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
-            AimbotSection:Divider({Text = "Prediction"})
-            AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Prediction/Enabled",Value = false})
-            AimbotSection:Slider({Name = "Velocity",Flag = "Aimbot/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -105,7 +102,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
             HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
-        end
+        end Parvus.Utilities.Misc:LightingSection(VisualsTab,"Right")
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
@@ -128,6 +125,7 @@ Window:LoadDefaultConfig("Parvus")
 Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 
@@ -157,18 +155,20 @@ local function WallCheck(Enabled,Camera,Hitbox,Character)
     {LocalPlayer.Character,Character})
 end
 
-local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE,PV)
-    -- DynamicFieldOfView,FieldOfView,TeamCheck
+local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
+    -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
+    -- PredictionEnabled,ProjectileSpeed
 
     if not Enabled then return end
-    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    local Camera,Closest = Workspace.CurrentCamera,nil
     FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
-        local Character = Player.Character if not Character then continue end
+        if Player == LocalPlayer then continue end
+        local Character = Player.Character
 
-        if Player ~= LocalPlayer and TeamCheck(TC,Player) then
+        if Character and TeamCheck(TC,Player) then
             local Humanoid = Character:FindFirstChildOfClass("Humanoid")
             if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
 
@@ -177,23 +177,25 @@ local function GetHitbox(Enabled,DFOV,FOV,TC,BP,WC,DC,MD,PE,PV)
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                 if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{Player,Character,BodyPart,Distance,ScreenPosition} end
+
+                    ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
+                    local NewFOV = ScreenPosition.Magnitude
+
+                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                 end
             end
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
 local function AimAt(Hitbox,Smoothness)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[5].X - Mouse.X) * Smoothness,
-        (Hitbox[5].Y - Mouse.Y) * Smoothness
+        Hitbox[4].X * Smoothness,
+        Hitbox[4].Y * Smoothness
     )
 end
 
@@ -201,8 +203,8 @@ RunService.Heartbeat:Connect(function()
     if Aimbot then
         AimAt(GetHitbox(
             Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["Aimbot/FieldOfView"],
+            Window.Flags["Aimbot/DynamicFOV"],
             Window.Flags["TeamCheck"],
             Window.Flags["Aimbot/BodyParts"],
             Window.Flags["Aimbot/WallCheck"],
