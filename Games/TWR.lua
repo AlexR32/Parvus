@@ -205,7 +205,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD)
     -- WallCheck,DistanceCheck,MaxDistance
 
     if not Enabled then return end
-    local Camera,ClosestHitbox = Workspace.CurrentCamera,nil
+    local Camera,Closest = Workspace.CurrentCamera,nil
     FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
 
     for Index,NPC in pairs(NPCFolder:GetChildren()) do
@@ -221,7 +221,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD)
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
 local function AimAt(Hitbox,Smoothness)
