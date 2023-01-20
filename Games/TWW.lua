@@ -201,7 +201,7 @@ end
 
 RunService.Heartbeat:Connect(function()
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["Aimbot/FieldOfView"],
             Window.Flags["Aimbot/DynamicFOV"],

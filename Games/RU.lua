@@ -239,7 +239,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE)
 end
 
 --[[local LiveRagdolls = Workspace.LiveRagdolls
-local function GetHitbox(Enabled,DFOV,FOV,BP,WC,DC,MD,PE)
+local function GetClosest(Enabled,DFOV,FOV,BP,WC,DC,MD,PE)
     -- DynamicFieldOfView,FieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
 
@@ -348,7 +348,7 @@ FastCastRedux.new = function(...)
 end]]
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox(
+    SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/FieldOfView"],
         Window.Flags["SilentAim/DynamicFOV"],
@@ -359,7 +359,7 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/Prediction"]
     )
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["Aimbot/FieldOfView"],
             Window.Flags["Aimbot/DynamicFOV"],
@@ -373,7 +373,7 @@ RunService.Heartbeat:Connect(function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
-    local TriggerHitbox = GetHitbox(
+    local TriggerHitbox = GetClosest(
         Window.Flags["Trigger/Enabled"],
         Window.Flags["Trigger/FieldOfView"],
         Window.Flags["Trigger/DynamicFOV"],
@@ -388,7 +388,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitbox(
+                TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["Trigger/FieldOfView"],
                     Window.Flags["Trigger/DynamicFOV"],

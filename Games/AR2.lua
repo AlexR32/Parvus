@@ -685,7 +685,7 @@ end
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
     if SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-        Args[5] = (SilentAim[5] - Args[4]).Unit
+        Args[5] = (SilentAim[4] - Args[4]).Unit
     end return OldFire(Self,unpack(Args))
 end
 -- Old Recoil Control
@@ -747,7 +747,7 @@ PlayerClass.CharacterAdded:Connect(function(Character)
 end)
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox(
+    SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/FieldOfView"],
         Window.Flags["SilentAim/DynamicFOV"],
@@ -759,7 +759,7 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/Prediction"]
     )
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["Aimbot/FieldOfView"],
             Window.Flags["Aimbot/DynamicFOV"],
@@ -774,7 +774,7 @@ RunService.Heartbeat:Connect(function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
-    local TriggerHitbox = GetHitbox(
+    local TriggerHitbox = GetClosest(
         Window.Flags["Trigger/Enabled"],
         Window.Flags["Trigger/FieldOfView"],
         Window.Flags["Trigger/DynamicFOV"],
@@ -790,7 +790,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitbox(
+                TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["Trigger/FieldOfView"],
                     Window.Flags["Trigger/DynamicFOV"],

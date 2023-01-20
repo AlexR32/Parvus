@@ -466,10 +466,10 @@ local function GetClosest(Enabled,NPCMode,FOV,DFOV,TC,BP,WC,DC,MD,PE)
                     if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                         BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
-    
+
                         ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
                         local NewFOV = ScreenPosition.Magnitude
-    
+
                         if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{NPC,NPC,BodyPart,ScreenPosition} end
                     end
                 end
@@ -479,21 +479,21 @@ local function GetClosest(Enabled,NPCMode,FOV,DFOV,TC,BP,WC,DC,MD,PE)
         for Index,Player in pairs(PlayerService:GetPlayers()) do
             if Player == LocalPlayer then continue end
             local Character = Player.Character
-    
+
             if Character and TeamCheck(TC,Player) then
                 local Humanoid = Character:FindFirstChildOfClass("Humanoid")
                 if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
-    
+
                 for Index,BodyPart in pairs(BP) do
                     BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
                     if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                         BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
-    
+
                         ScreenPosition = Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()
                         local NewFOV = ScreenPosition.Magnitude
-    
+
                         if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                     end
                 end
@@ -815,7 +815,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self, ...)
 end)
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox(
+    SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["BRM5/NPCMode"],
         Window.Flags["SilentAim/FieldOfView"],
@@ -827,7 +827,7 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/Distance"]
     )
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["BRM5/NPCMode"],
             Window.Flags["Aimbot/FieldOfView"],
@@ -860,7 +860,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     local Release = Window.Flags["Trigger/RMBMode"] and mouse2release or mouse1release
 
     if not Trigger then return end
-    local TriggerHitbox = GetHitbox(
+    local TriggerHitbox = GetClosest(
         Window.Flags["Trigger/Enabled"],
         Window.Flags["BRM5/NPCMode"],
         Window.Flags["Trigger/FieldOfView"],
@@ -877,7 +877,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitbox(
+                TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["BRM5/NPCMode"],
                     Window.Flags["Trigger/FieldOfView"],

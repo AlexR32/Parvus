@@ -200,7 +200,7 @@ local function WallCheck(Enabled,Camera,Hitbox,Character)
     {LocalPlayer.Character,Character})
 end
 
-local function GetHitbox(Enabled,FOV,DFOV,BP,WC,DC,MD)
+local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD)
     -- FieldOfView,DynamicFieldOfView,BodyParts
     -- WallCheck,DistanceCheck,MaxDistance
 
@@ -304,7 +304,7 @@ GuiModule.UpdateHUD = function(...) local Args = {...}
 end
 
 RunService.Heartbeat:Connect(function()
-    SilentAim = GetHitbox(
+    SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/FieldOfView"],
         Window.Flags["SilentAim/DynamicFOV"],
@@ -314,7 +314,7 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/Distance"]
     )
     if Aimbot then
-        AimAt(GetHitbox(
+        AimAt(GetClosest(
             Window.Flags["Aimbot/Enabled"],
             Window.Flags["Aimbot/FieldOfView"],
             Window.Flags["Aimbot/DynamicFOV"],
@@ -327,7 +327,7 @@ RunService.Heartbeat:Connect(function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
-    local TriggerHitbox = GetHitbox(
+    local TriggerHitbox = GetClosest(
         Window.Flags["Trigger/Enabled"],
         Window.Flags["Trigger/FieldOfView"],
         Window.Flags["Trigger/DynamicFOV"],
@@ -341,7 +341,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
             while task.wait() do
-                TriggerHitbox = GetHitbox(
+                TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["Trigger/FieldOfView"],
                     Window.Flags["Trigger/DynamicFOV"],
