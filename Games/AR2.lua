@@ -68,10 +68,10 @@ local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = 
 "SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01",
 "SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01",
 -- Christmas Random Events
-"SnowmanStructure02","SnowmanStructure01","ChristmasTreeHouse01",
+--[["SnowmanStructure02","SnowmanStructure01","ChristmasTreeHouse01",
 "ChristmasTreeSpecialForces01","ChristmasTreeHouse03","ChristmasSantaSleigh03",
 "ChristmasTreeHouse02","ChristmasSantaSleigh02","ChristmasSantaSleigh01",
-"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"
+"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"]]
 },{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
 "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
@@ -393,10 +393,14 @@ end
 
 local function Raycast(Origin,Direction)
     if not table.find(WallCheckParams.FilterDescendantsInstances,LocalPlayer.Character) then
-        --print("added character to raycast")
-        WallCheckParams.FilterDescendantsInstances = {Workspace.Effects,Workspace.Sounds,
-            Workspace.Locations,Workspace.Spawns,LocalPlayer.Character}
-    end local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
+        WallCheckParams.FilterDescendantsInstances = {
+            Workspace.Effects,Workspace.Sounds,
+            Workspace.Locations,Workspace.Spawns,
+            LocalPlayer.Character
+        } --print("added character to raycast")
+    end
+
+    local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
     if RaycastResult then
 		if (RaycastResult.Instance.Transparency == 1
         and RaycastResult.Instance.CanCollide == false)
@@ -868,6 +872,24 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
     end Items = nil
 end)
 
+local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
+Events["Inventory Container Added\r"] = function(Id,Data,...)
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
+        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
+        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
+    end return OldICA(Id,Data,...)
+end
+Events["Container Changed\r"] = function(Data,...)
+    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
+
+    Parvus.Utilities.Drawing:RemoveObject(Data.Id)
+    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
+        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
+        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
+    end return OldCC(Data,...)
+end
+
 for Index,Item in pairs(Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
@@ -950,24 +972,6 @@ end)
 Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
     Parvus.Utilities.Drawing:RemoveObject(Zombie)
 end)
-
-local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
-Events["Inventory Container Added\r"] = function(Id,Data,...)
-    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
-        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
-    end return OldICA(Id,Data,...)
-end
-Events["Container Changed\r"] = function(Data,...)
-    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
-
-    Parvus.Utilities.Drawing:RemoveObject(Data.Id)
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
-        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
-    end return OldCC(Data,...)
-end
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end

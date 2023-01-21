@@ -158,7 +158,6 @@ end
 local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
     -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,ProjectileSpeed
 
     if not Enabled then return end
     local Camera,Closest = Workspace.CurrentCamera,nil
