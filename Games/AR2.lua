@@ -58,8 +58,11 @@ local Vehicles = Workspace.Vehicles.Spawned
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
+local ItemMemory,TPActive,TPPosition,
+FlyPosition,NoClipEvent = {},false,nil,nil,nil
+
 -- game data mess
-local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = {
+local RandomEvents,ItemCategory,SanityBans = {
 "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
 "LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
 "MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
@@ -76,7 +79,8 @@ local RandomEvents,ItemCategory,SanityBans,ItemMemory,FlyPosition,NoClipEvent = 
 "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
 "Force Charcter Save","Update Character State","Sync Near Chunk Loot",
-"Resync Character Physics","Update Character Position"},{},nil,nil
+"Resync Character Physics","Update Character Position"}
+
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -308,6 +312,50 @@ local Window = Parvus.Utilities.UI:Window({
             --[[VehSection:Slider({Name = "Damping",Flag = "AR2/Vehicle/Damping",Min = 0,Max = 200,Value = 100})
             VehSection:Slider({Name = "Velocity",Flag = "AR2/Vehicle/Velocity",Min = 0,Max = 200,Value = 100})]]
         end
+        --[[local TargetSection = MiscTab:Section({Name = "Target",Side = "Right"}) do
+            local PlayerDropdown = TargetSection:Dropdown({Name = "Player List",IgnoreFlag = true})
+            PlayerDropdown:RefreshToPlayers(false)
+            TargetSection:Button({Name = "Refresh",Callback = function()
+                PlayerDropdown:RefreshToPlayers(false)
+            end})
+
+            TargetSection:Button({Name = "Goto",Callback = function()
+                if not PlayerClass.Character then return end
+                local PlayerName = PlayerDropdown.Value[1]
+                if not PlayerName then return end
+
+                local PlayerCharacter = PlayerService[PlayerName].Character
+                if not PlayerCharacter then return end
+
+                TPPosition = PlayerCharacter.PrimaryPart.CFrame
+                TPActive = true
+
+                task.spawn(function()
+                    while task.wait() do
+                        PlayerClass.Character.RootPart.CFrame = TPPosition  - Vector3.new(0,10,0)
+                        if not TPActive then break end
+                    end
+                end)
+
+                task.wait(4)
+                PlayerClass.Character.RootPart.CFrame = TPPosition
+                TPActive = false
+            end})]]
+            --TargetSection:Button({Name = "TP Zombies",Callback = function()
+                --local OldAntiZombie = Window:GetValue("AR2/AntiZombie/Enabled")
+                --Window:SetValue("AR2/AntiZombie/Enabled",false)
+
+                --local ClosestZombies = GetZombies(200)
+                --for Index,Zombie in pairs(ClosestZombies) do
+                    --if isnetworkowner(Zombie.PrimaryPart) then
+                        --Zombie.PrimaryPart.Anchored = false
+                        --Zombie.PrimaryPart.CFrame = PlayerService[PlayerDropdown.Value[1]].Character.PrimaryPart.CFrame
+                    --end
+                --end ClosestZombies = nil
+
+                --Window:SetValue("AR2/AntiZombie/Enabled",OldAntiZombie)
+            --end})
+        --end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly Enabled",Flag = "AR2/Fly/Enabled",Value = false,Callback = function(Bool)
                 --[[if Bool and PlayerClass.Character then BodyVelocity.Parent = PlayerClass.Character.RootPart
@@ -499,7 +547,7 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
-local function GetZombies(Distance)
+function GetZombies(Distance)
     local ClosestZombies = {}
 
     for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
@@ -684,6 +732,9 @@ Network.Send = function(Self,Name,...) local Args = {...}
             end
         end
     end]]
+    --[[if Name == "Animator Camera Position Report" then
+        if TPActive then Args[1] = TPPosition end
+    end]]
 
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"]
@@ -691,6 +742,10 @@ Network.Send = function(Self,Name,...) local Args = {...}
         or Window.Flags["AR2/WalkSpeed/Enabled"] then
             Args[1] = "Climbing"
         end
+        --[[if TPActive then
+            Args[1] = "Climbing"
+            Args[2] = TPPosition
+        end]]
         if Window.Flags["AR2/NoSpread"] then
             Args[3] = true Args[4] = true
         end
@@ -729,7 +784,7 @@ end
 local OldFlinch = CharacterCamera.Flinch
 CharacterCamera.Flinch = function(Self,...)
     if Window.Flags["AR2/NoFlinch"] then return end
-    return OldFlinch(...)
+    return OldFlinch(Self,...)
 end
 local OldSwimCheckCast = Raycasting.SwimCheckCast
 Raycasting.SwimCheckCast = function(Self,...)
@@ -871,6 +926,8 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
         end)
     end Items = nil
 end)
+
+Events["Character Rubber Band Rest\r"] = function() end
 
 local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
 Events["Inventory Container Added\r"] = function(Id,Data,...)
