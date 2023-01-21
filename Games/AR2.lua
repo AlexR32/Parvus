@@ -445,7 +445,8 @@ local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
     local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
     Time = Time + Delta / ProjectileSpeed
-    return Origin + Velocity * Time + Gravity * Time * Time / 2
+
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
 local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
@@ -481,7 +482,7 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
         end
     end
 
-    return ClosestHitbox
+    return Closest
 end
 
 local function AimAt(Hitbox,Smoothness)
