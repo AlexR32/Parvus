@@ -11,11 +11,13 @@ local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SilentAim,Aimbot,Trigger,ProjectileSpeed,ProjectileGravity
-= nil,false,false,1000,Vector3.new(0,Workspace.Gravity,0)
+local SilentAim,Aimbot,Trigger = nil,false,false
+
+local ProjectileSpeed,ProjectileGravity,GravityCorrection
+= 1000,Vector3.new(0,Workspace.Gravity,0),2
+
 local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
-local GravityCorrection = 2
 
 local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},

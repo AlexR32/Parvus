@@ -4,12 +4,10 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
 local SilentAim,Aimbot,Trigger = nil,false,false
-
-local GravityCorrection = 2
-local ProjectileGravity = Vector3.new(0,Workspace.Gravity,0)
+local ProjectileGravity,GravityCorrection
+= Vector3.new(0,Workspace.Gravity,0),2
+local Mouse = LocalPlayer:GetMouse()
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,

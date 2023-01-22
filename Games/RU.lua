@@ -8,10 +8,8 @@ repeat task.wait() until Workspace:FindFirstChild("Drops") and Workspace:FindFir
 
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger = nil,false,false
-
-local GravityCorrection = 2
-local ProjectileGravity = Vector3.new(0,Workspace.Gravity,0)
-local ProjectileSpeed = 1000
+local ProjectileSpeed,ProjectileGravity,GravityCorrection
+= 1000,Vector3.new(0,Workspace.Gravity,0),2
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,

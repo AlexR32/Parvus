@@ -20,12 +20,6 @@ if identifyexecutor() ~= "Synapse X" then
     return
 end
 
-local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot,SilentAim,Trigger,
-ProjectileSpeed,ProjectileGravity
-= false,nil,nil,1000,Vector3.zero
-local GravityCorrection = 2
-
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
@@ -36,10 +30,9 @@ local Network = Framework.Libraries.Network
 local Bullets = Framework.Libraries.Bullets
 local Cameras = Framework.Libraries.Cameras
 
-local CharacterCamera = Cameras.CameraList.Character
-ProjectileGravity = Vector3.new(0,Framework.Configs.Globals.ProjectileGravity,0)
-local VehicleController = Framework.Classes.VehicleControler
 local Animators = Framework.Classes.Animators
+local VehicleController = Framework.Classes.VehicleControler
+local CharacterCamera = Cameras.CameraList.Character
 
 local Events = getupvalue(Network.Add,4)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
@@ -51,6 +44,12 @@ local GetFireImpulse = getupvalue(Bullets.Fire,7)
 local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
 setupvalue(Network.Fetch,6,NullFunction)
+
+local LocalPlayer = PlayerService.LocalPlayer
+local Aimbot,SilentAim,Trigger = false,nil,nil
+
+local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,
+Vector3.new(0,math.abs(Framework.Configs.Globals.ProjectileGravity),0),2
 
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
@@ -619,7 +618,7 @@ local function HookCharacter(Character)
     end]]
     local OldEquip = Character.Equip
     Character.Equip = function(Self,Item,...)
-        if Item.FireConfig then
+        if Item.FireConfig and Item.FireConfig.MuzzleVelocity then
             ProjectileSpeed = Item.FireConfig.MuzzleVelocity
         end
         if Window.Flags["AR2/EquipInVehicle"] and Self.Sitting then

@@ -5,7 +5,6 @@ local Workspace = game:GetService("Workspace")
 
 local BackgroundGui = getrenv().shared.BackgroundGui
 repeat task.wait() until BackgroundGui and BackgroundGui.Parent == nil
-
 local LocalPlayer,Aimbot = PlayerService.LocalPlayer,false
 
 local Window = Parvus.Utilities.UI:Window({

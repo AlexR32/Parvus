@@ -28,17 +28,10 @@ if game.PlaceVersion > 1333 then
 end
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SilentAim,Aimbot,Trigger,GunModel,
-ProjectileSpeed,ProjectileGravity,
-GravityCorrection,Tortoiseshell
-= nil,false,false,nil,
-1600,Vector3.new(0,150,0),2,
-require(ReplicatedStorage.TS)
-
-local BanCommands = {
-    "GetUpdate","SetUpdate","Invoke",
-    "GetSetting","FireProjectile"
-}
+local SilentAim,Aimbot,Trigger = nil,false,false
+local Tortoiseshell,WeaponModel = require(ReplicatedStorage.TS),nil
+local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
+local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
@@ -350,7 +343,7 @@ local function WallCheck(Enabled,Camera,Hitbox)
     {Workspace.Geometry,Workspace.Terrain})
 end
 
-local function FindGunModel()
+local function FindWeaponModel()
     for Index,Instance in pairs(Workspace:GetChildren()) do
         if Instance:FindFirstChild("AnimationController") then
             return Instance
@@ -405,10 +398,10 @@ local function PlayerFly(Enabled,Speed)
     BodyVelocity.Velocity = InputToVelocity() * Speed
 end
 
-local function CustomizeGun(Enabled,HideTextures,Color,Reflectance,Material)
+local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
-    if not GunModel then return end
-    for Index,Instance in pairs(GunModel.Body:GetDescendants()) do
+    if not WeaponModel then return end
+    for Index,Instance in pairs(WeaponModel.Body:GetDescendants()) do
         if HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
         elseif Instance:IsA("BasePart") and Instance.Transparency < 1
@@ -621,7 +614,7 @@ end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
     local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
-        ProjectileGravity = Vector3.new(0,Projectiles[Args[1]].Gravity,0)
+        ProjectileGravity = Vector3.new(0,math.abs(Projectiles[Args[1]].Gravity),0)
     end return Old(Self,...)
 end)
 
@@ -632,7 +625,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,fu
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,...)
-    local Args = {...} if Args[1] then GunModel = Args[3] end
+    local Args = {...} if Args[1] then WeaponModel = Args[3] end
     return Old(Self,...)
 end,true)
 
@@ -686,7 +679,7 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
     end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
-    CustomizeGun(
+    CustomizeWeapon(
         Window.Flags["BB/WeaponCustom/Enabled"],
         Window.Flags["BB/WeaponCustom/Texture"],
         Window.Flags["BB/WeaponCustom/Color"],

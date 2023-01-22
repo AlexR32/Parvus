@@ -250,7 +250,7 @@ function Assets:Window(ScreenAsset,Window)
     end)
 
     local Month = tonumber(os.date("%m"))
-    if Month == 12 or Month == 1 or Month == 2 then task.spawn(Assets.Snowflakes,WindowAsset) end
+    if Month == 12 or Month == 1 then task.spawn(Assets.Snowflakes,WindowAsset) end
     WindowAsset.TabButtonContainer.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         WindowAsset.TabButtonContainer.CanvasSize = UDim2.new(
             0,WindowAsset.TabButtonContainer.ListLayout.AbsoluteContentSize.X,0,0
@@ -1127,6 +1127,17 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
         for Index,Option in pairs(Dropdown.List) do
             Option.Object.LayoutOrder = Index
         end
+    end
+    function Dropdown:RefreshToPlayers(ToggleMode)
+        local Players = {}
+        for Index,Player in pairs(PlayerService:GetPlayers()) do
+            if Player == LocalPlayer then continue end
+            table.insert(Players,{Name = Player.Name,
+                Mode = ToggleMode == "Toggle" or "Button"
+            })
+        end
+        Dropdown:Clear()
+        Dropdown:BulkAdd(Players)
     end
 
     --[[function Dropdown:SetValue(Options)
