@@ -1,3 +1,34 @@
+### Update 20-23/01/23
+```markdown
+# Global
+* Aimbot,Silent,Trigger various changes
+* Prediction various changes
+* from meters to studs (again)
+* little optimization
+# AR2
+- Kill aura disabled
+- removed christmas random events
+* fixed prediction errors
+# UI
+* snowflakes will remain until feb.
+* changed syn x only message a bit
+```
+### Update 06/01/23
+```markdown
+# Other
+* Updated Settings tab
+* tiny improvement on lighting section
+# UI
+* Fixed keybind setting entire keyboard instead of key (LOOL)
+```
+### Update 05/01/23
+```markdown
+# Huge UI Update
+* changed how load config works
+* heavy refactor of dropdown
+* changed element setters
+view wiki example for more info how things work now
+```
 ### Update 04/01/23
 ```markdown
 # AR2
