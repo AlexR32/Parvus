@@ -440,6 +440,7 @@ end
 local function ComputeProjectiles(Config,Hitbox)
     local RayResult =  Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,{Hitbox})
+    if not RayResult then return end
 
     local ShootProjectiles = {}
     for Index = 1,Config.Projectile.Amount do
@@ -449,7 +450,6 @@ local function ComputeProjectiles(Config,Hitbox)
         })
     end
 
-    if not RayResult then return end
     return ShootProjectiles,
     RayResult.Position,RayResult.Normal
 end

@@ -465,7 +465,7 @@ local function GetClosest(Enabled,NPCMode,FOV,DFOV,TC,BP,WC,DC,MD,PE)
                 for Index,BodyPart in pairs(BP) do
                     BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
                     local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                    if WallCheck(WC,Camera.CFrame,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
+                    if WallCheck(WC,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
                         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                         BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
 
