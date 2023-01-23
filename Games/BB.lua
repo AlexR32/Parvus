@@ -5,28 +5,21 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
+local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
-    local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Copy script\"",{
-        {Text = "Close",LayoutOrder = 0,Primary = true},
-        {Text = "Copy script",LayoutOrder = 1,Callback = function()
-            setclipboard("hookfunction(identifyexecutor,function() return \"Synapse X\" end)\nloadstring(game:HttpGetAsync(\"https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua\"))(false,5)")
-            PromptLib("How to make script work","You have copied the script, paste it into your executor, join and press execute",{
-                {Text = "Close",LayoutOrder = 0,Primary = true}
-            })
-        end}
-    })
-    return
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
+        {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded1 = true end},
+    }) repeat task.wait(1) until Loaded1
 end
 
 if game.PlaceVersion > 1333 then
-    local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
-        {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+        {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
-    }) repeat task.wait(1) until Loaded
+    }) repeat task.wait(1) until Loaded2
 end
 
+local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger = nil,false,false
 local Tortoiseshell,WeaponModel = require(ReplicatedStorage.TS),nil
@@ -68,7 +61,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
@@ -102,7 +95,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
-            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "meters"})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
@@ -128,7 +121,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25})
-            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = {
@@ -147,7 +140,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = true})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -305,7 +298,7 @@ WallCheckParams.IgnoreWater = true
 local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
 local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
 local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
-local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Workspace.CurrentCamera.CFrame)
+local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Camera.CFrame)
     local Forward  = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
     local Backward = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
     local Left     = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
@@ -334,12 +327,12 @@ local function TeamCheck(Player)
 end
 local function DistanceCheck(Enabled,Distance,MaxDistance)
     if not Enabled then return true end
-    return Distance * 0.28 <= MaxDistance
+    return Distance <= MaxDistance
 end
-local function WallCheck(Enabled,Camera,Hitbox)
+local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
-    return not Raycast(Camera.Position,
-    Hitbox.Position - Camera.Position,
+    return not Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position,
     {Workspace.Geometry,Workspace.Terrain})
 end
 
@@ -428,27 +421,36 @@ local function CustomizeArms(Enabled,HideTextures,Color,Reflectance,Material)
     end
 end
 
-local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
-    local PredictedPosition = Origin + Velocity * Time
+--[[local function CalculateTrajectory(targetPosition: Vector3, targetVelocity: Vector3, shooterPosition: Vector3, shooterVelocity: Vector3, projectileSpeed: number, gravity: number)	
+	local a = Vector3.new(0,math.abs(gravity),0)
+	local v = targetVelocity - shooterVelocity
+	local p = targetPosition - shooterPosition
+	local distance = p.Magnitude
+
+	local timeTaken = (distance / projectileSpeed)
+	return (targetPosition + v * timeTaken) + (a * timeTaken^2 / 2)
+end]]
+
+local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+    --[[local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed
+    Time = Time + Delta / ProjectileSpeed]]
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 local function ComputeProjectiles(Config,Hitbox)
-    local Projectiles = {}
-    local Camera = Workspace.CurrentCamera
     local RayResult =  Raycast(Camera.CFrame.Position,
     Hitbox.Position - Camera.CFrame.Position,{Hitbox})
 
+    local ShootProjectiles = {}
     for Index = 1,Config.Projectile.Amount do
-        table.insert(Projectiles,{
+        table.insert(ShootProjectiles,{
             (Hitbox.Position - Camera.CFrame.Position).Unit,
             Tortoiseshell.Projectiles:GetID()
         })
     end
 
     if not RayResult then return end
-    return Camera.CFrame.Position,Projectiles,
+    return ShootProjectiles,
     RayResult.Position,RayResult.Normal
 end
 local function AutoShoot(Hitbox,Enabled)
@@ -457,7 +459,6 @@ local function AutoShoot(Hitbox,Enabled)
 
     if Weapon and Config then
         if Config.Controller == "Melee" then
-            local Camera = Workspace.CurrentCamera
             if (Hitbox[3].Position - Camera.CFrame.Position).Magnitude <= 15 then
                 Tortoiseshell.Network:Fire("Item_Melee","StabBegin",Weapon)
                 Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[3],Hitbox[3].Position,
@@ -480,14 +481,15 @@ local function AutoShoot(Hitbox,Enabled)
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
 
-            local CameraPosition,ShootProjectiles,RayPosition,
-            RayNormal = ComputeProjectiles(Config,Hitbox[3])
-            if not CameraPosition then return end
+
+            local ShootProjectiles,RayPosition,RayNormal
+            = ComputeProjectiles(Config,Hitbox[3])
+            if not ShootProjectiles then return end
 
             Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
-            Weapon,CameraPosition,ShootProjectiles)
+            Weapon,Camera.CFrame.Position,ShootProjectiles)
 
-            task.wait((RayPosition - CameraPosition).Magnitude
+            task.wait((RayPosition - Camera.CFrame.Position).Magnitude
             / Projectiles[Config.Projectile.Template].Speed)
 
             for Index,Projectile in pairs(ShootProjectiles) do
@@ -528,9 +530,8 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
     -- WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
 
-    if not Enabled then return end
-    local Camera,Closest = Workspace.CurrentCamera,nil
-    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
+    if not Enabled then return end local Closest = nil
+    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
@@ -541,9 +542,14 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
                 BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
 
-                if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
+                if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then
+                    --[[local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)]]
+
+                    local LPCharacter = Characters[LocalPlayer]
+                    local Velocity = LPCharacter and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)
+                    BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and NewFOV < FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                 end
@@ -555,7 +561,6 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
 end
 
 local function GetClosestAllFOV(BP,WC,DC,MD)
-    local Camera = Workspace.CurrentCamera
     local Distance,Closest = math.huge,nil
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
@@ -567,7 +572,7 @@ local function GetClosestAllFOV(BP,WC,DC,MD)
                 BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
                 local NewDistance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
 
-                if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
+                if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then
                     if NewDistance < Distance then
                         Distance,Closest = NewDistance,{Player,Character,BodyPart}
                     end
@@ -754,6 +759,10 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
             BodyVelocity.Parent = Child.PrimaryPart
         end
     end
+end)
+
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    Camera = Workspace.CurrentCamera
 end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do

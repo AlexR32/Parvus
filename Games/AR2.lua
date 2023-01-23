@@ -6,18 +6,11 @@ local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
+local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
-    local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Copy script\"",{
-        {Text = "Close",LayoutOrder = 0,Primary = true},
-        {Text = "Copy script",LayoutOrder = 1,Callback = function()
-            setclipboard("hookfunction(identifyexecutor,function() return \"Synapse X\" end)\nloadstring(game:HttpGetAsync(\"https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua\"))(false,5)")
-            PromptLib("How to make script work","You have copied the script, paste it into your executor, join and press execute",{
-                {Text = "Close",LayoutOrder = 0,Primary = true}
-            })
-        end}
-    })
-    return
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
+        {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+    }) repeat task.wait(1) until Loaded
 end
 
 local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
@@ -45,6 +38,7 @@ local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
 setupvalue(Network.Fetch,6,NullFunction)
 
+local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
 
@@ -113,7 +107,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 --{Name = "HeadCollider",Mode = "Toggle"},
@@ -144,7 +138,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
-            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 --{Name = "HeadCollider",Mode = "Toggle"},
@@ -168,7 +162,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25})
-            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = {
@@ -184,7 +178,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = true})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -245,7 +239,7 @@ local Window = Parvus.Utilities.UI:Window({
         local ItemSection = ESPTab:Section({Name = "Item ESP",Side = "Left"}) do local Items = {}
             ItemSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Items/Enabled",Value = false})
             ItemSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Items/DistanceCheck",Value = true})
-            ItemSection:Slider({Name = "Distance",Flag = "AR2/ESP/Items/Distance",Min = 25,Max = 5000,Value = 50,Unit = "meters"})
+            ItemSection:Slider({Name = "Distance",Flag = "AR2/ESP/Items/Distance",Min = 25,Max = 5000,Value = 50,Unit = "studs"})
             for Index,Name in pairs(ItemCategory) do
                 local ItemFlag = "AR2/ESP/Items/" .. Name Window.Flags[ItemFlag.."/Enabled"] = false
                 Items[#Items + 1] = {Name = Name,Mode = "Toggle",Value = false,
@@ -258,7 +252,7 @@ local Window = Parvus.Utilities.UI:Window({
             ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
             ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
             ZombiesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Zombies/Color",Value = {1,0,1,0,false}})
-            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 250,Unit = "meters"})
+            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 250,Unit = "studs"})
         end
         --[[local ItemCSection = ESPTab:Section({Name = "Item Colors",Side = "Left"}) do
             for Index,Name in pairs(ItemCategory) do local ItemFlag = "AR2/ESP/Items/" .. Name
@@ -268,7 +262,7 @@ local Window = Parvus.Utilities.UI:Window({
         local RESection = ESPTab:Section({Name = "Random Events ESP",Side = "Right"}) do local REs = {}
             RESection:Toggle({Name = "Enabled",Flag = "AR2/ESP/RandomEvents/Enabled",Value = false})
             RESection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/RandomEvents/DistanceCheck",Value = true})
-            RESection:Slider({Name = "Distance",Flag = "AR2/ESP/RandomEvents/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "meters"})
+            RESection:Slider({Name = "Distance",Flag = "AR2/ESP/RandomEvents/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
             for Index,Name in pairs(RandomEvents) do
                 local REFlag = "AR2/ESP/RandomEvents/" .. Name Window.Flags[REFlag.."/Enabled"] = false
                 REs[#REs + 1] = {Name = Name,Mode = "Toggle",Value = true,
@@ -286,7 +280,7 @@ local Window = Parvus.Utilities.UI:Window({
             VehiclesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Vehicles/Enabled",Value = false})
             VehiclesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Vehicles/DistanceCheck",Value = true})
             VehiclesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Vehicles/Color",Value = {1,0,1,0,false}})
-            VehiclesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Vehicles/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "meters"})
+            VehiclesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Vehicles/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
         end
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
@@ -428,7 +422,7 @@ WallCheckParams.FilterDescendantsInstances = {
 local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
 local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
 local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
-local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Workspace.CurrentCamera.CFrame)
+local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Camera.CFrame)
     local Forward  = UserInputService:IsKeyDown(Enum.KeyCode.W) and LookVector or Vector3.zero
     local Backward = UserInputService:IsKeyDown(Enum.KeyCode.S) and -LookVector or Vector3.zero
     local Left     = UserInputService:IsKeyDown(Enum.KeyCode.A) and -RightVector or Vector3.zero
@@ -472,7 +466,6 @@ local function PlayerFly(Enabled,Speed)
 end
 
 local function GetDistanceFromCamera(Position)
-    local Camera = Workspace.CurrentCamera
     return (Position - Camera.CFrame.Position).Magnitude
 end
 
@@ -483,19 +476,19 @@ end
 
 local function DistanceCheck(Enabled,Distance,MaxDistance)
     if not Enabled then return true end
-    return Distance * 0.28 <= MaxDistance
+    return Distance <= MaxDistance
 end
 
-local function WallCheck(Enabled,Camera,Hitbox)
+local function WallCheck(Enabled,Hitbox)
     if not Enabled then return true end
-    return Raycast(Camera.Position,
-    Hitbox.Position - Camera.Position)
+    return Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position)
 end
 
-local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
-    local PredictedPosition = Origin + Velocity * Time
+local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+    --[[local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed
+    Time = Time + Delta / ProjectileSpeed]]
 
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
@@ -505,9 +498,8 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
 
-    if not Enabled then return end
-    local Camera,Closest = Workspace.CurrentCamera,nil
-    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
+    if not Enabled then return end local Closest = nil
+    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
@@ -520,10 +512,10 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE)
             for Index,BodyPart in pairs(BP) do
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                if WallCheck(WC,Camera.CFrame,BodyPart) and DistanceCheck(DC,Distance,MD) then
+                if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then
                     local BPPosition = PE and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,
-                    Distance / ProjectileSpeed) or BodyPart.Position
+                    BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,
+                    ProjectileGravity) or BodyPart.Position
 
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -680,13 +672,13 @@ local function HookCharacter(Character)
     end
 end
 
-setupvalue(Bullets.Fire,1,function(Character,Camera,...)
+setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
     if Window.Flags["AR2/NoSpread"] then
         return GetSpreadAngle(
             {MoveState = "Walking",Zooming = true},
             {FirstPerson = true},...
         )
-    end return GetSpreadAngle(Character,Camera,...)
+    end return GetSpreadAngle(Character,CCamera,...)
 end)
 
 setupvalue(Bullets.Fire,5,function(...)
@@ -992,8 +984,8 @@ Randoms.ChildAdded:Connect(function(Event)
         )
         if Window.Flags["AR2/ESP/RandomEvents/Enabled"] then
             Parvus.Utilities.UI:Notification2({
-                Title = string.format("%s spawned (~%i meters away)",Event.Name,
-                GetDistanceFromCamera(Event.Value.Position) * 0.28),Duration = 20
+                Title = string.format("%s spawned (~%i studs away)",Event.Name,
+                GetDistanceFromCamera(Event.Value.Position)),Duration = 20
             })
         end
     end
@@ -1027,6 +1019,10 @@ Vehicles.ChildRemoved:Connect(function(Vehicle)
 end)
 Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
     Parvus.Utilities.Drawing:RemoveObject(Zombie)
+end)
+
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    Camera = Workspace.CurrentCamera
 end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do

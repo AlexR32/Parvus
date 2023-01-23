@@ -5,7 +5,10 @@ local Workspace = game:GetService("Workspace")
 
 local BackgroundGui = getrenv().shared.BackgroundGui
 repeat task.wait() until BackgroundGui and BackgroundGui.Parent == nil
-local LocalPlayer,Aimbot = PlayerService.LocalPlayer,false
+
+local Camera = Workspace.CurrentCamera
+local LocalPlayer = PlayerService.LocalPlayer
+local Aimbot = false
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -32,7 +35,7 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
@@ -46,7 +49,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -108,13 +111,13 @@ local Window = Parvus.Utilities.UI:Window({
             TESPSection:Toggle({Name = "Enabled",Flag = "ESP/Thunderstruck/Enabled",Value = false})
             :Colorpicker({Flag = "ESP/Thunderstruck/Color",Value = {1,0,1,0.5,false}})
             TESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Thunderstruck/DistanceCheck",Value = false})
-            TESPSection:Slider({Name = "Distance",Flag = "ESP/Thunderstruck/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
+            TESPSection:Slider({Name = "Distance",Flag = "ESP/Thunderstruck/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
         end
         local LESPSection = MiscTab:Section({Name = "Legendary ESP",Side = "Right"}) do
             LESPSection:Toggle({Name = "Enabled",Flag = "ESP/Legendary/Enabled",Value = false})
             :Colorpicker({Name = "Color",Flag = "ESP/Legendary/Color",Value = {1,0,1,0.5,false}})
             LESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Legendary/DistanceCheck",Value = false})
-            LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "meters"})
+            LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end
@@ -144,13 +147,13 @@ end
 
 local function DistanceCheck(Enabled,Distance,MaxDistance)
     if not Enabled then return true end
-    return Distance * 0.28 <= MaxDistance
+    return Distance <= MaxDistance
 end
 
-local function WallCheck(Enabled,Camera,Hitbox,Character)
+local function WallCheck(Enabled,Hitbox,Character)
     if not Enabled then return true end
-    return not Raycast(Camera.Position,
-    Hitbox.Position - Camera.Position,
+    return not Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position,
     {LocalPlayer.Character,Character})
 end
 
@@ -158,9 +161,8 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
     -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
 
-    if not Enabled then return end
-    local Camera,Closest = Workspace.CurrentCamera,nil
-    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
+    if not Enabled then return end local Closest = nil
+    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
@@ -173,7 +175,7 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
             for Index,BodyPart in pairs(BP) do
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+                if WallCheck(WC,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
 
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -275,6 +277,10 @@ for Index,Instance in pairs(Regions) do
         end
     end)
 end
+
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    Camera = Workspace.CurrentCamera
+end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end

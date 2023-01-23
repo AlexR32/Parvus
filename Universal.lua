@@ -3,11 +3,12 @@ local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
+local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
-local SilentAim,Aimbot,Trigger = nil,false,false
-local ProjectileGravity,GravityCorrection
-= Vector3.new(0,Workspace.Gravity,0),2
 local Mouse = LocalPlayer:GetMouse()
+
+local SilentAim,Aimbot,Trigger = nil,false,false
+local GravityCorrection = 2
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -34,14 +35,15 @@ local Window = Parvus.Utilities.UI:Window({
             Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
             AimbotSection:Divider({Text = "Prediction"})
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Prediction/Enabled",Value = false})
-            AimbotSection:Slider({Name = "Velocity",Flag = "Aimbot/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
+            AimbotSection:Slider({Name = "Velocity",Flag = "Aimbot/Prediction/Velocity",Min = 1,Max = 10000,Value = 1000})
+            AimbotSection:Slider({Name = "Gravity",Flag = "Aimbot/Prediction/Gravity",Min = 0,Max = 1000,Precise = 1,Value = 196.2})
         end
         local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
             AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
@@ -66,11 +68,15 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
-            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "HumanoidRootPart",Mode = "Toggle"}
             }})
+            SilentAimSection:Divider({Text = "Prediction"})
+            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Prediction/Enabled",Value = false})
+            SilentAimSection:Slider({Name = "Velocity",Flag = "SilentAim/Prediction/Velocity",Min = 1,Max = 10000,Value = 1000})
+            SilentAimSection:Slider({Name = "Gravity",Flag = "SilentAim/Prediction/Gravity",Min = 0,Max = 1000,Precise = 1,Value = 196.2})
         end
         local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
             SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
@@ -88,7 +94,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
             Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25})
-            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
             TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
             TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = {
@@ -97,7 +103,8 @@ local Window = Parvus.Utilities.UI:Window({
             }})
             TriggerSection:Divider({Text = "Prediction"})
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Prediction/Enabled",Value = false})
-            TriggerSection:Slider({Name = "Velocity",Flag = "Trigger/Prediction/Velocity",Min = 100,Max = 5000,Value = 1600})
+            TriggerSection:Slider({Name = "Velocity",Flag = "Trigger/Prediction/Velocity",Min = 1,Max = 10000,Value = 1000})
+            TriggerSection:Slider({Name = "Gravity",Flag = "Trigger/Prediction/Gravity",Min = 0,Max = 1000,Precise = 1,Value = 196.2})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -107,7 +114,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "meters"})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -193,31 +200,30 @@ end
 
 local function DistanceCheck(Enabled,Distance,MaxDistance)
     if not Enabled then return true end
-    return Distance * 0.28 <= MaxDistance
+    return Distance <= MaxDistance
 end
 
-local function WallCheck(Enabled,Camera,Hitbox,Character)
+local function WallCheck(Enabled,Hitbox,Character)
     if not Enabled then return true end
-    return not Raycast(Camera.Position,
-    Hitbox.Position - Camera.Position,
+    return not Raycast(Camera.CFrame.Position,
+    Hitbox.Position - Camera.CFrame.Position,
     {LocalPlayer.Character,Character})
 end
 
-local function CalculateTrajectory(Origin,Velocity,Gravity,Time)
-    local PredictedPosition = Origin + Velocity * Time
+local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+    --[[local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed
+    Time = Time + Delta / ProjectileSpeed]]
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
-local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE,PS)
+local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE,PS,PG)
     -- FieldOfView,DynamicFieldOfView,TeamCheck
     -- BodyParts,WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled,ProjectileSpeed
+    -- PredictionEnabled,ProjectileSpeed,ProjectileGravity
 
-    if not Enabled then return end
-    local Camera,Closest = Workspace.CurrentCamera,nil
-    FOV = DFOV and ((120 - Camera.FieldOfView) * 4) + FOV or FOV
+    if not Enabled then return end local Closest = nil
+    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
@@ -230,10 +236,9 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD,PE,PS)
             for Index,BodyPart in pairs(BP) do
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                if WallCheck(WC,Camera.CFrame,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / PS) or BodyPart.Position)
-
+                if WallCheck(WC,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(
+                        BodyPart.Position,BodyPart.AssemblyLinearVelocity,Distance / PS,Vector3.new(0,PG,0)) or BodyPart.Position)
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
                     if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                 end
@@ -299,7 +304,10 @@ RunService.Heartbeat:Connect(function()
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/WallCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
-        Window.Flags["SilentAim/Distance"]
+        Window.Flags["SilentAim/Distance"],
+        Window.Flags["SilentAim/Prediction/Enabled"],
+        Window.Flags["SilentAim/Prediction/Velocity"],
+        Window.Flags["SilentAim/Prediction/Gravity"]
     )
     if Aimbot then
         AimAt(GetClosest(
@@ -312,7 +320,8 @@ RunService.Heartbeat:Connect(function()
             Window.Flags["Aimbot/DistanceCheck"],
             Window.Flags["Aimbot/Distance"],
             Window.Flags["Aimbot/Prediction/Enabled"],
-            Window.Flags["Aimbot/Prediction/Velocity"]
+            Window.Flags["Aimbot/Prediction/Velocity"],
+            Window.Flags["Aimbot/Prediction/Gravity"]
         ),Window.Flags["Aimbot/Smoothness"] / 100)
     end
 end)
@@ -328,7 +337,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/Distance"],
         Window.Flags["Trigger/Prediction/Enabled"],
-        Window.Flags["Trigger/Prediction/Velocity"]
+        Window.Flags["Trigger/Prediction/Velocity"],
+        Window.Flags["Trigger/Prediction/Gravity"]
     )
 
     if TriggerHitbox then mouse1press()
@@ -345,11 +355,16 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
                     Window.Flags["Trigger/DistanceCheck"],
                     Window.Flags["Trigger/Distance"],
                     Window.Flags["Trigger/Prediction/Enabled"],
-                    Window.Flags["Trigger/Prediction/Velocity"]
+                    Window.Flags["Trigger/Prediction/Velocity"],
+                    Window.Flags["Trigger/Prediction/Gravity"]
                 ) if not TriggerHitbox or not Trigger then break end
             end
         end mouse1release()
     end
+end)
+
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+    Camera = Workspace.CurrentCamera
 end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do

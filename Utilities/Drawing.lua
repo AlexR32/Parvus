@@ -41,7 +41,8 @@ local function ClampDistance(Enabled,Clamp,Distance)
 end
 local function DynamicFOV(Enabled,FOV)
     if not Enabled then return FOV end
-    return ((120 - Camera.FieldOfView) * 4) + FOV
+    --return FOV / (Camera.FieldOfView / 80)
+    return FOV * (1 + (80 - Camera.FieldOfView) / 100)
 end
 local function GetFlag(F,F1,F2) return F[F1..F2] end
 
@@ -431,7 +432,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
 
         local Position = ESP.IsBasePart and ESP.Object.Position.Position or ESP.Object.Position
         local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(Position)
-        local Distance = GetDistanceFromCamera(Position) * 0.28
+        local Distance = GetDistanceFromCamera(Position)
 
         local InTheRange = CheckDistance(
             GetFlag(ESP.Flags,ESP.GlobalFlag,"/DistanceCheck"),
@@ -442,7 +443,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
         and GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")) or false
         if ESP.Drawing.Text.Visible then local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
             ESP.Drawing.Text.Transparency = 1-Color[4] ESP.Drawing.Text.Color = Color[6]
-            ESP.Drawing.Text.Text = string.format("%s\n%i meters",ESP.Object.Name,Distance)
+            ESP.Drawing.Text.Text = string.format("%s\n%i studs",ESP.Object.Name,Distance)
             ESP.Drawing.Text.Position = Vector2.new(ScreenPosition.X,ScreenPosition.Y)
         end
     end
@@ -538,7 +539,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
                         ESP.Drawing.Box.Text.Outline = GetFlag(ESP.Flags,ESP.Flag,"/Text/Outline")
                         ESP.Drawing.Box.Text.Font = GetFontFromName(GetFlag(ESP.Flags,ESP.Flag,"/Text/Font")[1])
                         ESP.Drawing.Box.Text.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Text/Transparency")
-                        ESP.Drawing.Box.Text.Text = string.format("%s\n%i meters",ESP.Mode == "Player" and Target.Name
+                        ESP.Drawing.Box.Text.Text = string.format("%s\n%i studs",ESP.Mode == "Player" and Target.Name
                         or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC"),Distance)
                         ESP.Drawing.Box.Text.Position = Vector2.new(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)
                     end
