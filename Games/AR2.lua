@@ -17,6 +17,8 @@ local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
+for i,c in pairs(getconnections(game:GetService("ScriptContext").Error)) do c:Disable() end
+
 local Raycasting = Framework.Libraries.Raycasting
 local Interface = Framework.Libraries.Interface
 local Network = Framework.Libraries.Network

@@ -28,7 +28,7 @@ do -- Thanks to Kiriot22
     OldPluginManager = hookfunction(getrenv().PluginManager,function()
         return error(Message)
     end)
-    for i,c in pairs(getconnections(game:GetService("ScriptContext").Error)) do c:Disable() end
+    --for i,c in pairs(getconnections(game:GetService("ScriptContext").Error)) do c:Disable() end
 end
 
 function Misc:SetupFPS()

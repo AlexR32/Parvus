@@ -27,7 +27,7 @@ end
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
 local SilentAim,Aimbot,Trigger = nil,false,false
-local Tortoiseshell,WeaponModel = require(ReplicatedStorage.TS),nil
+local Tortoiseshell,WeaponModel,NewRandom = require(ReplicatedStorage.TS),nil,Random.new()
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 
@@ -36,6 +36,8 @@ local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
 local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
+
+
 
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.MaxForce = Vector3.one * math.huge
@@ -597,26 +599,35 @@ local function AimAt(Hitbox,Smoothness)
 end
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
-    local Args = {...} if SilentAim and not Window.Flags["BB/AutoShoot/Enabled"] then
-        if Args[2] == "__Hit" and math.random(0,100)
-        <= Window.Flags["SilentAim/HitChance"] then
+    local Args = {...}
+
+    if Args[2] == "__Hit" then
+        if (SilentAim and not Window.Flags["BB/AutoShoot/Enabled"])
+        and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
             Args[4] = SilentAim[3].Position
             Args[5] = SilentAim[3]
             Args[7] = SilentAim[2]
             Tortoiseshell.UI.Events.Hitmarker:Fire(
             SilentAim[3],SilentAim[3].Position)
+            return Old(Self,unpack(Args))
         end
     end
-    if Window.Flags["BB/AntiAim/Enabled"] and Args[3] == "Look" then
-        if Window.Flags["BB/AntiAim/LeanRandom"] then
-            Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
+
+    if Args[3] == "Look" then
+        if Window.Flags["BB/AntiAim/Enabled"] then
+            if Window.Flags["BB/AntiAim/LeanRandom"] then
+                Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
+            end
+            Args[4] = Window.Flags["BB/AntiAim/Pitch"] < 0
+            and Window.Flags["BB/AntiAim/Pitch"] + NewRandom:NextNumber(0,
+            Window.Flags["BB/AntiAim/PitchRandom"])
+            or Window.Flags["BB/AntiAim/Pitch"] - NewRandom:NextNumber(0,
+            Window.Flags["BB/AntiAim/PitchRandom"])
+            return Old(Self,unpack(Args))
         end
-        Args[4] = Window.Flags["BB/AntiAim/Pitch"] < 0
-        and Window.Flags["BB/AntiAim/Pitch"] + Random.new():NextNumber(0,
-        Window.Flags["BB/AntiAim/PitchRandom"])
-        or Window.Flags["BB/AntiAim/Pitch"] - Random.new():NextNumber(0,
-        Window.Flags["BB/AntiAim/PitchRandom"])
-    end return Old(Self,unpack(Args))
+    end
+
+    return Old(Self,...)
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
