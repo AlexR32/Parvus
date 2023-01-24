@@ -5,6 +5,10 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
 
+local Camera = Workspace.CurrentCamera
+local LocalPlayer = PlayerService.LocalPlayer
+repeat task.wait(1) until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
+
 local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
@@ -19,8 +23,9 @@ if game.PlaceVersion > 1333 then
     }) repeat task.wait(1) until Loaded2
 end
 
-local Camera = Workspace.CurrentCamera
-local LocalPlayer = PlayerService.LocalPlayer
+--local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--local Tortoiseshell = require(ReplicatedStorage.TS)
+
 local SilentAim,Aimbot,Trigger = nil,false,false
 local Tortoiseshell,WeaponModel = require(ReplicatedStorage.TS),nil
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
@@ -40,10 +45,6 @@ local Notify = Instance.new("BindableEvent")
 Notify.Event:Connect(function(Text)
     Parvus.Utilities.UI:Notification2(Text)
 end)
-
-repeat task.wait() until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
---local ReplicatedStorage = game:GetService("ReplicatedStorage")
---local Tortoiseshell = require(ReplicatedStorage.TS)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -268,7 +269,8 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
 
     if Method == "FireServer" then
-        if type(Args[1]) == "string" and table.find(BanCommands,Args[1]) then
+        if type(Args[1]) == "string"
+        and table.find(BanCommands,Args[1]) then
             print("blocked",Args[2]) return
         end
     end
