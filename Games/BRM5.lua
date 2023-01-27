@@ -20,7 +20,7 @@ local ProjectileSpeed,ProjectileGravity,GravityCorrection
 local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
 
-local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
+local Teleports,NoClipEvent,NoClipObjects,WhiteColor,RaycastFolder,Squads = {
     {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
     {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
     {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
@@ -31,7 +31,7 @@ local Teleports,NoClipEvent,WhiteColor,RaycastFolder = {
     {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
     {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
     {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
-},nil,Color3.new(1,1,1),Workspace:FindFirstChild("Raycast")
+},nil,{},Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),nil
 
 local Server = require(Packages:WaitForChild("server"))
 local ServerSettings = getupvalue(Server.Get,1)
@@ -192,6 +192,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local BoxSection = NPCVisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/NPC/Box/Enabled",Value = false})
+            BoxSection:Toggle({Name = "Healthbar",Flag = "ESP/NPC/Box/Healthbar",Value = false})
             BoxSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Box/Filled",Value = false})
             BoxSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Box/Outline",Value = true})
             BoxSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Box/Thickness",Min = 1,Max = 10,Value = 1})
@@ -213,8 +214,8 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/NPC/Arrow/Distance",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
@@ -268,11 +269,24 @@ local Window = Parvus.Utilities.UI:Window({
             Callback = function(Bool)
                 if Bool and not NoClipEvent then
                     NoClipEvent = RunService.Stepped:Connect(function()
-                        NoClip(true)
+                        if not LocalPlayer.Character then return end
+                
+                        for Index,Object in pairs(LocalPlayer.Character:GetDescendants()) do
+                            if Object:IsA("BasePart") then
+                                if NoClipObjects[Object] == nil then
+                                    NoClipObjects[Object] = Object.CanCollide
+                                end Object.CanCollide = false
+                            end
+                        end
                     end)
                 elseif not Bool and NoClipEvent then
-                    NoClipEvent:Disconnect() NoClipEvent = nil
-                    task.wait(0.1) NoClip(false)
+                    NoClipEvent:Disconnect()
+                    NoClipEvent = nil
+            
+                    task.wait(0.1)
+                    for Object,CanCollide in pairs(NoClipObjects) do
+                        Object.CanCollide = CanCollide
+                    end table.clear(NoClipObjects)
                 end
             end}):Keybind()
             CharSection:Toggle({Name = "Anti Skydive",Flag = "BRM5/AntiFall",Value = false}):Keybind()
@@ -362,22 +376,6 @@ local Window = Parvus.Utilities.UI:Window({
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",true)
 end
-
-function NoClip(Enabled) if not LocalPlayer.Character then return end
-    for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
-        if Value:IsA("BasePart") then Value.CanCollide = not Enabled end
-    end
-end
-
-function RequireModule(Name)
-    for Index, Instance in pairs(getloadedmodules()) do
-        if Instance.Name == Name then
-            return require(Instance)
-        end
-    end
-end
-
-local Squads = RequireModule("SquadInterface")
 
 Window:SetValue("Background/Offset",296)
 Window:LoadDefaultConfig("Parvus")
@@ -544,7 +542,6 @@ local function AircraftFly(Enabled,Speed,CameraControl,Args)
         Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
     end
 end
-
 local function Teleport(Position,Velocity)
 	local PrimaryPart = LocalPlayer.Character
     and LocalPlayer.Character.PrimaryPart
@@ -583,6 +580,14 @@ local function Teleport(Position,Velocity)
         AlignOrientation:Destroy()
     end return TPModule
 end
+
+function RequireModule(Name)
+    for Index, Instance in pairs(getloadedmodules()) do
+        if Instance.Name == Name then
+            return require(Instance)
+        end
+    end
+end
 function TeleportCharacter(Position)
     local PrimaryPart = LocalPlayer.Character
     and LocalPlayer.Character.PrimaryPart
@@ -616,6 +621,11 @@ function EnableSwitch(Switch)
     end
 end
 
+Squads = RequireModule("SquadInterface")
+local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
+local RecoilFunction = RequireModule("CharacterCamera").Recoil
+setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))
+
 HookFunction("ControllerClass","LateUpdate",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
         Args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
@@ -633,10 +643,6 @@ HookFunction("ViewmodelClass","Update",function(Args)
         Args[3] = CFrame.new(Args[3].Position)
     end return Args
 end)
-
-local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
-local RecoilFunction = RequireModule("CharacterCamera").Recoil
-setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))
 HookFunction("CameraService","Activate",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
         local RecoilValue = Window.Flags["BRM5/Recoil/Value"]
@@ -648,7 +654,6 @@ HookFunction("CameraService","Activate",function(Args)
         end
     end return Args
 end)
-
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
         Args[1]._bob = 0
@@ -763,15 +768,15 @@ task.spawn(function()
         and rawget(Table,"InvokeServer")  then
             local OldFireServer = Table.FireServer
             --local OldInvokeServer = Table.InvokeServer
-            Table.FireServer = function(Self, ...) local Args = {...}
-                if checkcaller() then return OldFireServer(Self, ...) end
+            Table.FireServer = function(Self,...) local Args = {...}
+                if checkcaller() then return OldFireServer(Self,...) end
                 if Window.Flags["BRM5/AntiFall"] then
                     if Args[1] == "ReplicateSkydive" and
                     (Args[2] == 3 or Args[2] == 2) then
                         return
                     end
                 end
-                return OldFireServer(Self, ...)
+                return OldFireServer(Self,...)
             end
             --[[Table.FireServer = function(Self, ...)
                 local Args = {...}
@@ -790,7 +795,7 @@ task.spawn(function()
 end)
 
 local OldNamecall
-OldNamecall = hookmetamethod(game,"__namecall",function(Self, ...)
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
     if Window.Flags["BRM5/AntiFall"] then
         if Method == "TakeDamage" then return end
@@ -808,7 +813,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self, ...)
         end
     end
 
-    return OldNamecall(Self, unpack(Args))
+    return OldNamecall(Self,unpack(Args))
 end)
 
 RunService.Heartbeat:Connect(function()

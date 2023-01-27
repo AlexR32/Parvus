@@ -37,8 +37,6 @@ local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
 
-
-
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.MaxForce = Vector3.one * math.huge
 BodyVelocity.Velocity = Vector3.zero

@@ -50,14 +50,16 @@ Vector3.new(0,math.abs(Framework.Configs.Globals.ProjectileGravity),0),2
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
+local Corpses = Workspace.Corpses
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
 local ItemMemory,TPActive,TPPosition,
-FlyPosition,NoClipEvent = {},false,nil,nil,nil
+FlyPosition,NoClipEvent,NoClipObjects
+= {},false,nil,nil,nil,{}
 
 -- game data mess
-local RandomEvents,ItemCategory,SanityBans = {
+local RandomEvents,ItemCategory,ZombieInherits,SanityBans = {
 "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
 "LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
 "MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
@@ -65,17 +67,23 @@ local RandomEvents,ItemCategory,SanityBans = {
 "PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
 "SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01",
 "SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01",
+
 -- Christmas Random Events
 --[["SnowmanStructure02","SnowmanStructure01","ChristmasTreeHouse01",
 "ChristmasTreeSpecialForces01","ChristmasTreeHouse03","ChristmasSantaSleigh03",
 "ChristmasTreeHouse02","ChristmasSantaSleigh02","ChristmasSantaSleigh01",
-"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"]]
-},{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
+"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"]]},
+
+{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
 "Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
+
+{"Presets.Behavior Boss Level 01","Presets.Behavior Boss Level 02","Presets.Behavior Boss Level 03",
+"Presets.Behavior Common Level 01","Presets.Behavior Common Level 02","Presets.Behavior Common Level 03",
+"Presets.Behavior Common Thrall Level 01","Presets.Behavior MiniBoss Level 01","Presets.Behavior MiniBoss Level 02"},
+
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
 "Force Charcter Save","Update Character State","Sync Near Chunk Loot",
 "Resync Character Physics","Update Character Position"}
-
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -250,11 +258,21 @@ local Window = Parvus.Utilities.UI:Window({
                 }
             end ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
-        local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Left"}) do
+        local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Left"}) do local ZIs = {}
             ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
             ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
-            ZombiesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Zombies/Color",Value = {1,0,1,0,false}})
-            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 250,Unit = "studs"})
+            ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
+
+            for Index,Inherit in pairs(ZombieInherits) do
+                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                local REFlag = "AR2/ESP/Zombies/" .. InheritName
+                Window.Flags[REFlag.."/Enabled"] = false
+
+                ZIs[#ZIs + 1] = {Name = InheritName,Mode = "Toggle",Value = true,
+                    Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
+                    Callback = function(Selected,Option) Window.Flags[REFlag.."/Enabled"] = Option.Value end
+                }
+            end ZombiesSection:Dropdown({Name = "ESP List",Flag = "AR2/Zombies",List = ZIs})
         end
         --[[local ItemCSection = ESPTab:Section({Name = "Item Colors",Side = "Left"}) do
             for Index,Name in pairs(ItemCategory) do local ItemFlag = "AR2/ESP/Items/" .. Name
@@ -271,7 +289,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
                     Callback = function(Selected,Option) Window.Flags[REFlag.."/Enabled"] = Option.Value end
                 }
-            end RESection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = REs})
+            end RESection:Dropdown({Name = "ESP List",Flag = "AR2/RandomEvents",List = REs})
         end
         --[[local RECSection = ESPTab:Section({Name = "Random Events Colors",Side = "Right"}) do
             for Index,Name in pairs(RandomEvents) do local REFlag = "AR2/ESP/RandomEvents/" .. Name
@@ -378,15 +396,59 @@ local Window = Parvus.Utilities.UI:Window({
             --MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
+            --[[MiscSection:Button({Name = "TP Corpses",Callback = function()
+                if not PlayerClass.Character then return end
+                for Index,Item in pairs(Corpses:GetDescendants()) do
+                    if Item:IsA("BasePart") then
+                        if isnetworkowner(Item) then
+                            print(Item)
+                            Item.Parent:PivotTo(PlayerClass.Character.RootPart.CFrame)
+                        end
+                    end
+                end
+            end})
+            MiscSection:Button({Name = "TP Loot",Callback = function()
+                if not PlayerClass.Character then return end
+                for Index,Item in pairs(Loot:GetDescendants()) do
+                    if Item:IsA("Model") then
+                        for i,v in pairs(Item:GetChildren()) do
+                            if v:IsA("BasePart") then
+                                if isnetworkowner(v) then
+                                    Item:PivotTo(PlayerClass.Character.RootPart.CFrame)
+                                    Item.Parent.Value = PlayerClass.Character.RootPart.CFrame
+                                end
+                            end
+                        end
+                    elseif Item:IsA("BasePart") and not Item.Parent:IsA("Model") then
+                        if isnetworkowner(Item) then
+                            Item.CFrame = PlayerClass.Character.RootPart.CFrame
+                            Item.Parent.Value = PlayerClass.Character.RootPart.CFrame
+                        end
+                    end
+                end
+            end})]]
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
             Callback = function(Bool)
                 if Bool and not NoClipEvent then
                     NoClipEvent = RunService.Stepped:Connect(function()
-                        NoClip(true)
+                        if not LocalPlayer.Character then return end
+                
+                        for Index,Object in pairs(LocalPlayer.Character:GetDescendants()) do
+                            if Object:IsA("BasePart") then
+                                if NoClipObjects[Object] == nil then
+                                    NoClipObjects[Object] = Object.CanCollide
+                                end Object.CanCollide = false
+                            end
+                        end
                     end)
                 elseif not Bool and NoClipEvent then
-                    NoClipEvent:Disconnect() NoClipEvent = nil
-                    task.wait(0.1) NoClip(false)
+                    NoClipEvent:Disconnect()
+                    NoClipEvent = nil
+            
+                    task.wait(0.1)
+                    for Object,CanCollide in pairs(NoClipObjects) do
+                        Object.CanCollide = CanCollide
+                    end table.clear(NoClipObjects)
                 end
             end}):Keybind()
             MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false,Callback = function(Bool)
@@ -394,12 +456,6 @@ local Window = Parvus.Utilities.UI:Window({
             end}):Keybind()
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"Period",true)
-end
-
-function NoClip(Enabled) if not LocalPlayer.Character then return end
-    for Index,Value in pairs(LocalPlayer.Character:GetDescendants()) do
-        if Value:IsA("BasePart") then Value.CanCollide = not Enabled end
-    end
 end
 
 Window:SetValue("Background/Offset",296)
@@ -963,12 +1019,20 @@ for Index,Vehicle in pairs(Vehicles:GetChildren()) do
 end
 for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
     local Config = require(Zombies.Configs[Zombie.Name])
-    if Config.Inherits and #Config.Inherits >= 1 then
-        Parvus.Utilities.Drawing:AddObject(
-            Zombie,Zombie.Name,Zombie.PrimaryPart,
-            "AR2/ESP/Zombies","AR2/ESP/Zombies",Window.Flags
-        )
+
+    if Config.Inherits then
+        for Index,Inherit in pairs(Config.Inherits) do
+            if table.find(ZombieInherits,Inherit) then
+                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                Parvus.Utilities.Drawing:AddObject(
+                    Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
+                    "AR2/ESP/Zombies/"..InheritName,Window.Flags
+                )
+            end
+        end
     end
+
+    Config = nil
 end
 
 Loot.DescendantAdded:Connect(function(Item)
@@ -1002,12 +1066,20 @@ end)
 Zombies.Mobs.ChildAdded:Connect(function(Zombie)
     repeat task.wait() until Zombie.PrimaryPart
     local Config = require(Zombies.Configs[Zombie.Name])
-    if Config.Inherits and #Config.Inherits >= 1 then
-        Parvus.Utilities.Drawing:AddObject(
-            Zombie,Zombie.Name,Zombie.PrimaryPart,
-            "AR2/ESP/Zombies","AR2/ESP/Zombies",Window.Flags
-        )
+
+    if Config.Inherits then
+        for Index,Inherit in pairs(Config.Inherits) do
+            if table.find(ZombieInherits,Inherit) then
+                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                Parvus.Utilities.Drawing:AddObject(
+                    Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
+                    "AR2/ESP/Zombies/"..InheritName,Window.Flags
+                )
+            end
+        end
     end
+
+    Config = nil
 end)
 
 Loot.DescendantRemoving:Connect(function(Item)

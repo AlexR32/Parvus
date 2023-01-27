@@ -505,7 +505,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
                 end
                 if ESP.Drawing.Box.Main.Visible or ESP.Drawing.Box.Text.Visible then
                     local BoxPosition,BoxSize = CalculateBox(ESP.Target.Character,ESP.Target.ScreenPosition)
-                    ESP.Target.HealthPercent,ESP.Target.BoxTooSmall = ESP.Target.Health / ESP.Target.MaxHealth,BoxSize.Y <= 12
+                    ESP.Target.HealthPercent = ESP.Target.Health / ESP.Target.MaxHealth
+                    ESP.Target.BoxTooSmall = BoxSize.Y <= 12
                     
                     if ESP.Drawing.Box.Main.Visible then
                         ESP.Drawing.Box.Main.Color = ESP.Target.Color
@@ -521,6 +522,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
                     end
                     if ESP.Drawing.Healthbar.Main.Visible and not ESP.Target.BoxTooSmall then
                         ESP.Drawing.Healthbar.Main.Color = RedColor:Lerp(GreenColor,ESP.Target.HealthPercent)
+                        ESP.Drawing.Healthbar.Outline.Transparency = ESP.Drawing.Box.Main.Transparency
+                        ESP.Drawing.Healthbar.Main.Transparency = ESP.Drawing.Box.Main.Transparency
 
                         ESP.Drawing.Healthbar.Outline.Size = Vector2.new(3,BoxSize.Y + 2)
 
@@ -583,14 +586,16 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
         ESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
 
         ESP.Drawing.Box.Main.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/Enabled") or false
-        ESP.Drawing.Box.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
-        and ESP.Drawing.Box.Main.Visible or false
+        ESP.Drawing.Box.Outline.Visible = ESP.Drawing.Box.Main.Visible
+        and GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline") or false
+
         ESP.Drawing.Box.Text.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Text/Enabled") or false
 
-        ESP.Drawing.Healthbar.Main.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Healthbar")
-        and not ESP.Target.BoxTooSmall and ESP.Drawing.Box.Main.Visible or false
-        ESP.Drawing.Healthbar.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
-        and ESP.Drawing.Healthbar.Main.Visible or false
+        ESP.Drawing.Healthbar.Main.Visible = ESP.Drawing.Box.Main.Visible
+        and GetFlag(ESP.Flags,ESP.Flag,"/Box/Healthbar") and not ESP.Target.BoxTooSmall or false
+
+        ESP.Drawing.Healthbar.Outline.Visible = ESP.Drawing.Healthbar.Main.Visible
+        and GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline") or false
 
         ESP.Drawing.Arrow.Main.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
         ESP.Drawing.Arrow.Outline.Visible = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Outline")
