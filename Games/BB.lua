@@ -16,7 +16,7 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(1) until Loaded1
 end
 
-if game.PlaceVersion > 1333 then
+if game.PlaceVersion > 1336 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -244,9 +244,11 @@ local Window = Parvus.Utilities.UI:Window({
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false})
             :Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -1.5,Max = 1.5,Precise = 2,Value = -1.5})
-            AASection:Slider({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Min = 0,Max = 1.5,Precise = 2,Value = 0})
-            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = true})
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2})
+            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1.5,Max = 1.5,Precise = 2,Value = 0})
+
+            AASection:Toggle({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Value = false})
+            AASection:Toggle({Name = "Yaw Random",Flag = "BB/AntiAim/YawRandom",Value = false})
         end
         --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
         end]]
@@ -263,34 +265,38 @@ Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
-do local OldNamecall,OldTaskSpawn
-OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
-    if checkcaller() then return OldNamecall(Self,...) end
-    local Method,Args = getnamecallmethod(),{...}
+do
+    local OldNamecall,OldTaskSpawn
+    OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
+        if checkcaller() then return OldNamecall(Self,...) end
+        local Method,Args = getnamecallmethod(),{...}
 
-    if Method == "FireServer" then
-        if type(Args[1]) == "string"
-        and table.find(BanCommands,Args[1]) then
-            print("blocked",Args[2]) return
+        if Method == "FireServer" then
+            if type(Args[1]) == "string"
+            and table.find(BanCommands,Args[1]) then
+                print("blocked",Args[2]) return
+            end
         end
-    end
 
-    return OldNamecall(Self,...)
-end)
-OldTaskSpawn = hookfunction(getrenv().task.spawn,function(...)
-    if checkcaller() then return OldTaskSpawn(...) end
+        return OldNamecall(Self,...)
+    end)
+    OldTaskSpawn = hookfunction(getrenv().task.spawn,function(...)
+        if checkcaller() then return OldTaskSpawn(...) end
 
-    local Args = {...}
-    if type(Args[1]) == "function" then
-        local Constants = getconstants(Args[1])
-        if table.find(Constants,"wait") then
-            print("blocked wtd crash")
-            wait(31622400) -- 366 days
+        local Args = {...}
+        if type(Args[1]) == "function" then
+            local Constants = getconstants(Args[1])
+            if not table.find(Constants,"thread error ")
+            and table.find(Constants,"wait") then
+                print("blocked wtd crash")
+                --print(repr(Constants))
+                wait(31536000) -- 365 days
+            end
         end
-    end
 
-    return OldTaskSpawn(...)
-end) end
+        return OldTaskSpawn(...)
+    end)
+end
 
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Whitelist
@@ -396,6 +402,8 @@ end
 local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
     if not WeaponModel then return end
+    if WeaponModel.Parent == nil then return end
+
     for Index,Instance in pairs(WeaponModel.Body:GetDescendants()) do
         if HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
@@ -410,10 +418,12 @@ local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
 end
 local function CustomizeArms(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
+
     for Index,Instance in pairs(Workspace.Arms:GetDescendants()) do
         if HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
-        elseif Instance:IsA("BasePart") and Instance.Transparency < 1
+        elseif Instance:IsA("BasePart")
+        and Instance.Transparency < 1
         and Instance.Reflectance < 1 then
             Instance.Color = Color[6]
             Instance.Transparency = Color[4] > 0.95 and 0.95 or Color[4]
@@ -483,27 +493,28 @@ local function AutoShoot(Hitbox,Enabled)
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
 
-
             local ShootProjectiles,RayPosition,RayNormal
             = ComputeProjectiles(Config,Hitbox[3])
             if not ShootProjectiles then return end
 
-            Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
-            Weapon,Camera.CFrame.Position,ShootProjectiles)
+            task.spawn(function()
+                Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
+                Weapon,Camera.CFrame.Position,ShootProjectiles)
 
-            task.wait((RayPosition - Camera.CFrame.Position).Magnitude
-            / Projectiles[Config.Projectile.Template].Speed)
+                task.wait((RayPosition - Camera.CFrame.Position).Magnitude
+                / Projectiles[Config.Projectile.Template].Speed)
 
-            for Index,Projectile in pairs(ShootProjectiles) do
-                Tortoiseshell.Network:Fire("Projectiles","__Hit",
-                Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1])
-            end
+                for Index,Projectile in pairs(ShootProjectiles) do
+                    Tortoiseshell.Network:Fire("Projectiles","__Hit",
+                    Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1])
+                end
+            end)
 
             Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
             Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
             Config.Projectile.Amount and Config.Projectile.Amount > 3)
-            task.wait(60/CurrentFireMode.FireRate)
 
+            task.wait(60/CurrentFireMode.FireRate)
             if (OldAmmo - Ammo.Value) >= 1 then
                 Parvus.Utilities.UI:Notification2({
                     Title = ("Autoshoot | Hit %s | Ammo %s"):format(
@@ -512,7 +523,7 @@ local function AutoShoot(Hitbox,Enabled)
                 })
             end
         else local Reloading = State.Reloading.Server
-            if Reloading.Value then
+            if not Reloading.Value then
                 local ReloadTime = Config.Magazine.ReloadTime
                 local Milliseconds = (ReloadTime % 1) * 10
                 local Seconds = ReloadTime % 60
@@ -549,7 +560,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
                     BodyPart.AssemblyLinearVelocity,ProjectileGravity,Distance / ProjectileSpeed) or BodyPart.Position)]]
 
                     local LPCharacter = Characters[LocalPlayer]
-                    local Velocity = LPCharacter and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
+                    local Velocity = (LPCharacter and LPCharacter.PrimaryPart) and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                     BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -611,16 +622,41 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
         end
     end
 
+    if Args[2] == "Throw" then
+        if (SilentAim and not Window.Flags["BB/AutoShoot/Enabled"])
+        and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+            Args[5] = (SilentAim[3].Position - Camera.CFrame.Position).Unit
+            Tortoiseshell.UI.Events.Hitmarker:Fire(
+            SilentAim[3],SilentAim[3].Position)
+            return Old(Self,unpack(Args))
+        end
+    end
+
     if Args[3] == "Look" then
         if Window.Flags["BB/AntiAim/Enabled"] then
-            if Window.Flags["BB/AntiAim/LeanRandom"] then
-                Tortoiseshell.Network:Fire("Character","State","Lean",math.random(-1,1))
-            end
-            Args[4] = Window.Flags["BB/AntiAim/Pitch"] < 0
-            and Window.Flags["BB/AntiAim/Pitch"] + NewRandom:NextNumber(0,
-            Window.Flags["BB/AntiAim/PitchRandom"])
-            or Window.Flags["BB/AntiAim/Pitch"] - NewRandom:NextNumber(0,
-            Window.Flags["BB/AntiAim/PitchRandom"])
+            local Pitch = Window.Flags["BB/AntiAim/Pitch"]
+            local Yaw = Window.Flags["BB/AntiAim/Yaw"]
+
+            local PitchRange = math.abs(Pitch)
+            PitchRange = NewRandom:NextNumber(-PitchRange,PitchRange)
+
+            local YawRange = math.abs(Yaw)
+            YawRange = NewRandom:NextNumber(-YawRange,YawRange)
+
+            Args[4] = Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch
+            Old(Self,"Character","State","Lean",Window.Flags["BB/AntiAim/YawRandom"] and YawRange or Yaw)
+
+            --[[Old(Self,"Character","State","Aiming",true)
+            Old(Self,"Character","State","Climbing",true)
+            Old(Self,"Character","State","Grounded",true)
+            Old(Self,"Character","State","InWater",true)
+            Old(Self,"Character","State","Sliding",true)
+            Old(Self,"Character","State","Sprinting",true)
+            Old(Self,"Character","State","SuperSprinting",true)
+            Old(Self,"Character","State","Swapping",true)
+            Old(Self,"Character","State","Vaulting",true)
+            Old(Self,"Character","State","Stance","Stand") -- "Crouch","Prone"]]
+
             return Old(Self,unpack(Args))
         end
     end
@@ -648,7 +684,7 @@ end,true)
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
     local Args = {Old(Self,...)} local Config = Args[1]
     if Window.Flags["BB/WeaponMod/Enabled"]
-    and (Config.Recoil and Config.Recoil.Default) then
+    and (Config and Config.Recoil and Config.Recoil.Default) then
         Config.Recoil.Default.WeaponScale = 
         Config.Recoil.Default.WeaponScale * (Window.Flags["BB/WeaponMod/WeaponScale"] / 100)
 
@@ -659,6 +695,22 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self
         Config.Recoil.Default.RecoilScale * (Window.Flags["BB/WeaponMod/RecoilScale"] / 100)
     end return unpack(Args)
 end)
+
+--[[for Index,Event in pairs(Events) do
+    if Event.Event == "Item_Throwable" then
+        local OldCallback = Event.Callback
+        Event.Callback = function(...) local Args = {...}
+            Parvus.Utilities.Misc:NewThreadLoop(0,function()
+                if Args[2].Parent == nil then return "break" end
+                if (SilentAim and not Window.Flags["BB/AutoShoot/Enabled"])
+                and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+                    Args[2].PrimaryPart.Position = SilentAim[3].Position
+                    --print("Grenade Teleported")
+                end
+            end) return OldCallback(...)
+        end
+    end
+end]]
 
 RunService.Heartbeat:Connect(function()
     SilentAim = GetClosest(

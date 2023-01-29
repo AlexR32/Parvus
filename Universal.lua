@@ -284,12 +284,12 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
         local Mode = Window.Flags["SilentAim/Mode"][1]
         if (Method == "Raycast" and Mode == Method) then
-            Args[2] = (SilentAim[3].Position - Args[1]).Unit * 1000
+            Args[2] = (SilentAim[3].Position - Args[1]).Unit * 5000
             return OldNamecall(Self,unpack(Args))
         elseif (Method == "FindPartOnRayWithIgnoreList" and Mode == Method)
         or (Method == "FindPartOnRayWithWhitelist" and Mode == Method)
         or ((Method == "FindPartOnRay" or Method == "findPartOnRay") and Mode:lower() == Method:lower()) then
-            Args[1] = Ray.new(Args[1].Origin,(SilentAim[3].Position - Args[1].Origin).Unit * 1000)
+            Args[1] = Ray.new(Args[1].Origin,SilentAim[3].Position - Args[1].Origin)
             return OldNamecall(Self,unpack(Args))
         end
     end return OldNamecall(Self,...)

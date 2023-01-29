@@ -79,7 +79,9 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans = {
 
 {"Presets.Behavior Boss Level 01","Presets.Behavior Boss Level 02","Presets.Behavior Boss Level 03",
 "Presets.Behavior Common Level 01","Presets.Behavior Common Level 02","Presets.Behavior Common Level 03",
-"Presets.Behavior Common Thrall Level 01","Presets.Behavior MiniBoss Level 01","Presets.Behavior MiniBoss Level 02"},
+"Presets.Behavior Common Thrall Level 01","Presets.Behavior MiniBoss Level 01","Presets.Behavior MiniBoss Level 02",
+"Presets.Skin Tone Dark","Presets.Skin Tone Dark Servant","Presets.Skin Tone Light","Presets.Skin Tone LightMid",
+"Presets.Skin Tone LightMidDark","Presets.Skin Tone Mid","Presets.Skin Tone MidDark","Presets.Skin Tone Servant"},
 
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
 "Force Charcter Save","Update Character State","Sync Near Chunk Loot",
@@ -264,7 +266,7 @@ local Window = Parvus.Utilities.UI:Window({
             ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
 
             for Index,Inherit in pairs(ZombieInherits) do
-                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
                 local REFlag = "AR2/ESP/Zombies/" .. InheritName
                 Window.Flags[REFlag.."/Enabled"] = false
 
@@ -432,7 +434,7 @@ local Window = Parvus.Utilities.UI:Window({
                 if Bool and not NoClipEvent then
                     NoClipEvent = RunService.Stepped:Connect(function()
                         if not LocalPlayer.Character then return end
-                
+
                         for Index,Object in pairs(LocalPlayer.Character:GetDescendants()) do
                             if Object:IsA("BasePart") then
                                 if NoClipObjects[Object] == nil then
@@ -444,7 +446,7 @@ local Window = Parvus.Utilities.UI:Window({
                 elseif not Bool and NoClipEvent then
                     NoClipEvent:Disconnect()
                     NoClipEvent = nil
-            
+
                     task.wait(0.1)
                     for Object,CanCollide in pairs(NoClipObjects) do
                         Object.CanCollide = CanCollide
@@ -1023,7 +1025,7 @@ for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
     if Config.Inherits then
         for Index,Inherit in pairs(Config.Inherits) do
             if table.find(ZombieInherits,Inherit) then
-                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
                 Parvus.Utilities.Drawing:AddObject(
                     Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
                     "AR2/ESP/Zombies/"..InheritName,Window.Flags
