@@ -89,8 +89,6 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "AutoShoot",Flag = "BB/AutoShoot/Enabled",Value = false})
-            SilentAimSection:Toggle({Name = "AutoShoot 360 Mode",Flag = "BB/AutoShoot/AllFOV",Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
@@ -98,6 +96,25 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
             SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
+                {Name = "Head",Mode = "Toggle",Value = true},
+                {Name = "Neck",Mode = "Toggle"},
+                {Name = "Chest",Mode = "Toggle"},
+                {Name = "Abdomen",Mode = "Toggle"},
+                {Name = "Hips",Mode = "Toggle"}
+            }})
+        end
+        local AutoShootSection = AimAssistTab:Section({Name = "Autoshoot",Side = "Right"}) do
+            AutoShootSection:Toggle({Name = "Enabled",Flag = "BB/AutoShoot/Enabled",Value = false})
+            :Keybind({Mouse = true,Flag = "BB/AutoShoot/Keybind"})
+            AutoShootSection:Toggle({Name = "Visibility Check",Flag = "BB/AutoShoot/WallCheck",Value = false})
+            AutoShootSection:Toggle({Name = "Distance Check",Flag = "BB/AutoShoot/DistanceCheck",Value = false})
+            AutoShootSection:Slider({Name = "Distance",Flag = "BB/AutoShoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
+            AutoShootSection:Slider({Name = "Fire Rate",Flag = "BB/AutoShoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
+            AutoShootSection:Dropdown({Name = "Mode",Flag = "BB/AutoShoot/Mode",List = {
+                {Name = "360°",Mode = "Button",Value = true},
+                {Name = "Silent Aim Settings",Mode = "Button"}
+            }})
+            AutoShootSection:Dropdown({Name = "Body Parts",Flag = "BB/AutoShoot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
                 {Name = "Chest",Mode = "Toggle"},
@@ -236,7 +253,7 @@ local Window = Parvus.Utilities.UI:Window({
                 if Bool and Characters[LocalPlayer] then BodyVelocity.Parent = Characters[LocalPlayer].PrimaryPart
                 else BodyVelocity.Parent = nil end
             end}):Keybind({Flag = "BB/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 10,Max = 100,Value = 100})
+            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 10,Max = 150,Value = 100})
             CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
                 if Characters[LocalPlayer] then Characters[LocalPlayer].PrimaryPart.CanCollide = not Bool end
             end})
@@ -407,7 +424,8 @@ local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
     for Index,Instance in pairs(WeaponModel.Body:GetDescendants()) do
         if HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
-        elseif Instance:IsA("BasePart") and Instance.Transparency < 1
+        elseif Instance:IsA("BasePart")
+        and Instance.Transparency < 1
         and Instance.Reflectance < 1 then
             Instance.Color = Color[6]
             Instance.Transparency = Color[4] > 0.95 and 0.95 or Color[4]
@@ -450,23 +468,25 @@ local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 local function ComputeProjectiles(Config,Hitbox)
-    local RayResult =  Raycast(Camera.CFrame.Position,
-    Hitbox.Position - Camera.CFrame.Position,{Hitbox})
+    local Position = Camera.CFrame.Position
+    local RayResult =  Raycast(Position,
+    Hitbox.Position - Position,{Hitbox})
     if not RayResult then return end
 
     local ShootProjectiles = {}
     for Index = 1,Config.Projectile.Amount do
         table.insert(ShootProjectiles,{
-            (Hitbox.Position - Camera.CFrame.Position).Unit,
+            (Hitbox.Position - Position).Unit,
             Tortoiseshell.Projectiles:GetID()
         })
     end
 
-    return ShootProjectiles,
+    return ShootProjectiles,Position,
     RayResult.Position,RayResult.Normal
 end
-local function AutoShoot(Hitbox,Enabled)
-    if not Enabled or not Hitbox then return end
+local function AutoShoot(Hitbox,FireRate)
+    if not Hitbox then return end
+
     local Weapon,Config = GetEquippedWeapon()
 
     if Weapon and Config then
@@ -478,7 +498,7 @@ local function AutoShoot(Hitbox,Enabled)
                 Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
 
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("Autoshoot | Stab %s"):format(Hitbox[1].Name),
+                    Title = ("AutoShoot | Stab %s"):format(Hitbox[1].Name),
                     Color = Color3.new(1,0.5,0.25),Duration = 3
                 }) task.wait(1 / Config.Melee.Speed)
             end return
@@ -493,16 +513,16 @@ local function AutoShoot(Hitbox,Enabled)
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
 
-            local ShootProjectiles,RayPosition,RayNormal
+            local ShootProjectiles,Position,RayPosition,RayNormal
             = ComputeProjectiles(Config,Hitbox[3])
             if not ShootProjectiles then return end
 
             task.spawn(function()
-                Tortoiseshell.Network:Fire("Item_Paintball","Shoot",
-                Weapon,Camera.CFrame.Position,ShootProjectiles)
+                Tortoiseshell.Network:Fire("Item_Paintball",
+                "Shoot",Weapon,Position,ShootProjectiles)
 
-                task.wait((RayPosition - Camera.CFrame.Position).Magnitude
-                / Projectiles[Config.Projectile.Template].Speed)
+                task.wait((RayPosition - Position).Magnitude
+                /Projectiles[Config.Projectile.Template].Speed)
 
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Tortoiseshell.Network:Fire("Projectiles","__Hit",
@@ -513,11 +533,11 @@ local function AutoShoot(Hitbox,Enabled)
             Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
             Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
             Config.Projectile.Amount and Config.Projectile.Amount > 3)
+            task.wait(60/(CurrentFireMode.FireRate*FireRate))
 
-            task.wait(60/CurrentFireMode.FireRate)
             if (OldAmmo - Ammo.Value) >= 1 then
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("Autoshoot | Hit %s | Ammo %s"):format(
+                    Title = ("AutoShoot | Hit %s | Ammo %s"):format(
                         Hitbox[1].Name,Ammo.Value
                     ),Color = Color3.new(1,0.5,0.25),Duration = 3
                 })
@@ -530,7 +550,7 @@ local function AutoShoot(Hitbox,Enabled)
 
                 Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("Autoshoot | Reloading | Approx Time: %d.%d sec."):format(Seconds,Milliseconds),
+                    Title = ("AutoShoot | Reloading | Approx Time: %d.%d sec."):format(Seconds,Milliseconds),
                     Color = Color3.new(1,0.25,0.25),Duration = 3
                 }) task.wait(ReloadTime)
             end
@@ -573,7 +593,9 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
     return Closest
 end
 
-local function GetClosestAllFOV(BP,WC,DC,MD)
+local function GetClosestAllFOV(Enabled,BP,WC,DC,MD)
+    if not Enabled then return end
+
     local Distance,Closest = math.huge,nil
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
@@ -770,13 +792,17 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Window.Flags["BB/AutoShoot/Enabled"] then return end
-    AutoShoot(Window.Flags["BB/AutoShoot/AllFOV"]
-    and GetClosestAllFOV(
-        Window.Flags["SilentAim/BodyParts"],
-        Window.Flags["SilentAim/WallCheck"],
-        Window.Flags["SilentAim/DistanceCheck"],
-        Window.Flags["SilentAim/Distance"]
-    ) or SilentAim,Window.Flags["BB/AutoShoot/Enabled"])
+    if Window.Flags["BB/AutoShoot/Mode"][1] == "360°" then
+        AutoShoot(GetClosestAllFOV(
+            Window.Flags["BB/AutoShoot/Enabled"],
+            Window.Flags["BB/AutoShoot/BodyParts"],
+            Window.Flags["BB/AutoShoot/WallCheck"],
+            Window.Flags["BB/AutoShoot/DistanceCheck"],
+            Window.Flags["BB/AutoShoot/Distance"]
+        ),Window.Flags["BB/AutoShoot/FireRate"])
+    elseif Window.Flags["BB/AutoShoot/Mode"][1] == "Silent Aim" then
+        AutoShoot(SilentAim,Window.Flags["BB/AutoShoot/FireRate"])
+    end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end

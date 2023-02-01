@@ -1072,7 +1072,7 @@ Zombies.Mobs.ChildAdded:Connect(function(Zombie)
     if Config.Inherits then
         for Index,Inherit in pairs(Config.Inherits) do
             if table.find(ZombieInherits,Inherit) then
-                local InheritName = Inherit:gsub("Presets.Behavior",""):gsub(" ","")
+                local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
                 Parvus.Utilities.Drawing:AddObject(
                     Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
                     "AR2/ESP/Zombies/"..InheritName,Window.Flags
