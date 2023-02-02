@@ -289,6 +289,7 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
         local HitmarkerSection = MiscTab:Section({Name = "Hitmarker Customization",Side = "Left"}) do
+
             local HitList = {}
             for Index,Sound in pairs(HitSounds) do
                 HitList[#HitList + 1] = {Name = Sound[1],Mode = "Button",Callback = function()
@@ -300,17 +301,24 @@ local Window = Parvus.Utilities.UI:Window({
                     end HitmarkerSound:Play()
                 end,Value = Sound[3]}
             end
+
+            HitmarkerSection:Button({Name = "Reset To Defaults",Callback = function()
+                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
+                    HitmarkerScript.HeadshotSound.Volume = 0.7
+                    HitmarkerScript.HitmarkerSound.Volume = 3.5
+                    HitmarkerScript.HitmarkerSound.PlaybackSpeed = 1.4
+                    HitmarkerScript.HitmarkerSound.SoundId = "rbxassetid://4645745735"
+                end
+            end})
             HitmarkerSection:Slider({Name = "Pitch",Flag = "BB/Hitmarker/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1,
-            Callback = function(Value)
-                local HitmarkerSound = nil
+            Callback = function(Value) local HitmarkerSound = nil
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
                     HitmarkerSound = HitmarkerScript.HitmarkerSound
                     HitmarkerSound.PlaybackSpeed = Value
                 end HitmarkerSound:Play()
             end})
             HitmarkerSection:Slider({Name = "Volume",Flag = "BB/Hitmarker/Volume",Min = 0,Max = 5,Precise = 1,Value = 0.5,
-            Callback = function(Value)
-                local HitmarkerSound = nil
+            Callback = function(Value) local HitmarkerSound = nil
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
                     HitmarkerSound = HitmarkerScript.HitmarkerSound
                     HitmarkerSound.Volume = Value
@@ -338,7 +346,8 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local KillSoundSection = MiscTab:Section({Name = "Hitmarker Customization",Side = "Right"}) do
+        local KillSoundSection = MiscTab:Section({Name = "KillSound Customization",Side = "Right"}) do
+
             local KillSoundList = {}
             for Index,Sound in pairs(HitSounds) do
                 KillSoundList[#KillSoundList + 1] = {Name = Sound[1],Mode = "Button",Callback = function()
@@ -350,23 +359,30 @@ local Window = Parvus.Utilities.UI:Window({
                     end HitmarkerSound:Play()
                 end,Value = Sound[3]}
             end
-            KillSoundSection:Slider({Name = "Pitch",Flag = "BB/Hitmarker/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1,
-            Callback = function(Value)
-                local HitmarkerSound = nil
+
+            KillSoundSection:Button({Name = "Reset To Defaults",Callback = function()
+                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
+                    HitmarkerScript.MedalSound.Volume = 0.8
+                    HitmarkerScript.KillSound.Volume = 1
+                    HitmarkerScript.KillSound.PlaybackSpeed = 1.5
+                    HitmarkerScript.KillSound.SoundId = "rbxassetid://2636743632"
+                end
+            end})
+            KillSoundSection:Slider({Name = "Pitch",Flag = "BB/KillSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1,
+            Callback = function(Value) local HitmarkerSound = nil
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
                     HitmarkerSound = HitmarkerScript.KillSound
                     HitmarkerSound.PlaybackSpeed = Value
                 end HitmarkerSound:Play()
             end})
-            KillSoundSection:Slider({Name = "Volume",Flag = "BB/Hitmarker/Volume",Min = 0,Max = 5,Precise = 1,Value = 0.5,
-            Callback = function(Value)
-                local HitmarkerSound = nil
+            KillSoundSection:Slider({Name = "Volume",Flag = "BB/KillSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 0.5,
+            Callback = function(Value) local HitmarkerSound = nil
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
                     HitmarkerSound = HitmarkerScript.KillSound
                     HitmarkerSound.Volume = Value
                 end HitmarkerSound:Play()
             end})
-            KillSoundSection:Dropdown({Name = "Hitmarker Sound",Flag = "BB/Hitmarker/Sound",List = KillSoundList})
+            KillSoundSection:Dropdown({Name = "Hitmarker Sound",Flag = "BB/KillSound/Sound",List = KillSoundList})
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
