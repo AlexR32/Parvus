@@ -17,7 +17,7 @@ local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
-for i,c in pairs(getconnections(game:GetService("ScriptContext").Error)) do c:Disable() end
+--for i,c in pairs(getconnections(game:GetService("ScriptContext").Error)) do c:Disable() end
 
 local Raycasting = Framework.Libraries.Raycasting
 local Interface = Framework.Libraries.Interface
@@ -29,16 +29,16 @@ local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 local CharacterCamera = Cameras.CameraList.Character
 
-local Events = getupvalue(Network.Add,4)
+local Events = getupvalue(Network.Add,1)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
 --local GetSpreadVector = getupvalue(Bullets.Fire,3)
 --local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local FlinchCamera = getupvalue(Bullets.Fire,5)
 local GetFireImpulse = getupvalue(Bullets.Fire,7)
 
-local NullFunction = function() end
+--[[local NullFunction = function() end
 setupvalue(Network.Send,6,NullFunction)
-setupvalue(Network.Fetch,6,NullFunction)
+setupvalue(Network.Fetch,6,NullFunction)]]
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
@@ -59,7 +59,7 @@ FlyPosition,NoClipEvent,NoClipObjects
 = {},false,nil,nil,nil,{}
 
 -- game data mess
-local RandomEvents,ItemCategory,ZombieInherits,SanityBans = {
+local RandomEvents,ItemCategory,ZombieInherits,SanityBans,InfectedScripts = {
 "ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
 "LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
 "MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
@@ -84,8 +84,10 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans = {
 "Presets.Skin Tone LightMidDark","Presets.Skin Tone Mid","Presets.Skin Tone MidDark","Presets.Skin Tone Servant"},
 
 {"Character Humanoid Update","Character Root Update","Get Player Stance Speed",
-"Force Charcter Save","Update Character State","Sync Near Chunk Loot",
-"Resync Character Physics","Update Character Position"}
+"Force Charcter Save","Update Character State","Sync Near Chunk Loot","Sorry Mate, Wrong Path :/",
+"Resync Character Physics","Update Character Position"},
+
+{"Characters","Network","World"}
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -732,6 +734,20 @@ local function HookCharacter(Character)
     end
 end
 
+local OldNamecall
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
+    local Method,Args = getnamecallmethod(),{...}
+
+    if Method == "GetChildren"
+    and (Self == ReplicatedFirst
+    or Self == ReplicatedStorage) then
+        print("crash bypass")
+        wait(383961600) -- 4444 days
+    end
+
+    return OldNamecall(Self,...)
+end)
+
 setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
     if Window.Flags["AR2/NoSpread"] then
         return GetSpreadAngle(
@@ -765,14 +781,12 @@ setupvalue(InteractHeartbeat,11,function(...)
     end return FindItemData(...)
 end)
 
-local OldSend = Network.Send
-Network.Send = function(Self,Name,...) local Args = {...}
-    if table.find(SanityBans,Name) then return end
-
-    if Name == "Character Jumped"
-    and Window.Flags["AR2/SSCS"] then
+Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local Args = {...}
+    if table.find(SanityBans,Name) and not table.find(SanityBans,Args[1]) then
+        print(Name,Args[1])
         return
     end
+    if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
 
     --[[if Name == "Animator State Report" then
         if Window.Flags["AR2/EquipInAir"] then
@@ -802,8 +816,9 @@ Network.Send = function(Self,Name,...) local Args = {...}
         end
     end
 
-    return OldSend(Self,Name,unpack(Args))
-end
+    return Old(Self,Name,unpack(Args))
+end)
+
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
     if SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
@@ -978,17 +993,15 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
     end Items = nil
 end)
 
-Events["Character Rubber Band Rest\r"] = function() end
-
-local OldICA, OldCC = Events["Inventory Container Added\r"], Events["Container Changed\r"]
-Events["Inventory Container Added\r"] = function(Id,Data,...)
+local OldICA,OldCC = Events["Inventory Container Added"],Events["Container Changed"]
+Events["Inventory Container Added"] = function(Id,Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
     if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
         Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
         "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
     end return OldICA(Id,Data,...)
 end
-Events["Container Changed\r"] = function(Data,...)
+Events["Container Changed"] = function(Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
 
     Parvus.Utilities.Drawing:RemoveObject(Data.Id)
