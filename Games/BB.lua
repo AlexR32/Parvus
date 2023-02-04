@@ -47,7 +47,7 @@ Notify.Event:Connect(function(Text)
 end)
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Game,
+    Name = "kebab hub saatana — "..Parvus.Game,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -269,6 +269,20 @@ local Window = Parvus.Utilities.UI:Window({
         end
         --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
         end]]
+    
+    local testTab = Window:Tab({Name = "testtab"}) do
+        local NicecockSection = MiscTab:Section({Name = "test",Side = "Left"}) do
+            NicecockSection:Toggle({Name = "YAZ",Flag = "",Value = false})
+            :Colorpicker({Flag = "",Value = {1,0.75,1,0.5,true}})
+            NicecockSection:Toggle({Name = "nice kok",Flag = "",Value = true})
+            NicecockSection:Slider({Name = "nice kok",Flag = "",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            NicecockSection:Dropdown({Name = "nice kok",Flag = "",List = {
+                {Name = "ya",Mode = "Button"},
+                {Name = "deeznuties",Mode = "Button"},
+                {Name = "yessssssssss",Mode = "Button",Value = true},
+                {Name = "skibididamdam",Mode = "Button"}
+            }})
+        end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end
 
@@ -456,7 +470,6 @@ end
 	local v = targetVelocity - shooterVelocity
 	local p = targetPosition - shooterPosition
 	local distance = p.Magnitude
-
 	local timeTaken = (distance / projectileSpeed)
 	return (targetPosition + v * timeTaken) + (a * timeTaken^2 / 2)
 end]]
