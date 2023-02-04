@@ -7,6 +7,10 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
+PromptLib("patched","patched",{
+{Text = "Ok",LayoutOrder = 0,Primary = false},
+}) return
+
 if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
         {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
