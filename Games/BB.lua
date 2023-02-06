@@ -166,6 +166,9 @@ local Window = Parvus.Utilities.UI:Window({
         local AutoShootSection = AimAssistTab:Section({Name = "Autoshoot",Side = "Right"}) do
             AutoShootSection:Toggle({Name = "Enabled",Flag = "BB/AutoShoot/Enabled",Value = false})
             :Keybind({Mouse = true,Flag = "BB/AutoShoot/Keybind"})
+            AutoShootSection:Toggle({Name = "Beam Enabled",Flag = "BB/AutoShoot/Beam/Enabled",Value = true})
+            :Colorpicker({Flag = "BB/AutoShoot/Beam/Color",Value = {1,0.75,1,0,true}})
+            AutoShootSection:Toggle({Name = "HitMarker Enabled",Flag = "BB/AutoShoot/HM",Value = true})
             AutoShootSection:Toggle({Name = "Auto Grenade",Flag = "BB/AutoShoot/Grenade",Value = false})
             AutoShootSection:Toggle({Name = "Grenade TP",Flag = "BB/AutoShoot/GrenadeTP",Value = false})
             AutoShootSection:Toggle({Name = "Visibility Check",Flag = "BB/AutoShoot/WallCheck",Value = false})
@@ -226,17 +229,17 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Thickness",Flag = "ESP/Player/Box/Thickness",Min = 1,Max = 10,Value = 1})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             BoxSection:Divider()
-            BoxSection:Toggle({Name = "Text Enabled",Flag = "ESP/Player/Text/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Text/Outline",Value = true})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Text/Autoscale",Value = true})
-            BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Text/Font",List = {
+            BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/Player/Name/Enabled",Value = false})
+            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = true})
+            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = true})
+            BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Name/Font",List = {
                 {Name = "UI",Mode = "Button",Value = true},
                 {Name = "System",Mode = "Button"},
                 {Name = "Plex",Mode = "Button"},
                 {Name = "Monospace",Mode = "Button"}
             }})
-            BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Text/Size",Min = 13,Max = 100,Value = 16})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
+            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
         local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
@@ -244,22 +247,23 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
             OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Distance",Min = 80,Max = 200,Value = 200})
+            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
         local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
-            HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Head/Enabled",Value = false})
-            HeadSection:Toggle({Name = "Filled",Flag = "ESP/Player/Head/Filled",Value = true})
-            HeadSection:Toggle({Name = "Outline",Flag = "ESP/Player/Head/Outline",Value = true})
-            HeadSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Head/Autoscale",Value = true})
-            HeadSection:Slider({Name = "Radius",Flag = "ESP/Player/Head/Radius",Min = 1,Max = 10,Value = 8})
-            HeadSection:Slider({Name = "NumSides",Flag = "ESP/Player/Head/NumSides",Min = 3,Max = 100,Value = 4})
-            HeadSection:Slider({Name = "Thickness",Flag = "ESP/Player/Head/Thickness",Min = 1,Max = 10,Value = 1})
-            HeadSection:Slider({Name = "Transparency",Flag = "ESP/Player/Head/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/HeadDot/Enabled",Value = false})
+            HeadSection:Toggle({Name = "Filled",Flag = "ESP/Player/HeadDot/Filled",Value = true})
+            HeadSection:Toggle({Name = "Outline",Flag = "ESP/Player/HeadDot/Outline",Value = true})
+            HeadSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/HeadDot/Autoscale",Value = true})
+            HeadSection:Slider({Name = "Radius",Flag = "ESP/Player/HeadDot/Radius",Min = 1,Max = 10,Value = 8})
+            HeadSection:Slider({Name = "NumSides",Flag = "ESP/Player/HeadDot/NumSides",Min = 3,Max = 100,Value = 4})
+            HeadSection:Slider({Name = "Thickness",Flag = "ESP/Player/HeadDot/Thickness",Min = 1,Max = 10,Value = 1})
+            HeadSection:Slider({Name = "Transparency",Flag = "ESP/Player/HeadDot/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
         local TracerSection = VisualsTab:Section({Name = "Tracers",Side = "Right"}) do
             TracerSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Tracer/Enabled",Value = false})
+            TracerSection:Toggle({Name = "Outline",Flag = "ESP/Player/Tracer/Outline",Value = true})
             TracerSection:Dropdown({Name = "Mode",Flag = "ESP/Player/Tracer/Mode",List = {
                 {Name = "From Bottom",Mode = "Button",Value = true},
                 {Name = "From Mouse",Mode = "Button"}
@@ -384,12 +388,15 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
-                if Bool and Characters[LocalPlayer] then BodyVelocity.Parent = Characters[LocalPlayer].PrimaryPart
+                local LPCharacter = Characters[LocalPlayer]
+                if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
+                    BodyVelocity.Parent = Characters[LocalPlayer].PrimaryPart
                 else BodyVelocity.Parent = nil end
             end}):Keybind({Flag = "BB/Fly/Keybind"})
             CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 10,Max = 150,Value = 100})
             CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
-                if Characters[LocalPlayer] then Characters[LocalPlayer].PrimaryPart.CanCollide = not Bool end
+                local LPCharacter = Characters[LocalPlayer]
+                if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
             end})
         end
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
@@ -633,6 +640,7 @@ local function ProjectileBeam(Origin,Direction)
         for Index = 1, 60 * 1 do
             RunService.Heartbeat:Wait()
             Beam.Transparency = Index / (60 * 1)
+            Beam.Color = Window.Flags["BB/AutoShoot/Beam/Color"][6]
         end Beam:Destroy()
     end)
 
@@ -665,7 +673,9 @@ local function AutoShoot(Hitbox,FireRate)
                 Tortoiseshell.Network:Fire("Item_Melee","StabBegin",Weapon)
                 Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[3],Hitbox[3].Position,
                 (Hitbox[3].Position - Camera.CFrame.Position).Unit * (Config.Melee.Range + 1))
-                Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
+                if Window.Flags["BB/AutoShoot/HM"] then
+                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
+                end
 
                 Parvus.Utilities.UI:Notification2({
                     Title = ("AutoShoot | Stab %s"):format(Hitbox[1].Name),
@@ -675,10 +685,10 @@ local function AutoShoot(Hitbox,FireRate)
         end
 
         local State = Weapon.State
-        local Ammo = State.Ammo.Server
-        if Ammo.Value > 0 and Config.Controller == "Paintball" then
+        local Ammo = State.Ammo.Server local AmmoValue = Ammo.Value
+        local Health = Hitbox[2].Health local HealthValue = Health.Value
+        if AmmoValue > 0 and Config.Controller == "Paintball" then
             local FireMode = State.FireMode.Server
-            local OldAmmo = Ammo.Value
 
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
@@ -700,13 +710,20 @@ local function AutoShoot(Hitbox,FireRate)
                 end
             end)
 
-            ProjectileBeam(Position,RayPosition)
+            if Window.Flags["BB/AutoShoot/Beam/Enabled"] then
+                ProjectileBeam(Position,RayPosition)
+            end
+            if Window.Flags["BB/AutoShoot/HM"] then
+                Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
+                Config.Projectile.Amount and Config.Projectile.Amount > 3)
+            end
             Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
-            Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
-            Config.Projectile.Amount and Config.Projectile.Amount > 3)
             task.wait(60/(CurrentFireMode.FireRate*FireRate))
 
-            if (OldAmmo - Ammo.Value) >= 1 then
+            if (AmmoValue - Ammo.Value) >= 1 then
+                --[[ProjectileBeam(Position,RayPosition)
+                Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
+                Config.Projectile.Amount and Config.Projectile.Amount > 3)]]
                 Parvus.Utilities.UI:Notification2({
                     Title = ("AutoShoot | Hit %s | Ammo %s"):format(
                         Hitbox[1].Name,Ammo.Value
@@ -772,7 +789,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
                     local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
                     BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
                     local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and NewFOV < FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
+                    if OnScreen and NewFOV < FOV then FOV,Closest = NewFOV,{Player,Character.Parent,BodyPart,ScreenPosition} end
                 end
             end
         end
@@ -798,7 +815,7 @@ local function GetClosestAllFOV(Enabled,BP,WC,DC,MD)
 
                 if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then
                     if NewDistance < Distance then
-                        Distance,Closest = NewDistance,{Player,Character,BodyPart}
+                        Distance,Closest = NewDistance,{Player,Character.Parent,BodyPart}
                     end
                 end
             end
