@@ -6,13 +6,20 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
-local StarterPlayer = game:GetService("StarterPlayer")
-local StarterPlayerScripts = StarterPlayer.StarterPlayerScripts
-local FrameWork = StarterPlayerScripts.FrameWork
-local Functions = require(FrameWork.Functions)
+local FXModule
+--local Functions
+for Index,Value in pairs(getgc(true)) do
+    if type(Value) == "table" then
+        if rawget(Value,"ViewArmor") then
+            FXModule = Value
+        --[[elseif rawget(Value,"DisableUpperVisuals") then
+            Functions = Value]]
+        end
+    end
+end
 
-local FXModule = require(FrameWork.NewModules.FXModule)
-local proceedArmor = getupvalue(FXModule.ViewArmor,8)
+--local XRay = getupvalue(FXModule.xray,2)
+local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -37,17 +44,17 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Thickness",Flag = "ESP/Player/Box/Thickness",Min = 1,Max = 10,Value = 1})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             BoxSection:Divider()
-            BoxSection:Toggle({Name = "Text Enabled",Flag = "ESP/Player/Text/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Text/Outline",Value = true})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Text/Autoscale",Value = true})
-            BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Text/Font",List = {
+            BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/Player/Name/Enabled",Value = false})
+            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = true})
+            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = true})
+            BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Name/Font",List = {
                 {Name = "UI",Mode = "Button",Value = true},
                 {Name = "System",Mode = "Button"},
                 {Name = "Plex",Mode = "Button"},
                 {Name = "Monospace",Mode = "Button"}
             }})
-            BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Text/Size",Min = 13,Max = 100,Value = 16})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Text/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
+            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
         local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
@@ -55,7 +62,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
             OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Distance",Min = 80,Max = 200,Value = 200})
+            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
@@ -73,13 +80,15 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
-                Bool = Bool and 1 or 0
+                local NumBool = Bool and 1 or 0
                 for Index,Child in pairs(Workspace:GetChildren()) do
                     if Child:FindFirstChild("Owner") and
                     Child.Owner.Value ~= LocalPlayer.Name
                     and Child.Alive.Value then
-                        proceedArmor(Child,Bool,0,true)
-                        Functions.DisableUpperVisuals(Child)
+                        proceedArmor(Child,NumBool,0)
+                        --FXModule.ViewArmor(Child,NumBool,0)
+                        --XRay(Child.Main.Hitboxes,Bool,1)
+                        --Functions.DisableUpperVisuals(Child)
                     end
                 end
             end}):Keybind()
@@ -160,8 +169,10 @@ for Index,Child in pairs(Workspace:GetChildren()) do
     if Child:FindFirstChild("Owner") and
     Child.Owner.Value ~= LocalPlayer.Name
     and Child.Alive.Value then
-        proceedArmor(Child,1,0,true)
-        Functions.DisableUpperVisuals(Child)
+        proceedArmor(Child,1,0)
+        --FXModule.ViewArmor(Child,1,0)
+        --XRay(Child.Main.Hitboxes,true,1)
+        --Functions.DisableUpperVisuals(Child)
     end
 end
 
@@ -169,8 +180,10 @@ Workspace.ChildAdded:Connect(function(Child)
     if not Window.Flags["ST/XRay"] then return end
     task.wait(0.5) if Child:FindFirstChild("Owner") and
     Child.Owner.Value ~= LocalPlayer.Name then
-        proceedArmor(Child,1,0,true)
-        Functions.DisableUpperVisuals(Child)
+        proceedArmor(Child,1,0)
+        --FXModule.ViewArmor(Child,1,0)
+        --XRay(Child.Main.Hitboxes,true,1)
+        --Functions.DisableUpperVisuals(Child)
     end
 end)
 
