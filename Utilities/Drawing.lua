@@ -359,7 +359,7 @@ RunService.Heartbeat:Connect(function()
     for Object,ESP in pairs(DrawingLibrary.ObjectESP) do
         if not GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")
         or not GetFlag(ESP.Flags,ESP.Flag,"/Enabled") then
-            ESP.Drawing.Name.Visible = false continue
+            ESP.Name.Visible = false continue
         end
 
         local Position = ESP.IsBasePart and ESP.Target.Position.Position or ESP.Target.Position
@@ -370,13 +370,13 @@ RunService.Heartbeat:Connect(function()
             Distance,GetFlag(ESP.Flags,ESP.GlobalFlag,"/Distance")
         )
 
-        ESP.Drawing.Name.Visible = (OnScreen and InTheRange) and
+        ESP.Name.Visible = (OnScreen and InTheRange) and
         (GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled") and GetFlag(ESP.Flags,ESP.Flag,"/Enabled")) or false
 
-        if ESP.Drawing.Name.Visible then local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
-            ESP.Drawing.Name.Transparency = 1-Color[4] ESP.Drawing.Name.Color = Color[6]
-            ESP.Drawing.Name.Text = string.format("%s\n%i studs",ESP.Target.Name,Distance)
-            ESP.Drawing.Name.Position = V2New(ScreenPosition.X,ScreenPosition.Y)
+        if ESP.Name.Visible then local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
+            ESP.Name.Transparency = 1-Color[4] ESP.Name.Color = Color[6]
+            ESP.Name.Text = string.format("%s\n%i studs",ESP.Target.Name,Distance)
+            ESP.Name.Position = V2New(ScreenPosition.X,ScreenPosition.Y)
         end
     end
 end)

@@ -30,12 +30,7 @@ local SilentAim,Aimbot,Trigger = nil,false,false
 local Tortoiseshell,WeaponModel,NewRandom = require(ReplicatedStorage.TS),nil,Random.new()
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
-
-local GBP = {"Chest"}
-local HitmarkerScripts = {}
-for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
-    HitmarkerScripts[#HitmarkerScripts + 1] = getfenv(Connection.Function).script
-end
+local GBP,HitmarkerScripts = {"Chest"},{}
 
 local HitSounds = {
     {"AR2 Head","2062016772",false},
@@ -91,7 +86,25 @@ local HitSounds = {
     end,false},]]
 }
 
+local function GetFunctionFromEvent(Event,ScriptName)
+    for Index,Connection in pairs(getconnections(Event)) do
+        local Script = getfenv(Connection.Function).script
+        if Script.Name == ScriptName then
+            return Connection.Function
+        end
+    end
+end
+
+for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
+    HitmarkerScripts[#HitmarkerScripts + 1] = getfenv(Connection.Function).script
+end
+
+local SetIdentity = syn and syn.set_thread_identity or setidentity
+local HandleCharacter = getupvalue(GetFunctionFromEvent(Tortoiseshell.Characters.CharacterAdded,"CharacterAnimateScript"),3)
+local CharacterHandlers = getupvalue(HandleCharacter,3)
+
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
+local RSC = getupvalue(Tortoiseshell.Timer.BindToRenderStep,1) -- RenderSteppedConnections
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
 local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
@@ -169,10 +182,10 @@ local Window = Parvus.Utilities.UI:Window({
             AutoShootSection:Toggle({Name = "Beam Enabled",Flag = "BB/AutoShoot/Beam/Enabled",Value = true})
             :Colorpicker({Flag = "BB/AutoShoot/Beam/Color",Value = {1,0.75,1,0,true}})
             AutoShootSection:Toggle({Name = "HitMarker Enabled",Flag = "BB/AutoShoot/HM",Value = true})
-            AutoShootSection:Toggle({Name = "Auto Grenade",Flag = "BB/AutoShoot/Grenade",Value = false})
+            AutoShootSection:Toggle({Name = "Auto Grenade",Flag = "BB/AutoShoot/Grenade",Value = false}):Keybind()
             AutoShootSection:Toggle({Name = "Grenade TP",Flag = "BB/AutoShoot/GrenadeTP",Value = false})
-            AutoShootSection:Toggle({Name = "Visibility Check",Flag = "BB/AutoShoot/WallCheck",Value = false})
-            AutoShootSection:Toggle({Name = "Distance Check",Flag = "BB/AutoShoot/DistanceCheck",Value = false})
+            AutoShootSection:Toggle({Name = "Visibility Check",Flag = "BB/AutoShoot/WallCheck",Value = false}):Keybind()
+            AutoShootSection:Toggle({Name = "Distance Check",Flag = "BB/AutoShoot/DistanceCheck",Value = false}):Keybind()
             AutoShootSection:Slider({Name = "Distance",Flag = "BB/AutoShoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
             AutoShootSection:Slider({Name = "Fire Rate",Flag = "BB/AutoShoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
             AutoShootSection:Dropdown({Name = "Body Parts",Flag = "BB/AutoShoot/BodyParts",List = {
@@ -397,6 +410,22 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
+            end})
+            CharSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson",Value = false,Callback = function(Bool)
+                local LPCharacter = Characters[LocalPlayer]
+                if not LPCharacter then return end
+
+                task.spawn(function() SetIdentity(2)
+                    if not CharacterHandlers[LPCharacter] then
+                        HandleCharacter(LPCharacter,LocalPlayer)
+                    end
+                end)
+
+                for Index,Value in pairs(LPCharacter:GetDescendants()) do
+                    if Value:IsA("BasePart") then
+                        Value.LocalTransparencyModifier = Bool and 0 or 1
+                    end
+                end
             end})
         end
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
@@ -924,6 +953,19 @@ end,true)
     end return unpack(Args)
 end)]]
 
+local OldCamera = RSC["Camera"]
+RSC["Camera"] = function(...)
+    local Args = {OldCamera(...)}
+    if Window.Flags["BB/ThirdPerson"] then
+        local LPCharacter = Characters[LocalPlayer]
+        if LPCharacter and LPCharacter.Parent ~= nil then
+            Camera.CFrame = Camera.CFrame * CFrame.new(0,0,10)
+            return
+        end
+    end
+    return unpack(Args)
+end
+
 for Index,Event in pairs(Events) do
     if Event.Event == "Item_Throwable" then
         local OldCallback = Event.Callback
@@ -1070,6 +1112,24 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
         Child.PrimaryPart.CanCollide = not Window.Flags["BB/NoClip"]
         if Window.Flags["BB/Fly/Enabled"] then
             BodyVelocity.Parent = Child.PrimaryPart
+        end
+
+        if Window.Flags["BB/ThirdPerson"] then
+            task.spawn(function()
+                local LPCharacter = Characters[LocalPlayer]
+                if not LPCharacter then return end
+                SetIdentity(2)
+
+                if not CharacterHandlers[LPCharacter] then
+                    HandleCharacter(LPCharacter,LocalPlayer)
+                end task.wait(0.5)
+
+                for Index,Value in pairs(LPCharacter:GetDescendants()) do
+                    if Value:IsA("BasePart") then
+                        Value.LocalTransparencyModifier = 0
+                    end
+                end
+            end)
         end
     end
 end)

@@ -6,13 +6,20 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
-local StarterPlayer = game:GetService("StarterPlayer")
-local StarterPlayerScripts = StarterPlayer.StarterPlayerScripts
-local FrameWork = StarterPlayerScripts.FrameWork
-local Functions = require(FrameWork.Functions)
+local FXModule
+--local Functions
+for Index,Value in pairs(getgc(true)) do
+    if type(Value) == "table" then
+        if rawget(Value,"ViewArmor") then
+            FXModule = Value
+        --[[elseif rawget(Value,"DisableUpperVisuals") then
+            Functions = Value]]
+        end
+    end
+end
 
-local FXModule = require(FrameWork.NewModules.FXModule)
-local proceedArmor = getupvalue(FXModule.ViewArmor,8)
+--local XRay = getupvalue(FXModule.xray,2)
+local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -73,13 +80,15 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
             MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
-                Bool = Bool and 1 or 0
+                local NumBool = Bool and 1 or 0
                 for Index,Child in pairs(Workspace:GetChildren()) do
                     if Child:FindFirstChild("Owner") and
                     Child.Owner.Value ~= LocalPlayer.Name
                     and Child.Alive.Value then
-                        proceedArmor(Child,Bool,0,true)
-                        Functions.DisableUpperVisuals(Child)
+                        proceedArmor(Child,NumBool,0)
+                        --FXModule.ViewArmor(Child,NumBool,0)
+                        --XRay(Child.Main.Hitboxes,Bool,1)
+                        --Functions.DisableUpperVisuals(Child)
                     end
                 end
             end}):Keybind()
@@ -160,8 +169,10 @@ for Index,Child in pairs(Workspace:GetChildren()) do
     if Child:FindFirstChild("Owner") and
     Child.Owner.Value ~= LocalPlayer.Name
     and Child.Alive.Value then
-        proceedArmor(Child,1,0,true)
-        Functions.DisableUpperVisuals(Child)
+        proceedArmor(Child,1,0)
+        --FXModule.ViewArmor(Child,1,0)
+        --XRay(Child.Main.Hitboxes,true,1)
+        --Functions.DisableUpperVisuals(Child)
     end
 end
 
@@ -169,8 +180,10 @@ Workspace.ChildAdded:Connect(function(Child)
     if not Window.Flags["ST/XRay"] then return end
     task.wait(0.5) if Child:FindFirstChild("Owner") and
     Child.Owner.Value ~= LocalPlayer.Name then
-        proceedArmor(Child,1,0,true)
-        Functions.DisableUpperVisuals(Child)
+        proceedArmor(Child,1,0)
+        --FXModule.ViewArmor(Child,1,0)
+        --XRay(Child.Main.Hitboxes,true,1)
+        --Functions.DisableUpperVisuals(Child)
     end
 end)
 
