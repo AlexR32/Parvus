@@ -1,3 +1,51 @@
+### Update 11/02/23
+```markdown
+# Global
+* esp module updated (configs may be corrupted)
++ added tracer outline to esp
+# ST
+* fixed (kind of cuz xray seems to not work)
+# Bad Business
++ added hitsounds
++ added beam to autoshoot
++ added hitmarker toggle for autoshoot
++ added auto grenade
++ added grenade tp
++ changed weapon mod a bit
++ changed autoshoot section
+```
+### Update 01/02/23
+```markdown
+# AR2
+* fixed zombie wont add to esp when spawned
+# Bad Business
+* updated autoshoot
+```
+### Update 29/01/23
+```markdown
+# AR2
+* added more zombie types to zombie list
+# Bad Business
+* *updated for latest game version* bruh
+* Remade Anti-Aim
+* fixed weapon customization spamming error when match ended
+* improved autoshoot now it shoots faster and fixed reloading
+* fixed aimbot and etc spamming error when character not loaded
++ added grenade silent aim (testing)
+* fixed weapon mod spamming errors when some things doesn't exist
+# Universal
+* fixed and updated findpartonray/withwhitelist/withignorelist
+* raycast ray length now is 5000 instead of 1000 (silent aim)
+```
+### Update 27/01/23
+```markdown
+# Global
+* fixed healthbars
+* improved noclip (ar2, brm5)
+
+# AR2
+* now you can choose zombie levels in esp
+```
 ### Update 20-23/01/23
 ```markdown
 # Global
