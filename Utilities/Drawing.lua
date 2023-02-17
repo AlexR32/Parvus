@@ -59,16 +59,16 @@ local function GetFontFromName(FontName)
     or 0
 end
 
---[[local function GetDistanceFromCamera(Position)
+local function GetDistance(Position)
     return (Position - Camera.CFrame.Position).Magnitude
-end]]
-local function CheckDistance(Enabled,D1,D2)
-    if not Enabled then return true end
-    return D1 <= D2
 end
-local function ClampDistance(Enabled,D1,D2)
-    if not Enabled then return D1 end
-    return Clamp(1 / D2 * 1000,0,D1)
+local function CheckDistance(Enabled,P1,P2)
+    if not Enabled then return true end
+    return P1 >= P2
+end
+local function ClampDistance(Enabled,P1,P2)
+    if not Enabled then return P1 end
+    return Clamp(1 / P2 * 1000,0,P1)
 end
 local function DynamicFOV(Enabled,FOV)
     if not Enabled then return FOV end
@@ -233,8 +233,8 @@ function DrawingLibrary:AddESP(Target,Mode,Flag,Flags)
         Drawing = {
             BoxOutline       = DrawingNew("Square",   { Visible = false, ZIndex = 0 }),
             Box              = DrawingNew("Square",   { Visible = false, ZIndex = 1 }),
-            HealthBarOutline = DrawingNew("Square",   { Visible = false, ZIndex = 0 }),
-            HealthBar        = DrawingNew("Square",   { Visible = false, ZIndex = 1 }),
+            HealthBarOutline = DrawingNew("Square",   { Visible = false, ZIndex = 0, Filled = true }),
+            HealthBar        = DrawingNew("Square",   { Visible = false, ZIndex = 1, Filled = true }),
             TracerOutline    = DrawingNew("Line",     { Visible = false, ZIndex = 0 }),
             Tracer           = DrawingNew("Line",     { Visible = false, ZIndex = 1 }),
             HeadDotOutline   = DrawingNew("Circle",   { Visible = false, ZIndex = 0 }),
@@ -363,15 +363,11 @@ RunService.Heartbeat:Connect(function()
         end
 
         local Position = ESP.IsBasePart and ESP.Target.Position.Position or ESP.Target.Position
-        local ScreenPosition,OnScreen,Distance = WorldToScreen(Position)
+        local ScreenPosition,OnScreen = WorldToScreen(Position)
+        local Distance = GetDistance(Position)
 
-        local InTheRange = CheckDistance(
-            GetFlag(ESP.Flags,ESP.GlobalFlag,"/DistanceCheck"),
-            Distance,GetFlag(ESP.Flags,ESP.GlobalFlag,"/Distance")
-        )
-
-        ESP.Name.Visible = (OnScreen and InTheRange) and
-        (GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled") and GetFlag(ESP.Flags,ESP.Flag,"/Enabled")) or false
+        local InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.GlobalFlag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.GlobalFlag,"/Distance"),Distance)
+        ESP.Name.Visible = (OnScreen and InTheRange) and (GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled") and GetFlag(ESP.Flags,ESP.Flag,"/Enabled")) or false
 
         if ESP.Name.Visible then local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
             ESP.Name.Transparency = 1-Color[4] ESP.Name.Color = Color[6]
@@ -385,8 +381,10 @@ RunService.Heartbeat:Connect(function()
     for Target,ESP in pairs(DrawingLibrary.ESP) do
         ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
         if ESP.Target.Character and ESP.Target.RootPart then
-            ESP.Target.ScreenPosition,ESP.Target.OnScreen,ESP.Target.Distance = WorldToScreen(ESP.Target.RootPart.Position)
-            ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),ESP.Target.Distance,GetFlag(ESP.Flags,ESP.Flag,"/Distance"))
+            ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.RootPart.Position)
+            ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
+
+            ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
             ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
             ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
             ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor

@@ -8,8 +8,8 @@ local Workspace = game:GetService("Workspace")
 
 local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
-    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
-        {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nYou are at risk of getting autoban\nAre you sure you want to load Parvus?",{
+        {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
     }) repeat task.wait(1) until Loaded
 end
 
@@ -196,7 +196,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Healthbar",Flag = "ESP/Player/Box/Healthbar",Value = false})
+            BoxSection:Toggle({Name = "Healthbar",Flag = "ESP/Player/Box/HealthBar",Value = false})
             BoxSection:Toggle({Name = "Filled",Flag = "ESP/Player/Box/Filled",Value = false})
             BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Box/Outline",Value = true})
             BoxSection:Slider({Name = "Thickness",Flag = "ESP/Player/Box/Thickness",Min = 1,Max = 10,Value = 1})
