@@ -8,8 +8,8 @@ local Workspace = game:GetService("Workspace")
 
 local Loaded,PromptLib = false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
-    PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
-        {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
+    PromptLib("Unsupported executor","Synapse X only for safety measures\nYou are at risk of getting autoban\nAre you sure you want to load Parvus?",{
+        {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded = true end},
     }) repeat task.wait(1) until Loaded
 end
 
