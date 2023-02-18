@@ -437,7 +437,7 @@ function Assets:Window(ScreenAsset,Window)
 
 		local AutoLoads = HttpService:JSONDecode(
 			readfile(FolderName.."\\AutoLoads.json")
-		) local AutoLoad = AutoLoads[game.GameId]
+		) local AutoLoad = AutoLoads[tostring(game.GameId)]
 
 		if table.find(GetConfigs(FolderName),AutoLoad) then
 			Window:LoadConfig(FolderName,AutoLoad)
