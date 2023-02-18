@@ -673,10 +673,8 @@ function Assets:Slider(Parent,ScreenAsset,Window,Slider)
 	SliderAsset.Value.PlaceholderText = #Slider.Unit == 0 and Slider.Value or Slider.Value .. " " .. Slider.Unit
 
 	local function AttachToMouse(Input)
-		--local XScale = math.clamp((Input.Position.X - SliderAsset.Background.AbsolutePosition.X) / SliderAsset.Background.AbsoluteSize.X,0,1)
-		--Slider.Value = Scale(XScale,0,1,Slider.Min,Slider.Max)
-		local XScale = (Input.Position.X - SliderAsset.Background.AbsolutePosition.X) / SliderAsset.Background.AbsoluteSize.X
-		Slider.Value = Scale(XScale,0,1,Slider.Min,Slider.Max)
+		local ScaleX = math.clamp((Input.Position.X - SliderAsset.Background.AbsolutePosition.X) / SliderAsset.Background.AbsoluteSize.X,0,1)
+		Slider.Value = Scale(ScaleX,0,1,Slider.Min,Slider.Max)
 	end
 
 	if Slider.HighType then
