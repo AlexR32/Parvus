@@ -1,3 +1,22 @@
+### Update 18/02/23
+```markdown
+# UI
+another big update for UI
+* made dropdowns scrollable
+* new configs autoload system
+(now configs that you set to autoload will remain in game where you set it)
+* other small fixes and refactors
+# Global
+* main theme changed to default one (Christmas theme ended)
+```
+### Update 17/02/23
+```markdown
+# Global
+* fixed healthbars
+* fixed distance incorrectness
+# Bad Business
++ added thirdperson
+```
 ### Update 11/02/23
 ```markdown
 # Global
@@ -178,14 +197,12 @@ view wiki example for more info how things work now
 # BRM5
 + Added Unlock FPS
 ```
-
 ### Update 04/12/22
 ```markdown
 # BRM5
 * Fixed Wallcheck
 * Small improvements
 ```
-
 ### Update 03/12/22
 ```markdown
 # BRM5
@@ -195,7 +212,6 @@ view wiki example for more info how things work now
 * Fixed speedhack viewmodel getting crazy
 * Improved Environment section (now more smooth and less fps hungry i guess)
 ```
-
 ### Update 02/12/22
 ```markdown
 # Global
@@ -204,7 +220,6 @@ view wiki example for more info how things work now
 * Changed how Recoil slider works a bit
 * Refactor and improvements to No bob, firemodes, no bullet drop
 ```
-
 ### Update 01/12/22
 ```markdown
 # Global
@@ -218,13 +233,11 @@ view wiki example for more info how things work now
 # UI
 * Fixed Dropdown Flags not being autoassigned
 ```
-
 ### Update 22/11/22
 ```markdown
 - halloween disabled
 * fixed background scale always 296
 ```
-
 ### Update 29/10/22
 ```markdown
 # BB
@@ -237,7 +250,6 @@ view wiki example for more info how things work now
 # loader
 * refactor
 ```
-
 ### Update 15/10/22
 ```markdown
 # BRM5
@@ -245,13 +257,11 @@ view wiki example for more info how things work now
 * improved teleports
 * misc fixes
 ```
-
 ### Update 7/10/22
 ```markdown
 # BRM5
 * NPC ESP should be fixed as well as esp oov arrows
 ```
-
 ### Update 1/10/22
 ```markdown
 # Global
@@ -259,7 +269,6 @@ view wiki example for more info how things work now
 # Loader
 * Fixes/Improvements
 ```
-
 ### Update 24/08/22
 ```markdown
 # Bad Business
@@ -271,7 +280,6 @@ view wiki example for more info how things work now
 # BRM5
 * A-10 "Enabled" renamed to "Speed Enabled" for more clarity
 ```
-
 ### Update 06/08/22
 ```markdown
 # BB
@@ -281,14 +289,12 @@ view wiki example for more info how things work now
 # AR2
 * NoClip should be fixed??
 ```
-
 ### Update 30/07/22
 ```markdown
 # BRM5
 * Improved Teleports (see video below)
 + Added No Clip (just like in AR2)
 ```
-
 ### Update 29/07/22
 ```markdown
 #BB
@@ -300,7 +306,6 @@ view wiki example for more info how things work now
 # Global
 * Wallcheck Fix
 ```
-
 ### Update 29/07/22
 ```markdown
 # AR2
@@ -330,7 +335,6 @@ view wiki example for more info how things work now
 + Circle Outline
 + Optimize ESP
 ```
-
 ### Update 23/07/22
 ```markdown
 # AR2
@@ -340,7 +344,6 @@ view wiki example for more info how things work now
 + Added Spoof SCS (SCS - Set Character State: No Fall Damage, Less Hunger / Thirst While Sprinting)
 * Improved Container ESP
 ```
-
 ### Update 23/07/22
 ```markdown
 # AR2
@@ -351,7 +354,6 @@ view wiki example for more info how things work now
 # UI
 * Improved Notification2 function
 ```
-
 ### Update 21/07/22
 ```markdown
 # AR2
@@ -369,14 +371,12 @@ view wiki example for more info how things work now
 * Fixed Dropdown size with big lists
 * Cleared some code
 ```
-
 ### Update 20/07/22
 ```markdown
 # AR2
 * Item ESP tab reworked
 + Added Container ESP
 ```
-
 ### Update 16/07/22
 ```markdown
 # Bad Business
@@ -387,7 +387,6 @@ view wiki example for more info how things work now
 # Global
 * changed game tab to "Miscellaneous" tab
 ```
-
 ### Update 15/07/22
 ```markdown
 # ST
@@ -397,7 +396,6 @@ view wiki example for more info how things work now
 # global
 * changed some things
 ```
-
 ### Update 12/07/22
 ```markdown
 # Bad Business
@@ -406,7 +404,6 @@ view wiki example for more info how things work now
 * ESP Optimization
 * fixed trigger bot weird keybind bug
 ```
-
 ### Update 12/07/22
 ```markdown
 # Bad Business
@@ -423,7 +420,6 @@ view wiki example for more info how things work now
 + Added no recoil and lighting changer for now
 - Silent Aim disabled due to ban risk :shrug:
 ```
-
 ### Update 09/07/22
 ```markdown
 # Bad Business
@@ -435,7 +431,6 @@ view wiki example for more info how things work now
 # Global
 - Removed unused prints for debug
 ```
-
 ### Update 05/07/22
 ```markdown
 # BRM5
@@ -454,26 +449,22 @@ view wiki example for more info how things work now
 * Some Optimizations
 * Improved Trigger
 ```
-
 ### Update 26/06/22
 ```markdown
 # Bad Business
 * unpatched
 (they really thinking that removing print("ouch") could stop me? lmao)
 ```
-
 ### Update 25/06/22
 ```markdown
 + made some optimization go check if its still lags for you
 ```
-
 ### Update 25/06/22
 ```markdown
 # Bad Business
 * unpatched
 (it was little bit hard but i did it)
 ```
-
 ### Update 22/06/22
 ```markdown
 # BRM5
@@ -482,27 +473,23 @@ view wiki example for more info how things work now
 + added force character reset
 * fixed custom mouse disabled by default
 ```
-
 ### Update 19/06/22
 ```markdown
 # Universal
 + added blur gameplay in settings
 + bring back Close On Exec (now named Open On Load)
 ```
-
 ### Update 10/06/22
 ```markdown
 # BRM5
 * fixed getconnections for shitsploits
 * fixed nvg shape
 ```
-
 ### Update 10/06/22
 ```markdown
 # Bad Business
 * fixed prediction with magic book (finally)
 ```
-
 ### Update 03/06/22
 ```markdown
 + Added Steel Titans (Fly and ESP)
@@ -510,7 +497,6 @@ view wiki example for more info how things work now
 + Added Fake RGE
 * Fixed HookFunction Typo
 ```
-
 ### Update 29/05/22
 ```markdown
 # Bad Business
@@ -523,7 +509,6 @@ view wiki example for more info how things work now
 - disabled most of functions cuz they can be detected
 (gonna leave it like this until i figure out how anti cheat works)
 ```
-
 ### Update 28/05/22
 ```markdown
 # Bad Business
@@ -531,7 +516,6 @@ view wiki example for more info how things work now
 * improved autoshoot a bit
 * made autoshoot use actual weapon config (more precise reloading time)
 ```
-
 ### Update 26/05/22
 ```markdown
 # Bad Business
@@ -542,13 +526,11 @@ view wiki example for more info how things work now
 # RAGDOLL UNIVERSE
 * fixed esp
 ```
-
 ### Update 21/05/22
 ```markdown
 * fixes
 + Added TWW
 ```
-
 ### Update 16/05/22
 ```markdown
 # BRM5
@@ -556,7 +538,6 @@ view wiki example for more info how things work now
 * you can change recoil percent now
 * code now a lot smaller
 ```
-
 ### Update 15/05/22
 ```markdown
 # Bad Business
@@ -564,19 +545,16 @@ view wiki example for more info how things work now
 * changed and fixed autoshoot (more stable i guess?)
 * made gravity correction dynamic again, but looks like it doesnt affect prediction at all
 ```
-
 ### Update 15/05/22
 ```markdown
 # Bad Business
 * ez fix lmao, their methods suck
 ```
-
 ### Update 14/05/22
 ```markdown
 # Bad Business
 * made gravity correction static cuz its breaking whole script for some reason
 ```
-
 ### Update 14/05/22
 ```markdown
 # Bad Business
@@ -589,14 +567,11 @@ view wiki example for more info how things work now
 * changed dynamic fov
 * something changed, cant remember what so find out what i changed for yourself :)
 ```
-
 ### Update 08/05/22
 ```markdown
 * Bug Fixes
 * Watermark Changed
-
 ```
-
 ### Update 07/05/22
 ```markdown
 # Bad Business
@@ -604,7 +579,6 @@ view wiki example for more info how things work now
 # Global
 * Box Improvements
 ```
-
 ### Update 00/05/22
 ```markdown
 # Global
@@ -613,7 +587,6 @@ view wiki example for more info how things work now
 * Revert Watermark and make it draggable and you can save position
 + lighting controls in visuals tab
 ```
-
 ### Update 30/04/22
 ```markdown
 # Global
@@ -621,13 +594,11 @@ view wiki example for more info how things work now
 # Bad Business
 * Fixed silent aim uses settings from aimbot (lol)
 ```
-
 ### Update 27/04/22
 ```markdown
 # Global
 + New Config System
 ```
-
 ### Update 15/04/22
 ```markdown
 # BRM5
@@ -635,13 +606,11 @@ view wiki example for more info how things work now
 # Global
 + Added Dynamic FOV (changes with your camera FOV)
 ```
-
 ### Update 14/04/22
 ```markdown
 # Bad Business
 + added bullet drop correction to prediction (not 100% precise)
 ```
-
 ### Update 13/04/22
 ```markdown
 # Bad Business
@@ -650,21 +619,18 @@ view wiki example for more info how things work now
 * Attempt to fix ESP lags
 * Prediction now auto detects bullet velocity
 ```
-
 ### Update 12/04/22
 ```markdown
 # Bad Business
 + Added Bullet Drop Changer
 * Changed Trigger Bot
 ```
-
 ### Update 11/04/22
 ```markdown
 # BRM5
 * NPC ESP Changed
 + Added no NVG Goggles Effect
 ```
-
 ### Update 10/04/22
 ```markdown
 # Bad Business
