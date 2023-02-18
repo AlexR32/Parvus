@@ -377,11 +377,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",true)
-end
-
-Window:SetValue("Background/Offset",296)
-Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)

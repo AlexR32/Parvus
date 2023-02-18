@@ -168,11 +168,7 @@ local Window = Parvus.Utilities.UI:Window({
             HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end
-
-Window:SetValue("Background/Offset",296)
-Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)

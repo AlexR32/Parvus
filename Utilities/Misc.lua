@@ -144,7 +144,12 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
             Callback = function(Bool) Window.Enabled = Bool end})
 
             UIToggle:Keybind({Value = UIKeybind,Flag = "UI/Keybind",DoNotClear = true})
-            UIToggle:Colorpicker({Flag = "UI/Color",Value = {0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false},
+            --[[
+                Default   - 1,0.25,1,0,true
+                Christmas - 0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false
+                Halloween - 0.0836667,1,1,0,false
+            ]]
+            UIToggle:Colorpicker({Flag = "UI/Color",Value = {1,0.25,1,0,true},
             Callback = function(HSVAR,Color) Window.Color = Color end})
 
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
@@ -171,7 +176,12 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
         :ToolTip("Join for support, updates and more!")
 
         local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
-            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false},
+            --[[
+                Default   - 1,1,0,0,false
+                Christmas - 0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false
+                Halloween - 0.0836667,1,1,0,false
+            ]]
+            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Textbox({HideName = true,Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
             Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
@@ -203,7 +213,7 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
                 {Name = "Floral",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://5553946656"
                     Window.Flags["Background/CustomImage"] = ""
-                end},
+                end,Value = true},
                 {Name = "Halloween",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://11113209821"
                     Window.Flags["Background/CustomImage"] = ""
@@ -211,7 +221,7 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
                 {Name = "Christmas",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://11711560928"
                     Window.Flags["Background/CustomImage"] = ""
-                end,Value = true}
+                end}
             }})
             BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",HighType = true,Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.fromOffset(Number,Number) end})
@@ -233,6 +243,12 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
         end
     end
+end
+
+function Misc:InitAutoLoad(Window)
+    Window:SetValue("Background/Offset",74)
+    Window:AutoLoadConfig("Parvus")
+    Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
 end
 
 function Misc:LightingSection(Tab,Side)

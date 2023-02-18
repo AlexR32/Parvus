@@ -94,7 +94,7 @@ local Window = Parvus.Utilities.UI:Window({
             end}):Keybind()
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end
+end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 function GetPlayerTank(Player)
     local Char = Player:WaitForChild("Char")
@@ -103,9 +103,6 @@ function GetPlayerTank(Player)
     return Char.Value.Parent.Parent.Parent
 end
 
-Window:SetValue("Background/Offset",296)
-Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
