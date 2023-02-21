@@ -218,7 +218,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE)
                 Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
                 local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BPPosition)
                 local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,BPPosition,Distance,ScreenPosition} end
+                if OnScreen and Magnitude <= FOV then FOV,ClosestHitbox = Magnitude,{NPC,NPC,BodyPart,BPPosition,ScreenPosition} end
             end
         end
     end
@@ -291,19 +291,28 @@ end)
 
 -- Testing
 local OldNamecall
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
 
-    if Self.Name == "PewRomote" and (string.sub(Args[1],11) == "d" or string.sub(Args[1],11) == "j") and
-    SilentAim and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-        local Direction = (SilentAim[4] - Args[3]) Args[4] = Direction.Unit
-        Args[10] = 0 Args[8] = Vector3.zero local Thing = OldNamecall(Self,unpack(Args))
-        Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[4],
-        SilentAim[3],0.02,Direction.Unit * Direction.Magnitude,SilentAim[3].Size.Y)
-        return Thing
+    if Self.Name == "PewRomote" and Method == "FireServer" and SilentAim
+    and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+        local Command = string.sub(Args[1],11)
+        if (Command == "d" or Command == "j") then
+            local Direction = SilentAim[4] - Args[3]
+            Args[4] = Direction.Unit
+            Args[8] = Vector3.zero
+            Args[10] = 0
+
+            OldNamecall(Self,unpack(Args))
+            task.spawn(function() local Time = tick()
+                task.wait((SilentAim[4] - Args[3]).Magnitude / ProjectileSpeed)
+                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[4],
+                SilentAim[3],tick() - Time,Direction,SilentAim[3].Size.Y)
+            end) return
+        end
     end
 
-    return OldNamecall(Self, ...)
+    return OldNamecall(Self,...)
 end)
 
 --[[local RayHit
