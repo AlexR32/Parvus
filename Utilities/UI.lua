@@ -1148,6 +1148,8 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 	end)
 	Dropdown:GetPropertyChangedSignal("Value"):Connect(function(Value)
 		if type(Value) ~= "table" then return end
+		if #Value == 0 then RefreshSelected() return end
+
 		for Index,Option in pairs(Dropdown.List) do
 			if table.find(Value,Option.Name) then
 				Option.Value = true
