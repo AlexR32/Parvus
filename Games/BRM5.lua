@@ -5,6 +5,9 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 
+repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
+local Terrain = Workspace:FindFirstChildOfClass("Terrain")
+
 repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
@@ -255,6 +258,12 @@ local Window = Parvus.Utilities.UI:Window({
             end})
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
+        end
+        local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
+            IESPSection:Toggle({Name = "Enabled",Flag = "ESP/Intel/Enabled",Value = false})
+            :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
+            IESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Intel/DistanceCheck",Value = false})
+            IESPSection:Slider({Name = "Distance",Flag = "ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
         end
         local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
@@ -896,6 +905,19 @@ end)
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
+end)
+
+for Index,Item in pairs(Terrain:GetChildren()) do
+    if Item:FindFirstChildOfClass("ProximityPrompt") then
+        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item,"ESP/Intel","ESP/Intel",Window.Flags)
+    end
+end
+
+Terrain.DescendantAdded:Connect(function(Item)
+    if Item:IsA("ProximityPrompt") then
+        print(Item.Parent.Name)
+        Parvus.Utilities.Drawing:AddObject(Item.Parent,Item.Parent.Name,Item.Parent,"ESP/Intel","ESP/Intel",Window.Flags)
+    end
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do

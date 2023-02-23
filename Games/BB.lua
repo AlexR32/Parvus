@@ -466,13 +466,13 @@ local Window = Parvus.Utilities.UI:Window({
         -- // TODO: Add more types like random,jitter,spin etc
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false}):Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Look",Flag = "BB/AntiAim/Look",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
             AASection:Slider({Name = "Lean",Flag = "BB/AntiAim/Lean",Min = -1.5,Max = 1.5,Precise = 2,Value = 0,Wide = true})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
+            AASection:Slider({Name = "Roll",Flag = "BB/AntiAim/Roll",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
             AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
-            AASection:Toggle({Name = "Look Random",Flag = "BB/AntiAim/LookRandom",Value = false})
-            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = false})
             AASection:Toggle({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Value = false})
+            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = false})
+            AASection:Toggle({Name = "Roll Random",Flag = "BB/AntiAim/RollRandom",Value = false})
             AASection:Toggle({Name = "Yaw Random",Flag = "BB/AntiAim/YawRandom",Value = false})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
@@ -942,14 +942,14 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
 
     if Args[3] == "Look" then
         if Window.Flags["BB/AntiAim/Enabled"] then
-            local Look = Window.Flags["BB/AntiAim/Look"]
+            local Pitch = Window.Flags["BB/AntiAim/Pitch"]
             local Lean = Window.Flags["BB/AntiAim/Lean"]
 
-            local LookRange,LeanRange = math.abs(Look),math.abs(Lean)
-            LookRange,LeanRange = NewRandom:NextNumber(-LookRange,LookRange),
+            local PitchRange,LeanRange = math.abs(Pitch),math.abs(Lean)
+            PitchRange,LeanRange = NewRandom:NextNumber(-PitchRange,PitchRange),
             NewRandom:NextNumber(-LeanRange,LeanRange)
 
-            Args[4] = Window.Flags["BB/AntiAim/LookRandom"] and LookRange or Look
+            Args[4] = Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch
             Old(Self,"Character","State","Lean",Window.Flags["BB/AntiAim/LeanRandom"] and LeanRange or Lean)
 
             --[[Old(Self,"Character","State","Aiming",true)
@@ -1027,13 +1027,13 @@ HeartbeatConnections["Control"] = function(...)
             LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
         end
         if Window.Flags["BB/AntiAim/Enabled"] then
-            local Pitch,Yaw = Window.Flags["BB/AntiAim/Pitch"],Window.Flags["BB/AntiAim/Yaw"]
-            local PitchRange,YawRange = math.abs(Pitch),math.abs(Yaw)
-            PitchRange,YawRange = NewRandom:NextNumber(-PitchRange,PitchRange),
+            local Roll,Yaw = Window.Flags["BB/AntiAim/Roll"],Window.Flags["BB/AntiAim/Yaw"]
+            local RollRange,YawRange = math.abs(Roll),math.abs(Yaw)
+            RollRange,YawRange = NewRandom:NextNumber(-RollRange,RollRange),
             NewRandom:NextNumber(-YawRange,YawRange)
 
             LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(
-                math.rad(180 * (Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch)),
+                math.rad(180 * (Window.Flags["BB/AntiAim/RollRandom"] and RollRange or Roll)),
                 math.rad(180 * (Window.Flags["BB/AntiAim/YawRandom"] and YawRange or Yaw)),0
             )
         end

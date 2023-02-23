@@ -16,7 +16,7 @@ repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SetIdentity = syn and syn.set_thread_identity or setidentity
+local SetIdentity = (syn and syn.set_thread_identity) or setidentity
 local Request = (syn and syn.request) or (http and http.request) or request
 
 do -- Thanks to Kiriot22
@@ -86,7 +86,7 @@ function Misc:ReJoin()
 end
 
 function Misc:ServerHop()
-    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGetAsync(
+    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGet(
         "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/0?sortOrder=2&excludeFullGames=true&limit=100"
     )).data,{}
     for Index,ServerData in ipairs(DataDecoded) do
@@ -257,7 +257,7 @@ end
 function Misc:InitAutoLoad(Window)
     Window:SetValue("Background/Offset",74)
     Window:AutoLoadConfig("Parvus")
-    Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+    Window:SetValue("UI/Enabled",Window.Flags["UI/OOL"])
 end
 
 function Misc:LightingSection(Tab,Side)
