@@ -5,7 +5,6 @@ Made With :heart: By ***AlexR32#0157***
 ***Parvus is still in beta stage of development so expect some bugs or lack of features.***   
 ### Loadstring
 ```lua
-local Debug,NotificationTime = false,5
 local Request = (syn and syn.request)
 or (http and http.request) or request
 
@@ -14,8 +13,9 @@ local function HTTPGet(Url)
     if Responce then return Responce.Body end
 end
 
-local Url = "https://raw.githubusercontent.com/AlexR32/Parvus/main/"
-loadstring(HTTPGet(Url.."Loader.lua"))(Debug,NotificationTime)
+local DevelopmentBranch,Debug,NotificationTime = true,false,5
+loadstring(HTTPGet(("https://raw.githubusercontent.com/AlexR32/Parvus/%s/Loader.lua")
+:format(DevelopmentBranch and "development" or "main")))(Debug,NotificationTime)
 
 ```
 ### Supported Games
