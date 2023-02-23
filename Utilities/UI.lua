@@ -656,7 +656,7 @@ function Assets:Toggle(Parent,ScreenAsset,Window,Toggle)
 	return ToggleAsset
 end
 function Assets:Slider(Parent,ScreenAsset,Window,Slider)
-	local SliderAsset = Slider.HighType
+	local SliderAsset = Slider.Wide
 	and GetAsset("Slider/HighSlider")
 	or GetAsset("Slider/Slider")
 
@@ -677,7 +677,7 @@ function Assets:Slider(Parent,ScreenAsset,Window,Slider)
 		Slider.Value = Scale(ScaleX,0,1,Slider.Min,Slider.Max)
 	end
 
-	if Slider.HighType then
+	if Slider.Wide then
 		SliderAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			SliderAsset.Value.Size = UDim2.new(0,SliderAsset.Value.TextBounds.X,1,0)
 			SliderAsset.Title.Size = UDim2.new(1,-SliderAsset.Value.Size.X.Offset + 12,1,0)
@@ -1148,6 +1148,8 @@ function Assets:Dropdown(Parent,ScreenAsset,Window,Dropdown)
 	end)
 	Dropdown:GetPropertyChangedSignal("Value"):Connect(function(Value)
 		if type(Value) ~= "table" then return end
+		if #Value == 0 then RefreshSelected() return end
+
 		for Index,Option in pairs(Dropdown.List) do
 			if table.find(Value,Option.Name) then
 				Option.Value = true
@@ -1300,7 +1302,12 @@ function Assets:Colorpicker(Parent,ScreenAsset,Window,Colorpicker)
 	end)
 	Colorpicker:GetPropertyChangedSignal("Value"):Connect(function(Value)
 		Value[6] = TableToColor(Value)
+		Colorpicker.ColorConfig[1] = Colorpicker.Value[5]
 		ColorpickerAsset.Color.BackgroundColor3 = Value[6]
+
+		PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
+		and Window.Color or Color3.fromRGB(60,60,60)
+
 		PaletteAsset.SVPicker.BackgroundColor3 = Color3.fromHSV(Value[1],1,1)
 		PaletteAsset.SVPicker.Pin.Position = UDim2.fromScale(Value[2],1 - Value[3])
 		PaletteAsset.Hue.Pin.Position = UDim2.fromScale(1 - Value[1],0.5)
@@ -1445,7 +1452,12 @@ function Assets:ToggleColorpicker(Parent,ScreenAsset,Window,Colorpicker)
 	end)
 	Colorpicker:GetPropertyChangedSignal("Value"):Connect(function(Value)
 		Value[6] = TableToColor(Value)
+		Colorpicker.ColorConfig[1] = Colorpicker.Value[5]
 		ColorpickerAsset.BackgroundColor3 = Value[6]
+
+		PaletteAsset.Rainbow.Tick.BackgroundColor3 = Colorpicker.Value[5]
+		and Window.Color or Color3.fromRGB(60,60,60)
+
 		PaletteAsset.SVPicker.BackgroundColor3 = Color3.fromHSV(Value[1],1,1)
 		PaletteAsset.SVPicker.Pin.Position = UDim2.fromScale(Value[2],1 - Value[3])
 		PaletteAsset.Hue.Pin.Position = UDim2.fromScale(1 - Value[1],0.5)

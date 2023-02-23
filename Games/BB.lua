@@ -30,7 +30,7 @@ local SilentAim,Aimbot,Trigger = nil,false,false
 local Tortoiseshell,WeaponModel,NewRandom = require(ReplicatedStorage.TS),nil,Random.new()
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
-local GBP,HitmarkerScripts = {"Chest"},{}
+local GBP,HitmarkerScripts,FlyPosition = {"Chest"},{},nil
 
 local HitSounds = {
     {"AR2 Head","2062016772",false},
@@ -104,11 +104,12 @@ local HandleCharacter = getupvalue(GetFunctionFromEvent(Tortoiseshell.Characters
 local CharacterHandlers = getupvalue(HandleCharacter,3)
 
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
-local RSC = getupvalue(Tortoiseshell.Timer.BindToRenderStep,1) -- RenderSteppedConnections
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
 local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 --local ControllersFolder = getupvalue(Tortoiseshell.Items.GetController,2)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
+local HeartbeatConnections = getupvalue(Tortoiseshell.Timer.BindToHeartbeat,1)
+local RenderStepConnections = getupvalue(Tortoiseshell.Timer.BindToRenderStep,1)
 
 local BodyVelocity = Instance.new("BodyVelocity")
 BodyVelocity.MaxForce = Vector3.one * math.huge
@@ -303,8 +304,19 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
+        local CCSection = MiscTab:Section({Name = "Character Customization",Side = "Left"}) do
+            CCSection:Toggle({Name = "Enabled",Flag = "BB/CharCustom/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/CharCustom/Color",Value = {1,0.75,1,0.5,true}})
+            CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CharCustom/Texture",Value = true})
+            CCSection:Slider({Name = "Reflectance",Flag = "BB/CharCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            CCSection:Dropdown({Name = "Material",Flag = "BB/CharCustom/Material",List = {
+                {Name = "SmoothPlastic",Mode = "Button"},
+                {Name = "ForceField",Mode = "Button"},
+                {Name = "Neon",Mode = "Button",Value = true},
+                {Name = "Glass",Mode = "Button"}
+            }})
+        end
         local HitmarkerSection = MiscTab:Section({Name = "Hitmarker Customization",Side = "Left"}) do
-
             local HitList = {}
             for Index,Sound in pairs(HitSounds) do
                 HitList[#HitList + 1] = {Name = Sound[1],Mode = "Button",Callback = function()
@@ -400,45 +412,54 @@ local Window = Parvus.Utilities.UI:Window({
             KillSoundSection:Dropdown({Name = "Hitmarker Sound",Flag = "BB/KillSound/Sound",List = KillSoundList})
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
-            CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
-                    BodyVelocity.Parent = Characters[LocalPlayer].PrimaryPart
-                else BodyVelocity.Parent = nil end
-            end}):Keybind({Flag = "BB/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 10,Max = 150,Value = 100})
-            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
-            end})
-            CharSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson",Value = false,Callback = function(Bool)
+            CharSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
+            CharSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if not LPCharacter then return end
 
-                task.spawn(function() SetIdentity(2)
-                    if not CharacterHandlers[LPCharacter] then
-                        HandleCharacter(LPCharacter,LocalPlayer)
-                    end
-                end)
+                if Window.Flags["BB/ThirdPerson/Outfit"] then
+                    task.spawn(function() SetIdentity(2)
+                        if not CharacterHandlers[LPCharacter] then
+                            HandleCharacter(LPCharacter,LocalPlayer)
+                        end
+                    end)
+                end
 
                 for Index,Value in pairs(LPCharacter:GetDescendants()) do
                     if Value:IsA("BasePart") then
                         Value.LocalTransparencyModifier = Bool and 0 or 1
                     end
                 end
+            end}):Keybind({Flag = "BB/ThirdPerson/Keybind"})
+            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
+                local LPCharacter = Characters[LocalPlayer]
+                if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
             end})
+            CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
+                local LPCharacter = Characters[LocalPlayer]
+                if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
+                    FlyPosition = LPCharacter.PrimaryPart.Position
+                    --BodyVelocity.Parent = LPCharacter.PrimaryPart
+                --else BodyVelocity.Parent = nil end
+                end
+            end}):Keybind({Flag = "BB/Fly/Keybind"})
+            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2.5,Precise = 1,Value = 2.5,Wide = true})
+            CharSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
         end
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false})
             :Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2})
-            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1.5,Max = 1.5,Precise = 2,Value = 0})
-
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
+            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1.5,Max = 1.5,Precise = 2,Value = 0,Wide = true})
             AASection:Toggle({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Value = false})
             AASection:Toggle({Name = "Yaw Random",Flag = "BB/AntiAim/YawRandom",Value = false})
+
+            AASection:Toggle({Name = "Body Manipulation",Flag = "BB/AntiAim/BodyManipulation/Enabled",Value = false})
+            :Keybind({Flag = "BB/BodyManipulation/Keybind"})
+            AASection:Slider({Name = "X",Flag = "BB/AntiAim/BodyManipulation/X",Min = -360,Max = 360,Value = 180,Wide = true})
+            AASection:Slider({Name = "Y",Flag = "BB/AntiAim/BodyManipulation/Y",Min = -360,Max = 360,Value = 0,Wide = true})
+            AASection:Slider({Name = "Z",Flag = "BB/AntiAim/BodyManipulation/Z",Min = -360,Max = 360,Value = 0,Wide = true})
         end
-        --[[local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
-        end]]
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
@@ -613,6 +634,25 @@ local function CustomizeArms(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
 
     for Index,Instance in pairs(Workspace.Arms:GetDescendants()) do
+        if HideTextures and Instance:IsA("Texture") then
+            Instance.Transparency = 1
+        elseif Instance:IsA("BasePart")
+        and Instance.Transparency < 1
+        and Instance.Reflectance < 1 then
+            Instance.Color = Color[6]
+            Instance.Transparency = Color[4] > 0.95 and 0.95 or Color[4]
+            Instance.Reflectance = Reflectance
+            Instance.Material = Material
+        end
+    end
+end
+local function CustomizeCharacter(Enabled,HideTextures,Color,Reflectance,Material)
+    if not Enabled then return end
+
+    local LPCharacter = Characters[LocalPlayer]
+    if not LPCharacter then return end
+
+    for Index,Instance in pairs(LPCharacter:GetDescendants()) do
         if HideTextures and Instance:IsA("Texture") then
             Instance.Transparency = 1
         elseif Instance:IsA("BasePart")
@@ -949,16 +989,39 @@ end,true)
     end return unpack(Args)
 end)]]
 
-local OldCamera = RSC["Camera"]
-RSC["Camera"] = function(...)
+local OldCamera = RenderStepConnections["Camera"]
+RenderStepConnections["Camera"] = function(...)
     local Args = {OldCamera(...)}
-    if Window.Flags["BB/ThirdPerson"] then
+    if Window.Flags["BB/ThirdPerson/Enabled"] then
         local LPCharacter = Characters[LocalPlayer]
-        if LPCharacter and LPCharacter.Parent ~= nil then
-            Camera.CFrame = Camera.CFrame * CFrame.new(0,0,10)
+        if LPCharacter and LPCharacter.Parent then
+            Camera.CFrame = Camera.CFrame * CFrame.new(0,0,Window.Flags["BB/ThirdPerson/FOV"])
             return
         end
     end
+    return unpack(Args)
+end
+
+local OldControl = HeartbeatConnections["Control"]
+HeartbeatConnections["Control"] = function(...)
+    local Args = {OldControl(...)}
+
+    local LPCharacter = Characters[LocalPlayer]
+    if LPCharacter and LPCharacter.Parent and LPCharacter.PrimaryPart then
+        if Window.Flags["BB/Fly/Enabled"] and FlyPosition then
+            FlyPosition += InputToVelocity() * Window.Flags["BB/Fly/Speed"]
+            LPCharacter.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
+            LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
+        end
+        if Window.Flags["BB/AntiAim/BodyManipulation/Enabled"] then
+            LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(
+                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/X"]),
+                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/Y"]),
+                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/Z"])
+            )
+        end
+    end
+
     return unpack(Args)
 end
 
@@ -1045,13 +1108,22 @@ Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
         Window.Flags["BB/ArmsCustom/Reflectance"],
         Window.Flags["BB/ArmsCustom/Material"][1]
     )
+    if Window.Flags["BB/ThirdPerson/Enabled"] then
+        CustomizeCharacter(
+            Window.Flags["BB/CharCustom/Enabled"],
+            Window.Flags["BB/CharCustom/Texture"],
+            Window.Flags["BB/CharCustom/Color"],
+            Window.Flags["BB/CharCustom/Reflectance"],
+            Window.Flags["BB/CharCustom/Material"][1]
+        )
+    end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+--[[Parvus.Utilities.Misc:NewThreadLoop(0,function()
     PlayerFly(
         Window.Flags["BB/Fly/Enabled"],
         Window.Flags["BB/Fly/Speed"]
     )
-end)
+end)]]
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     --if not Window.Flags["BB/AutoShoot/Enabled"] then return end
     AutoShoot(GetClosestAllFOV(
@@ -1106,18 +1178,21 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
     if Child.Name == LocalPlayer.Name then
         repeat task.wait() until Child.PrimaryPart
         Child.PrimaryPart.CanCollide = not Window.Flags["BB/NoClip"]
-        if Window.Flags["BB/Fly/Enabled"] then
+        FlyPosition = Child.PrimaryPart.Position
+        --[[if Window.Flags["BB/Fly/Enabled"] then
             BodyVelocity.Parent = Child.PrimaryPart
-        end
+        end]]
 
-        if Window.Flags["BB/ThirdPerson"] then
+        if Window.Flags["BB/ThirdPerson/Enabled"] then
             task.spawn(function()
                 local LPCharacter = Characters[LocalPlayer]
                 if not LPCharacter then return end
-                SetIdentity(2)
 
-                if not CharacterHandlers[LPCharacter] then
-                    HandleCharacter(LPCharacter,LocalPlayer)
+                if Window.Flags["BB/ThirdPerson/Outfit"] then
+                    if not CharacterHandlers[LPCharacter] then
+                        SetIdentity(2)
+                        HandleCharacter(LPCharacter,LocalPlayer)
+                    end
                 end task.wait(0.5)
 
                 for Index,Value in pairs(LPCharacter:GetDescendants()) do

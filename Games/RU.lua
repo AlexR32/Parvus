@@ -193,9 +193,9 @@ local function WallCheck(Enabled,Hitbox,Character)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    local PredictedPosition = Origin + Velocity * Time
+    --[[local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed
+    Time = Time + Delta / ProjectileSpeed]]
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 

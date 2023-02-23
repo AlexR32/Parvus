@@ -7,11 +7,11 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local Stats = game:GetService("Stats")
 
-
 local Misc = {}
-repeat task.wait() until
-Stats.Network:FindFirstChild("ServerStatsItem")
+
+repeat task.wait() until Stats.Network:FindFirstChild("ServerStatsItem")
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
+
 repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
@@ -137,54 +137,59 @@ function Misc:SetupWatermark(Window)
     end)
 end
 
-function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
-    local SettingsTab = Window:Tab({Name = "Settings"}) do
-        local MenuSection = SettingsTab:Section({Name = "Menu",Side = "Left"}) do
-            local UIToggle = MenuSection:Toggle({Name = "Enabled",Flag = "UI/Toggle",IgnoreFlag = true,Value = Window.Enabled,
-            Callback = function(Bool) Window.Enabled = Bool end})
+--[[
+# UI Color
+  - Default   = 1,0.25,1,0,true
+  - Christmas = 0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false
+  - Halloween = 0.0836667,1,1,0,false
+# Background Color
+  - Default   = 1,1,0,0,false
+  - Christmas = 0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false
+  - Halloween = 0.0836667,1,1,0,false
+]]
 
+function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
+    local OptionsTab = Window:Tab({Name = "Options"}) do
+        local MenuSection = OptionsTab:Section({Name = "Menu",Side = "Left"}) do
+            local UIToggle = MenuSection:Toggle({Name = "UI Enabled",Flag = "UI/Enabled",IgnoreFlag = true,
+            Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
             UIToggle:Keybind({Value = UIKeybind,Flag = "UI/Keybind",DoNotClear = true})
-            --[[
-                Default   - 1,0.25,1,0,true
-                Christmas - 0.4541666507720947,0.20942406356334686,0.7490196228027344,0,false
-                Halloween - 0.0836667,1,1,0,false
-            ]]
             UIToggle:Colorpicker({Flag = "UI/Color",Value = {1,0.25,1,0,true},
             Callback = function(HSVAR,Color) Window.Color = Color end})
 
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function(Bool) Window.Blur = Bool end})
-            MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark",Value = true,
-            Callback = function(Bool) Window.Watermark.Enabled = Bool end})
+
+            MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark/Enabled",Value = true,
+            Callback = function(Bool) Window.Watermark.Enabled = Bool end}):Keybind({Flag = "UI/Watermark/Keybind"})
+
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = CustomMouse})
+
+            MenuSection:Button({Name = "Rejoin",Side = "Left",
+            Callback = Parvus.Utilities.Misc.ReJoin})
+
+            MenuSection:Button({Name = "Server Hop",Side = "Left",
+            Callback = Parvus.Utilities.Misc.ServerHop})
         end
-        SettingsTab:AddConfigSection("Parvus","Left")
 
-        SettingsTab:Button({Name = "Rejoin",Side = "Left",
-        Callback = Parvus.Utilities.Misc.ReJoin})
+        OptionsTab:AddConfigSection("Parvus","Left")
 
-        SettingsTab:Button({Name = "Server Hop",Side = "Left",
-        Callback = Parvus.Utilities.Misc.ServerHop})
+        local DiscordSection = OptionsTab:Section({Name = "Discord",Side = "Left"}) do
+            DiscordSection:Label({Text = "Invite Code: sYqDpbPYb7"})
 
-        SettingsTab:Button({Name = "Join Discord Server",Side = "Left",
-        Callback = Parvus.Utilities.Misc.JoinDiscord})
-        :ToolTip("Join for support, updates and more!")
+            DiscordSection:Button({Name = "Copy Invite Link",Side = "Left",
+            Callback = function() setclipboard("https://discord.gg/sYqDpbPYb7") end})
 
-        SettingsTab:Button({Name = "Copy Discord Invite",Side = "Left",
-        Callback = function() setclipboard("https://discord.com/invite/sYqDpbPYb7") end})
-        :ToolTip("Join for support, updates and more!")
+            DiscordSection:Button({Name = "Join Through Discord App",Side = "Left",
+            Callback = Parvus.Utilities.Misc.JoinDiscord})
+        end
 
-        local BackgroundSection = SettingsTab:Section({Name = "Background",Side = "Right"}) do
-            --[[
-                Default   - 1,1,0,0,false
-                Christmas - 0.12000000476837158,0.10204081237316132,0.9607843160629272,0.5,false
-                Halloween - 0.0836667,1,1,0,false
-            ]]
+        local BackgroundSection = OptionsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Textbox({HideName = true,Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
-            Callback = function(String) if string.gsub(String," ","") ~= "" then Window.Background.Image = String end end})
+            Callback = function(String,EnterPressed) if EnterPressed then Window.Background.Image = String end end})
             BackgroundSection:Dropdown({HideName = true,Flag = "Background/Image",List = {
                 {Name = "Legacy",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://2151741365"
@@ -223,23 +228,27 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",HighType = true,Min = 74,Max = 296,Value = 74,
+            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Wide = true,Min = 74,Max = 296,Value = 74,
             Callback = function(Number) Window.Background.TileSize = UDim2.fromOffset(Number,Number) end})
         end
-        local CrosshairSection = SettingsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
+        local CrosshairSection = OptionsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
             :Colorpicker({Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
-            CrosshairSection:Slider({Name = "Size",Flag = "Mouse/Crosshair/Size",HighType = true,Min = 0,Max = 20,Value = 4})
-            CrosshairSection:Slider({Name = "Gap",Flag = "Mouse/Crosshair/Gap",HighType = true,Min = 0,Max = 10,Value = 2})
+            CrosshairSection:Slider({Name = "Size",Flag = "Mouse/Crosshair/Size",Wide = true,Min = 0,Max = 20,Value = 4})
+            CrosshairSection:Slider({Name = "Gap",Flag = "Mouse/Crosshair/Gap",Wide = true,Min = 0,Max = 10,Value = 2})
         end
-        local CreditsSection = SettingsTab:Section({Name = "Credits",Side = "Right"}) do
-            CreditsSection:Label({Text = "This script was made by AlexR32#0157"})
-            CreditsSection:Divider()
-            CreditsSection:Label({Text = "Thanks to Jan for awesome Background Patterns"})
-            CreditsSection:Label({Text = "Thanks to Infinite Yield Team for Server Hop and Rejoin"})
-            CreditsSection:Label({Text = "Thanks to Blissful for Offscreen Arrows"})
-            CreditsSection:Label({Text = "Thanks to coasts for Universal ESP"})
-            CreditsSection:Label({Text = "Thanks to el3tric for Bracket V2"})
+        local CreditsSection = OptionsTab:Section({Name = "Credits",Side = "Right"}) do
+            CreditsSection:Label({Text = "Made by AlexR32#0157"})
+            CreditsSection:Label({Text = "(I dont take friend requests,\nfind me on my server)"})
+            CreditsSection:Divider({Text = "Special thanks to"})
+            CreditsSection:Label({Text = "Jan for awesome Background Patterns"})
+            CreditsSection:Label({Text = "Infinite Yield Team for Server Hop and Rejoin"})
+            CreditsSection:Label({Text = "Blissful for Offscreen Arrows"})
+            CreditsSection:Label({Text = "coasts for Universal ESP"})
+            CreditsSection:Label({Text = "mickeyrbx for CalculateBox"})
+            CreditsSection:Label({Text = "Kiriot22 for Anti plugin crash"})
+            CreditsSection:Label({Text = "el3tric for Bracket V2"})
+            CreditsSection:Label({Text = "and much more people\nbehind this project"})
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
         end
     end
@@ -248,7 +257,7 @@ end
 function Misc:InitAutoLoad(Window)
     Window:SetValue("Background/Offset",74)
     Window:AutoLoadConfig("Parvus")
-    Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+    Window:SetValue("UI/Enabled",Window.Flags["UI/OOL"])
 end
 
 function Misc:LightingSection(Tab,Side)
