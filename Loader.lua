@@ -49,7 +49,7 @@ local function LoadScript(Script)
 end
 
 getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},
-    Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/main/",Games = {
+    Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/development/",Games = {
         ["Universal" ] = {Name = "Universal",                 Script = "Universal" },
         ["1168263273"] = {Name = "Bad Business",              Script = "Games/BB"  },
         ["1586272220"] = {Name = "Steel Titans",              Script = "Games/ST"  },
