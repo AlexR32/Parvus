@@ -9,7 +9,7 @@ local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 repeat task.wait(1) until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
 
-local Loaded1,Loaded2,PromptLib = false,false,loadstring(Parvus.HTTPGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
+local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
         {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded1 = true end},
