@@ -121,11 +121,7 @@ local Window = Parvus.Utilities.UI:Window({
             LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end
-
-Window:SetValue("Background/Offset",296)
-Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Misc:SetupLighting(Window.Flags)

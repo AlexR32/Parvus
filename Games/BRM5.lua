@@ -377,11 +377,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",true)
-end
-
-Window:SetValue("Background/Offset",296)
-Window:LoadDefaultConfig("Parvus")
-Window:SetValue("UI/Toggle",Window.Flags["UI/OOL"])
+end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
@@ -442,9 +438,9 @@ local function WallCheck(Enabled,Hitbox,Character)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    local PredictedPosition = Origin + Velocity * Time
+    --[[local PredictedPosition = Origin + Velocity * Time
     local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed
+    Time = Time + Delta / ProjectileSpeed]]
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
