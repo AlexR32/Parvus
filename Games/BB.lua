@@ -450,7 +450,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
-            end}):Keybind(Flag = "BB/NoClip/Keybind")
+            end}):Keybind({Flag = "BB/NoClip/Keybind"})
             CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
