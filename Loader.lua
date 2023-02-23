@@ -48,7 +48,7 @@ local function LoadScript(Script)
     or HTTPGet(("%s%s.lua"):format(Parvus.Domain,Script)))()
 end
 
-getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},
+getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},HTTPGet = HTTPGet,
     Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/development/",Games = {
         ["Universal" ] = {Name = "Universal",                 Script = "Universal" },
         ["1168263273"] = {Name = "Bad Business",              Script = "Games/BB"  },

@@ -86,7 +86,7 @@ function Misc:ReJoin()
 end
 
 function Misc:ServerHop()
-    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGet(
+    local DataDecoded,Servers = HttpService:JSONDecode(Parvus.HTTPGet(
         "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/0?sortOrder=2&excludeFullGames=true&limit=100"
     )).data,{}
     for Index,ServerData in ipairs(DataDecoded) do
