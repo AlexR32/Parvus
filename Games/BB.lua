@@ -33,57 +33,73 @@ local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjecti
 local GBP,HitmarkerScripts,FlyPosition = {"Chest"},{},nil
 
 local HitSounds = {
-    {"AR2 Head","2062016772",false},
-    {"AR2 Body","2062015952",false},
-    {"BB Body","4645745735",false},
-    {"Neverlose","8726881116",false},
-    {"Gamesense","4817809188",false},
-    {"Baimware","3124331820",false},
-    {"Skeet","4753603610",false},
-    {"Steve","4965083997",false},
-    {"Minecraft","6361963422",false},
-    {"Button","12221967",false},
-    {"Oof","4792539171",false},
-    {"Osu","7149919358",false},
-    {"Osu Combobreak","3547118594",false},
-    {"Click","8053704437",false},
-    {"Snow","6455527632",false},
-    {"Stone","3581383408",false},
-    {"Rust","1255040462",false},
-    {"Splat","12222152",false},
-    {"Bell","6534947240",false},
-    {"Slime","6916371803",false},
-    {"Saber","8415678813",false},
-    {"Bat","3333907347",false},
-    {"Bubble","6534947588",false},
-    {"Pick","1347140027",false},
-    {"Pop","198598793",false},
-    {"Bamboo","3769434519",false},
-    {"HitMarker","8543972310",false},
-    {"Crit","296102734",false},
-    {"Bonk","3765689841",false},
-    {"Clink","711751971",false},
-    {"CoD","160432334",false},
-    {"Lazer Beam","130791043",false},
-    {"Windows XP Error","160715357",false},
-    {"Windows XP Ding","489390072",false},
-    {"HL Med Kit","4720445506",false},
-    {"HL Door","4996094887",false},
-    {"HL Crowbar","546410481",false},
-    {"HL Revolver","1678424590",false},
-    {"HL Elevator","237877850",false},
-    {"TF2 Hitsound","3455144981",false},
-    {"TF2 Critical","296102734",false},
-    {"TF2 Beepo","3466987025",false},
-    {"TF2 Bat","3333907347",false},
-    {"TF2 Pow","679798995",false},
-    {"TF2 You Suck","1058417264",false},
-    {"Quake Hitsound","4868633804",false},
-    {"Fart","131314452",false},
-    --[[{"The Ting Goes",function()
-        local RanT = {"5007348397","5007348117","5007347746","5007347082"}
-        return RanT[math.random(#RanT)]
-    end,false},]]
+{"AR2 Head","2062016772",false},
+{"AR2 Body","2062015952",false},
+{"BB Body","4645745735",false},
+{"BB Kill","2636743632",false},
+{"Neverlose","8726881116",false},
+{"Gamesense","4817809188",false},
+{"Baimware","3124331820",false},
+{"Steve","4965083997",false},
+{"Skeet","4753603610",false},
+{"Body","3213738472",false},
+{"Ding","7149516994",false},
+{"Mario","2815207981",false},
+{"Minecraft","6361963422",false},
+{"Among Us","5700183626",false},
+{"Button","12221967",false},
+{"Oof","4792539171",false},
+{"Osu","7149919358",false},
+{"Osu Combobreak","3547118594",false},
+{"Bambi","8437203821",false},
+{"Click","8053704437",false},
+{"Snow","6455527632",false},
+{"Stone","3581383408",false},
+{"Rust","1255040462",false},
+{"Splat","12222152",false},
+{"Bell","6534947240",false},
+{"Slime","6916371803",false},
+{"Saber","8415678813",false},
+{"Bat","3333907347",false},
+{"Bubble","6534947588",false},
+{"Pick","1347140027",false},
+{"Pop","198598793",false},
+{"EmptyGun","203691822",false},
+{"Bamboo","3769434519",false},
+{"Stomp","200632875",false},
+{"Bag","364942410",false},
+{"HitMarker","8543972310",false},
+{"LaserSlash","199145497",false},
+{"RailGunF","199145534",false},
+{"Bruh","4275842574",false},
+{"Crit","296102734",false},
+{"Bonk","3765689841",false},
+{"Clink","711751971",false},
+{"CoD","160432334",false},
+{"Lazer Beam","130791043",false},
+
+{"Windows XP Error","160715357",false},
+{"Windows XP Ding","489390072",false},
+
+{"HL Med Kit","4720445506",false},
+{"HL Door","4996094887",false},
+{"HL Crowbar","546410481",false},
+{"HL Revolver","1678424590",false},
+{"HL Elevator","237877850",false},
+
+{"TF2 HitSound","3455144981",false},
+{"TF2 Squasher","3466981613",false},
+{"TF2 Retro","3466984142",false},
+{"TF2 Space","3466982899",false},
+{"TF2 Vortex","3466980212",false},
+{"TF2 Beepo","3466987025",false},
+{"TF2 Bat","3333907347",false},
+{"TF2 Pow","679798995",false},
+{"TF2 You Suck","1058417264",false},
+{"Quake Hitsound","4868633804",false},
+{"Fart","131314452",false},
+{"Fart2","6367774932",false},
+{"FortniteGuns","3008769599",false}
 }
 
 local function GetFunctionFromEvent(Event,ScriptName)
@@ -431,10 +447,10 @@ local Window = Parvus.Utilities.UI:Window({
                     end
                 end
             end}):Keybind({Flag = "BB/ThirdPerson/Keybind"})
-            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip",Value = false,Callback = function(Bool)
+            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
-            end})
+            end}):Keybind(Flag = "BB/NoClip/Keybind")
             CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
                 if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
@@ -446,19 +462,18 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2.5,Precise = 1,Value = 2.5,Wide = true})
             CharSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
         end
+
+        -- // TODO: Add more types like random,jitter,spin etc
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
-            AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false})
-            :Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
-            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1.5,Max = 1.5,Precise = 2,Value = 0,Wide = true})
+            AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false}):Keybind({Flag = "BB/AntiAim/Keybind"})
+            AASection:Slider({Name = "Look",Flag = "BB/AntiAim/Look",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
+            AASection:Slider({Name = "Lean",Flag = "BB/AntiAim/Lean",Min = -1.5,Max = 1.5,Precise = 2,Value = 0,Wide = true})
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
+            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
+            AASection:Toggle({Name = "Look Random",Flag = "BB/AntiAim/LookRandom",Value = false})
+            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = false})
             AASection:Toggle({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Value = false})
             AASection:Toggle({Name = "Yaw Random",Flag = "BB/AntiAim/YawRandom",Value = false})
-
-            AASection:Toggle({Name = "Body Manipulation",Flag = "BB/AntiAim/BodyManipulation/Enabled",Value = false})
-            :Keybind({Flag = "BB/BodyManipulation/Keybind"})
-            AASection:Slider({Name = "X",Flag = "BB/AntiAim/BodyManipulation/X",Min = -360,Max = 360,Value = 180,Wide = true})
-            AASection:Slider({Name = "Y",Flag = "BB/AntiAim/BodyManipulation/Y",Min = -360,Max = 360,Value = 0,Wide = true})
-            AASection:Slider({Name = "Z",Flag = "BB/AntiAim/BodyManipulation/Z",Min = -360,Max = 360,Value = 0,Wide = true})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end Parvus.Utilities.Misc:InitAutoLoad(Window)
@@ -927,17 +942,15 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
 
     if Args[3] == "Look" then
         if Window.Flags["BB/AntiAim/Enabled"] then
-            local Pitch = Window.Flags["BB/AntiAim/Pitch"]
-            local Yaw = Window.Flags["BB/AntiAim/Yaw"]
+            local Look = Window.Flags["BB/AntiAim/Look"]
+            local Lean = Window.Flags["BB/AntiAim/Lean"]
 
-            local PitchRange = math.abs(Pitch)
-            PitchRange = NewRandom:NextNumber(-PitchRange,PitchRange)
+            local LookRange,LeanRange = math.abs(Look),math.abs(Lean)
+            LookRange,LeanRange = NewRandom:NextNumber(-LookRange,LookRange),
+            NewRandom:NextNumber(-LeanRange,LeanRange)
 
-            local YawRange = math.abs(Yaw)
-            YawRange = NewRandom:NextNumber(-YawRange,YawRange)
-
-            Args[4] = Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch
-            Old(Self,"Character","State","Lean",Window.Flags["BB/AntiAim/YawRandom"] and YawRange or Yaw)
+            Args[4] = Window.Flags["BB/AntiAim/LookRandom"] and LookRange or Look
+            Old(Self,"Character","State","Lean",Window.Flags["BB/AntiAim/LeanRandom"] and LeanRange or Lean)
 
             --[[Old(Self,"Character","State","Aiming",true)
             Old(Self,"Character","State","Climbing",true)
@@ -1013,11 +1026,15 @@ HeartbeatConnections["Control"] = function(...)
             LPCharacter.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
             LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
         end
-        if Window.Flags["BB/AntiAim/BodyManipulation/Enabled"] then
+        if Window.Flags["BB/AntiAim/Enabled"] then
+            local Pitch,Yaw = Window.Flags["BB/AntiAim/Pitch"],Window.Flags["BB/AntiAim/Yaw"]
+            local PitchRange,YawRange = math.abs(Pitch),math.abs(Yaw)
+            PitchRange,YawRange = NewRandom:NextNumber(-PitchRange,PitchRange),
+            NewRandom:NextNumber(-YawRange,YawRange)
+
             LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(
-                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/X"]),
-                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/Y"]),
-                math.rad(Window.Flags["BB/AntiAim/BodyManipulation/Z"])
+                math.rad(180 * (Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch)),
+                math.rad(180 * (Window.Flags["BB/AntiAim/YawRandom"] and YawRange or Yaw)),0
             )
         end
     end
