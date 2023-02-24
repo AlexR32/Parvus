@@ -44,7 +44,7 @@ local function HighlightNew()
 end
 local function DrawingNew(Type,Properties)
     local Drawing = Drawing.new(Type)
-    --if not Properties then return Drawing end
+    if not Properties then return Drawing end
     for Property,Value in pairs(Properties) do
         Drawing[Property] = Value
     end return Drawing

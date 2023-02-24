@@ -8,7 +8,7 @@ repeat task.wait() until BackgroundGui and BackgroundGui.Parent == nil
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot = false
+local Aimbot,Regions = false,{}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -210,67 +210,49 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Thunderstruck, Legendary ESP
-local Regions = {}
-for Index,Instance in pairs(Workspace.WORKSPACE_Geometry:GetChildren()) do
-    if string.find(Instance.Name,"REGION_") then
-        table.insert(Regions,Instance)
-    end
-end
-for Index,Instance in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
-    if Instance:WaitForChild("Health").Value > 300 then print(Instance.Name)
-        Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
+-- Legendary ESP
+for Index,Object in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do
+    if Object:WaitForChild("Health").Value > 300 then print("Adding:",Object.Name)
+        Parvus.Utilities.Drawing:AddObject(Object,Object.Name,Object.PrimaryPart,
         "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end
-Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Instance)
-    if Instance:WaitForChild("Health").Value > 300 then print(Instance.Name)
-        Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
+Workspace.WORKSPACE_Entities.Animals.ChildAdded:Connect(function(Object)
+    if Object:WaitForChild("Health").Value > 300 then print("Adding:",Object.Name)
+        Parvus.Utilities.Drawing:AddObject(Object,Object.Name,Object.PrimaryPart,
         "ESP/Legendary","ESP/Legendary",Window.Flags)
     end
 end)
-Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Instance)
-    Parvus.Utilities.Drawing:RemoveObject(Instance)
+Workspace.WORKSPACE_Entities.Animals.ChildRemoved:Connect(function(Object)
+    Parvus.Utilities.Drawing:RemoveObject(Object)
 end)
-for Index,Instance in pairs(Regions) do
-    for Index,Instance in pairs(Instance.Trees:GetChildren()) do
-        if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
+
+-- Thunderstruck ESP
+for Index,Object in pairs(Workspace.WORKSPACE_Geometry:GetChildren()) do
+    if string.find(Object.Name,"REGION_") then
+        table.insert(Regions,Object)
+    end
+end
+
+for Index,Object in pairs(Regions) do
+    for Index,Object in pairs(Object:GetDescendants()) do
+        if Object:FindFirstChild("Strike2",true) then print("Adding:",Object.Name)
+            Parvus.Utilities.Drawing:AddObject(Object,Object.Name,Object.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end
-    for Index,Instance in pairs(Instance.Vegetation:GetChildren()) do
-        if Instance:FindFirstChild("Strike2",true) then print(Instance.Name)
-            Parvus.Utilities.Drawing:AddObject(Instance,Instance.Name,Instance.PrimaryPart,
-            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
-        end
-    end
-    Instance.Trees.DescendantAdded:Connect(function(Instance)
-        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
-            print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:AddObject(Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart,
+    Object.DescendantAdded:Connect(function(Object)
+        if Object:IsA("ParticleEmitter") and Object.Name == "Strike2" then
+            print("Adding:",Object.Parent.Parent.Name)
+            Parvus.Utilities.Drawing:AddObject(Object.Parent.Parent,
+            Object.Parent.Parent.Name,Object.Parent.Parent.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end
     end)
-    Instance.Vegetation.DescendantAdded:Connect(function()
-        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
-            print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:AddObject(Instance.Parent.Parent,
-            Instance.Parent.Parent.Name,Instance.Parent.Parent.PrimaryPart,
-            "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
-        end
-    end)
-    Instance.Trees.DescendantRemoving:Connect(function(Instance)
-        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
-            print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:RemoveObject(Instance.Parent.Parent)
-        end
-    end)
-    Instance.Vegetation.DescendantRemoving:Connect(function(Instance)
-        if Instance:IsA("ParticleEmitter") and Instance.Name == "Strike2" then
-            print(Instance.Parent.Parent.Name)
-            Parvus.Utilities.Drawing:RemoveObject(Instance.Parent.Parent)
+    Object.DescendantRemoving:Connect(function(Object)
+        if Object:IsA("ParticleEmitter") and Object.Name == "Strike2" then
+            print("Removing:",Object.Parent.Parent.Name)
+            Parvus.Utilities.Drawing:RemoveObject(Object.Parent.Parent)
         end
     end)
 end

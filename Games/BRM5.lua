@@ -5,8 +5,8 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 
-repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
-local Terrain = Workspace:FindFirstChildOfClass("Terrain")
+--repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
+--local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
 repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
@@ -24,16 +24,16 @@ local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
 
 local Teleports,NoClipEvent,NoClipObjects,WhiteColor,RaycastFolder,Squads = {
-    {"Forward Operating Base",Vector3.new(-3962.565, 64.188, 805.001)},
-    {"Communications Tower",Vector3.new(-1487.503, 809.622, -4416.927)},
-    {"Department of Utilities",Vector3.new(306.193, 62.148, -3153.789)},
-    {"Vietnama Village",Vector3.new(737.021, 117.422, -97.472)},
-    {"Fort Ronograd",Vector3.new(6269.501, 185.632, -1232.474)},
-    {"Ronograd City",Vector3.new(3536.074, 175.622, 1099.497)},
-    {"Sochraina City",Vector3.new(-918, 73.622, 4178.497)},
-    {"El Chara",Vector3.new(-4789.463, 107.638, 5298.004)},
-    {"Naval Docks",Vector3.new(6167.5, 129.622, 2092)},
-    {"Quarry",Vector3.new(272.762, 85.563, 2208.969)},
+    {"Forward Operating Base", Vector3.new(-3962.565, 64.188, 805.001)   },
+    {"Communications Tower",   Vector3.new(-1492.074, 809.622, -4415.498)},
+    {"Department Of Utilities",Vector3.new(86.105, 62.056, -2922.543)    },
+    {"Vietnama Village",       Vector3.new(737.943, 117.622, -97.537)    },
+    {"Fort Ronograd",          Vector3.new(6270.922, 185.885, -1226.123) },
+    {"Ronograd City",          Vector3.new(3483, 175.622, 1079.5)        },
+    {"Sochraina City",         Vector3.new(-932.943, 73.622, 4179.463)   },
+    {"El Chara",               Vector3.new(-4796, 107.638, 5298.497)     },
+    {"Naval Docks",            Vector3.new(6156.855, 130.184, 2097.577)  },
+    {"Quarry",                 Vector3.new(354, 85.622, 2630.5)          }
 },nil,{},Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),nil
 
 local Server = require(Packages:WaitForChild("server"))
@@ -907,17 +907,19 @@ Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
 end)
 
-for Index,Item in pairs(Terrain:GetChildren()) do
-    if Item:FindFirstChildOfClass("ProximityPrompt") then
-        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item,"ESP/Intel","ESP/Intel",Window.Flags)
+for Index,Item in pairs(RaycastFolder:GetChildren()) do
+    if Item:FindFirstChildWhichIsA("ProximityPrompt",true) then
+        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
     end
 end
 
-Terrain.DescendantAdded:Connect(function(Item)
-    if Item:IsA("ProximityPrompt") then
-        print(Item.Parent.Name)
-        Parvus.Utilities.Drawing:AddObject(Item.Parent,Item.Parent.Name,Item.Parent,"ESP/Intel","ESP/Intel",Window.Flags)
-    end
+RaycastFolder.ChildAdded:Connect(function(Item)
+    repeat task.wait() until Item:FindFirstChildWhichIsA("ProximityPrompt",true) --print(Item.Name)
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
+end)
+
+RaycastFolder.ChildRemoved:Connect(function(Item)
+    Parvus.Utilities.Drawing:RemoveObject(Item)
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do

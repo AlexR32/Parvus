@@ -367,7 +367,7 @@ local Window = Parvus.Utilities.UI:Window({
                     HitmarkerSound.Volume = Value
                 end HitmarkerSound:Play()
             end})
-            HitmarkerSection:Dropdown({Name = "Hitmarker Sound",Flag = "BB/Hitmarker/Sound",List = HitList})
+            HitmarkerSection:Dropdown({HideName = true,Flag = "BB/Hitmarker/Sound",List = HitList})
         end
         local WMSection = MiscTab:Section({Name = "Weapon Modification",Side = "Left"}) do
             WMSection:Toggle({Name = "Auto FireMode",Flag = "BB/FireMode/Enabled",Value = false})
@@ -425,7 +425,7 @@ local Window = Parvus.Utilities.UI:Window({
                     HitmarkerSound.Volume = Value
                 end HitmarkerSound:Play()
             end})
-            KillSoundSection:Dropdown({Name = "Hitmarker Sound",Flag = "BB/KillSound/Sound",List = KillSoundList})
+            KillSoundSection:Dropdown({HideName = true,Flag = "BB/KillSound/Sound",List = KillSoundList})
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
@@ -462,18 +462,25 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2.5,Precise = 1,Value = 2.5,Wide = true})
             CharSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
         end
-
-        -- // TODO: Add more types like random,jitter,spin etc
         local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false}):Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch",Min = -2,Max = 2,Precise = 2,Value = -2,Wide = true})
-            AASection:Slider({Name = "Lean",Flag = "BB/AntiAim/Lean",Min = -1.5,Max = 1.5,Precise = 2,Value = 0,Wide = true})
-            AASection:Slider({Name = "Roll",Flag = "BB/AntiAim/Roll",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
-            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw",Min = -1,Max = 1,Precise = 2,Value = 1,Wide = true})
-            AASection:Toggle({Name = "Pitch Random",Flag = "BB/AntiAim/PitchRandom",Value = false})
-            AASection:Toggle({Name = "Lean Random",Flag = "BB/AntiAim/LeanRandom",Value = false})
-            AASection:Toggle({Name = "Roll Random",Flag = "BB/AntiAim/RollRandom",Value = false})
-            AASection:Toggle({Name = "Yaw Random",Flag = "BB/AntiAim/YawRandom",Value = false})
+            AASection:Slider({Name = "Refresh Rate",Flag = "BB/AntiAim/RefreshRate",Min = 0,Max = 1,Precise = 2,Value = 0.05,Wide = true})
+            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch/Value",Min = -2,Max = 2,Precise = 2,Value = -2})
+            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Pitch/Mode",List = {
+                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
+            }})
+            AASection:Slider({Name = "Lean",Flag = "BB/AntiAim/Lean/Value",Min = -1.5,Max = 1.5,Precise = 2,Value = 0})
+            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Lean/Mode",List = {
+                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
+            }})
+            AASection:Slider({Name = "Roll",Flag = "BB/AntiAim/Roll/Value",Min = -1,Max = 1,Precise = 2,Value = 1})
+            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Roll/Mode",List = {
+                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
+            }})
+            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw/Value",Min = -1,Max = 1,Precise = 2,Value = 1})
+            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Yaw/Mode",List = {
+                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
+            }})
         end
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end Parvus.Utilities.Misc:InitAutoLoad(Window)
@@ -617,6 +624,17 @@ local function GetGrenade()
             return Weapon,Config
         end
     end
+end
+local JitterValue,SpinValue = 1,0
+local function GetAntiAimValue(Value,Mode)
+    if Mode == "Random" then
+        Value = math.abs(Value)
+        return NewRandom:NextNumber(-Value,Value)
+    elseif Mode == "Jitter" then
+        Value = Value * JitterValue
+    --elseif Mode == "Spin" then
+    end
+    return Value
 end
 --[[local function ToggleShoot(Toggle)
     Tortoiseshell.Input[Toggle and "AutomateBegan"
@@ -915,6 +933,12 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
+task.spawn(function()
+    while task.wait(Window.Flags["BB/AntiAim/RefreshRate"]) do
+        JitterValue = JitterValue == -1 and 1 or -1
+    end
+end)
+
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     local Args = {...}
 
@@ -942,15 +966,9 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
 
     if Args[3] == "Look" then
         if Window.Flags["BB/AntiAim/Enabled"] then
-            local Pitch = Window.Flags["BB/AntiAim/Pitch"]
-            local Lean = Window.Flags["BB/AntiAim/Lean"]
-
-            local PitchRange,LeanRange = math.abs(Pitch),math.abs(Lean)
-            PitchRange,LeanRange = NewRandom:NextNumber(-PitchRange,PitchRange),
-            NewRandom:NextNumber(-LeanRange,LeanRange)
-
-            Args[4] = Window.Flags["BB/AntiAim/PitchRandom"] and PitchRange or Pitch
-            Old(Self,"Character","State","Lean",Window.Flags["BB/AntiAim/LeanRandom"] and LeanRange or Lean)
+            local Pitch = GetAntiAimValue(Window.Flags["BB/AntiAim/Pitch/Value"],Window.Flags["BB/AntiAim/Pitch/Mode"][1])
+            local Lean = GetAntiAimValue(Window.Flags["BB/AntiAim/Lean/Value"],Window.Flags["BB/AntiAim/Lean/Mode"][1])
+            Args[4] = Pitch Old(Self,"Character","State","Lean",Lean)
 
             --[[Old(Self,"Character","State","Aiming",true)
             Old(Self,"Character","State","Climbing",true)
@@ -1027,15 +1045,9 @@ HeartbeatConnections["Control"] = function(...)
             LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
         end
         if Window.Flags["BB/AntiAim/Enabled"] then
-            local Roll,Yaw = Window.Flags["BB/AntiAim/Roll"],Window.Flags["BB/AntiAim/Yaw"]
-            local RollRange,YawRange = math.abs(Roll),math.abs(Yaw)
-            RollRange,YawRange = NewRandom:NextNumber(-RollRange,RollRange),
-            NewRandom:NextNumber(-YawRange,YawRange)
-
-            LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(
-                math.rad(180 * (Window.Flags["BB/AntiAim/RollRandom"] and RollRange or Roll)),
-                math.rad(180 * (Window.Flags["BB/AntiAim/YawRandom"] and YawRange or Yaw)),0
-            )
+            local Roll = GetAntiAimValue(Window.Flags["BB/AntiAim/Roll/Value"],Window.Flags["BB/AntiAim/Roll/Mode"][1])
+            local Yaw = GetAntiAimValue(Window.Flags["BB/AntiAim/Yaw/Value"],Window.Flags["BB/AntiAim/Yaw/Mode"][1])
+            LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(math.rad(180 * Roll),math.rad(180 * Yaw),0)
         end
     end
 
