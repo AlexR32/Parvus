@@ -16,12 +16,14 @@ repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SetIdentity = syn and syn.set_thread_identity or setidentity
+local SetIdentity = (syn and syn.set_thread_identity) or setidentity
 local Request = (syn and syn.request) or (http and http.request) or request
 
 do -- Thanks to Kiriot22
     local OldPluginManager,Message = nil,nil
-    task.spawn(function() SetIdentity(2)
+    task.spawn(function()
+        SetIdentity = (syn and syn.set_thread_identity) or setidentity
+        SetIdentity(2)
         local Success,Error = pcall(getrenv().PluginManager)
         Message = Error
     end)
@@ -86,7 +88,7 @@ function Misc:ReJoin()
 end
 
 function Misc:ServerHop()
-    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGetAsync(
+    local DataDecoded,Servers = HttpService:JSONDecode(game:HttpGet(
         "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/0?sortOrder=2&excludeFullGames=true&limit=100"
     )).data,{}
     for Index,ServerData in ipairs(DataDecoded) do

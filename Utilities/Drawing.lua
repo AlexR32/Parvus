@@ -43,11 +43,11 @@ local function HighlightNew()
     return Highlight
 end
 local function DrawingNew(Type,Properties)
-    local Drawing = Drawing.new(Type)
-    --if not Properties then return Drawing end
+    Type = Drawing.new(Type)
+    if not Properties then return Type end
     for Property,Value in pairs(Properties) do
-        Drawing[Property] = Value
-    end return Drawing
+        Type[Property] = Value
+    end return Type
 end
 
 local function GetFlag(F,F1,F2) return F[F1..F2] end
@@ -220,7 +220,7 @@ function DrawingLibrary:AddObject(Object,ObjectName,ObjectPosition,GlobalFlag,Fl
         Target = {Name = ObjectName,Position = ObjectPosition},
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
 
-        Name = DrawingNew("Text", { Visible = false, ZIndex = 1, Outline = true, Center = true })
+        Name = DrawingNew("Text",{Visible = false,ZIndex = 1,Center = true,Outline = true})
     }
 end
 function DrawingLibrary:AddESP(Target,Mode,Flag,Flags)
@@ -231,21 +231,21 @@ function DrawingLibrary:AddESP(Target,Mode,Flag,Flags)
         Flag = Flag,Flags = Flags,
         Highlight = HighlightNew(),
         Drawing = {
-            BoxOutline       = DrawingNew("Square",   { Visible = false, ZIndex = 0 }),
-            Box              = DrawingNew("Square",   { Visible = false, ZIndex = 1 }),
-            HealthBarOutline = DrawingNew("Square",   { Visible = false, ZIndex = 0, Filled = true }),
-            HealthBar        = DrawingNew("Square",   { Visible = false, ZIndex = 1, Filled = true }),
-            TracerOutline    = DrawingNew("Line",     { Visible = false, ZIndex = 0 }),
-            Tracer           = DrawingNew("Line",     { Visible = false, ZIndex = 1 }),
-            HeadDotOutline   = DrawingNew("Circle",   { Visible = false, ZIndex = 0 }),
-            HeadDot          = DrawingNew("Circle",   { Visible = false, ZIndex = 1 }),
-            ArrowOutline     = DrawingNew("Triangle", { Visible = false, ZIndex = 0 }),
-            Arrow            = DrawingNew("Triangle", { Visible = false, ZIndex = 1 }),
+            BoxOutline       = DrawingNew("Square",  {Visible = false,ZIndex = 0                                                }),
+            Box              = DrawingNew("Square",  {Visible = false,ZIndex = 1                                                }),
+            HealthBarOutline = DrawingNew("Square",  {Visible = false,ZIndex = 0,Filled = true                                  }),
+            HealthBar        = DrawingNew("Square",  {Visible = false,ZIndex = 1,Filled = true                                  }),
+            TracerOutline    = DrawingNew("Line",    {Visible = false,ZIndex = 0                                                }),
+            Tracer           = DrawingNew("Line",    {Visible = false,ZIndex = 1                                                }),
+            HeadDotOutline   = DrawingNew("Circle",  {Visible = false,ZIndex = 0                                                }),
+            HeadDot          = DrawingNew("Circle",  {Visible = false,ZIndex = 1                                                }),
+            ArrowOutline     = DrawingNew("Triangle",{Visible = false,ZIndex = 0                                                }),
+            Arrow            = DrawingNew("Triangle",{Visible = false,ZIndex = 1                                                }),
 
-            Name             = DrawingNew("Text",     { Color = WhiteColor, Visible = false, ZIndex = 1, Outline = true, Center = true }),
-            Distance         = DrawingNew("Text",     { Color = WhiteColor, Visible = false, ZIndex = 0, Outline = true, Center = true }),
-            Health           = DrawingNew("Text",     { Color = WhiteColor, Visible = false, ZIndex = 0, Outline = true, Center = true }),
-            Weapon           = DrawingNew("Text",     { Color = WhiteColor, Visible = false, ZIndex = 0, Outline = true, Center = true })
+            Name             = DrawingNew("Text",    {Visible = false,ZIndex = 1,Center = true,Outline = true,Color = WhiteColor}),
+            Distance         = DrawingNew("Text",    {Visible = false,ZIndex = 0,Center = true,Outline = true,Color = WhiteColor}),
+            Health           = DrawingNew("Text",    {Visible = false,ZIndex = 0,Center = true,Outline = true,Color = WhiteColor}),
+            Weapon           = DrawingNew("Text",    {Visible = false,ZIndex = 0,Center = true,Outline = true,Color = WhiteColor})
         }
     }
 end
