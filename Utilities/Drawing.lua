@@ -43,11 +43,11 @@ local function HighlightNew()
     return Highlight
 end
 local function DrawingNew(Type,Properties)
-    Type = Drawing.new(Type)
-    if not Properties then return Type end
+    local Drawing = Drawing.new(Type)
+    if not Properties then return Drawing end
     for Property,Value in pairs(Properties) do
-        Type[Property] = Value
-    end return Type
+        Drawing[Property] = Value
+    end return Drawing
 end
 
 local function GetFlag(F,F1,F2) return F[F1..F2] end
