@@ -13,7 +13,7 @@ local function HTTPGet(Url)
     if Responce then return Responce.Body end
 end
 
-local DevelopmentBranch,Debug,NotificationTime = true,false,5
+local DevelopmentBranch,Debug,NotificationTime = false,false,5
 loadstring(HTTPGet(("https://raw.githubusercontent.com/AlexR32/Parvus/%s/Loader.lua")
 :format(DevelopmentBranch and "development" or "main")))(Debug,NotificationTime)
 
