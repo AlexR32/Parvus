@@ -21,9 +21,7 @@ local Request = (syn and syn.request) or (http and http.request) or request
 
 do -- Thanks to Kiriot22
     local OldPluginManager,Message = nil,nil
-    task.spawn(function()
-        SetIdentity = (syn and syn.set_thread_identity) or setidentity
-        SetIdentity(2)
+    task.spawn(function() SetIdentity(2)
         local Success,Error = pcall(getrenv().PluginManager)
         Message = Error
     end)
