@@ -1,3 +1,34 @@
+### Update 25/02/23
+```markdown
+# Global
+* changed loader and script autoload
++ new loadstring (subject to change in future maybe)
+# The Wild West
+* little changes to legendary and thunderstruck esp
+# BRM5
++ added intel esp
+* updated teleport locations a bit
+# Bad Business
++ added new hit sounds
+* new anti-aim's
++ added keybind to noclip
+* hitsound's section little update
+```
+### Update 23/02/23
+```markdown
+# UI
+* small fixes (colorpicker and dropdown)
+# Global
+* updated settings tab (now its options tab)
+# Bad Business
++ added thirdperson load outfit toggle
++ added character customization for thirdperson
+* changed how fly works
++ added thirdperson fov slider
++ added body manipulation (now you can adjust angles of your character)
+
+*some configs might not work with new update, srry*
+```
 ### Update 18/02/23
 ```markdown
 # UI
