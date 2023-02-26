@@ -315,13 +315,13 @@ local Window = Parvus.Utilities.UI:Window({
             end
         end
         local VehSection = MiscTab:Section({Name = "Vehicle"}) do
-            VehSection:Toggle({Name = "Enabled",Flag = "BRM5/Vehicle/Enabled",Value = false})
+            VehSection:Toggle({Name = "Enabled",Flag = "BRM5/Vehicle/Enabled",Value = false}):Keybind({Flag = "BRM5/Vehicle/Keybind"})
             VehSection:Slider({Name = "Speed",Flag = "BRM5/Vehicle/Speed",Min = 0,Max = 1000,Value = 100})
             VehSection:Slider({Name = "Acceleration",Flag = "BRM5/Vehicle/Acceleration",Min = 1,Max = 50,Value = 1})
             :ToolTip("lower = faster")
         end
         local HeliSection = MiscTab:Section({Name = "Helicopter"}) do
-            HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false})
+            HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false}):Keybind({Flag = "BRM5/Helicopter/Keybind"})
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
         local AirSection = MiscTab:Section({Name = "Aircraft"}) do
