@@ -7,118 +7,47 @@ local TeamService = game:GetService("Teams")
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
-repeat task.wait(1) until not LocalPlayer.PlayerGui:FindFirstChild("LoadingGui").Enabled
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local LoadingGui = PlayerGui:WaitForChild("LoadingGui")
+repeat task.wait(0.5) until not LoadingGui.Enabled
 
 local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
         {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded1 = true end},
-    }) repeat task.wait(1) until Loaded1
+    }) repeat task.wait(0.5) until Loaded1
 end
 
 if game.PlaceVersion > 1341 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
-    }) repeat task.wait(1) until Loaded2
+    }) repeat task.wait(0.5) until Loaded2
 end
 
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
-local SilentAim,Aimbot,Trigger = nil,false,false
-local Tortoiseshell,WeaponModel,NewRandom = require(ReplicatedStorage.TS),nil,Random.new()
+local SilentAim,Aimbot,Trigger,AutoshootHitbox,GrenadeHitbox = nil,false,false,nil,nil
+local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS),{},nil
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
-local GBP,HitmarkerScripts,FlyPosition = {"Chest"},{},nil
-
-local HitSounds = {
-{"AR2 Head","2062016772",false},
-{"AR2 Body","2062015952",false},
-{"BB Body","4645745735",false},
-{"BB Kill","2636743632",false},
-{"Neverlose","8726881116",false},
-{"Gamesense","4817809188",false},
-{"Baimware","3124331820",false},
-{"Steve","4965083997",false},
-{"Skeet","4753603610",false},
-{"Body","3213738472",false},
-{"Ding","7149516994",false},
-{"Mario","2815207981",false},
-{"Minecraft","6361963422",false},
-{"Among Us","5700183626",false},
-{"Button","12221967",false},
-{"Oof","4792539171",false},
-{"Osu","7149919358",false},
-{"Osu Combobreak","3547118594",false},
-{"Bambi","8437203821",false},
-{"Click","8053704437",false},
-{"Snow","6455527632",false},
-{"Stone","3581383408",false},
-{"Rust","1255040462",false},
-{"Splat","12222152",false},
-{"Bell","6534947240",false},
-{"Slime","6916371803",false},
-{"Saber","8415678813",false},
-{"Bat","3333907347",false},
-{"Bubble","6534947588",false},
-{"Pick","1347140027",false},
-{"Pop","198598793",false},
-{"EmptyGun","203691822",false},
-{"Bamboo","3769434519",false},
-{"Stomp","200632875",false},
-{"Bag","364942410",false},
-{"HitMarker","8543972310",false},
-{"LaserSlash","199145497",false},
-{"RailGunF","199145534",false},
-{"Bruh","4275842574",false},
-{"Crit","296102734",false},
-{"Bonk","3765689841",false},
-{"Clink","711751971",false},
-{"CoD","160432334",false},
-{"Lazer Beam","130791043",false},
-
-{"Windows XP Error","160715357",false},
-{"Windows XP Ding","489390072",false},
-
-{"HL Med Kit","4720445506",false},
-{"HL Door","4996094887",false},
-{"HL Crowbar","546410481",false},
-{"HL Revolver","1678424590",false},
-{"HL Elevator","237877850",false},
-
-{"TF2 HitSound","3455144981",false},
-{"TF2 Squasher","3466981613",false},
-{"TF2 Retro","3466984142",false},
-{"TF2 Space","3466982899",false},
-{"TF2 Vortex","3466980212",false},
-{"TF2 Beepo","3466987025",false},
-{"TF2 Bat","3333907347",false},
-{"TF2 Pow","679798995",false},
-{"TF2 You Suck","1058417264",false},
-{"Quake Hitsound","4868633804",false},
-{"Fart","131314452",false},
-{"Fart2","6367774932",false},
-{"FortniteGuns","3008769599",false}
-}
-
-local function GetFunctionFromEvent(Event,ScriptName)
-    for Index,Connection in pairs(getconnections(Event)) do
-        local Script = getfenv(Connection.Function).script
-        if Script.Name == ScriptName then
-            return Connection.Function
-        end
-    end
-end
+local NewRandom,CodesDebounce,FlyPosition = Random.new(),false,nil
+local SetIdentity = syn and syn.set_thread_identity or setidentity
 
 for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
     HitmarkerScripts[#HitmarkerScripts + 1] = getfenv(Connection.Function).script
 end
 
-local SetIdentity = syn and syn.set_thread_identity or setidentity
-local HandleCharacter = getupvalue(GetFunctionFromEvent(Tortoiseshell.Characters.CharacterAdded,"CharacterAnimateScript"),3)
-local CharacterHandlers = getupvalue(HandleCharacter,3)
+local HandleCharacter
+for Index,Connection in pairs(getconnections(Tortoiseshell.Characters.CharacterAdded)) do
+    local Script = getfenv(Connection.Function).script
+    if Script.Name == "CharacterAnimateScript" then
+        HandleCharacter = Connection.Function
+    end
+end
 
+local CharacterHandlers = getupvalue(HandleCharacter,3)
 local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
 local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
@@ -135,6 +64,76 @@ local Notify = Instance.new("BindableEvent")
 Notify.Event:Connect(function(Text)
     Parvus.Utilities.UI:Notification2(Text)
 end)
+
+local HitSounds = {
+    {"AR2 Head","2062016772"},
+    {"AR2 Body","2062015952"},
+    {"BB Body","4645745735"},
+    {"BB Kill","2636743632"},
+    {"Neverlose","8726881116"},
+    {"Gamesense","4817809188"},
+    {"Baimware","3124331820"},
+    {"Steve","4965083997"},
+    {"Skeet","4753603610"},
+    {"Body","3213738472"},
+    {"Ding","7149516994"},
+    {"Mario","2815207981"},
+    {"Minecraft","6361963422"},
+    {"Among Us","5700183626"},
+    {"Button","12221967"},
+    {"Oof","4792539171"},
+    {"Osu","7149919358"},
+    {"Osu Combobreak","3547118594"},
+    {"Bambi","8437203821"},
+    {"Click","8053704437"},
+    {"Snow","6455527632"},
+    {"Stone","3581383408"},
+    {"Rust","1255040462"},
+    {"Splat","12222152"},
+    {"Bell","6534947240"},
+    {"Slime","6916371803"},
+    {"Saber","8415678813"},
+    {"Bat","3333907347"},
+    {"Bubble","6534947588"},
+    {"Pick","1347140027"},
+    {"Pop","198598793"},
+    {"EmptyGun","203691822"},
+    {"Bamboo","3769434519"},
+    {"Stomp","200632875"},
+    {"Bag","364942410"},
+    {"Hitmarker","8543972310"},
+    {"LaserSlash","199145497"},
+    {"RailGunF","199145534"},
+    {"Bruh","4275842574"},
+    {"Crit","296102734"},
+    {"Bonk","3765689841"},
+    {"Clink","711751971"},
+    {"CoD","160432334"},
+    {"Lazer Beam","130791043"},
+    
+    {"Windows XP Error","160715357"},
+    {"Windows XP Ding","489390072"},
+    
+    {"HL Med Kit","4720445506"},
+    {"HL Door","4996094887"},
+    {"HL Crowbar","546410481"},
+    {"HL Revolver","1678424590"},
+    {"HL Elevator","237877850"},
+    
+    {"TF2 HitSound","3455144981"},
+    {"TF2 Squasher","3466981613"},
+    {"TF2 Retro","3466984142"},
+    {"TF2 Space","3466982899"},
+    {"TF2 Vortex","3466980212"},
+    {"TF2 Beepo","3466987025"},
+    {"TF2 Bat","3333907347"},
+    {"TF2 Pow","679798995"},
+    {"TF2 You Suck","1058417264"},
+    {"Quake Hitsound","4868633804"},
+    {"Fart","131314452"},
+    {"Fart2","6367774932"},
+    {"FortniteGuns","3008769599"}
+}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — "..Parvus.Game,
@@ -168,6 +167,14 @@ local Window = Parvus.Utilities.UI:Window({
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 2})
         end
+        local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Left"}) do
+            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
+            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
+            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",
+            Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
+            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 14})
+            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 2})
+        end
         local TFOVSection = AimAssistTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
             TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
             TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
@@ -193,33 +200,25 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Hips",Mode = "Toggle"}
             }})
         end
-        local AutoShootSection = AimAssistTab:Section({Name = "Autoshoot",Side = "Right"}) do
-            AutoShootSection:Toggle({Name = "Enabled",Flag = "BB/AutoShoot/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "BB/AutoShoot/Keybind"})
-            AutoShootSection:Toggle({Name = "Beam Enabled",Flag = "BB/AutoShoot/Beam/Enabled",Value = true})
-            :Colorpicker({Flag = "BB/AutoShoot/Beam/Color",Value = {1,0.75,1,0,true}})
-            AutoShootSection:Toggle({Name = "HitMarker Enabled",Flag = "BB/AutoShoot/HM",Value = true})
-            AutoShootSection:Toggle({Name = "Auto Grenade",Flag = "BB/AutoShoot/Grenade",Value = false}):Keybind()
-            AutoShootSection:Toggle({Name = "Grenade TP",Flag = "BB/AutoShoot/GrenadeTP",Value = false})
-            AutoShootSection:Toggle({Name = "Visibility Check",Flag = "BB/AutoShoot/WallCheck",Value = false}):Keybind()
-            AutoShootSection:Toggle({Name = "Distance Check",Flag = "BB/AutoShoot/DistanceCheck",Value = false}):Keybind()
-            AutoShootSection:Slider({Name = "Distance",Flag = "BB/AutoShoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
-            AutoShootSection:Slider({Name = "Fire Rate",Flag = "BB/AutoShoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
-            AutoShootSection:Dropdown({Name = "Body Parts",Flag = "BB/AutoShoot/BodyParts",List = {
+        local AutoshootSection = AimAssistTab:Section({Name = "Autoshoot",Side = "Right"}) do
+            AutoshootSection:Toggle({Name = "Enabled",Flag = "BB/Autoshoot/Enabled",Value = false})
+            :Keybind({Mouse = true,Flag = "BB/Autoshoot/Keybind"})
+            AutoshootSection:Toggle({Name = "Beam Enabled",Flag = "BB/Autoshoot/Beam/Enabled",Value = true})
+            :Colorpicker({Flag = "BB/Autoshoot/Beam/Color",Value = {1,0.75,1,0,true}})
+            AutoshootSection:Toggle({Name = "Hitmarker Enabled",Flag = "BB/Autoshoot/Hitmarker",Value = true})
+            AutoshootSection:Toggle({Name = "Tele-Grenade",Flag = "BB/Autoshoot/TeleGrenade",Value = false}):Keybind()
+            AutoshootSection:Toggle({Name = "Auto Grenade",Flag = "BB/Autoshoot/AutoGrenade",Value = false}):Keybind()
+            AutoshootSection:Toggle({Name = "Visibility Check",Flag = "BB/Autoshoot/WallCheck",Value = false}):Keybind()
+            AutoshootSection:Toggle({Name = "Distance Check",Flag = "BB/Autoshoot/DistanceCheck",Value = false}):Keybind()
+            AutoshootSection:Slider({Name = "Distance",Flag = "BB/Autoshoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
+            AutoshootSection:Slider({Name = "Fire Rate",Flag = "BB/Autoshoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
+            AutoshootSection:Dropdown({Name = "Body Parts",Flag = "BB/Autoshoot/BodyParts",List = {
                 {Name = "Head",Mode = "Toggle",Value = true},
                 {Name = "Neck",Mode = "Toggle"},
                 {Name = "Chest",Mode = "Toggle"},
                 {Name = "Abdomen",Mode = "Toggle"},
                 {Name = "Hips",Mode = "Toggle"}
             }})
-        end
-        local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
-            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",
-            Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
-            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 2})
         end
         local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
@@ -309,11 +308,11 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            WCSection:Toggle({Name = "Enabled",Flag = "BB/WeaponCustom/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/WeaponCustom/Color",Value = {1,0.75,1,0.5,true}})
-            WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WeaponCustom/Texture",Value = true})
-            WCSection:Slider({Name = "Reflectance",Flag = "BB/WeaponCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            WCSection:Dropdown({Name = "Material",Flag = "BB/WeaponCustom/Material",List = {
+            WCSection:Toggle({Name = "Enabled",Flag = "BB/WC/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/WC/Color",Value = {1,0.75,1,0.5,true}})
+            WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WC/Texture",Value = true})
+            WCSection:Slider({Name = "Reflectance",Flag = "BB/WC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            WCSection:Dropdown({Name = "Material",Flag = "BB/WC/Material",List = {
                 {Name = "SmoothPlastic",Mode = "Button"},
                 {Name = "ForceField",Mode = "Button"},
                 {Name = "Neon",Mode = "Button",Value = true},
@@ -321,31 +320,35 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
         local CCSection = MiscTab:Section({Name = "Character Customization",Side = "Left"}) do
-            CCSection:Toggle({Name = "Enabled",Flag = "BB/CharCustom/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/CharCustom/Color",Value = {1,0.75,1,0.5,true}})
-            CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CharCustom/Texture",Value = true})
-            CCSection:Slider({Name = "Reflectance",Flag = "BB/CharCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            CCSection:Dropdown({Name = "Material",Flag = "BB/CharCustom/Material",List = {
+            CCSection:Toggle({Name = "Enabled",Flag = "BB/CC/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/CC/Color",Value = {1,0.75,1,0.5,true}})
+            CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CC/Texture",Value = true})
+            CCSection:Slider({Name = "Reflectance",Flag = "BB/CC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            CCSection:Dropdown({Name = "Material",Flag = "BB/CC/Material",List = {
                 {Name = "SmoothPlastic",Mode = "Button"},
                 {Name = "ForceField",Mode = "Button"},
                 {Name = "Neon",Mode = "Button",Value = true},
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local HitmarkerSection = MiscTab:Section({Name = "Hitmarker Customization",Side = "Left"}) do
-            local HitList = {}
+        local HitSoundSection = MiscTab:Section({Name = "HitSound Customization",Side = "Left"}) do
+
+            local HitSoundsList = {}
             for Index,Sound in pairs(HitSounds) do
-                HitList[#HitList + 1] = {Name = Sound[1],Mode = "Button",Callback = function()
-                    local HitmarkerSound = nil
-                    for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                        HitmarkerScript.HeadshotSound.Volume = 0
-                        HitmarkerSound = HitmarkerScript.HitmarkerSound
-                        HitmarkerSound.SoundId = "rbxassetid://" .. Sound[2]
-                    end HitmarkerSound:Play()
-                end,Value = Sound[3]}
+                HitSoundsList[#HitSoundsList + 1] = {
+                    Name = Sound[1],Mode = "Button",
+                    Callback = function()
+                        local HitSound
+                        for Index,HitmarkerScript in pairs(HitmarkerScripts) do
+                            HitmarkerScript.HeadshotSound.Volume = 0
+                            HitSound = HitmarkerScript.HitmarkerSound
+                            HitSound.SoundId = "rbxassetid://" .. Sound[2]
+                        end HitSound:Play()
+                    end
+                }
             end
 
-            HitmarkerSection:Button({Name = "Reset To Defaults",Callback = function()
+            HitSoundSection:Button({Name = "Reset To Defaults",Callback = function()
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
                     HitmarkerScript.HeadshotSound.Volume = 0.7
                     HitmarkerScript.HitmarkerSound.Volume = 3.5
@@ -353,21 +356,23 @@ local Window = Parvus.Utilities.UI:Window({
                     HitmarkerScript.HitmarkerSound.SoundId = "rbxassetid://4645745735"
                 end
             end})
-            HitmarkerSection:Slider({Name = "Pitch",Flag = "BB/Hitmarker/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1,
-            Callback = function(Value) local HitmarkerSound = nil
+            HitSoundSection:Slider({Name = "Volume",Flag = "BB/HitSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 3.5,
+            Callback = function(Value)
+                local HitSound
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerSound = HitmarkerScript.HitmarkerSound
-                    HitmarkerSound.PlaybackSpeed = Value
-                end HitmarkerSound:Play()
+                    HitSound = HitmarkerScript.HitmarkerSound
+                    HitSound.Volume = Value
+                end HitSound:Play()
             end})
-            HitmarkerSection:Slider({Name = "Volume",Flag = "BB/Hitmarker/Volume",Min = 0,Max = 5,Precise = 1,Value = 0.5,
-            Callback = function(Value) local HitmarkerSound = nil
+            HitSoundSection:Slider({Name = "Pitch",Flag = "BB/HitSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1.4,
+            Callback = function(Value)
+                local HitSound
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerSound = HitmarkerScript.HitmarkerSound
-                    HitmarkerSound.Volume = Value
-                end HitmarkerSound:Play()
+                    HitSound = HitmarkerScript.HitmarkerSound
+                    HitSound.PlaybackSpeed = Value
+                end HitSound:Play()
             end})
-            HitmarkerSection:Dropdown({HideName = true,Flag = "BB/Hitmarker/Sound",List = HitList})
+            HitSoundSection:Dropdown({HideName = true,Flag = "BB/HitSound/Sound",List = HitSoundsList})
         end
         local WMSection = MiscTab:Section({Name = "Weapon Modification",Side = "Left"}) do
             WMSection:Toggle({Name = "Auto FireMode",Flag = "BB/FireMode/Enabled",Value = false})
@@ -377,12 +382,33 @@ local Window = Parvus.Utilities.UI:Window({
             WMSection:Slider({Name = "Recoil Scale",Flag = "BB/Recoil/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Slider({Name = "Bullet Drop",Flag = "BB/Recoil/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
+        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+            MiscSection:Button({Name = "Redeem Codes",Callback = function()
+                local Codes = ""
+                local Success,Error = pcall(function()
+                    Codes = game:HttpGet("https://roblox-bad-business.fandom.com/wiki/Codes")
+                end)
+
+                if Success then
+                    for Code in Codes:gmatch("<td>([%w\n_]*)</td>") do
+                        Tortoiseshell.Network:Invoke("Codes","Redeem",Code:gsub("\n",""))
+                        --Code = Code:gsub("\n","")
+                        --print(Code,Tortoiseshell.Network:Invoke("Codes","Redeem",Code))
+                    end task.wait(0.1)
+                    firesignal(LocalPlayer.PlayerGui.MenuGui.ClaimedFrame.CloseButton.MouseButton1Click)
+                    firesignal(LocalPlayer.PlayerGui.MenuGui.PurchasedFrame.CloseButton.MouseButton1Click)
+                    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "All available codes are claimed!",Duration = 5})
+                else
+                    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Failed to get the codes:\n"..Error,Duration = 5})
+                end
+            end})
+        end
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
-            ACSection:Toggle({Name = "Enabled",Flag = "BB/ArmsCustom/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/ArmsCustom/Color",Value = {1,0,1,1,false}})
-            ACSection:Toggle({Name = "Hide Textures",Flag = "BB/ArmsCustom/Texture",Value = true})
-            ACSection:Slider({Name = "Reflectance",Flag = "BB/ArmsCustom/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            ACSection:Dropdown({Name = "Material",Flag = "BB/ArmsCustom/Material",List = {
+            ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
+            :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
+            ACSection:Toggle({Name = "Hide Textures",Flag = "BB/AC/Texture",Value = true})
+            ACSection:Slider({Name = "Reflectance",Flag = "BB/AC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
+            ACSection:Dropdown({Name = "Material",Flag = "BB/AC/Material",List = {
                 {Name = "SmoothPlastic",Mode = "Button"},
                 {Name = "ForceField",Mode = "Button"},
                 {Name = "Neon",Mode = "Button",Value = true},
@@ -391,16 +417,19 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local KillSoundSection = MiscTab:Section({Name = "KillSound Customization",Side = "Right"}) do
 
-            local KillSoundList = {}
+            local KillSoundsList = {}
             for Index,Sound in pairs(HitSounds) do
-                KillSoundList[#KillSoundList + 1] = {Name = Sound[1],Mode = "Button",Callback = function()
-                    local HitmarkerSound = nil
-                    for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                        HitmarkerScript.MedalSound.Volume = 0
-                        HitmarkerSound = HitmarkerScript.KillSound
-                        HitmarkerSound.SoundId = "rbxassetid://" .. Sound[2]
-                    end HitmarkerSound:Play()
-                end,Value = Sound[3]}
+                KillSoundsList[#KillSoundsList + 1] = {
+                    Name = Sound[1],Mode = "Button",
+                    Callback = function()
+                        local KillSound
+                        for Index,HitmarkerScript in pairs(HitmarkerScripts) do
+                            HitmarkerScript.MedalSound.Volume = 0
+                            KillSound = HitmarkerScript.KillSound
+                            KillSound.SoundId = "rbxassetid://" .. Sound[2]
+                        end KillSound:Play()
+                    end
+                }
             end
 
             KillSoundSection:Button({Name = "Reset To Defaults",Callback = function()
@@ -411,21 +440,23 @@ local Window = Parvus.Utilities.UI:Window({
                     HitmarkerScript.KillSound.SoundId = "rbxassetid://2636743632"
                 end
             end})
-            KillSoundSection:Slider({Name = "Pitch",Flag = "BB/KillSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1,
-            Callback = function(Value) local HitmarkerSound = nil
+            KillSoundSection:Slider({Name = "Volume",Flag = "BB/KillSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 1,
+            Callback = function(Value)
+                local KillSound
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerSound = HitmarkerScript.KillSound
-                    HitmarkerSound.PlaybackSpeed = Value
-                end HitmarkerSound:Play()
+                    KillSound = HitmarkerScript.KillSound
+                    KillSound.Volume = Value
+                end KillSound:Play()
             end})
-            KillSoundSection:Slider({Name = "Volume",Flag = "BB/KillSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 0.5,
-            Callback = function(Value) local HitmarkerSound = nil
+            KillSoundSection:Slider({Name = "Pitch",Flag = "BB/KillSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1.5,
+            Callback = function(Value)
+                local KillSound
                 for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerSound = HitmarkerScript.KillSound
-                    HitmarkerSound.Volume = Value
-                end HitmarkerSound:Play()
+                    KillSound = HitmarkerScript.KillSound
+                    KillSound.PlaybackSpeed = Value
+                end KillSound:Play()
             end})
-            KillSoundSection:Dropdown({HideName = true,Flag = "BB/KillSound/Sound",List = KillSoundList})
+            KillSoundSection:Dropdown({HideName = true,Flag = "BB/KillSound/Sound",List = KillSoundsList})
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
@@ -487,6 +518,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
@@ -738,7 +770,7 @@ local function ProjectileBeam(Origin,Direction)
         for Index = 1, 60 * 1 do
             RunService.Heartbeat:Wait()
             Beam.Transparency = Index / (60 * 1)
-            Beam.Color = Window.Flags["BB/AutoShoot/Beam/Color"][6]
+            Beam.Color = Window.Flags["BB/Autoshoot/Beam/Color"][6]
         end Beam:Destroy()
     end)
 
@@ -761,7 +793,7 @@ local function ComputeProjectiles(Config,Hitbox)
     return ShootProjectiles,Position,
     RayResult.Position,RayResult.Normal
 end
-local function AutoShoot(Hitbox,FireRate)
+local function Autoshoot(Hitbox,FireRate)
     if not Hitbox then return end
     local Weapon,Config = GetEquippedWeapon()
 
@@ -771,12 +803,12 @@ local function AutoShoot(Hitbox,FireRate)
                 Tortoiseshell.Network:Fire("Item_Melee","StabBegin",Weapon)
                 Tortoiseshell.Network:Fire("Item_Melee","Stab",Weapon,Hitbox[3],Hitbox[3].Position,
                 (Hitbox[3].Position - Camera.CFrame.Position).Unit * (Config.Melee.Range + 1))
-                if Window.Flags["BB/AutoShoot/HM"] then
+                if Window.Flags["BB/Autoshoot/HM"] then
                     Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
                 end
 
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("AutoShoot | Stab %s"):format(Hitbox[1].Name),
+                    Title = ("Autoshoot | Stab %s"):format(Hitbox[1].Name),
                     Color = Color3.new(1,0.5,0.25),Duration = 3
                 }) task.wait(1 / Config.Melee.Speed)
             end return
@@ -808,10 +840,10 @@ local function AutoShoot(Hitbox,FireRate)
                 end
             end)
 
-            if Window.Flags["BB/AutoShoot/Beam/Enabled"] then
-                ProjectileBeam(Position,RayPosition)
+            if Window.Flags["BB/Autoshoot/Beam/Enabled"] then
+                ProjectileBeam(Position - Vector3.new(0,5,0),RayPosition)
             end
-            if Window.Flags["BB/AutoShoot/HM"] then
+            if Window.Flags["BB/Autoshoot/HM"] then
                 Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
                 Config.Projectile.Amount and Config.Projectile.Amount > 3)
             end
@@ -823,7 +855,7 @@ local function AutoShoot(Hitbox,FireRate)
                 Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
                 Config.Projectile.Amount and Config.Projectile.Amount > 3)]]
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("AutoShoot | Hit %s | Ammo %s"):format(
+                    Title = ("Autoshoot | Hit %s | Ammo %s"):format(
                         Hitbox[1].Name,Ammo.Value
                     ),Color = Color3.new(1,0.5,0.25),Duration = 3
                 })
@@ -836,7 +868,7 @@ local function AutoShoot(Hitbox,FireRate)
 
                 Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("AutoShoot | Reloading | Approx Time: %d.%d sec."):format(Seconds,Milliseconds),
+                    Title = ("Autoshoot | Reloading | Approx Time: %d.%d sec."):format(Seconds,Milliseconds),
                     Color = Color3.new(1,0.25,0.25),Duration = 3
                 }) task.wait(ReloadTime)
             end
@@ -866,7 +898,7 @@ local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
     -- WallCheck,DistanceCheck,MaxDistance
     -- PredictionEnabled
 
-    if not Enabled then return end local Closest = nil
+    if not Enabled then return end local Closest
     FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
     for Index,Player in pairs(PlayerService:GetPlayers()) do
@@ -933,17 +965,11 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
-task.spawn(function()
-    while task.wait(Window.Flags["BB/AntiAim/RefreshRate"]) do
-        JitterValue = JitterValue == -1 and 1 or -1
-    end
-end)
-
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     local Args = {...}
 
     if Args[2] == "__Hit" then
-        if (SilentAim and not Window.Flags["BB/AutoShoot/Enabled"])
+        if (SilentAim and not Window.Flags["BB/Autoshoot/Enabled"])
         and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
             Args[4] = SilentAim[3].Position
             Args[5] = SilentAim[3]
@@ -955,7 +981,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
     end
 
     if Args[2] == "Throw" then
-        if (SilentAim and not Window.Flags["BB/AutoShoot/Enabled"])
+        if (SilentAim and not Window.Flags["BB/Autoshoot/Enabled"])
         and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
             Args[5] = (SilentAim[3].Position - Camera.CFrame.Position).Unit
             Tortoiseshell.UI.Events.Hitmarker:Fire(
@@ -1060,12 +1086,9 @@ for Index,Event in pairs(Events) do
         Event.Callback = function(...) local Args = {...}
             Parvus.Utilities.Misc:NewThreadLoop(0,function()
                 if Args[2].Parent == nil then return "break" end
-                if Window.Flags["BB/AutoShoot/GrenadeTP"] then
-                    local Hitbox = GetClosestAllFOV(true,GBP)
-                    if Hitbox then
-                        Args[2].PrimaryPart.Position = Hitbox[3].Position
-                        --print("Grenade Teleported")
-                    end
+                if GrenadeHitbox then
+                    Args[2].PrimaryPart.Position = Hitbox[3].Position
+                    --print("Grenade Teleported")
                 end
             end) return OldCallback(...)
         end
@@ -1098,7 +1121,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(1,function()
+Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
@@ -1124,26 +1147,26 @@ Parvus.Utilities.Misc:NewThreadLoop(1,function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
     CustomizeWeapon(
-        Window.Flags["BB/WeaponCustom/Enabled"],
-        Window.Flags["BB/WeaponCustom/Texture"],
-        Window.Flags["BB/WeaponCustom/Color"],
-        Window.Flags["BB/WeaponCustom/Reflectance"],
-        Window.Flags["BB/WeaponCustom/Material"][1]
+        Window.Flags["BB/WC/Enabled"],
+        Window.Flags["BB/WC/Texture"],
+        Window.Flags["BB/WC/Color"],
+        Window.Flags["BB/WC/Reflectance"],
+        Window.Flags["BB/WC/Material"][1]
     )
     CustomizeArms(
-        Window.Flags["BB/ArmsCustom/Enabled"],
-        Window.Flags["BB/ArmsCustom/Texture"],
-        Window.Flags["BB/ArmsCustom/Color"],
-        Window.Flags["BB/ArmsCustom/Reflectance"],
-        Window.Flags["BB/ArmsCustom/Material"][1]
+        Window.Flags["BB/AC/Enabled"],
+        Window.Flags["BB/AC/Texture"],
+        Window.Flags["BB/AC/Color"],
+        Window.Flags["BB/AC/Reflectance"],
+        Window.Flags["BB/AC/Material"][1]
     )
     if Window.Flags["BB/ThirdPerson/Enabled"] then
         CustomizeCharacter(
-            Window.Flags["BB/CharCustom/Enabled"],
-            Window.Flags["BB/CharCustom/Texture"],
-            Window.Flags["BB/CharCustom/Color"],
-            Window.Flags["BB/CharCustom/Reflectance"],
-            Window.Flags["BB/CharCustom/Material"][1]
+            Window.Flags["BB/CC/Enabled"],
+            Window.Flags["BB/CC/Texture"],
+            Window.Flags["BB/CC/Color"],
+            Window.Flags["BB/CC/Reflectance"],
+            Window.Flags["BB/CC/Material"][1]
         )
     end
 end)
@@ -1154,18 +1177,29 @@ end)
     )
 end)]]
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    --if not Window.Flags["BB/AutoShoot/Enabled"] then return end
-    AutoShoot(GetClosestAllFOV(
-        Window.Flags["BB/AutoShoot/Enabled"],
-        Window.Flags["BB/AutoShoot/BodyParts"],
-        Window.Flags["BB/AutoShoot/WallCheck"],
-        Window.Flags["BB/AutoShoot/DistanceCheck"],
-        Window.Flags["BB/AutoShoot/Distance"]
-    ),Window.Flags["BB/AutoShoot/FireRate"])
+    AutoshootHitbox = GetClosestAllFOV(
+        Window.Flags["BB/Autoshoot/Enabled"],
+        Window.Flags["BB/Autoshoot/BodyParts"],
+        Window.Flags["BB/Autoshoot/WallCheck"],
+        Window.Flags["BB/Autoshoot/DistanceCheck"],
+        Window.Flags["BB/Autoshoot/Distance"]
+    )
+    GrenadeHitbox = GetClosestAllFOV(
+        Window.Flags["BB/Autoshoot/TeleGrenade"],
+        Window.Flags["BB/Autoshoot/BodyParts"]
+    )
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    --if not Window.Flags["BB/AutoShoot/Grenade"] then return end
-    AutoGrenade(Window.Flags["BB/AutoShoot/Grenade"])
+    Autoshoot(AutoshootHitbox,
+        Window.Flags["BB/Autoshoot/FireRate"]
+    )
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    AutoGrenade(Window.Flags["BB/Autoshoot/AutoGrenade"])
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
+    JitterValue = JitterValue == -1 and 1 or -1
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
@@ -1185,7 +1219,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Tortoiseshell.Input:AutomateBegan("Shoot")
         task.wait(Window.Flags["Trigger/Delay"])
         if Window.Flags["Trigger/HoldMode"] then
-            while task.wait() do
+            while task.wait(0) do
                 TriggerHitbox = GetClosest(
                     Window.Flags["Trigger/Enabled"],
                     Window.Flags["Trigger/FieldOfView"],
@@ -1205,7 +1239,7 @@ end)
 
 Workspace.Characters.ChildAdded:Connect(function(Child)
     if Child.Name == LocalPlayer.Name then
-        repeat task.wait() until Child.PrimaryPart
+        repeat task.wait(0) until Child.PrimaryPart
         Child.PrimaryPart.CanCollide = not Window.Flags["BB/NoClip"]
         FlyPosition = Child.PrimaryPart.Position
         --[[if Window.Flags["BB/Fly/Enabled"] then

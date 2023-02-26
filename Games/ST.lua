@@ -106,6 +106,7 @@ end
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 
 --[[local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
 local BodyVelocity = Instance.new("BodyVelocity")

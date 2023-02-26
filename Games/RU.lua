@@ -159,6 +159,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)

@@ -269,54 +269,55 @@ function DrawingLibrary:RemoveObject(Target)
 end
 
 function DrawingLibrary:SetupCursor(Flags)
-    local Cursor        = DrawingNew("Triangle", { Color = WhiteColor, Filled = true, Thickness = 1, Transparency = 1, Visible = true, ZIndex = 2 })
-    local CursorOutline = DrawingNew("Triangle", { Color = BlackColor, Filled = true, Thickness = 1, Transparency = 1, Visible = true, ZIndex = 1 })
+    local Cursor = DrawingNew("Image",{
+        Data = Parvus.Cursor,
+        Size = V2New(64,64) / 1.5,
+        Rounding = 0,
 
-    local CrosshairL = DrawingNew("Line", { Thickness = 1.5, Transparency = 1, Visible = true, ZIndex = 3 })
-    local CrosshairR = DrawingNew("Line", { Thickness = 1.5, Transparency = 1, Visible = true, ZIndex = 3 })
-    local CrosshairT = DrawingNew("Line", { Thickness = 1.5, Transparency = 1, Visible = true, ZIndex = 3 })
-    local CrosshairB = DrawingNew("Line", { Thickness = 1.5, Transparency = 1, Visible = true, ZIndex = 3 })
+        Transparency = 1,
+        Visible = false,
+        ZIndex = 3
+    })
 
     RunService.Heartbeat:Connect(function()
-        local CursorEnabled = Flags["Mouse/Enabled"] and UserInputService.MouseBehavior == Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
-        local CrosshairEnabled = Flags["Mouse/Crosshair/Enabled"] and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
-        local Mouse = UserInputService:GetMouseLocation()
+        Cursor.Visible = Flags["Mouse/Enabled"] and UserInputService.MouseBehavior == Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
+        if Cursor.Visible then Cursor.Position = UserInputService:GetMouseLocation() - Cursor.Size / 2 end
+    end)
+end
 
-        Cursor.Visible = CursorEnabled
-        CursorOutline.Visible = CursorEnabled
+function DrawingLibrary:SetupCrosshair(Flags)
+    local CrosshairL = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
+    local CrosshairR = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
+    local CrosshairT = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
+    local CrosshairB = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
 
-        CrosshairL.Visible = CrosshairEnabled
-        CrosshairR.Visible = CrosshairEnabled
-        CrosshairT.Visible = CrosshairEnabled
-        CrosshairB.Visible = CrosshairEnabled
+    RunService.Heartbeat:Connect(function()
+        local CrosshairEnabled = Flags["Crosshair/Enabled"] and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default and not UserInputService.MouseIconEnabled
+        CrosshairL.Visible,CrosshairR.Visible,CrosshairT.Visible,CrosshairB.Visible = CrosshairEnabled,CrosshairEnabled,CrosshairEnabled,CrosshairEnabled
 
-        if CursorEnabled then
-            Cursor.PointA = Mouse + V2New(0,15)
-            Cursor.PointB = Mouse
-            Cursor.PointC = Mouse + V2New(10,10)
-
-            CursorOutline.PointA = Cursor.PointA + V2New(0,1)
-            CursorOutline.PointB = Cursor.PointB
-            CursorOutline.PointC = Cursor.PointC + V2New(1,0)
-        end
         if CrosshairEnabled then
-            local Gap = Flags["Mouse/Crosshair/Gap"]
-            local Size = Flags["Mouse/Crosshair/Size"]
-            local Color = Flags["Mouse/Crosshair/Color"][6]
+            local Gap = Flags["Crosshair/Gap"]
+            local Size = Flags["Crosshair/Size"]
+            local Color = Flags["Crosshair/Color"]
+            local Mouse = UserInputService:GetMouseLocation()
 
-            CrosshairL.Color = Color
+            CrosshairL.Color = Color[6]
+            CrosshairL.Transparency = 1-Color[4]
             CrosshairL.From = Mouse - V2New(Gap,0)
             CrosshairL.To = Mouse - V2New(Size + Gap,0)
 
-            CrosshairR.Color = Color
+            CrosshairR.Color = Color[6]
+            CrosshairR.Transparency = 1-Color[4]
             CrosshairR.From = Mouse + V2New(Gap + 1,0)
             CrosshairR.To = Mouse + V2New(Size + (Gap + 1),0)
 
-            CrosshairT.Color = Color
+            CrosshairT.Color = Color[6]
+            CrosshairT.Transparency = 1-Color[4]
             CrosshairT.From = Mouse - V2New(0,Gap)
             CrosshairT.To = Mouse - V2New(0,Size + Gap)
 
-            CrosshairB.Color = Color
+            CrosshairB.Color = Color[6]
+            CrosshairB.Transparency = 1-Color[4]
             CrosshairB.From = Mouse + V2New(0,Gap + 1)
             CrosshairB.To = Mouse + V2New(0,Size + (Gap + 1))
         end

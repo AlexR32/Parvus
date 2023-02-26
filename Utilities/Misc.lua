@@ -228,14 +228,14 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Wide = true,Min = 74,Max = 296,Value = 74,
+            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,Wide = true,
             Callback = function(Number) Window.Background.TileSize = UDim2.fromOffset(Number,Number) end})
         end
         local CrosshairSection = OptionsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
-            CrosshairSection:Toggle({Name = "Enabled",Flag = "Mouse/Crosshair/Enabled",Value = false})
-            :Colorpicker({Flag = "Mouse/Crosshair/Color",Value = {1,1,1,0,false}})
-            CrosshairSection:Slider({Name = "Size",Flag = "Mouse/Crosshair/Size",Wide = true,Min = 0,Max = 20,Value = 4})
-            CrosshairSection:Slider({Name = "Gap",Flag = "Mouse/Crosshair/Gap",Wide = true,Min = 0,Max = 10,Value = 2})
+            CrosshairSection:Toggle({Name = "Enabled",Flag = "Crosshair/Enabled",Value = false})
+            :Colorpicker({Flag = "Crosshair/Color",Value = {1,1,1,0,false}})
+            CrosshairSection:Slider({Name = "Size",Flag = "Crosshair/Size",Min = 0,Max = 20,Value = 4,Unit = "px",Wide = true})
+            CrosshairSection:Slider({Name = "Gap",Flag = "Crosshair/Gap",Min = 0,Max = 10,Value = 2,Unit = "px",Wide = true})
         end
         local CreditsSection = OptionsTab:Section({Name = "Credits",Side = "Right"}) do
             CreditsSection:Label({Text = "Made by AlexR32#0157"})
