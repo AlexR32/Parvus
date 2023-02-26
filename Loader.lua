@@ -28,7 +28,7 @@ local function GetSupportedGame() local Game
 end
 
 local function Concat(Array,Separator)
-    local Output = "" for Index,Value in pairs(Array) do
+    local Output = "" for Index,Value in ipairs(Array) do
         Value = type(Value) == "string" and "\""..Value.."\""
         Output = Index == #Array and Output .. tostring(Value)
         or Output .. tostring(Value) .. Separator
