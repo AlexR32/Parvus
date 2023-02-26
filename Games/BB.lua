@@ -25,6 +25,7 @@ if game.PlaceVersion > 1341 then
     }) repeat task.wait(0.5) until Loaded2
 end
 
+-- // TODO: add to all local's nil
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --local Tortoiseshell = require(ReplicatedStorage.TS)
 
