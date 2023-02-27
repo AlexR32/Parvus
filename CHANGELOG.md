@@ -1,3 +1,21 @@
+### Update 27/02/23
+```markdown
+# Global
+* new custom cursor (uses image)
+* bunch of config flags changed so some element values may reset
+* loadstring changed (should be final decision)
+* changed 'misc' section to 'other'
+
+# BRM5
++ added keybinds to vehicle and heli toggles
+
+# Bad Business
+* loading speed should be faster now
+* tweaked bullet tracer to spawn little bit off the camera
+* almost all tabs are rethought (thanks to Tabby @ discord server)
+* tweaks to autoshoot and all of its components (grenade tp, knife aura etc)
++ added redeem codes
+```
 ### Update 25/02/23
 ```markdown
 # Global
