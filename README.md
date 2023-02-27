@@ -5,7 +5,7 @@ Made With :heart: By ***AlexR32#0157***
 ***Parvus is still in beta stage of development so expect some bugs or lack of features.***   
 ### Loadstring
 ```lua
-local DevelopmentBranch = true
+local DevelopmentBranch = false
 local NotificationTime = 5
 local Debug = false
 
