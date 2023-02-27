@@ -177,6 +177,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
@@ -257,7 +258,7 @@ local function AimAt(Hitbox,Smoothness)
 end
 
 -- Universal Silent Aim by Averiias
-local OldIndex,OldNamecall
+local OldIndex,OldNamecall = nil,nil
 OldIndex = hookmetamethod(game,"__index",function(Self,Index)
     local Mode = Window.Flags["SilentAim/Mode"][1]
     if Self == Mouse and not checkcaller() and Mode == "Hit/Target" and SilentAim

@@ -315,13 +315,13 @@ local Window = Parvus.Utilities.UI:Window({
             end
         end
         local VehSection = MiscTab:Section({Name = "Vehicle"}) do
-            VehSection:Toggle({Name = "Enabled",Flag = "BRM5/Vehicle/Enabled",Value = false})
+            VehSection:Toggle({Name = "Enabled",Flag = "BRM5/Vehicle/Enabled",Value = false}):Keybind({Flag = "BRM5/Vehicle/Keybind"})
             VehSection:Slider({Name = "Speed",Flag = "BRM5/Vehicle/Speed",Min = 0,Max = 1000,Value = 100})
             VehSection:Slider({Name = "Acceleration",Flag = "BRM5/Vehicle/Acceleration",Min = 1,Max = 50,Value = 1})
             :ToolTip("lower = faster")
         end
         local HeliSection = MiscTab:Section({Name = "Helicopter"}) do
-            HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false})
+            HeliSection:Toggle({Name = "Enabled",Flag = "BRM5/Helicopter/Enabled",Value = false}):Keybind({Flag = "BRM5/Helicopter/Keybind"})
             HeliSection:Slider({Name = "Speed",Flag = "BRM5/Helicopter/Speed",Min = 0,Max = 500,Value = 200})
         end
         local AirSection = MiscTab:Section({Name = "Aircraft"}) do
@@ -366,7 +366,7 @@ local Window = Parvus.Utilities.UI:Window({
                 end
             end})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
             Value = ServerSettings["FIRSTPERSON_LOCKED"],Callback = function(Value)
                 ServerSettings["FIRSTPERSON_LOCKED"] = Value
@@ -390,6 +390,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
@@ -801,7 +802,7 @@ task.spawn(function()
     end
 end)
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
     if Window.Flags["BRM5/AntiFall"] then

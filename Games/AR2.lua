@@ -395,7 +395,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "No Fall Impact",Flag = "AR2/NoFallImpact",Value = false})
             CharSection:Toggle({Name = "No Jump Delay",Flag = "AR2/NoJumpDelay",Value = false})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
             --MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
@@ -466,6 +466,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Misc:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
@@ -731,7 +732,7 @@ local function HookCharacter(Character)
     end
 end
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
 

@@ -1,3 +1,4 @@
+repeat task.wait() until game.IsLoaded
 repeat task.wait() until game.GameId ~= 0
 
 if Parvus and Parvus.Game then
@@ -28,6 +29,7 @@ end
 
 local function Concat(Array,Separator)
     local Output = "" for Index,Value in ipairs(Array) do
+        Value = type(Value) == "string" and "\""..Value.."\"" or Value
         Output = Index == #Array and Output .. tostring(Value)
         or Output .. tostring(Value) .. Separator
     end return Output
@@ -38,18 +40,19 @@ local function HTTPGet(Url)
     if Responce then return Responce.Body end
 end
 
-local function GetScript(Script)
-    return Parvus.Debug and readfile("Parvus/" .. Script .. ".lua")
-    or HTTPGet(("%s%s.lua"):format(Parvus.Domain,Script))
+local function GetFile(File)
+    return Parvus.Debug and readfile("Parvus/" .. File)
+    or HTTPGet(("%s%s"):format(Parvus.Domain,File))
 end
 
 local function LoadScript(Script)
-    return loadstring(Parvus.Debug and readfile("Parvus/" .. Script .. ".lua")
-    or HTTPGet(("%s%s.lua"):format(Parvus.Domain,Script)))()
+    return loadstring(GetFile(Script..".lua"))()
 end
 
-getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},HTTPGet = HTTPGet,
-    Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/main/",Games = {
+getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},
+    Domain = "https://raw.githubusercontent.com/AlexR32/Parvus/"..LoadArgs[2].."/",
+
+    Games = {
         ["Universal" ] = {Name = "Universal",                 Script = "Universal" },
         ["1168263273"] = {Name = "Bad Business",              Script = "Games/BB"  },
         ["1586272220"] = {Name = "Steel Titans",              Script = "Games/ST"  },
@@ -65,12 +68,14 @@ getgenv().Parvus = {Debug = LoadArgs[1],Utilities = {},HTTPGet = HTTPGet,
 Parvus.Utilities.UI = LoadScript("Utilities/UI")
 Parvus.Utilities.Misc = LoadScript("Utilities/Misc")
 Parvus.Utilities.Drawing = LoadScript("Utilities/Drawing")
-Parvus.LoadString = GetScript("LoadString")
+
+Parvus.Loadstring = GetFile("Utilities/Loadstring.lua")
+Parvus.Cursor = GetFile("Utilities/ArrowCursor.png")
 
 local SupportedGame = GetSupportedGame()
 LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.InProgress then
-        QueueOnTeleport(Parvus.LoadString:format(
+        QueueOnTeleport(Parvus.Loadstring:format(
             Concat(LoadArgs,","),Parvus.Domain
         ))
     end
@@ -82,6 +87,6 @@ if SupportedGame then
     Parvus.Utilities.UI:Notification({
         Title = "Parvus Hub",
         Description = Parvus.Game .. " loaded!",
-        Duration = LoadArgs[2]
+        Duration = LoadArgs[3]
     })
 end

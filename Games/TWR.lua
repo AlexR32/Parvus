@@ -16,7 +16,8 @@ local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
 --[[local Client = getsenv(LocalPlayer.PlayerScripts.Client)
 local GlobalTable = getupvalue(Client.RHit,2)]]
 
---[[local OCIFunction for Index,Function in pairs(getgc()) do
+--[[local OCIFunction = nil
+for Index,Function in pairs(getgc()) do
     if islclosure(Function) and getconstants(Function)[1] == "GetCC" then
         OCIFunction = Function
     end
@@ -28,7 +29,7 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = AimAssistTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "Unlimited Mag",Flag = "TWR/InfMag",Value = false})
             MiscSection:Toggle({Name = "Unlimited Pool",Flag = "TWR/InfPool",Value = false})
             MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
@@ -172,6 +173,7 @@ end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
@@ -231,7 +233,7 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
---[[local OldNamecall,OldOCIFunction
+--[[OldOCIFunction = nil
 OldOCIFunction = hookfunction(OCIFunction,function(...)
     local ToReturn = OldOCIFunction(...)
     print("OCI",repr(ToReturn),repr({...}))
@@ -242,6 +244,7 @@ OldOCIFunction = hookfunction(OCIFunction,function(...)
     end return ToReturn
 end)]]
 
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then

@@ -6,8 +6,8 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
-local FXModule
---local Functions
+local FXModule = nil
+--local Functions = nil
 for Index,Value in pairs(getgc(true)) do
     if type(Value) == "table" then
         if rawget(Value,"ViewArmor") then
@@ -78,7 +78,7 @@ local Window = Parvus.Utilities.UI:Window({
             FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
             FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 100,Max = 500,Value = 100})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
             MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
                 local NumBool = Bool and 1 or 0
                 for Index,Child in pairs(Workspace:GetChildren()) do
@@ -106,6 +106,7 @@ end
 
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
+Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 
 --[[local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
 local BodyVelocity = Instance.new("BodyVelocity")
@@ -137,7 +138,7 @@ local function PlayerFly(Enabled,Speed,EnableCamera)
     end
 end
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then

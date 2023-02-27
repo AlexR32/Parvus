@@ -7,5 +7,5 @@ local function HTTPGet(Url)
     if Responce then return Responce.Body end
 end
 
-loadstring(LoadArgs[1] and readfile("Parvus/Loader.lua") or
-HTTPGet("%sLoader.lua"))(unpack(LoadArgs))
+loadstring(LoadArgs[1] and readfile("Parvus/Loader.lua")
+or HTTPGet("%sLoader.lua"))(unpack(LoadArgs))
