@@ -258,7 +258,7 @@ local function AimAt(Hitbox,Smoothness)
 end
 
 -- Universal Silent Aim by Averiias
-local OldIndex,OldNamecall
+local OldIndex,OldNamecall = nil,nil
 OldIndex = hookmetamethod(game,"__index",function(Self,Index)
     local Mode = Window.Flags["SilentAim/Mode"][1]
     if Self == Mouse and not checkcaller() and Mode == "Hit/Target" and SilentAim

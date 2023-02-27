@@ -291,7 +291,7 @@ LocalPlayer.CharacterAdded:Connect(function(Character)
 end)
 
 -- Testing
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
 
@@ -316,7 +316,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     return OldNamecall(Self,...)
 end)
 
---[[local RayHit
+--[[local RayHit = nil
 local function GetRayHit()
     for Index,Value in pairs(getgc(true)) do
         if type(Value) == "table" then

@@ -732,7 +732,7 @@ local function HookCharacter(Character)
     end
 end
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
 

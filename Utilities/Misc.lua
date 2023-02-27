@@ -309,7 +309,7 @@ function Misc:SetupLighting(Flags)
     }
 
     Lighting.Changed:Connect(function(Property)
-        if Property == "TimeOfDay" then return end local Value
+        if Property == "TimeOfDay" then return end local Value = nil
         if not pcall(function() Value = Lighting[Property] end) then return end
         local CustomValue,FormatedValue = Flags["Lighting/"..Property],Value
         local DefaultValue = Misc.DefaultLighting[Property]

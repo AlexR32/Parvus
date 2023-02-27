@@ -802,7 +802,7 @@ task.spawn(function()
     end
 end)
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
     if Window.Flags["BRM5/AntiFall"] then

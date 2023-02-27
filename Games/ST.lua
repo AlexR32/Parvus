@@ -6,8 +6,8 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
-local FXModule
---local Functions
+local FXModule = nil
+--local Functions = nil
 for Index,Value in pairs(getgc(true)) do
     if type(Value) == "table" then
         if rawget(Value,"ViewArmor") then
@@ -138,7 +138,7 @@ local function PlayerFly(Enabled,Speed,EnableCamera)
     end
 end
 
-local OldNamecall
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then

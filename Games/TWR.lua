@@ -16,7 +16,8 @@ local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
 --[[local Client = getsenv(LocalPlayer.PlayerScripts.Client)
 local GlobalTable = getupvalue(Client.RHit,2)]]
 
---[[local OCIFunction for Index,Function in pairs(getgc()) do
+--[[local OCIFunction = nil
+for Index,Function in pairs(getgc()) do
     if islclosure(Function) and getconstants(Function)[1] == "GetCC" then
         OCIFunction = Function
     end
@@ -232,7 +233,7 @@ local function AimAt(Hitbox,Smoothness)
     )
 end
 
---[[local OldNamecall,OldOCIFunction
+--[[OldOCIFunction = nil
 OldOCIFunction = hookfunction(OCIFunction,function(...)
     local ToReturn = OldOCIFunction(...)
     print("OCI",repr(ToReturn),repr({...}))
@@ -243,6 +244,7 @@ OldOCIFunction = hookfunction(OCIFunction,function(...)
     end return ToReturn
 end)]]
 
+local OldNamecall = nil
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
