@@ -78,7 +78,7 @@ local Window = Parvus.Utilities.UI:Window({
             FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
             FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 100,Max = 500,Value = 100})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Right"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
             MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
                 local NumBool = Bool and 1 or 0
                 for Index,Child in pairs(Workspace:GetChildren()) do

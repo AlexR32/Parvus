@@ -243,7 +243,7 @@ local Window = Parvus.Utilities.UI:Window({
             WMSection:Slider({Name = "Recoil Scale",Flag = "BB/Recoil/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Slider({Name = "Bullet Drop",Flag = "BB/Recoil/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
-        local MiscSection = RageTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = RageTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "Knife Aura",Flag = "BB/Rage/KnifeAura",Value = false}):Keybind()
             MiscSection:Toggle({Name = "Tele-Grenade",Flag = "BB/Rage/TeleGrenade",Value = false}):Keybind()
             MiscSection:Toggle({Name = "Auto Grenade",Flag = "BB/Rage/AutoGrenade",Value = false}):Keybind()
@@ -474,7 +474,7 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            WCSection:Toggle({Name = "Weapon Color",Flag = "BB/WC/Enabled",Value = false})
+            WCSection:Toggle({Name = "Enabled",Flag = "BB/WC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/WC/Color",Value = {1,0.75,1,0.5,true}})
             WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WC/Texture",Value = true})
             WCSection:Slider({Name = "Reflectance",Flag = "BB/WC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
@@ -486,7 +486,7 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
         local CCSection = MiscTab:Section({Name = "Character Customization",Side = "Left"}) do
-            CCSection:Toggle({Name = "Character Color",Flag = "BB/CC/Enabled",Value = false})
+            CCSection:Toggle({Name = "Enabled",Flag = "BB/CC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/CC/Color",Value = {1,0.75,1,0.5,true}})
             CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CC/Texture",Value = true})
             CCSection:Slider({Name = "Reflectance",Flag = "BB/CC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
@@ -497,7 +497,7 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Button({Name = "Redeem Codes",Callback = function()
                 local Codes = ""
                 local Success,Error = pcall(function()
@@ -519,7 +519,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
-            ACSection:Toggle({Name = "Arms Color",Flag = "BB/AC/Enabled",Value = false})
+            ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
             ACSection:Toggle({Name = "Hide Textures",Flag = "BB/AC/Texture",Value = true})
             ACSection:Slider({Name = "Reflectance",Flag = "BB/AC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
@@ -695,7 +695,7 @@ local Window = Parvus.Utilities.UI:Window({
             WMSection:Slider({Name = "Recoil Scale",Flag = "BB/Recoil/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
             WMSection:Slider({Name = "Bullet Drop",Flag = "BB/Recoil/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Button({Name = "Redeem Codes",Callback = function()
                 local Codes = ""
                 local Success,Error = pcall(function()
@@ -1291,7 +1291,6 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
     if Args[2] == "__Hit" then
         if (SilentAim and not Window.Flags["BB/Rage/Autoshoot/Enabled"])
         and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
-            print(Args[5])
             Args[4] = SilentAim[3].Position
             Args[5] = SilentAim[3]
             Args[7] = SilentAim[2]

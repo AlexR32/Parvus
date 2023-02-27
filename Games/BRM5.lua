@@ -366,7 +366,7 @@ local Window = Parvus.Utilities.UI:Window({
                 end
             end})
         end
-        local MiscSection = MiscTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
             Value = ServerSettings["FIRSTPERSON_LOCKED"],Callback = function(Value)
                 ServerSettings["FIRSTPERSON_LOCKED"] = Value

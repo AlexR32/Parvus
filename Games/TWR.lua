@@ -29,7 +29,7 @@ local Window = Parvus.Utilities.UI:Window({
     }) do Window:Watermark({Enabled = true})
 
     local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local MiscSection = AimAssistTab:Section({Name = "Misc",Side = "Left"}) do
+        local MiscSection = AimAssistTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "Unlimited Mag",Flag = "TWR/InfMag",Value = false})
             MiscSection:Toggle({Name = "Unlimited Pool",Flag = "TWR/InfPool",Value = false})
             MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
