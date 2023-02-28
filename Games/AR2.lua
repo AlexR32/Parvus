@@ -203,8 +203,8 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             BoxSection:Divider()
             BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/Player/Name/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = false})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = true})
+            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = true})
+            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = false})
             BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Name/Font",List = {
                 {Name = "UI",Mode = "Button",Value = true},
                 {Name = "System",Mode = "Button"},
