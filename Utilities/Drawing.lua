@@ -8,7 +8,7 @@ repeat task.wait() until PlayerService.LocalPlayer
 local LocalPlayer = PlayerService.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Locals
+-- Declarations
 local Cos = math.cos
 local Rad = math.rad
 local Sin = math.sin
@@ -17,18 +17,20 @@ local Clamp = math.clamp
 local Floor = math.floor
 local Clear = table.clear
 
--- Namecalls
 local WTVP = Camera.WorldToViewportPoint
 local FindFirstChild = Workspace.FindFirstChild
 local FindFirstChildOfClass = Workspace.FindFirstChildOfClass
 local FindFirstChildWhichIsA = Workspace.FindFirstChildWhichIsA
 local PointToObjectSpace = CFrame.identity.PointToObjectSpace
-local BlackColor = Color3.new(0,0,0)
-local WhiteColor = Color3.new(1,1,1)
-local GreenColor = Color3.new(0,1,0)
-local RedColor = Color3.new(1,0,0)
-local LerpColor = BlackColor.Lerp
+
 local V2New = Vector2.new
+local ColorNew = Color3.new
+local RedColor = ColorNew(1,0,0)
+local GreenColor = ColorNew(0,1,0)
+local WhiteColor = ColorNew(1,1,1)
+local BlackColor = ColorNew(0,0,0)
+local LerpColor = BlackColor.Lerp
+local Fonts = Drawing.Fonts
 
 if not HighlightContainer then
     local CoreGui = game:GetService("CoreGui")
@@ -43,21 +45,22 @@ local function HighlightNew()
     return Highlight
 end
 local function DrawingNew(Type,Properties)
-    local Drawing = Drawing.new(Type)
-    if not Properties then return Drawing end
+    local DrawingObject = Drawing.new(Type)
     for Property,Value in pairs(Properties) do
-        Drawing[Property] = Value
-    end return Drawing
+        DrawingObject[Property] = Value
+    end return DrawingObject
 end
 
-local function GetFlag(F,F1,F2) return F[F1..F2] end
-local function GetFontFromName(FontName)
+--[[local function GetFontFromName(FontName)
     return (FontName == "UI" and 0)
     or (FontName == "System" and 1)
     or (FontName == "Plex" and 2)
     or (FontName == "Monospace" and 3)
     or 0
-end
+end]]
+
+local function GetFlag(F,F1,F2) return F[F1..F2] end
+local function GetFont(Font) return Fonts[Font] end
 
 local function GetDistance(Position)
     return (Position - Camera.CFrame.Position).Magnitude
@@ -270,8 +273,8 @@ end
 
 function DrawingLibrary:SetupCursor(Flags)
     local Cursor = DrawingNew("Image",{
-        Data = Parvus.Cursor,
         Size = V2New(64,64) / 1.5,
+        Data = Parvus.Cursor,
         Rounding = 0,
 
         Transparency = 1,
@@ -296,10 +299,10 @@ function DrawingLibrary:SetupCrosshair(Flags)
         CrosshairL.Visible,CrosshairR.Visible,CrosshairT.Visible,CrosshairB.Visible = CrosshairEnabled,CrosshairEnabled,CrosshairEnabled,CrosshairEnabled
 
         if CrosshairEnabled then
-            local Gap = Flags["Crosshair/Gap"]
-            local Size = Flags["Crosshair/Size"]
-            local Color = Flags["Crosshair/Color"]
             local Mouse = UserInputService:GetMouseLocation()
+            local Color = Flags["Crosshair/Color"]
+            local Size = Flags["Crosshair/Size"]
+            local Gap = Flags["Crosshair/Gap"]
 
             CrosshairL.Color = Color[6]
             CrosshairL.Transparency = 1-Color[4]
@@ -325,8 +328,8 @@ function DrawingLibrary:SetupCrosshair(Flags)
 end
 
 function DrawingLibrary:FOVCircle(Flag,Flags)
-    local FOVCircle = DrawingNew("Circle", { ZIndex = 4 })
-    local Outline   = DrawingNew("Circle", { ZIndex = 3 })
+    local FOVCircle = DrawingNew("Circle",{ZIndex = 4})
+    local Outline   = DrawingNew("Circle",{ZIndex = 3})
 
     RunService.Heartbeat:Connect(function()
         FOVCircle.Visible = GetFlag(Flags,Flag,"/Enabled") and GetFlag(Flags,Flag,"/Circle/Enabled")
@@ -395,6 +398,8 @@ RunService.Heartbeat:Connect(function()
             if ESP.Target.OnScreen and ESP.Target.InTheRange then
                 if ESP.Highlight.Enabled then
                     local OutlineColor = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")
+                    ESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
+                    and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop
                     ESP.Highlight.Adornee = ESP.Target.Character ESP.Highlight.FillColor = ESP.Target.Color
                     ESP.Highlight.OutlineColor = OutlineColor[6] ESP.Highlight.OutlineTransparency = OutlineColor[4]
                     ESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
@@ -468,8 +473,8 @@ RunService.Heartbeat:Connect(function()
                     end
                     if ESP.Drawing.Name.Visible then
                         ESP.Drawing.Name.Outline = GetFlag(ESP.Flags,ESP.Flag,"/Name/Outline")
+                        ESP.Drawing.Name.Font = GetFont(GetFlag(ESP.Flags,ESP.Flag,"/Name/Font")[1])
                         ESP.Drawing.Name.Transparency = 1-GetFlag(ESP.Flags,ESP.Flag,"/Name/Transparency")
-                        ESP.Drawing.Name.Font = GetFontFromName(GetFlag(ESP.Flags,ESP.Flag,"/Name/Font")[1])
                         ESP.Drawing.Name.Size = ClampDistance(GetFlag(ESP.Flags,ESP.Flag,"/Name/Autoscale"),GetFlag(ESP.Flags,ESP.Flag,"/Name/Size"),ESP.Target.Distance)
                         ESP.Drawing.Name.Text = string.format("%s\n%i studs",ESP.Mode == "Player" and Target.Name or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC"),ESP.Target.Distance)
                         ESP.Drawing.Name.Position = V2New(BoxPosition.X + BoxSize.X / 2, BoxPosition.Y + BoxSize.Y)

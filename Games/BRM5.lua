@@ -24,16 +24,17 @@ local NPCFolder,Network,GroundTip,AircraftTip
 = Workspace.Bots,{},nil,nil
 
 local Teleports,NoClipEvent,NoClipObjects,WhiteColor,RaycastFolder,Squads = {
-    {"Forward Operating Base", Vector3.new(-3962.565, 64.188, 805.001)   },
-    {"Communications Tower",   Vector3.new(-1492.074, 809.622, -4415.498)},
-    {"Department Of Utilities",Vector3.new(86.105, 62.056, -2922.543)    },
-    {"Vietnama Village",       Vector3.new(737.943, 117.622, -97.537)    },
-    {"Fort Ronograd",          Vector3.new(6270.922, 185.885, -1226.123) },
-    {"Ronograd City",          Vector3.new(3483, 175.622, 1079.5)        },
-    {"Sochraina City",         Vector3.new(-932.943, 73.622, 4179.463)   },
-    {"El Chara",               Vector3.new(-4796, 107.638, 5298.497)     },
-    {"Naval Docks",            Vector3.new(6156.855, 130.184, 2097.577)  },
-    {"Quarry",                 Vector3.new(354, 85.622, 2630.5)          }
+    {"Forward Operating Base", Vector3.new(-3993,64,757)     },
+    {"Communications Tower",   Vector3.new(-1800,785,-4140)  },
+    {"Department Of Utilities",Vector3.new(-54,63,-3645)     },
+    {"Vietnama Village",       Vector3.new(739,118,-92)      },
+    {"Fort Ronograd",          Vector3.new(6359,190,-1468)   },
+    {"Ronograd City",          Vector3.new(3478,176,1073)    },
+    {"Sochraina City",         Vector3.new(93,26,3630)       },
+    {"El Chara",               Vector3.new(-4768,108,5218)   },
+    {"Naval Docks",            Vector3.new(6174,130,2099)    },
+    {"Quarry",                 Vector3.new(331,86,2598)      },
+    {"Nuclear Silo",           Vector3.new(1024,44,-5148)    }
 },nil,{},Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),nil
 
 local Server = require(Packages:WaitForChild("server"))
@@ -150,15 +151,11 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
-            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
-            OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
-            OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-            OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
-            OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+        local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
+            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
+            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/Player/Highlight/Occluded",Value = false})
+            ChamSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
         local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/HeadDot/Enabled",Value = false})
@@ -180,10 +177,15 @@ local Window = Parvus.Utilities.UI:Window({
             TracerSection:Slider({Name = "Thickness",Flag = "ESP/Player/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
             TracerSection:Slider({Name = "Transparency",Flag = "ESP/Player/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HighlightSection = VisualsTab:Section({Name = "Highlights",Side = "Right"}) do
-            HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
-            HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
+        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
+            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
+            OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
+            OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
+            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
+            OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
+            OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
     end
     local NPCVisualsTab = Window:Tab({Name = "NPC Visuals"}) do
@@ -214,15 +216,11 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Size",Flag = "ESP/NPC/Name/Size",Min = 13,Max = 100,Value = 16})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local OoVSection = NPCVisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
-            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Arrow/Enabled",Value = false})
-            OoVSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Arrow/Filled",Value = true})
-            OoVSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 18})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/NPC/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-            OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
-            OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+        local ChamSection = NPCVisualsTab:Section({Name = "Chams",Side = "Left"}) do
+            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Highlight/Enabled",Value = false})
+            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/NPC/Highlight/Occluded",Value = false})
+            ChamSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
         local HeadSection = NPCVisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/HeadDot/Enabled",Value = false})
@@ -244,10 +242,15 @@ local Window = Parvus.Utilities.UI:Window({
             TracerSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
             TracerSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HighlightSection = NPCVisualsTab:Section({Name = "Highlights",Side = "Right"}) do
-            HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Highlight/Enabled",Value = false})
-            HighlightSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
+        local OoVSection = NPCVisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
+            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Arrow/Enabled",Value = false})
+            OoVSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Arrow/Filled",Value = true})
+            OoVSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Arrow/Outline",Value = true})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
+            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/NPC/Arrow/Radius",Min = 80,Max = 200,Value = 200})
+            OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
+            OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
@@ -551,40 +554,40 @@ local function AircraftFly(Enabled,Speed,CameraControl,Args)
     end
 end
 local function Teleport(Position,Velocity)
-	local PrimaryPart = LocalPlayer.Character
+    local PrimaryPart = LocalPlayer.Character
     and LocalPlayer.Character.PrimaryPart
     if not PrimaryPart then return end
     local TPModule = {}
 
-	local AlignPosition = Instance.new("AlignPosition")
-	AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
-	AlignPosition.Attachment0 = PrimaryPart.RootRigAttachment
+    local AlignPosition = Instance.new("AlignPosition")
+    AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+    AlignPosition.Attachment0 = PrimaryPart.RootRigAttachment
 
     local AlignOrientation = Instance.new("AlignOrientation")
-	AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
-	AlignOrientation.Attachment0 = PrimaryPart.RootRigAttachment
+    AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    AlignOrientation.Attachment0 = PrimaryPart.RootRigAttachment
 
     --AlignPosition.MaxForce = 10000
     AlignPosition.MaxVelocity = Velocity
-	AlignPosition.Position = Position
+    AlignPosition.Position = Position
 
-	AlignPosition.Parent = PrimaryPart
+    AlignPosition.Parent = PrimaryPart
     AlignOrientation.Parent = PrimaryPart
 
-	function TPModule:Update(Position,Velocity)
+    function TPModule:Update(Position,Velocity)
         AlignPosition.MaxVelocity = Velocity
-		AlignPosition.Position = Position
-	end
-	function TPModule:Wait()
-		while task.wait() do
-			if (PrimaryPart.Position - AlignPosition.Position).Magnitude < 5 then
-				break
-			end
-		end
-	end
-	function TPModule:Destroy()
+        AlignPosition.Position = Position
+    end
+    function TPModule:Wait()
+        while task.wait() do
+            if (PrimaryPart.Position - AlignPosition.Position).Magnitude < 5 then
+                break
+            end
+        end
+    end
+    function TPModule:Destroy()
         TPModule:Wait()
-		AlignPosition:Destroy()
+        AlignPosition:Destroy()
         AlignOrientation:Destroy()
     end return TPModule
 end
@@ -720,7 +723,7 @@ HookFunction("AircraftMovement","Update",function(Args)
     if Window.Flags["BRM5/Aircraft/Enabled"] then
         --[[Args[1]._speed = 1
         Args[1]._gyro.CFrame = Args[1]._gyro.CFrame * CFrame.Angles(math.rad(-Args[3].Y * Args[4] * 50), 0, math.rad(Args[3].X * Args[4] * 50));
-		Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
+        Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
         Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000 * Args[1]._speed 
         Args[1]._force.Velocity = Args[1]._main.CFrame.LookVector * -Window.Flags["BRM5/Aircraft/Speed"]]
         Args[1]._model.RPM.Value = Window.Flags["BRM5/Aircraft/Speed"]

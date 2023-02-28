@@ -203,8 +203,8 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             BoxSection:Divider()
             BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/Player/Name/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = true})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = false})
+            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = false})
+            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = true})
             BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Name/Font",List = {
                 {Name = "UI",Mode = "Button",Value = true},
                 {Name = "System",Mode = "Button"},
@@ -214,15 +214,11 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Left"}) do
-            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
-            OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
-            OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-            OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
-            OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+        local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
+            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
+            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/Player/Highlight/Occluded",Value = false})
+            ChamSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
         local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/HeadDot/Enabled",Value = false})
@@ -244,11 +240,16 @@ local Window = Parvus.Utilities.UI:Window({
             TracerSection:Slider({Name = "Thickness",Flag = "ESP/Player/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
             TracerSection:Slider({Name = "Transparency",Flag = "ESP/Player/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HighlightSection = VisualsTab:Section({Name = "Highlights",Side = "Right"}) do
-            HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
-            HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
-        end Parvus.Utilities.Misc:LightingSection(VisualsTab,"Right")
+        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
+            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
+            OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
+            OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
+            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
+            OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
+            OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+        end
     end
     local ESPTab = Window:Tab({Name = "AR2 ESP"}) do
         local ItemSection = ESPTab:Section({Name = "Item ESP",Side = "Left"}) do local Items = {}
@@ -503,14 +504,14 @@ local function Raycast(Origin,Direction)
 
     local RaycastResult = Workspace:Raycast(Origin,Direction,WallCheckParams)
     if RaycastResult then
-		if (RaycastResult.Instance.Transparency == 1
+        if (RaycastResult.Instance.Transparency == 1
         and RaycastResult.Instance.CanCollide == false)
         or (CollectionService:HasTag(RaycastResult.Instance,"Bullets Penetrate")
         or CollectionService:HasTag(RaycastResult.Instance,"Window Part")
         or CollectionService:HasTag(RaycastResult.Instance,"World Mesh")
         or CollectionService:HasTag(RaycastResult.Instance,"World Water Part")) then
-			return true
-		end
+            return true
+        end
     end
 end
 
