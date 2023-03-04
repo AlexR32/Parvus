@@ -18,7 +18,7 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(0.5) until Loaded1
 end
 
-if game.PlaceVersion > 1341 then
+if game.PlaceVersion ~= 1343 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -32,6 +32,7 @@ local SilentAim,Aimbot,Trigger,AutoshootHitbox = nil,false,false,nil
 local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS),{},nil
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
+local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
 local NewRandom,CodesDebounce,FlyPosition = Random.new(),false,nil
 local SetIdentity = syn and syn.set_thread_identity or setidentity
 
@@ -436,10 +437,11 @@ local Window = Parvus.Utilities.UI:Window({
             BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
             BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-        local HighlightSection = VisualsTab:Section({Name = "Highlights",Side = "Left"}) do
-            HighlightSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
-            HighlightSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            HighlightSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
+        local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
+            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
+            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/Player/Highlight/Occluded",Value = false})
+            ChamSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
         end
         local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
             HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/HeadDot/Enabled",Value = false})
@@ -619,10 +621,8 @@ local Window = Parvus.Utilities.UI:Window({
     end
     --[[local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            WCSection:Toggle({Name = "Weapon Color",Flag = "BB/WC/Enabled",Value = false})
+            WCSection:Toggle({Name = "Enabled",Flag = "BB/WC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/WC/Color",Value = {1,0.75,1,0.5,true}})
-            WCSection:Toggle({Name = "Bullet Tracer",Flag = "BB/BulletTracer/Enabled",Value = true})
-            :Colorpicker({Flag = "BB/BulletTracer/Color",Value = {1,0.75,1,0,true}})
             WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WC/Texture",Value = true})
             WCSection:Slider({Name = "Reflectance",Flag = "BB/WC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
             WCSection:Dropdown({Name = "Material",Flag = "BB/WC/Material",List = {
@@ -633,7 +633,7 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
         local CCSection = MiscTab:Section({Name = "Character Customization",Side = "Left"}) do
-            CCSection:Toggle({Name = "Character Color",Flag = "BB/CC/Enabled",Value = false})
+            CCSection:Toggle({Name = "Enabled",Flag = "BB/CC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/CC/Color",Value = {1,0.75,1,0.5,true}})
             CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CC/Texture",Value = true})
             CCSection:Slider({Name = "Reflectance",Flag = "BB/CC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
@@ -717,7 +717,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
-            ACSection:Toggle({Name = "Arms Color",Flag = "BB/AC/Enabled",Value = false})
+            ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
             ACSection:Toggle({Name = "Hide Textures",Flag = "BB/AC/Texture",Value = true})
             ACSection:Slider({Name = "Reflectance",Flag = "BB/AC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
@@ -1045,13 +1045,13 @@ local function CustomizeCharacter(Enabled,HideTextures,Color,Reflectance,Materia
 end
 
 --[[local function CalculateTrajectory(targetPosition: Vector3, targetVelocity: Vector3, shooterPosition: Vector3, shooterVelocity: Vector3, projectileSpeed: number, gravity: number)	
-	local a = Vector3.new(0,math.abs(gravity),0)
-	local v = targetVelocity - shooterVelocity
-	local p = targetPosition - shooterPosition
-	local distance = p.Magnitude
+    local a = Vector3.new(0,math.abs(gravity),0)
+    local v = targetVelocity - shooterVelocity
+    local p = targetPosition - shooterPosition
+    local distance = p.Magnitude
 
-	local timeTaken = (distance / projectileSpeed)
-	return (targetPosition + v * timeTaken) + (a * timeTaken^2 / 2)
+    local timeTaken = (distance / projectileSpeed)
+    return (targetPosition + v * timeTaken) + (a * timeTaken^2 / 2)
 end]]
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
@@ -1062,7 +1062,7 @@ local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
 end
 
 local function ProjectileBeam(Origin,Direction)
-	local Beam = Instance.new("Part")
+    local Beam = Instance.new("Part")
 
     Beam.BottomSurface = Enum.SurfaceType.Smooth
     Beam.TopSurface = Enum.SurfaceType.Smooth
@@ -1070,12 +1070,12 @@ local function ProjectileBeam(Origin,Direction)
     Beam.Color = Color3.new(1,0,0)
 
     Beam.CanCollide = false
-	Beam.CanTouch = false
+    Beam.CanTouch = false
     Beam.CanQuery = false
     Beam.Anchored = true
 
-	Beam.Size = Vector3.new(0.1,0.1,(Origin - Direction).Magnitude)
-	Beam.CFrame = CFrame.new(Origin,Direction) * CFrame.new(0,0,-Beam.Size.Z / 2)
+    Beam.Size = Vector3.new(0.1,0.1,(Origin - Direction).Magnitude)
+    Beam.CFrame = CFrame.new(Origin,Direction) * CFrame.new(0,0,-Beam.Size.Z / 2)
 
     Beam.Parent = Workspace
 
@@ -1088,23 +1088,22 @@ local function ProjectileBeam(Origin,Direction)
         end Beam:Destroy()
     end)
 
-	return Beam
+    return Beam
 end
 local function ComputeProjectiles(Config,Hitbox)
-    local Position = Camera.CFrame.Position
-    local RayResult =  Raycast(Position,
-    Hitbox.Position - Position,{Hitbox})
+    local ReticlePosition = Tortoiseshell.Input.Reticle:GetPosition()
+    local RayResult =  Raycast(ReticlePosition,Hitbox.Position - ReticlePosition,{Hitbox})
     if not RayResult then return end
 
     local ShootProjectiles = {}
     for Index = 1,Config.Projectile.Amount do
         table.insert(ShootProjectiles,{
-            (Hitbox.Position - Position).Unit,
+            ((Hitbox.Position - ReticlePosition).Unit + Vector3.new(0,Config.Projectile.GravityCorrection / 1000,0)).Unit,
             Tortoiseshell.Projectiles:GetID()
         })
     end
 
-    return ShootProjectiles,Position,
+    return ShootProjectiles,ReticlePosition,
     RayResult.Position,RayResult.Normal
 end
 local function Autoshoot(Hitbox,FireRate)
@@ -1120,26 +1119,23 @@ local function Autoshoot(Hitbox,FireRate)
             local FireModeFromList = Config.FireModeList[FireMode.Value]
             local CurrentFireMode = Config.FireModes[FireModeFromList]
 
-            local ShootProjectiles,Position,RayPosition,RayNormal
+            local ShootProjectiles,ReticlePosition,RayPosition,RayNormal
             = ComputeProjectiles(Config,Hitbox[3])
             if not ShootProjectiles then return end
 
             task.spawn(function()
                 Tortoiseshell.Network:Fire("Item_Paintball",
-                "Shoot",Weapon,Position,ShootProjectiles)
+                "Shoot",Weapon,ReticlePosition,ShootProjectiles)
 
-                task.wait((RayPosition - Position).Magnitude
-                /Projectiles[Config.Projectile.Template].Speed)
+                task.wait((RayPosition - ReticlePosition).Magnitude
+                / Projectiles[Config.Projectile.Template].Speed)
 
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Tortoiseshell.Network:Fire("Projectiles","__Hit",
-                    Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1])
+                    Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1],nil)
                 end
             end)
 
-            if Window.Flags["BB/BulletTracer/Enabled"] then
-                ProjectileBeam(Position - Vector3.new(0,1,0),RayPosition)
-            end
             if Window.Flags["BB/Rage/Hitmarker"] then
                 Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
                 Config.Projectile.Amount and Config.Projectile.Amount > 3)
@@ -1296,8 +1292,11 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
             Args[7] = SilentAim[2]
             Tortoiseshell.UI.Events.Hitmarker:Fire(
             SilentAim[3],SilentAim[3].Position)
-            return Old(Self,unpack(Args))
         end
+        if Window.Flags["BB/BulletTracer/Enabled"] then
+            ProjectileBeam(Camera.CFrame.Position - Vector3.new(0,1,0),Args[4])
+        end
+        return Old(Self,unpack(Args))
     end
 
     --[[if Args[2] == "Throw" then
@@ -1310,25 +1309,28 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
         end
     end]]
 
-    if Args[3] == "Look" then
-        if Window.Flags["BB/AntiAim/Enabled"] then
+    if Args[2] == "State" then
+
+        --[[
+        Old(Self,"Character","State","Aiming",true)
+        Old(Self,"Character","State","Climbing",true)
+        Old(Self,"Character","State","Grounded",true)
+        Old(Self,"Character","State","InWater",true)
+        Old(Self,"Character","State","Sliding",true)
+        Old(Self,"Character","State","Sprinting",true)
+        Old(Self,"Character","State","SuperSprinting",true)
+        Old(Self,"Character","State","Swapping",true)
+        Old(Self,"Character","State","Vaulting",true)
+        Old(Self,"Character","State","Stance","Stand") -- "Crouch","Prone"
+        ]]
+
+        if Window.Flags["BB/Rage/Autoshoot/Enabled"]
+        and table.find(DisabledStates,Args[3]) then Args[4] = false end
+        if Window.Flags["BB/AntiAim/Enabled"] and Args[3] == "Look" then
             local Pitch = GetAntiAimValue(Window.Flags["BB/AntiAim/Pitch/Value"],Window.Flags["BB/AntiAim/Pitch/Mode"][1])
             local Lean = GetAntiAimValue(Window.Flags["BB/AntiAim/Lean/Value"],Window.Flags["BB/AntiAim/Lean/Mode"][1])
             Args[4] = Pitch Old(Self,"Character","State","Lean",Lean)
-
-            --[[Old(Self,"Character","State","Aiming",true)
-            Old(Self,"Character","State","Climbing",true)
-            Old(Self,"Character","State","Grounded",true)
-            Old(Self,"Character","State","InWater",true)
-            Old(Self,"Character","State","Sliding",true)
-            Old(Self,"Character","State","Sprinting",true)
-            Old(Self,"Character","State","SuperSprinting",true)
-            Old(Self,"Character","State","Swapping",true)
-            Old(Self,"Character","State","Vaulting",true)
-            Old(Self,"Character","State","Stance","Stand") -- "Crouch","Prone"]]
-
-            return Old(Self,unpack(Args))
-        end
+        end return Old(Self,unpack(Args))
     end
 
     return Old(Self,...)
