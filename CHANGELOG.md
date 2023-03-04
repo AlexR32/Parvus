@@ -1,3 +1,19 @@
+### Update 2?/02/23
+```markdown
+# Global
+* changed name of highlights to chams
+* changed visual tab layout a bit
++ added chams occluded toggle (basically wallcheck)
+
+# BRM5
+* updated teleport locations
+
+# Bad Business
+* bullet tracers now works everywhere
+* autoshoot unpatched i guess (was banning you for 999999999 days)
+
+*(report if any of this doesn't work)*
+```
 ### Update 27/02/23
 ```markdown
 # Global

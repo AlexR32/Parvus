@@ -18,7 +18,7 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(0.5) until Loaded1
 end
 
-if game.PlaceVersion ~= 1343 then
+if game.PlaceVersion > 1343 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
