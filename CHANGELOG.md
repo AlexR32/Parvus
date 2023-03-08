@@ -1,3 +1,37 @@
+### Update 04/03/23
+```markdown
+# Global
+* changed name of highlights to chams
+* changed visual tab layout a bit
++ added chams occluded toggle (basically wallcheck)
+
+# BRM5
+* updated teleport locations
+
+# Bad Business
+* bullet tracers now works everywhere
+* autoshoot unpatched i guess (was banning you for 999999999 days)
+
+*(report if any of this doesn't work)*
+```
+### Update 27/02/23
+```markdown
+# Global
+* new custom cursor (uses image)
+* bunch of config flags changed so some element values may reset
+* loadstring changed (should be final decision)
+* changed 'misc' section to 'other'
+
+# BRM5
++ added keybinds to vehicle and heli toggles
+
+# Bad Business
+* loading speed should be faster now
+* tweaked bullet tracer to spawn little bit off the camera
+* almost all tabs are rethought (thanks to Tabby @ discord server)
+* tweaks to autoshoot and all of its components (grenade tp, knife aura etc)
++ added redeem codes
+```
 ### Update 25/02/23
 ```markdown
 # Global

@@ -11,7 +11,7 @@ local SilentAim,Aimbot,Trigger = nil,false,false
 local GravityCorrection = 2
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Game,
+    Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -210,9 +210,7 @@ local function WallCheck(Enabled,Hitbox,Character)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    --[[local PredictedPosition = Origin + Velocity * Time
-    local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed]]
+    
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
