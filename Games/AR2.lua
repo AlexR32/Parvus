@@ -103,7 +103,7 @@ BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
 BodyVelocity.Velocity = Vector3.zero]]
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Game,
+    Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -257,10 +257,10 @@ local Window = Parvus.Utilities.UI:Window({
             ItemSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Items/DistanceCheck",Value = true})
             ItemSection:Slider({Name = "Distance",Flag = "AR2/ESP/Items/Distance",Min = 25,Max = 5000,Value = 50,Unit = "studs"})
             for Index,Name in pairs(ItemCategory) do
-                local ItemFlag = "AR2/ESP/Items/" .. Name Window.Flags[ItemFlag.."/Enabled"] = false
+                local ItemFlag = "AR2/ESP/Items/" .. Name Window.Flags[ItemFlag .. "/Enabled"] = false
                 Items[#Items + 1] = {Name = Name,Mode = "Toggle",Value = false,
                     Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[ItemFlag.."/Enabled"] = Option.Value end
+                    Callback = function(Selected,Option) Window.Flags[ItemFlag .. "/Enabled"] = Option.Value end
                 }
             end ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
@@ -272,17 +272,17 @@ local Window = Parvus.Utilities.UI:Window({
             for Index,Inherit in pairs(ZombieInherits) do
                 local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
                 local REFlag = "AR2/ESP/Zombies/" .. InheritName
-                Window.Flags[REFlag.."/Enabled"] = false
+                Window.Flags[REFlag .. "/Enabled"] = false
 
                 ZIs[#ZIs + 1] = {Name = InheritName,Mode = "Toggle",Value = true,
                     Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[REFlag.."/Enabled"] = Option.Value end
+                    Callback = function(Selected,Option) Window.Flags[REFlag .. "/Enabled"] = Option.Value end
                 }
             end ZombiesSection:Dropdown({Name = "ESP List",Flag = "AR2/Zombies",List = ZIs})
         end
         --[[local ItemCSection = ESPTab:Section({Name = "Item Colors",Side = "Left"}) do
             for Index,Name in pairs(ItemCategory) do local ItemFlag = "AR2/ESP/Items/" .. Name
-                ItemCSection:Colorpicker({Name = Name,Flag = ItemFlag.."/Color",Value = {1,0,1,0,false}})
+                ItemCSection:Colorpicker({Name = Name,Flag = ItemFlag .. "/Color",Value = {1,0,1,0,false}})
             end
         end]]
         local RESection = ESPTab:Section({Name = "Random Events ESP",Side = "Right"}) do local REs = {}
@@ -290,16 +290,16 @@ local Window = Parvus.Utilities.UI:Window({
             RESection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/RandomEvents/DistanceCheck",Value = true})
             RESection:Slider({Name = "Distance",Flag = "AR2/ESP/RandomEvents/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
             for Index,Name in pairs(RandomEvents) do
-                local REFlag = "AR2/ESP/RandomEvents/" .. Name Window.Flags[REFlag.."/Enabled"] = false
+                local REFlag = "AR2/ESP/RandomEvents/" .. Name Window.Flags[REFlag .. "/Enabled"] = false
                 REs[#REs + 1] = {Name = Name,Mode = "Toggle",Value = true,
                     Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[REFlag.."/Enabled"] = Option.Value end
+                    Callback = function(Selected,Option) Window.Flags[REFlag .. "/Enabled"] = Option.Value end
                 }
             end RESection:Dropdown({Name = "ESP List",Flag = "AR2/RandomEvents",List = REs})
         end
         --[[local RECSection = ESPTab:Section({Name = "Random Events Colors",Side = "Right"}) do
             for Index,Name in pairs(RandomEvents) do local REFlag = "AR2/ESP/RandomEvents/" .. Name
-                RECSection:Colorpicker({Name = Name,Flag = REFlag.."/Color",Value = {1,0,1,0,false}})
+                RECSection:Colorpicker({Name = Name,Flag = REFlag .. "/Color",Value = {1,0,1,0,false}})
             end
         end]]
         local VehiclesSection = ESPTab:Section({Name = "Vehicles ESP",Side = "Right"}) do
@@ -547,10 +547,6 @@ local function WallCheck(Enabled,Hitbox)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    --[[local PredictedPosition = Origin + Velocity * Time
-    local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed]]
-
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
@@ -1014,14 +1010,14 @@ for Index,Item in pairs(Loot:GetDescendants()) do
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
         Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
-            "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
+            "AR2/ESP/Items","AR2/ESP/Items/" .. ItemData.Parent.Name,Window.Flags
         )
     end
 end
 for Index,Event in pairs(Randoms:GetChildren()) do
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
         Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
-            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
+            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
         )
     end
 end
@@ -1053,14 +1049,14 @@ Loot.DescendantAdded:Connect(function(Item)
     local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
     if Item:IsA("CFrameValue") and ItemData then --print(ItemData.Parent.Name)
         Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
-            "AR2/ESP/Items","AR2/ESP/Items/"..ItemData.Parent.Name,Window.Flags
+            "AR2/ESP/Items","AR2/ESP/Items/" .. ItemData.Parent.Name,Window.Flags
         )
     end
 end)
 Randoms.ChildAdded:Connect(function(Event)
     if table.find(RandomEvents,Event.Name) then --print(Event.Name)
         Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
-            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/"..Event.Name,Window.Flags
+            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
         )
         if Window.Flags["AR2/ESP/RandomEvents/Enabled"] then
             Parvus.Utilities.UI:Notification2({
@@ -1087,7 +1083,7 @@ Zombies.Mobs.ChildAdded:Connect(function(Zombie)
                 local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
                 Parvus.Utilities.Drawing:AddObject(
                     Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
-                    "AR2/ESP/Zombies/"..InheritName,Window.Flags
+                    "AR2/ESP/Zombies/" .. InheritName,Window.Flags
                 )
             end
         end

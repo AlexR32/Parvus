@@ -311,7 +311,7 @@ function Misc:SetupLighting(Flags)
     Lighting.Changed:Connect(function(Property)
         if Property == "TimeOfDay" then return end local Value = nil
         if not pcall(function() Value = Lighting[Property] end) then return end
-        local CustomValue,FormatedValue = Flags["Lighting/"..Property],Value
+        local CustomValue,FormatedValue = Flags["Lighting/" .. Property],Value
         local DefaultValue = Misc.DefaultLighting[Property]
 
         if type(CustomValue) == "table" then
@@ -334,7 +334,7 @@ function Misc:SetupLighting(Flags)
     RunService.Heartbeat:Connect(function()
         if Flags["Lighting/Enabled"] then
             for Property in pairs(Misc.DefaultLighting) do
-                local CustomValue = Flags["Lighting/"..Property]
+                local CustomValue = Flags["Lighting/" .. Property]
                 if type(CustomValue) == "table" then
                     CustomValue = CustomValue[6]
                 end

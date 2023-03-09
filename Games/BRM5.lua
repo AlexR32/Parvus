@@ -8,22 +8,26 @@ local Lighting = game:GetService("Lighting")
 --repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 --local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
+if not Workspace:FindFirstChild("Bots") then
+    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Join game first",Duration = 5})
+end
+
 repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
+local Server = require(Packages:WaitForChild("server"))
+local ServerSettings = getupvalue(Server.Get,1)
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger = nil,false,false
 
-local ProjectileSpeed,ProjectileGravity,GravityCorrection
-= 1000,Vector3.new(0,Workspace.Gravity,0),2
+local Actors,Squads,Network,NPCFolder,RaycastFolder = nil,nil,{},Workspace:WaitForChild("Bots"),Workspace:WaitForChild("Raycast")
+local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,Vector3.new(0,Workspace.Gravity,0),2
+local GroundTip,AircraftTip,NoClipEvent,NoClipObjects,WhiteColor = nil,nil,nil,{},Color3.new(1,1,1)
 
-local NPCFolder,Network,GroundTip,AircraftTip
-= Workspace.Bots,{},nil,nil
-
-local Teleports,NoClipEvent,NoClipObjects,WhiteColor,RaycastFolder,Squads = {
+local Teleports = {
     {"Forward Operating Base", Vector3.new(-3993,64,757)     },
     {"Communications Tower",   Vector3.new(-1800,785,-4140)  },
     {"Department Of Utilities",Vector3.new(-54,63,-3645)     },
@@ -35,13 +39,10 @@ local Teleports,NoClipEvent,NoClipObjects,WhiteColor,RaycastFolder,Squads = {
     {"Naval Docks",            Vector3.new(6174,130,2099)    },
     {"Quarry",                 Vector3.new(331,86,2598)      },
     {"Nuclear Silo",           Vector3.new(1024,44,-5148)    }
-},nil,{},Color3.new(1,1,1),Workspace:FindFirstChild("Raycast"),nil
-
-local Server = require(Packages:WaitForChild("server"))
-local ServerSettings = getupvalue(Server.Get,1)
+}
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Game,
+    Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-248)
     }) do Window:Watermark({Enabled = true})
 
@@ -432,7 +433,7 @@ local function TeamCheck(Enabled,Player)
     if Player.Neutral then
         local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
         local TargetColor = Squads._tags[Player] and Squads._tags[Player].Tag.TextLabel.TextColor3 or WhiteColor
-        return LPColor ~= TargetColor,TargetColor
+        return LPColor ~= TargetColor
     else
         return LocalPlayer.Team ~= Player.Team
     end
@@ -451,9 +452,6 @@ local function WallCheck(Enabled,Hitbox,Character)
 end
 
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    --[[local PredictedPosition = Origin + Velocity * Time
-    local Delta = (PredictedPosition - Origin).Magnitude
-    Time = Time + Delta / ProjectileSpeed]]
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
 end
 
@@ -465,44 +463,36 @@ local function GetClosest(Enabled,NPCMode,FOV,DFOV,TC,BP,WC,DC,MD,PE)
     if not Enabled then return end local Closest = nil
     FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
 
-    if NPCMode then
-        for Index,NPC in pairs(NPCFolder:GetChildren()) do
-            local Humanoid = NPC:FindFirstChildOfClass("Humanoid")
-            local IsAlive = Humanoid and Humanoid.Health > 0
-            if not NPC:FindFirstChildWhichIsA("ProximityPrompt",true) and
-            NPC:FindFirstChildWhichIsA("AlignOrientation",true) and IsAlive then
-                for Index,BodyPart in pairs(BP) do
-                    BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
-                    local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                    if WallCheck(WC,BodyPart,NPC) and DistanceCheck(DC,Distance,MD) then
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
-                        BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+    for Index,Actor in pairs(Actors) do
+        local Player = Actor.Player
+        if Player == LocalPlayer then continue end
 
-                        local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{NPC,NPC,BodyPart,ScreenPosition} end
-                    end
-                end
-            end
+        local Character = Actor.Character
+        local Humanoid = Actor.Humanoid
+        local RootPart = Actor.RootPart
+
+        if NPCMode then
+            if Actor._isPlayer then continue end
+            local RootRigAttachment = RootPart:FindFirstChild("RootRigAttachment")
+
+            if not RootRigAttachment then continue end
+            if not RootPart:FindFirstChild("AlignOrientation") then continue end
+            if RootRigAttachment:FindFirstChildOfClass("ProximityPrompt") then continue end
+        else
+            if not Actor._isPlayer then continue end
+            if not TeamCheck(TC,Player) then continue end
         end
-    else
-        for Index,Player in pairs(PlayerService:GetPlayers()) do
-            if Player == LocalPlayer then continue end
-            local Character = Player.Character
 
-            if Character and TeamCheck(TC,Player) then
-                local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-                if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+        if Character and Humanoid.Health > 0 then
+            for Index,BodyPart in pairs(BP) do
+                BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
+                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                if WallCheck(WC,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
 
-                for Index,BodyPart in pairs(BP) do
-                    BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
-                    local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                    if WallCheck(WC,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                        local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
-                        BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
-
-                        local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                        if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
-                    end
+                    local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
                 end
             end
         end
@@ -633,6 +623,7 @@ function EnableSwitch(Switch)
 end
 
 Squads = RequireModule("SquadInterface")
+Actors = RequireModule("ActorService")._actors
 local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
 local RecoilFunction = RequireModule("CharacterCamera").Recoil
 setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))
@@ -927,14 +918,16 @@ RaycastFolder.ChildRemoved:Connect(function(Item)
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do
-    if NPC:WaitForChild("HumanoidRootPart",5) and
-    NPC.HumanoidRootPart:FindFirstChild("AlignOrientation") then
-        Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
-    end
+    task.spawn(function()
+        if NPC:WaitForChild("HumanoidRootPart",5)
+        and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
+            Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+        end
+    end)
 end
 NPCFolder.ChildAdded:Connect(function(NPC)
-    if NPC:WaitForChild("HumanoidRootPart",5) and
-    NPC.HumanoidRootPart:FindFirstChild("AlignOrientation") then
+    if NPC:WaitForChild("HumanoidRootPart",5)
+    and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
         Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
     end
 end)

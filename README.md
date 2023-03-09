@@ -2,25 +2,16 @@
 Free Roblox Script Hub designed for shooters.  
 Made With :heart: By ***AlexR32#0157***
 
-***Parvus is still in beta stage of development so expect some bugs or lack of features.***   
+- ***This script is still in beta stage of development, so expect some bugs or lack of features.***  
+- ***This script only officially supports Synapse X, since I'm making this script with Synapse, so if you have problems running this script on other executors, just remember that it might be your executor***  
+- ***Please do not modify this script without my permission, or redistribute it without any credit to me.***  
+
 ### Loadstring
 ```lua
-local DevelopmentBranch = false
-local NotificationTime = 5
-local Debug = false
-
-local Request = (syn and syn.request)
-or (http and http.request) or request
-DevelopmentBranch = DevelopmentBranch
-and "development" or "main"
-
-local function HTTPGet(Url)
-    local Responce = Request({Url = Url,Method = "GET"})
-    if Responce then return Responce.Body end
-end
-
-loadstring(HTTPGet(("https://raw.githubusercontent.com/AlexR32/Parvus/%s/Loader.lua")
-:format(DevelopmentBranch)))(Debug,DevelopmentBranch,NotificationTime)
+local IsDevelopmentBranch,NotificationTime = false,5
+local Branch = IsDevelopmentBranch and "development" or "main"
+local Source = "https://raw.githubusercontent.com/AlexR32/Parvus/" .. Branch .. "/"
+loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTime)
 
 ```
 ### Supported Games

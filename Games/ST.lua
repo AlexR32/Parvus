@@ -22,7 +22,7 @@ end
 local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — "..Parvus.Game,
+    Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-173),
     Size = UDim2.new(0,346,0,346)
     }) do Window:Watermark({Enabled = true})
