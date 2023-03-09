@@ -1,3 +1,23 @@
+### Update 09/03/23
+```markdown
+# Global
+* loader changes
+* loadstring changes
+* drawing changes (fps fix attempt)
+
+# BRM5
+* aim function work changes (fps fix attempt)
+* attempt to fix not esp'ed npcs
+
+# Bad Business
+* updated for latest game version
+* viewmodel now hides with thirdperson enabled
+* redeem codes now hides claimed frame faster after all redeems
+* you can set transparency to 0 for weapon and arms now
+* you no longer have flying state when autoshoot enabled (test)
+* silent aim unpatched i guess (was banning you for 999999999 days)
+* auto firemode flag changed
+```
 ### Update 04/03/23
 ```markdown
 # Global
