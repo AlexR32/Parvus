@@ -34,8 +34,8 @@ local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS)
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
-local NewRandom,CodesDebounce,FlyPosition = Random.new(),false,nil
-local SetIdentity = syn and syn.set_thread_identity or setidentity
+local SetIdentity = setidentity or (syn and syn.set_thread_identity)
+local NewRandom,FlyPosition = Random.new(),nil
 
 for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
     HitmarkerScripts[#HitmarkerScripts + 1] = getfenv(Connection.Function).script
@@ -985,7 +985,8 @@ local function GetAntiAimValue(Value,Mode)
         return NewRandom:NextNumber(-Value,Value)
     elseif Mode == "Jitter" then
         Value = Value * JitterValue
-    --elseif Mode == "Spin" then
+    elseif Mode == "Spin" then
+        Value = Value * SpinValue
     end
     return Value
 end
@@ -1543,6 +1544,7 @@ end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
     JitterValue = JitterValue == -1 and 1 or -1
+    SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not Trigger then return end
