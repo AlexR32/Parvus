@@ -59,6 +59,9 @@ local Window = Parvus.Utilities.UI:Window({
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
+        local MiscSection = CombatTab:Section({Name = "Other",Side = "Left"}) do
+            MiscSection:Toggle({Name = "NPC Mode",Flag = "BRM5/NPCMode",Value = true})
+        end
         local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
