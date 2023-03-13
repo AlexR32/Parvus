@@ -237,15 +237,16 @@ local function GetClosest(Enabled,
     if not Enabled then return end local Closest = nil
     for Index,NPC in pairs(NPCFolder:GetChildren()) do
         for Index,BodyPart in pairs(BodyParts) do
-            BodyPart = NPC:FindFirstChild(BodyPart) if not BodyPart then continue end
-            local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+            BodyPart = NPC:FindFirstChild(BodyPart)
+            if not BodyPart then continue end
             
-            if IsVisible(VisibilityCheck,BodyPart,NPC)
-            and NotFar(DistanceCheck,Distance,DistanceLimit) then
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
+            local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
+            
+            if OnScreen and IsVisible(VisibilityCheck,BodyPart,NPC) and NotFar(DistanceCheck,Distance,DistanceLimit) then
                 local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
-                if OnScreen and FieldOfView >= Magnitude then
+                if FieldOfView >= Magnitude then
                     if Priority == "Random" then
                         Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                         BodyPart = NPC:FindFirstChild(Priority) if not BodyPart then continue end

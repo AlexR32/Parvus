@@ -254,15 +254,17 @@ local function GetClosest(Enabled,
             if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
 
             for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                BodyPart = Character:FindFirstChild(BodyPart)
+                if not BodyPart then continue end
 
-                if IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+
+                if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
-                    if OnScreen and FieldOfView >= Magnitude then
+                    if FieldOfView >= Magnitude then
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                             BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end

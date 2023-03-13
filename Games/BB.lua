@@ -1157,35 +1157,38 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
     DistanceLimit,FieldOfView,Priority,BodyParts,PredictionEnabled
 )
 
-    if not Enabled then return end local Closest = nil
+    if not Enabled then return end
+    local LPCharacter,Closest = Characters[LocalPlayer],nil
+    if not (LPCharacter and LPCharacter.PrimaryPart) then return end
+
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
-
         if InEnemyTeam(Player) then
             local Hitbox = GetHitbox(Player)
             if not Hitbox then continue end
             local Character = Hitbox.Parent
-            for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = GetBodyPart(Hitbox,BodyPart) if not BodyPart then continue end
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
 
-                if IsVisible(VisibilityCheck,BodyPart,Character)
-                and NotFar(DistanceCheck,Distance,DistanceLimit) then local LPCharacter = Characters[LocalPlayer]
-                    local Velocity = (LPCharacter and LPCharacter.PrimaryPart) and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+            for Index,BodyPart in pairs(BodyParts) do
+                BodyPart = GetBodyPart(Hitbox,BodyPart)
+                if not BodyPart then continue end
+
+                local Velocity,Distance = LPCharacter.PrimaryPart.AssemblyLinearVelocity,(BodyPart.Position - Camera.CFrame.Position).Magnitude
+                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+
+                if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
-                    if OnScreen and FieldOfView >= Magnitude then
+                    if FieldOfView >= Magnitude then
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                             BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
                             ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
                         elseif Priority ~= "Closest" then
                             BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
                             ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
                         end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
                     end
                 end
@@ -1223,6 +1226,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
                 task.wait((RayPosition - ReticlePosition).Magnitude
                 / Projectiles[Config.Projectile.Template].Speed)
 
+                if not SilentAim then return end
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Old(Self,"Projectiles","__Hit",Projectile[2],
                     RayPosition,SilentAim[3],RayNormal,SilentAim[1],nil)
@@ -1277,7 +1281,7 @@ end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
     local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
-        ProjectileGravity = Vector3.new(0,math.abs(Projectiles[Args[1]].Gravity),0)
+        ProjectileGravity = Vector3.new(0,Projectiles[Args[1]].Gravity,0)
     end return Old(Self,...)
 end)
 
