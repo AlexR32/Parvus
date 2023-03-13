@@ -7,7 +7,7 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local Stats = game:GetService("Stats")
 
-local Misc = {}
+local Misc = {DefaultLighting = {}}
 
 repeat task.wait() until Stats.Network:FindFirstChild("ServerStatsItem")
 local Ping = Stats.Network.ServerStatsItem["Data Ping"]
@@ -16,8 +16,8 @@ repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
 local Terrain = Workspace:FindFirstChildOfClass("Terrain")
 
 local LocalPlayer = PlayerService.LocalPlayer
-local SetIdentity = (syn and syn.set_thread_identity) or setidentity
-local Request = (syn and syn.request) or (http and http.request) or request
+local SetIdentity = setidentity or (syn and syn.set_thread_identity)
+local Request = request or (http and http.request) or (syn and syn.request)
 
 do -- Thanks to Kiriot22
     local OldPluginManager,Message = nil,nil
@@ -161,16 +161,13 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,
             Callback = function(Bool) Window.Blur = Bool end})
 
-            MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark/Enabled",Value = true,
-            Callback = function(Bool) Window.Watermark.Enabled = Bool end}):Keybind({Flag = "UI/Watermark/Keybind"})
-
             MenuSection:Toggle({Name = "Custom Mouse",Flag = "Mouse/Enabled",Value = CustomMouse})
 
-            MenuSection:Button({Name = "Rejoin",Side = "Left",
-            Callback = Parvus.Utilities.Misc.ReJoin})
-
-            MenuSection:Button({Name = "Server Hop",Side = "Left",
-            Callback = Parvus.Utilities.Misc.ServerHop})
+            MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark/Enabled",Value = true,
+            Callback = function(Bool) Window.Watermark.Enabled = Bool end}):Keybind({Flag = "UI/Watermark/Keybind"})
+            
+            MenuSection:Button({Name = "Rejoin",Side = "Left",Callback = Parvus.Utilities.Misc.ReJoin})
+            MenuSection:Button({Name = "Server Hop",Side = "Left",Callback = Parvus.Utilities.Misc.ServerHop})
         end
 
         OptionsTab:AddConfigSection("Parvus","Left")

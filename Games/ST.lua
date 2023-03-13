@@ -25,7 +25,7 @@ local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-173),
     Size = UDim2.new(0,346,0,346)
-    }) do Window:Watermark({Enabled = true})
+}) do Window:Watermark({Enabled = true})
 
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
         local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
@@ -97,22 +97,9 @@ local Window = Parvus.Utilities.UI:Window({
     end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
 end Parvus.Utilities.Misc:InitAutoLoad(Window)
 
-function GetPlayerTank(Player)
-    local Char = Player:WaitForChild("Char")
-    if not Char then return end
-    if not Char.Value then return end
-    return Char.Value.Parent.Parent.Parent
-end
-
-
 Parvus.Utilities.Misc:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
-
---[[local MaxVector = Vector3.new(math.huge,math.huge,math.huge)
-local BodyVelocity = Instance.new("BodyVelocity")
-local BodyGyro = Instance.new("BodyGyro")
-BodyGyro.P = 50000]]
 
 -- Fly Logic
 local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
@@ -128,14 +115,22 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
 end
 
+local function GetPlayerTank(Player)
+    local Char = Player:WaitForChild("Char")
+    if not Char then return end
+    if not Char.Value then return end
+    return Char.Value.Parent.Parent.Parent
+end
+
 local function PlayerFly(Enabled,Speed,EnableCamera)
     if not Enabled then return end
     local LPTank = GetPlayerTank(LocalPlayer)
     if LPTank and LPTank.PrimaryPart then
-        if EnableCamera then
-            LPTank:PivotTo(CFrame.new(LPTank:GetPivot().Position) * Camera.CFrame.Rotation)
-        end
         LPTank.PrimaryPart.AssemblyLinearVelocity = InputToVelocity() * Speed
+
+        if not EnableCamera then return end
+        LPTank.PrimaryPart.CFrame = LPTank.PrimaryPart.CFrame * Camera.CFrame.Rotation
+        --LPTank:PivotTo(CFrame.new(LPTank:GetPivot().Position) * Camera.CFrame.Rotation)
     end
 end
 
@@ -155,7 +150,7 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     return OldNamecall(Self, ...)
 end)
 
-RunService.Heartbeat:Connect(function()
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     PlayerFly(
         Window.Flags["ST/Fly/Enabled"],
         Window.Flags["ST/Fly/Speed"],

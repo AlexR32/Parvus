@@ -902,7 +902,7 @@ function Assets:ToggleKeybind(Parent,ScreenAsset,Window,Keybind,Toggle)
 			Keybind.Value = Key
 		elseif Input.UserInputType.Name == "Keyboard" then
 			if Key == Keybind.Value then
-				Toggle.Value = not Toggle.Value
+				if not Keybind.DisableToggle then Toggle.Value = not Toggle.Value end
 				Keybind.Callback(Keybind.Value,true,Toggle.Value)
 			end
 		end
@@ -914,7 +914,7 @@ function Assets:ToggleKeybind(Parent,ScreenAsset,Window,Keybind,Toggle)
 				or Key == "MouseButton2"
 				or Key == "MouseButton3" then
 				if Key == Keybind.Value then
-					Toggle.Value = not Toggle.Value
+					if not Keybind.DisableToggle then Toggle.Value = not Toggle.Value end
 					Keybind.Callback(Keybind.Value,true,Toggle.Value)
 				end
 			end

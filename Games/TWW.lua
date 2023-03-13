@@ -8,38 +8,51 @@ repeat task.wait() until BackgroundGui and BackgroundGui.Parent == nil
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
-local Aimbot,Regions = false,{}
+
+local Aimbot = false
+local Regions = {}
+
+local KnownBodyParts = {
+    {"Head",true},{"UpperTorso",true},{"LowerTorso",true},
+
+    {"RightUpperArm",false},{"RightLowerArm",false},{"RightHand",false},
+    {"LeftUpperArm",false},{"LeftLowerArm",false},{"LeftHand",false},
+
+    {"RightUpperLeg",false},{"RightLowerLeg",false},{"RightFoot",false},
+    {"LeftUpperLeg",false},{"LeftLowerLeg",false},{"LeftFoot",false}
+}
 
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-248)
-    }) do Window:Watermark({Enabled = true})
+}) do Window:Watermark({Enabled = true})
 
-    local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local GlobalSection = AimAssistTab:Section({Name = "Global",Side = "Right"}) do
-            GlobalSection:Toggle({Name = "Team Check",Flag = "TeamCheck",Value = false})
-        end
-        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Right"}) do
-            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.66666662693024,1,0.25,false}})
-            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
+    local CombatTab = Window:Tab({Name = "Combat"}) do
+        local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
-            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
+            :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
+            Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
+            AimbotSection:Toggle({Name = "Team Check",Flag = "Aimbot/TeamCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
-            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
-            AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-            AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "HumanoidRootPart",Mode = "Toggle"}
-            }})
+            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
+            AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
+            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
+            AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true}},{}
+            for Index,Value in pairs(KnownBodyParts) do
+                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
+                BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
+            end
+
+            AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = PriorityList})
+            AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = BodyPartsList})
+        end
+        local AFOVSection = CombatTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/FOVCircle/Enabled",Value = true})
+            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/FOVCircle/Filled",Value = false})
+            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/FOVCircle/Color",Value = {1,0.66666662693024,1,0.25,false}})
+            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
     end
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -106,7 +119,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
+        end Parvus.Utilities.Misc:LightingSection(VisualsTab,"Left")
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
@@ -134,51 +147,57 @@ local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
 WallCheckParams.IgnoreWater = true
 
-local function Raycast(Origin,Direction,Table)
-    WallCheckParams.FilterDescendantsInstances = Table
+local function Raycast(Origin,Direction,Filter)
+    WallCheckParams.FilterDescendantsInstances = Filter
     return Workspace:Raycast(Origin,Direction,WallCheckParams)
 end
-
-local function TeamCheck(Enabled,Player)
+local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-
-local function DistanceCheck(Enabled,Distance,MaxDistance)
+local function NotFar(Enabled,P1,P2)
     if not Enabled then return true end
-    return Distance <= MaxDistance
+    return P1 <= P2
 end
-
-local function WallCheck(Enabled,Hitbox,Character)
+local function IsVisible(Enabled,BodyPart,Character)
     if not Enabled then return true end
     return not Raycast(Camera.CFrame.Position,
-    Hitbox.Position - Camera.CFrame.Position,
-    {LocalPlayer.Character,Character})
+    BodyPart.Position - Camera.CFrame.Position,
+    {Character,LocalPlayer.Character})
 end
-
-local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
-    -- FieldOfView,DynamicFieldOfView,TeamCheck
-    -- BodyParts,WallCheck,DistanceCheck,MaxDistance
+local function GetClosest(Enabled,
+    TeamCheck,VisibilityCheck,DistanceCheck,
+    DistanceLimit,FieldOfView,Priority,BodyParts
+)
 
     if not Enabled then return end local Closest = nil
-    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
-
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
         local Character = Player.Character
 
-        if Character and TeamCheck(TC,Player) then
+        if Character and InEnemyTeam(TeamCheck,Player) then
             local Humanoid = Character:FindFirstChildOfClass("Humanoid")
             if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
 
-            for Index,BodyPart in pairs(BP) do
+            for Index,BodyPart in pairs(BodyParts) do
                 BodyPart = Character:FindFirstChild(BodyPart) if not BodyPart then continue end
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                if WallCheck(WC,BodyPart,Character) and DistanceCheck(DC,Distance,MD) then
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
 
-                    local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and NewFOV <= FOV then FOV,Closest = NewFOV,{Player,Character,BodyPart,ScreenPosition} end
+                if IsVisible(VisibilityCheck,BodyPart,Character)
+                and NotFar(DistanceCheck,Distance,DistanceLimit) then
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
+                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+
+                    if OnScreen and FieldOfView >= Magnitude then
+                        if Priority == "Random" then
+                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
+                        elseif Priority ~= "Closest" then
+                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
+                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
+                    end
                 end
             end
         end
@@ -186,30 +205,29 @@ local function GetClosest(Enabled,FOV,DFOV,TC,BP,WC,DC,MD)
 
     return Closest
 end
-
-local function AimAt(Hitbox,Smoothness)
+local function AimAt(Hitbox,Smoothing)
     if not Hitbox then return end
     local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothness,
-        (Hitbox[4].Y - Mouse.Y) * Smoothness
+        (Hitbox[4].X - Mouse.X) * Smoothing,
+        (Hitbox[4].Y - Mouse.Y) * Smoothing
     )
 end
 
-RunService.Heartbeat:Connect(function()
-    if Aimbot then
-        AimAt(GetClosest(
-            Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/FieldOfView"],
-            Window.Flags["Aimbot/DynamicFOV"],
-            Window.Flags["TeamCheck"],
-            Window.Flags["Aimbot/BodyParts"],
-            Window.Flags["Aimbot/WallCheck"],
-            Window.Flags["Aimbot/DistanceCheck"],
-            Window.Flags["Aimbot/Distance"]
-        ),Window.Flags["Aimbot/Smoothness"] / 100)
-    end
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
+
+    AimAt(GetClosest(
+        Window.Flags["Aimbot/Enabled"],
+        Window.Flags["Aimbot/TeamCheck"],
+        Window.Flags["Aimbot/VisibilityCheck"],
+        Window.Flags["Aimbot/DistanceCheck"],
+        Window.Flags["Aimbot/DistanceLimit"],
+        Window.Flags["Aimbot/FieldOfView"],
+        Window.Flags["Aimbot/Priority"][1],
+        Window.Flags["Aimbot/BodyParts"]
+    ),Window.Flags["Aimbot/Smoothing"] / 100)
 end)
 
 -- Legendary ESP

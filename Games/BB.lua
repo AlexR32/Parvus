@@ -34,8 +34,19 @@ local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS)
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
+local NewRandom,FlyPosition,JitterValue,SpinValue = Random.new(),nil,1,0
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
-local NewRandom,FlyPosition = Random.new(),nil
+
+local KnownBodyParts = {
+    {"Head",true},{"Neck",false},
+    {"Chest",false},{"Abdomen",false},{"Hips",false}
+
+    {"RightArm",false},{"RightForearm",false},{"RightHand",false},
+    {"LeftArm",false},{"LeftForearm",false},{"LeftHand",false},
+
+    {"RightLeg",false},{"RightForeleg",false},{"RightFoot",false},
+    {"LeftLeg",false},{"LeftForeleg",false},{"LeftFoot",false}
+}
 
 for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
     HitmarkerScripts[#HitmarkerScripts + 1] = getfenv(Connection.Function).script
@@ -136,101 +147,105 @@ local HitSounds = {
 local Window = Parvus.Utilities.UI:Window({
     Name = "Parvus Hub — " .. Parvus.Game.Name,
     Position = UDim2.new(0.05,0,0.5,-248)
-    }) do Window:Watermark({Enabled = true})
+}) do Window:Watermark({Enabled = true})
 
     local LegitTab = Window:Tab({Name = "Legit"}) do
         local AimbotSection = LegitTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
+            :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
+            Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
             AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
-            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
-            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
-            AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-            AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-            AimbotSection:Divider({Text = "FOV Circle"})
-            AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AimbotSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AimbotSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.66666662693024,1,0.25,false}})
-            AimbotSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            AimbotSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 2})
+            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
+            AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
+            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
+            AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true}},{}
+            for Index,Value in pairs(KnownBodyParts) do
+                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
+                BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
+            end
+
+            AimbotSection:Dropdown({Name = "Priority",Flag = "Aimbot/Priority",List = PriorityList})
+            AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = BodyPartsList})
+        end
+        local AFOVSection = LegitTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
+            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/FOVCircle/Enabled",Value = true})
+            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/FOVCircle/Filled",Value = false})
+            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/FOVCircle/Color",Value = {1,0.66666662693024,1,0.25,false}})
+            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
+        end
+        local TFOVSection = LegitTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
         local SilentAimSection = LegitTab:Section({Name = "Silent Aim",Side = "Right"}) do
-            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
+            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
+            SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/VisibilityCheck",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
-            SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
-            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
-            SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-            SilentAimSection:Divider({Text = "FOV Circle"})
-            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SilentAimSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SilentAimSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",
+            SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
+            SilentAimSection:Slider({Name = "Distance Limit",Flag = "SilentAim/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
+            for Index,Value in pairs(KnownBodyParts) do
+                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
+                BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
+            end
+
+            SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
+            SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = BodyPartsList})
+        end
+        local SAFOVSection = LegitTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
+            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/FOVCircle/Enabled",Value = true})
+            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
+            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
             Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
-            SilentAimSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            SilentAimSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 2})
+            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
         local TriggerSection = LegitTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
-            TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = true})
-            TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
+            :Keybind({Flag = "Trigger/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
+            Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
+            TriggerSection:Toggle({Name = "Always Enabled",Flag = "Trigger/AlwaysEnabled",Value = false})
+            TriggerSection:Toggle({Name = "Hold Mouse Button",Flag = "Trigger/HoldMouseButton",Value = false})
+
+            TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = false})
             TriggerSection:Toggle({Name = "Distance Check",Flag = "Trigger/DistanceCheck",Value = false})
-            TriggerSection:Toggle({Name = "Dynamic FOV",Flag = "Trigger/DynamicFOV",Value = false})
-            TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
-            Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
-            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25})
-            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-            TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
-            TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-            TriggerSection:Divider({Text = "FOV Circle"})
-            TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
-            TriggerSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
-            TriggerSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",
-            Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
-            TriggerSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            TriggerSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 2})
+            TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/VisibilityCheck",Value = false})
+
+            TriggerSection:Slider({Name = "Click Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15,Unit = "sec"})
+            TriggerSection:Slider({Name = "Distance Limit",Flag = "Trigger/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25,Unit = "r"})
+            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
+            for Index,Value in pairs(KnownBodyParts) do
+                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
+                BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
+            end
+
+            TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = PriorityList})
+            TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
     end
     local RageTab = Window:Tab({Name = "Rage"}) do
         local AutoshootSection = RageTab:Section({Name = "Rage",Side = "Left"}) do
-            AutoshootSection:Toggle({Name = "Enabled",Flag = "BB/Rage/Autoshoot/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "BB/Rage/Autoshoot/Keybind"})
-            AutoshootSection:Toggle({Name = "Visibility Check",Flag = "BB/Rage/Autoshoot/WallCheck",Value = false}):Keybind()
+            AutoshootSection:Toggle({Name = "Enabled",Flag = "BB/Rage/Autoshoot/Enabled",Value = false}):Keybind({Mouse = true,Flag = "BB/Rage/Autoshoot/Keybind"})
+            AutoshootSection:Toggle({Name = "Visibility Check",Flag = "BB/Rage/Autoshoot/VisibilityCheck",Value = false}):Keybind()
             AutoshootSection:Toggle({Name = "Distance Check",Flag = "BB/Rage/Autoshoot/DistanceCheck",Value = false}):Keybind()
-            AutoshootSection:Slider({Name = "Distance",Flag = "BB/Rage/Autoshoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
+            AutoshootSection:Slider({Name = "Distance",Flag = "BB/Rage/Autoshoot/DistanceLimit",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
             AutoshootSection:Slider({Name = "Fire Rate",Flag = "BB/Rage/Autoshoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
-            AutoshootSection:Dropdown({Name = "Body Parts",Flag = "BB/Rage/Autoshoot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
+            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
+            for Index,Value in pairs(KnownBodyParts) do
+                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
+                BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
+            end
+
+            AutoshootSection:Dropdown({Name = "Priority",Flag = "BB/Rage/Autoshoot/Priority",List = PriorityList})
+            AutoshootSection:Dropdown({Name = "Body Parts",Flag = "BB/Rage/Autoshoot/BodyParts",List = BodyPartsList})
         end
         local WMSection = RageTab:Section({Name = "Weapon Modification",Side = "Left"}) do
             --WMSection:Toggle({Name = "No Bob",Flag = "BB/NoBob",Value = false})
@@ -314,106 +329,6 @@ local Window = Parvus.Utilities.UI:Window({
             }})
         end
     end
-    --[[local AimAssistTab = Window:Tab({Name = "Combat"}) do
-        local AimbotSection = AimAssistTab:Section({Name = "Aimbot",Side = "Left"}) do
-            AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
-            AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = false})
-            AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/WallCheck",Value = false})
-            AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
-            AimbotSection:Toggle({Name = "Dynamic FOV",Flag = "Aimbot/DynamicFOV",Value = false})
-            AimbotSection:Keybind({Name = "Keybind",Flag = "Aimbot/Keybind",Value = "MouseButton2",
-            Mouse = true,Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
-            AimbotSection:Slider({Name = "Smoothness",Flag = "Aimbot/Smoothness",Min = 0,Max = 100,Value = 25,Unit = "%"})
-            AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100})
-            AimbotSection:Slider({Name = "Distance",Flag = "Aimbot/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-            AimbotSection:Dropdown({Name = "Body Parts",Flag = "Aimbot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-        end
-        local AFOVSection = AimAssistTab:Section({Name = "Aimbot FOV Circle",Side = "Left"}) do
-            AFOVSection:Toggle({Name = "Enabled",Flag = "Aimbot/Circle/Enabled",Value = true})
-            AFOVSection:Toggle({Name = "Filled",Flag = "Aimbot/Circle/Filled",Value = false})
-            AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/Circle/Color",Value = {1,0.66666662693024,1,0.25,false}})
-            AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/Circle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local SAFOVSection = AimAssistTab:Section({Name = "Silent Aim FOV Circle",Side = "Left"}) do
-            SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/Circle/Enabled",Value = true})
-            SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/Circle/Filled",Value = false})
-            SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/Circle/Color",
-            Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
-            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/Circle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local TFOVSection = AimAssistTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
-            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/Circle/Enabled",Value = true})
-            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/Circle/Filled",Value = false})
-            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/Circle/Color",
-            Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
-            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/Circle/NumSides",Min = 3,Max = 100,Value = 14})
-            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/Circle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local SilentAimSection = AimAssistTab:Section({Name = "Silent Aim",Side = "Right"}) do
-            SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
-            SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/WallCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
-            SilentAimSection:Toggle({Name = "Dynamic FOV",Flag = "SilentAim/DynamicFOV",Value = false})
-            SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
-            SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100})
-            SilentAimSection:Slider({Name = "Distance",Flag = "SilentAim/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
-            SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-        end
-        local RageSection = AimAssistTab:Section({Name = "Rage",Side = "Right"}) do
-            RageSection:Toggle({Name = "Tele-Grenade",Flag = "BB/Rage/TeleGrenade",Value = false}):Keybind()
-            RageSection:Toggle({Name = "Auto Grenade",Flag = "BB/Rage/AutoGrenade",Value = false}):Keybind()
-            RageSection:Toggle({Name = "Knife Aura",Flag = "BB/Rage/KnifeAura",Value = false}):Keybind()
-            RageSection:Toggle({Name = "Hitmarker",Flag = "BB/Rage/Hitmarker",Value = true})
-            RageSection:Toggle({Name = "Autoshoot",Flag = "BB/Rage/Autoshoot/Enabled",Value = false})
-            :Keybind({Mouse = true,Flag = "BB/Rage/Autoshoot/Keybind"})
-            RageSection:Toggle({Name = "Visibility Check",Flag = "BB/Rage/Autoshoot/WallCheck",Value = false}):Keybind()
-            RageSection:Toggle({Name = "Distance Check",Flag = "BB/Rage/Autoshoot/DistanceCheck",Value = false}):Keybind()
-            RageSection:Slider({Name = "Distance",Flag = "BB/Rage/Autoshoot/Distance",Min = 25,Max = 1000,Value = 1000,Unit = "studs"})
-            RageSection:Slider({Name = "Fire Rate",Flag = "BB/Rage/Autoshoot/FireRate",Min = 1,Max = 10,Value = 1,Unit = "x"})
-            RageSection:Dropdown({Name = "Body Parts",Flag = "BB/Rage/Autoshoot/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-        end
-        local TriggerSection = AimAssistTab:Section({Name = "Trigger",Side = "Right"}) do
-            TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
-            TriggerSection:Toggle({Name = "Prediction",Flag = "Trigger/Prediction",Value = true})
-            TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/WallCheck",Value = true})
-            TriggerSection:Toggle({Name = "Distance Check",Flag = "Trigger/DistanceCheck",Value = false})
-            TriggerSection:Toggle({Name = "Dynamic FOV",Flag = "Trigger/DynamicFOV",Value = false})
-            TriggerSection:Keybind({Name = "Keybind",Flag = "Trigger/Keybind",Value = "MouseButton2",
-            Mouse = true,Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
-            TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25})
-            TriggerSection:Slider({Name = "Distance",Flag = "Trigger/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-            TriggerSection:Slider({Name = "Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15})
-            TriggerSection:Toggle({Name = "Hold Mode",Flag = "Trigger/HoldMode",Value = false})
-            TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = {
-                {Name = "Head",Mode = "Toggle",Value = true},
-                {Name = "Neck",Mode = "Toggle"},
-                {Name = "Chest",Mode = "Toggle"},
-                {Name = "Abdomen",Mode = "Toggle"},
-                {Name = "Hips",Mode = "Toggle"}
-            }})
-        end
-    end]]
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
         local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -894,12 +809,6 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
 end
-
-local function Raycast(Origin,Direction,Table)
-    WallCheckParams.FilterDescendantsInstances = Table
-    return Workspace:Raycast(Origin,Direction,WallCheckParams)
-end
-
 local function GetPlayerTeam(Player)
     for Index,Team in pairs(TeamService:GetChildren()) do
         if Team.Players:FindFirstChild(Player.Name) then
@@ -907,19 +816,24 @@ local function GetPlayerTeam(Player)
         end
     end
 end
-local function TeamCheck(Player)
+
+local function Raycast(Origin,Direction,Filter)
+    WallCheckParams.FilterDescendantsInstances = Filter
+    return Workspace:Raycast(Origin,Direction,WallCheckParams)
+end
+local function InEnemyTeam(Player)
     local Team = GetPlayerTeam(Player)
     local LPTeam = GetPlayerTeam(LocalPlayer)
     return LPTeam ~= Team or Team == "FFA"
 end
-local function DistanceCheck(Enabled,Distance,MaxDistance)
+local function NotFar(Enabled,P1,P2)
     if not Enabled then return true end
-    return Distance <= MaxDistance
+    return P1 <= P2
 end
-local function WallCheck(Enabled,Hitbox)
+local function IsVisible(Enabled,BodyPart)
     if not Enabled then return true end
     return not Raycast(Camera.CFrame.Position,
-    Hitbox.Position - Camera.CFrame.Position,
+    BodyPart.Position - Camera.CFrame.Position,
     {Workspace.Geometry,Workspace.Terrain})
 end
 
@@ -930,21 +844,17 @@ local function FindWeaponModel()
         end
     end
 end
-local function GetCharacterInfo(Player,Shield)
+local function GetHitbox(Player)
     local Character = Characters[Player]
     if not Character then return end
     if Character.Parent == nil then return end
-
-    if Shield then
-        local Health = Character:FindFirstChild("Health")
-        if not Health then return end
-        return Character:FindFirstChild("Hitbox"),
-        not Health:FindFirstChild("Shield")
-    else
-        return Character:FindFirstChild("Hitbox"),true
-    end
+    return Character:WaitForChild("Hitbox")
 end
-local function GetHitbox(Hitbox,Name)
+local function IsCharacterInShield(Character)
+    local Health = Character:WaitForChild("Health")
+    return not Health:FindFirstChild("Shield")
+end
+local function GetBodyPart(Hitbox,Name)
     for Index,Part in pairs(Hitbox:GetChildren()) do
         local WeldConstraint = Part:FindFirstChildOfClass("WeldConstraint")
         if not WeldConstraint then continue end
@@ -978,7 +888,6 @@ local function GetGrenade()
         end
     end
 end
-local JitterValue,SpinValue = 1,0
 local function GetAntiAimValue(Value,Mode)
     if Mode == "Random" then
         Value = math.abs(Value)
@@ -994,7 +903,6 @@ end
     Tortoiseshell.Input[Toggle and "AutomateBegan"
     or "AutomateEnded"](Tortoiseshell.Input,"Shoot")
 end]]
-
 local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
     if not WeaponModel then return end
@@ -1048,11 +956,6 @@ local function CustomizeCharacter(Enabled,HideTextures,Color,Reflectance,Materia
         end
     end
 end
-
-local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end
-
 local function ProjectileBeam(Origin,Direction)
     local Beam = Instance.new("Part")
 
@@ -1201,56 +1104,34 @@ local function AutoGrenade(Enabled)
         end
     end
 end
-
-local function GetClosest(Enabled,FOV,DFOV,BP,WC,DC,MD,PE,Shield)
-    -- FieldOfView,DynamicFieldOfView,BodyParts
-    -- WallCheck,DistanceCheck,MaxDistance
-    -- PredictionEnabled
-
-    if not Enabled then return end local Closest = nil
-    FOV = DFOV and FOV * (1 + (80 - Camera.FieldOfView) / 100) or FOV
-
-    for Index,Player in pairs(PlayerService:GetPlayers()) do
-        if Player == LocalPlayer then continue end
-
-        local Character,Shield = GetCharacterInfo(Player,Shield)
-        if Character and Shield and TeamCheck(Player) then
-            for Index,BodyPart in pairs(BP) do
-                BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-
-                if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then local LPCharacter = Characters[LocalPlayer]
-                    local Velocity = (LPCharacter and LPCharacter.PrimaryPart) and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
-                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PE and CalculateTrajectory(BodyPart.Position,
-                    BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
-                    local NewFOV = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if OnScreen and NewFOV < FOV then FOV,Closest = NewFOV,{Player,Character.Parent,BodyPart,ScreenPosition} end
-                end
-            end
-        end
-    end
-
-    return Closest
-end
-
-local function GetClosestAllFOV(Enabled,BP,WC,DC,MD)
-    -- BodyParts,WallCheck,DistanceCheck,MaxDistance
+local function GetClosestAllFOV(Enabled,
+    VisibilityCheck,DistanceCheck,
+    DistanceLimit,Priority,BodyParts
+)
 
     if not Enabled then return end
     local Distance,Closest = math.huge,nil
-
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
 
-        local Character,Shield = GetCharacterInfo(Player,true)
-        if Character and Shield and TeamCheck(Player) then
-            for Index,BodyPart in pairs(BP) do
-                BodyPart = GetHitbox(Character,BodyPart) if not BodyPart then continue end
-                local NewDistance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+        local Hitbox = GetHitbox(Player)
+        local Character = Hitbox.Parent
+        local Shield = IsCharacterInShield(Character)
+        if Shield and InEnemyTeam(Player) then
+            for Index,BodyPart in pairs(BodyParts) do
+                BodyPart = GetBodyPart(Hitbox,BodyPart) if not BodyPart then continue end
+                local Magnitude = (BodyPart.Position - Camera.CFrame.Position).Magnitude
 
-                if WallCheck(WC,BodyPart) and DistanceCheck(DC,Distance,MD) then
-                    if NewDistance < Distance then
-                        Distance,Closest = NewDistance,{Player,Character.Parent,BodyPart}
+                if IsVisible(VisibilityCheck,BodyPart)
+                and NotFar(DistanceCheck,Distance,DistanceLimit) then
+                    if Distance >= Magnitude then
+                        if Priority == "Random" then
+                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                        elseif Priority ~= "Closest" then
+                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                        end
+                        Distance,Closest = Magnitude,{Player,Character,BodyPart}
                     end
                 end
             end
@@ -1260,13 +1141,57 @@ local function GetClosestAllFOV(Enabled,BP,WC,DC,MD)
     return Closest
 end
 
-local function AimAt(Hitbox,Smoothness)
+local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
+end
+local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
+    DistanceLimit,FieldOfView,Priority,BodyParts,PredictionEnabled
+)
+
+    if not Enabled then return end local Closest = nil
+    for Index,Player in pairs(PlayerService:GetPlayers()) do
+        if Player == LocalPlayer then continue end
+
+        if InEnemyTeam(Player) then
+            local Hitbox = GetHitbox(Player)
+            local Character = Hitbox.Parent
+            for Index,BodyPart in pairs(BodyParts) do
+                BodyPart = GetBodyPart(Hitbox,BodyPart) if not BodyPart then continue end
+                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+
+                if IsVisible(VisibilityCheck,BodyPart,Character)
+                and NotFar(DistanceCheck,Distance,DistanceLimit) then local LPCharacter = Characters[LocalPlayer]
+                    local Velocity = (LPCharacter and LPCharacter.PrimaryPart) and LPCharacter.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
+                    local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                    BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+
+                    if OnScreen and FieldOfView >= Magnitude then
+                        if Priority == "Random" then
+                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                        elseif Priority ~= "Closest" then
+                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,Vector3.new(0,ProjectileGravity,0)) or BodyPart.Position)
+                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
+                    end
+                end
+            end
+        end
+    end
+
+    return Closest
+end
+local function AimAt(Hitbox,Smoothing)
     if not Hitbox then return end
     local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothness,
-        (Hitbox[4].Y - Mouse.Y) * Smoothness
+        (Hitbox[4].X - Mouse.X) * Smoothing,
+        (Hitbox[4].Y - Mouse.Y) * Smoothing
     )
 end
 
@@ -1275,7 +1200,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
 
     if Args[2] == "Shoot" then
         if (SilentAim and not Window.Flags["BB/Rage/Autoshoot/Enabled"])
-        and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+        and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
             local Weapon,Config = GetEquippedWeapon()
             local ShootProjectiles,ReticlePosition,RayPosition,
             RayNormal = ComputeProjectiles(Config,SilentAim[3])
@@ -1308,7 +1233,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
         end
     --[[elseif Args[2] == "Throw" then
         if (SilentAim and not Window.Flags["BB/Rage/Autoshoot/Enabled"])
-        and math.random(0,100) <= Window.Flags["SilentAim/HitChance"] then
+        and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
             Args[5] = (SilentAim[3].Position - Camera.CFrame.Position).Unit
             Tortoiseshell.UI.Events.Hitmarker:Fire(
             SilentAim[3],SilentAim[3].Position)
@@ -1442,30 +1367,30 @@ for Index,Event in pairs(Events) do
     end
 end
 
-RunService.Heartbeat:Connect(function()
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
+
+    AimAt(GetClosest(
+        Window.Flags["Aimbot/Enabled"],
+        Window.Flags["Aimbot/VisibilityCheck"],
+        Window.Flags["Aimbot/DistanceCheck"],
+        Window.Flags["Aimbot/DistanceLimit"],
+        Window.Flags["Aimbot/FieldOfView"],
+        Window.Flags["Aimbot/Priority"][1],
+        Window.Flags["Aimbot/BodyParts"],
+        Window.Flags["Aimbot/Prediction"]
+    ),Window.Flags["Aimbot/Smoothing"] / 100)
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
-        Window.Flags["SilentAim/FieldOfView"],
-        Window.Flags["SilentAim/DynamicFOV"],
-        Window.Flags["SilentAim/BodyParts"],
-        Window.Flags["SilentAim/WallCheck"],
+        Window.Flags["SilentAim/VisibilityCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
-        Window.Flags["SilentAim/Distance"],
-        false,true
+        Window.Flags["SilentAim/DistanceLimit"],
+        Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/Priority"][1],
+        Window.Flags["SilentAim/BodyParts"]
     )
-    if Aimbot then
-        AimAt(GetClosest(
-            Window.Flags["Aimbot/Enabled"],
-            Window.Flags["Aimbot/FieldOfView"],
-            Window.Flags["Aimbot/DynamicFOV"],
-            Window.Flags["Aimbot/BodyParts"],
-            Window.Flags["Aimbot/WallCheck"],
-            Window.Flags["Aimbot/DistanceCheck"],
-            Window.Flags["Aimbot/Distance"],
-            Window.Flags["Aimbot/Prediction"],
-            false
-        ),Window.Flags["Aimbot/Smoothness"] / 100)
-    end
 end)
 
 Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
@@ -1524,10 +1449,11 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["BB/Rage/Autoshoot/Enabled"]
         or Window.Flags["BB/Rage/TeleGrenade"]
         or Window.Flags["BB/Rage/KnifeAura"],
-        Window.Flags["BB/Rage/Autoshoot/BodyParts"],
-        Window.Flags["BB/Rage/Autoshoot/WallCheck"],
+        Window.Flags["BB/Rage/Autoshoot/VisiblityCheck"],
         Window.Flags["BB/Rage/Autoshoot/DistanceCheck"],
-        Window.Flags["BB/Rage/Autoshoot/Distance"]
+        Window.Flags["BB/Rage/Autoshoot/DistanceLimit"],
+        Window.Flags["BB/Rage/Autoshoot/Priority"][1],
+        Window.Flags["BB/Rage/Autoshoot/BodyParts"]
     )
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
@@ -1547,39 +1473,35 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    if not Trigger then return end
-    local TriggerHitbox = GetClosest(
-        Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/FieldOfView"],
-        Window.Flags["Trigger/DynamicFOV"],
-        Window.Flags["Trigger/BodyParts"],
-        Window.Flags["Trigger/WallCheck"],
-        Window.Flags["Trigger/DistanceCheck"],
-        Window.Flags["Trigger/Distance"],
-        Window.Flags["Trigger/Prediction"],
-        false
-    )
+    if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
 
-    if TriggerHitbox then --ToggleShoot(true)
-        Tortoiseshell.Input:AutomateBegan("Shoot")
-        task.wait(Window.Flags["Trigger/Delay"])
-        if Window.Flags["Trigger/HoldMode"] then
-            while task.wait() do
-                TriggerHitbox = GetClosest(
-                    Window.Flags["Trigger/Enabled"],
-                    Window.Flags["Trigger/FieldOfView"],
-                    Window.Flags["Trigger/DynamicFOV"],
-                    Window.Flags["Trigger/BodyParts"],
-                    Window.Flags["Trigger/WallCheck"],
-                    Window.Flags["Trigger/DistanceCheck"],
-                    Window.Flags["Trigger/Distance"],
-                    Window.Flags["Trigger/Prediction"],
-                    false
-                ) if not TriggerHitbox or not Trigger then break end
-            end
-        end --ToggleShoot(false)
-        Tortoiseshell.Input:AutomateEnded("Shoot")
-    end
+    local TriggerClosest = GetClosest(
+        Window.Flags["Trigger/Enabled"],
+        Window.Flags["Trigger/VisibilityCheck"],
+        Window.Flags["Trigger/DistanceCheck"],
+        Window.Flags["Trigger/DistanceLimit"],
+        Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/Priority"][1],
+        Window.Flags["Trigger/BodyParts"],
+        Window.Flags["Trigger/Prediction"]
+    ) if not TriggerClosest then return end
+
+    task.wait(Window.Flags["Trigger/Delay"])
+    Tortoiseshell.Input:AutomateBegan("Shoot")
+    if Window.Flags["Trigger/HoldMouseButton"] then
+        while task.wait() do
+            TriggerClosest = GetClosest(
+                Window.Flags["Trigger/Enabled"],
+                Window.Flags["Trigger/VisibilityCheck"],
+                Window.Flags["Trigger/DistanceCheck"],
+                Window.Flags["Trigger/DistanceLimit"],
+                Window.Flags["Trigger/FieldOfView"],
+                Window.Flags["Trigger/Priority"][1],
+                Window.Flags["Trigger/BodyParts"],
+                Window.Flags["Trigger/Prediction"]
+            ) if not TriggerClosest or not Trigger then break end
+        end
+    end Tortoiseshell.Input:AutomateEnded("Shoot")
 end)
 
 Workspace.Characters.ChildAdded:Connect(function(Child)

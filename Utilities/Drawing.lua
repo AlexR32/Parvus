@@ -121,7 +121,7 @@ function GetCharacter(Target,Mode)
 end
 function GetHealth(Target,Character,Mode)
     local Humanoid = FindFirstChildOfClass(Character,"Humanoid")
-    if not Humanoid then return end
+    if not Humanoid then return 0,0,false end
     return Humanoid.Health,
     Humanoid.MaxHealth,
     Humanoid.Health > 0
@@ -332,18 +332,18 @@ function DrawingLibrary:FOVCircle(Flag,Flags)
     local Outline   = DrawingNew("Circle",{ZIndex = 3})
 
     RunService.Heartbeat:Connect(function()
-        FOVCircle.Visible = GetFlag(Flags,Flag,"/Enabled") and GetFlag(Flags,Flag,"/Circle/Enabled")
-        Outline.Visible = GetFlag(Flags,Flag,"/Enabled") and GetFlag(Flags,Flag,"/Circle/Enabled")
+        FOVCircle.Visible = GetFlag(Flags,Flag,"/Enabled") and GetFlag(Flags,Flag,"/FOVCircle/Enabled")
+        Outline.Visible = GetFlag(Flags,Flag,"/Enabled") and GetFlag(Flags,Flag,"/FOVCircle/Enabled")
 
         if FOVCircle.Visible then
-            local FOV = DynamicFOV(GetFlag(Flags,Flag,"/DynamicFOV"),GetFlag(Flags,Flag,"/FieldOfView"))
+            local FOV = GetFlag(Flags,Flag,"/FieldOfView") --DynamicFOV(GetFlag(Flags,Flag,"/DynamicFOV"),GetFlag(Flags,Flag,"/FieldOfView"))
             local Position = UserInputService:GetMouseLocation()
 
-            local Color = GetFlag(Flags,Flag,"/Circle/Color")
+            local Color = GetFlag(Flags,Flag,"/FOVCircle/Color")
             FOVCircle.Transparency = 1-Color[4] FOVCircle.Color = Color[6]
-            FOVCircle.Thickness = GetFlag(Flags,Flag,"/Circle/Thickness")
-            FOVCircle.NumSides = GetFlag(Flags,Flag,"/Circle/NumSides")
-            FOVCircle.Filled = GetFlag(Flags,Flag,"/Circle/Filled")
+            FOVCircle.Thickness = GetFlag(Flags,Flag,"/FOVCircle/Thickness")
+            FOVCircle.NumSides = GetFlag(Flags,Flag,"/FOVCircle/NumSides")
+            FOVCircle.Filled = GetFlag(Flags,Flag,"/FOVCircle/Filled")
 
             Outline.Transparency = FOVCircle.Transparency
             Outline.Thickness = FOVCircle.Thickness + 2
