@@ -23,6 +23,8 @@ local Network = Framework.Libraries.Network
 local Bullets = Framework.Libraries.Bullets
 local Cameras = Framework.Libraries.Cameras
 
+local Reticle = Interface:Get("Reticle")
+
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 local CharacterCamera = Cameras.CameraList.Character
@@ -48,13 +50,13 @@ Vector3.new(0,math.abs(Framework.Configs.Globals.ProjectileGravity),0),2
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
+local Characters = Workspace.Characters
 local Corpses = Workspace.Corpses
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
-local ItemMemory,TPActive,TPPosition,
-FlyPosition,NoClipEvent,NoClipObjects
-= {},false,nil,nil,nil,{}
+local ItemMemory,FlyPosition,NoClipEvent,NoClipObjects = {},false,nil,{}
+local TeleportBypass,StartTime,StartingPosition = false,tick(),nil
 
 local KnownBodyParts = {
     {"Head",true},{"HumanoidRootPart",true},
@@ -358,43 +360,40 @@ local Window = Parvus.Utilities.UI:Window({
             VehSection:Slider({Name = "Velocity",Flag = "AR2/Vehicle/Velocity",Min = 0,Max = 200,Value = 100})]]
         end
         local TargetSection = MiscTab:Section({Name = "Target",Side = "Right"}) do
-            local PlayerDropdown = TargetSection:Dropdown({Name = "Player List",IgnoreFlag = true})
+            local PlayerDropdown = TargetSection:Dropdown({Name = "Player List",
+            IgnoreFlag = true,Flag = "AR2/Target/List"})
             PlayerDropdown:RefreshToPlayers(false)
+
             TargetSection:Button({Name = "Refresh",Callback = function()
                 PlayerDropdown:RefreshToPlayers(false)
             end})
 
             TargetSection:Button({Name = "Goto",Callback = function()
+                if Window.Flags["AR2/Target/LoopGoto"] then return end
+
                 if not PlayerClass.Character then return end
-
-                local TargetName = PlayerDropdown.Value[1]
-                if not TargetName then return end
-
-                local TargetPlayer = PlayerService[TargetName]
-                if not TargetPlayer then return end
-
-                local TargetCharacter = TargetPlayer.Character
-                if not TargetCharacter then return end
-
-                local TargetRootPart = TargetCharacter.PrimaryPart
                 local RootPart = PlayerClass.Character.RootPart
-            
-                local StartingPosition = RootPart.Position
-                local StartTime = tick()
+                if not RootPart then return end
+
+                TeleportBypass = true
+                StartingPosition = RootPart.Position
+                StartTime = tick()
 
                 while RunService.Heartbeat:Wait() do
-                    if (RootPart.Position - TargetRootPart.Position).Magnitude <= 5
-                    or TargetRootPart.Parent == nil or RootPart.Parent == nil then break end
-
-                    local Delta = tick() - StartTime
-                    local TotalDuration = (StartingPosition - TargetRootPart.Position).Magnitude / 2000
-                    local PositionDelta = (TargetRootPart.Position - StartingPosition)
-                    local Progress = math.min(Delta / TotalDuration,1)
-
-                    local MappedPosition = StartingPosition + (PositionDelta * Progress)
-                    RootPart.AssemblyLinearVelocity = Vector3.zero
-                    RootPart.CFrame = CFrame.new(MappedPosition)
+                    if not Teleport(PlayerDropdown.Value[1]) then
+                        TeleportBypass = false break
+                    end
                 end
+            end})
+
+            TargetSection:Toggle({Name = "Loop Goto",Flag = "AR2/Target/LoopGoto",Value = false,
+            Callback = function(Bool) TeleportBypass = Bool
+                if not PlayerClass.Character then return end
+                local RootPart = PlayerClass.Character.RootPart
+                if not RootPart then return end
+
+                StartingPosition = RootPart.Position
+                StartTime = tick()
             end})
             --TargetSection:Button({Name = "TP Zombies",Callback = function()
                 --local OldAntiZombie = Window:GetValue("AR2/AntiZombie/Enabled")
@@ -433,9 +432,10 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "No Jump Delay",Flag = "AR2/NoJumpDelay",Value = false})
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
+            MiscSection:Toggle({Name = "Knife Aura",Flag = "AR2/KnifeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
-            --MiscSection:Toggle({Name = "Anti-Zombie KillAura",Flag = "AR2/AntiZombie/KillAura",Value = false})
+            MiscSection:Toggle({Name = "Anti-Zombie KnifeAura",Flag = "AR2/AntiZombie/KnifeAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             --[[MiscSection:Button({Name = "TP Corpses",Callback = function()
@@ -586,23 +586,26 @@ local function GetClosest(Enabled,
                 if not BodyPart then continue end
 
                 local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                local BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
 
-                if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
+                if OnScreen and IsVisible(VisibilityCheck,BodyPart) and NotFar(DistanceCheck,Distance,DistanceLimit) then
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
                     if FieldOfView >= Magnitude then
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                             BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                            BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
                         elseif Priority ~= "Closest" then
                             BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
-                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
+                            BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,BodyPartPosition,ScreenPosition}
                     end
                 end
             end
@@ -616,54 +619,45 @@ local function AimAt(Hitbox,Smoothing)
     local Mouse = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothing,
-        (Hitbox[4].Y - Mouse.Y) * Smoothing
+        (Hitbox[5].X - Mouse.X) * Smoothing,
+        (Hitbox[5].Y - Mouse.Y) * Smoothing
     )
 end
 
-local function PlayerFly(Enabled,Speed)
-    local Character = PlayerClass.Character
-    if not Enabled or not Character
-    or not FlyPosition then return end
+local function GetCharactersInRadius(Path,Distance)
 
-    --BodyVelocity.Velocity = InputToVelocity() * Speed
-    FlyPosition += InputToVelocity() * Speed
-    Character.RootPart.AssemblyLinearVelocity = Vector3.zero
-    Character.RootPart.CFrame = FlyPosition
-end
-local function GetDistanceFromCamera(Position)
-    return (Position - Camera.CFrame.Position).Magnitude
-end
-function GetZombies(Distance)
-    local ClosestZombies = {}
-
-    for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
-        local PrimaryPart = Zombie.PrimaryPart
+    local Closest = {}
+    for Index,Character in pairs(Path:GetChildren()) do
+        if Character == LocalPlayer.Character then continue end
+        local PrimaryPart = Character.PrimaryPart
         if not PrimaryPart then continue end
 
-        if GetDistanceFromCamera(PrimaryPart.Position) <= Distance then
-            ClosestZombies[#ClosestZombies + 1] = Zombie
-        end
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then continue end
+
+        if Humanoid.Health <= 0 then continue end
+        local Magnitude = (PrimaryPart.Position - Camera.CFrame.Position).Magnitude
+        if Distance >= Magnitude then table.insert(Closest,Character) end
     end
 
-    return ClosestZombies
+    return Closest
 end
-local function GetItems(Distance)
-    local ClosestItems = {}
+local function GetItemsInRadius(Distance)
+    local Closest = {}
 
     for Index,Item in pairs(LootBins:GetChildren()) do
         for Index,Group in pairs(Item:GetChildren()) do
             local Part = Group:FindFirstChild("Part")
             if not Part then continue end
 
-            if GetDistanceFromCamera(Part.Position) <= Distance then
-                ClosestItems[#ClosestItems + 1] = Group
-            end
+            local Magnitude = (Part.Position - Camera.CFrame.Position).Magnitude
+            if Distance >= Magnitude then table.insert(Closest,Group) end
         end
     end
 
-    return ClosestItems
+    return Closest
 end
+
 local function Length(Table) local Count = 0
     for Index, Value in pairs(Table) do Count += 1 end
     return Count
@@ -689,6 +683,46 @@ local function CIIC(Data) -- ConcatItemsInContainer
     end
     return table.concat(Items,"\n")
 end
+function Teleport(TargetName)
+    if Window.Flags["AR2/Fly/Enabled"] then return end
+    if not TargetName then return end
+    if not StartingPosition then return end
+    if not PlayerClass.Character then return end
+
+    local TargetPlayer = PlayerService:FindFirstChild(TargetName)
+    if not TargetPlayer then return end
+
+    local TargetCharacter = TargetPlayer.Character
+    if not TargetCharacter then return end
+
+    local TargetRootPart = TargetCharacter.PrimaryPart
+    local RootPart = PlayerClass.Character.RootPart
+
+    if (RootPart.Position - TargetRootPart.Position).Magnitude <= 5
+    or TargetRootPart.Parent == nil or RootPart.Parent == nil then return end
+
+    local Delta = tick() - StartTime
+    local TotalDuration = (StartingPosition - TargetRootPart.Position).Magnitude / 1500
+    local PositionDelta = (TargetRootPart.Position - StartingPosition)
+    local Progress = math.min(Delta / TotalDuration,1)
+
+    local MappedPosition = StartingPosition + (PositionDelta * Progress)
+    RootPart.AssemblyLinearVelocity = Vector3.zero
+    RootPart.CFrame = CFrame.new(MappedPosition)
+
+    return true
+end
+local function PlayerFly(Enabled,Speed)
+    local Character = PlayerClass.Character
+    if not Enabled or not Character
+    or not FlyPosition then return end
+
+    --BodyVelocity.Velocity = InputToVelocity() * Speed
+    FlyPosition += InputToVelocity() * Speed
+    Character.RootPart.AssemblyLinearVelocity = Vector3.zero
+    Character.RootPart.CFrame = FlyPosition
+end
+
 local function HookCharacter(Character)
     FlyPosition = Character.RootPart.CFrame
     --[[if Window.Flags["AR2/Fly/Enabled"] then
@@ -829,7 +863,8 @@ Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local 
     end]]
 
     if Name == "Set Character State" then
-        if Window.Flags["AR2/SSCS"]
+        if TeleportBypass
+        or Window.Flags["AR2/SSCS"]
         or Window.Flags["AR2/Fly/Enabled"]
         or Window.Flags["AR2/WalkSpeed/Enabled"] then
             Args[1] = "Climbing"
@@ -996,28 +1031,49 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     PlayerFly(Window.Flags["AR2/Fly/Enabled"],
         Window.Flags["AR2/Fly/Value"])
 end)
+
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not Window.Flags["AR2/Target/LoopGoto"] then return end
+    Teleport(Window.Flags["AR2/Target/List"][1])
+end)
 Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/AntiZombie/Enabled"] then return end
-    local ClosestZombies = GetZombies(50)
-    for Index,Zombie in pairs(ClosestZombies) do
-        Zombie.PrimaryPart.Anchored = isnetworkowner(Zombie.PrimaryPart)
-        --[[local ZombieOwned = isnetworkowner(Zombie.PrimaryPart)
-        if Window.Flags["AR2/AntiZombie/KillAura"] and ZombieOwned then
-            --Zombie.PrimaryPart.CFrame = PlayerClass.Character.RootPart.CFrame * CFrame.new(0,0,5)
-            --Zombie.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
+    local Closest = GetCharactersInRadius(Zombies.Mobs,250)
+
+    for Index,Character in pairs(Closest) do
+        local IsNetworkOwned = isnetworkowner(Character.PrimaryPart)
+        Character.PrimaryPart.Anchored = IsNetworkOwned
+
+        if Window.Flags["AR2/AntiZombie/KnifeAura"] and IsNetworkOwned then
+            if not PlayerClass.Character then return end
+            if (Character.PrimaryPart.Position - Camera.CFrame.Position).Magnitude >= 50 then continue end
             local Melee = PlayerClass.Character.Inventory.Equipment.Melee
             if Melee then Network:Send("Melee Swing",Melee.Id,1)
                 Network:Send("Melee Hit Register",Melee.Id,
-                Zombie.PrimaryPart,"Flesh")
+                Character.PrimaryPart,"Flesh")
             end
-        else Zombie.PrimaryPart.Anchored = ZombieOwned end]]
-    end ClosestZombies = nil
+        end
+    end
+end)
+
+Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
+    if not Window.Flags["AR2/KnifeAura"] then return end
+    local Closest = GetCharactersInRadius(Characters,50)
+
+    for Index,Character in pairs(Closest) do
+        if not PlayerClass.Character then return end
+        local Melee = PlayerClass.Character.Inventory.Equipment.Melee
+        if Melee then Network:Send("Melee Swing",Melee.Id,1)
+            Network:Send("Melee Hit Register",Melee.Id,
+            Character.PrimaryPart,"Flesh")
+        end
+    end
 end)
 Parvus.Utilities.Misc:NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
     or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
 
-    local Items = GetItems(100)
+    local Items = GetItemsInRadius(100)
     if Interface:IsVisible("GameMenu")
     or not PlayerClass.Character or
     #Items == 0 then return end
@@ -1088,10 +1144,9 @@ Randoms.ChildAdded:Connect(function(Event)
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
         )
         if Window.Flags["AR2/ESP/RandomEvents/Enabled"] then
-            Parvus.Utilities.UI:Notification2({
-                Title = string.format("%s spawned (~%i studs away)",Event.Name,
-                GetDistanceFromCamera(Event.Value.Position)),Duration = 20
-            })
+            local Distance = (Event.Value.Position - Camera.CFrame.Position).Magnitude
+            local Title = string.format("%s spawned (~%i studs away)",Event.Name,Distance)
+            Parvus.Utilities.UI:Notification2({Title = Title,Duration = 20})
         end
     end
 end)

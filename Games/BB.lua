@@ -1136,9 +1136,11 @@ local function GetClosestAllFOV(Enabled,
                     if Distance >= Magnitude then
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                            BodyPart = GetBodyPart(Hitbox,Priority)
+                            if not BodyPart then continue end
                         elseif Priority ~= "Closest" then
-                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                            BodyPart = GetBodyPart(Hitbox,Priority)
+                            if not BodyPart then continue end
                         end
                         Distance,Closest = Magnitude,{Player,Character,BodyPart}
                     end
