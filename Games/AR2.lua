@@ -803,7 +803,7 @@ local function HookCharacter(Character)
         local Args = {...}
         if Window.Flags["AR2/InstantReload"] then
             for I = 0, Args[3].LoopCount do
-                Self.ReloadEventCallback("Commit","End")
+                Self.ReloadEventCallback("Commit","Load")
             end
             Character.Animator:StopReloadAnimation(false)
         end
