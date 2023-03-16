@@ -339,9 +339,12 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
+            RecoilSection:Toggle({Name = "Silent Magic Bullet",Flag = "AR2/MagicBullet/Enabled",Value = false})
+            RecoilSection:Slider({Name = "Magic Bullet Depth",Flag = "AR2/MagicBullet/Depth",Min = 1,Max = 5,Value = 5,Unit = "studs"})
             RecoilSection:Toggle({Name = "Unlock Firemodes",Flag = "AR2/Firemodes",Value = false})
             RecoilSection:Toggle({Name = "No Spread",Flag = "AR2/NoSpread",Value = false})
             RecoilSection:Toggle({Name = "No Camera Flinch",Flag = "AR2/NoFlinch",Value = false})
+            RecoilSection:Toggle({Name = "Instant Reload",Flag = "AR2/InstantReload",Value = false})
             RecoilSection:Divider()
             RecoilSection:Toggle({Name = "Recoil Control",Flag = "AR2/Recoil/Enabled",Value = false})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -394,7 +397,7 @@ local Window = Parvus.Utilities.UI:Window({
 
                 StartingPosition = RootPart.Position
                 StartTime = tick()
-            end})
+            end}):Keybind()
             --TargetSection:Button({Name = "TP Zombies",Callback = function()
                 --local OldAntiZombie = Window:GetValue("AR2/AntiZombie/Enabled")
                 --Window:SetValue("AR2/AntiZombie/Enabled",false)
@@ -432,7 +435,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "No Jump Delay",Flag = "AR2/NoJumpDelay",Value = false})
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
-            MiscSection:Toggle({Name = "Knife Aura",Flag = "AR2/KnifeAura",Value = false})
+            MiscSection:Toggle({Name = "KnifeAura",Flag = "AR2/KnifeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
             MiscSection:Toggle({Name = "Anti-Zombie KnifeAura",Flag = "AR2/AntiZombie/KnifeAura",Value = false})
@@ -624,7 +627,38 @@ local function AimAt(Hitbox,Smoothing)
     )
 end
 
+local function ProjectileBeam(Origin,Direction)
+    local Beam = Instance.new("Part")
+
+    Beam.BottomSurface = Enum.SurfaceType.Smooth
+    Beam.TopSurface = Enum.SurfaceType.Smooth
+    Beam.Material = Enum.Material.SmoothPlastic
+    Beam.Color = Color3.new(1,0,0)
+
+    Beam.CanCollide = false
+    Beam.CanTouch = false
+    Beam.CanQuery = false
+    Beam.Anchored = true
+
+    Beam.Size = Vector3.new(0.1,0.1,(Origin - Direction).Magnitude)
+    Beam.CFrame = CFrame.new(Origin,Direction) * CFrame.new(0,0,-Beam.Size.Z / 2)
+
+    Beam.Parent = Workspace
+
+    task.spawn(function()
+        local Time = 60 * 1
+        for Index = 1,Time do
+            RunService.Heartbeat:Wait()
+            Beam.Transparency = Index / Time
+            Beam.Color = Color3.new(0,0,1)
+        end Beam:Destroy()
+    end)
+
+    return Beam
+end
+
 local function GetCharactersInRadius(Path,Distance)
+    if not PlayerClass.Character then return end
 
     local Closest = {}
     for Index,Character in pairs(Path:GetChildren()) do
@@ -632,11 +666,7 @@ local function GetCharactersInRadius(Path,Distance)
         local PrimaryPart = Character.PrimaryPart
         if not PrimaryPart then continue end
 
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        if not Humanoid then continue end
-
-        if Humanoid.Health <= 0 then continue end
-        local Magnitude = (PrimaryPart.Position - Camera.CFrame.Position).Magnitude
+        local Magnitude = (PrimaryPart.Position - PlayerClass.Character.RootPart.Position).Magnitude
         if Distance >= Magnitude then table.insert(Closest,Character) end
     end
 
@@ -694,12 +724,10 @@ function Teleport(TargetName)
 
     local TargetCharacter = TargetPlayer.Character
     if not TargetCharacter then return end
+    if TargetCharacter.Parent == nil then return end
 
     local TargetRootPart = TargetCharacter.PrimaryPart
     local RootPart = PlayerClass.Character.RootPart
-
-    if (RootPart.Position - TargetRootPart.Position).Magnitude <= 5
-    or TargetRootPart.Parent == nil or RootPart.Parent == nil then return end
 
     local Delta = tick() - StartTime
     local TotalDuration = (StartingPosition - TargetRootPart.Position).Magnitude / 1500
@@ -709,6 +737,8 @@ function Teleport(TargetName)
     local MappedPosition = StartingPosition + (PositionDelta * Progress)
     RootPart.AssemblyLinearVelocity = Vector3.zero
     RootPart.CFrame = CFrame.new(MappedPosition)
+
+    if (RootPart.Position - TargetRootPart.Position).Magnitude <= 5 then return end
 
     return true
 end
@@ -767,6 +797,18 @@ local function HookCharacter(Character)
             Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end return OldJumped(...)
     end
+    local OldPlayReloadAnimation = Character.Animator.PlayReloadAnimation
+    Character.Animator.PlayReloadAnimation = function(Self,...)
+        local Returned = {OldPlayReloadAnimation(Self,...)}
+        local Args = {...}
+        if Window.Flags["AR2/InstantReload"] then
+            for I = 0, Args[3].LoopCount do
+                Self.ReloadEventCallback("Commit","End")
+            end
+            Character.Animator:StopReloadAnimation(false)
+        end
+        return unpack(Returned)
+    end
     for Index,Spring in pairs({"WobblePos","WobbleRot","RotationVelocity","MoveVelocity"}) do
         local OldSpring = Character.Animator.Springs[Spring].Retune
         Character.Animator.Springs[Spring].Retune = function(Self,Force,Damping,...)
@@ -780,6 +822,7 @@ local function HookCharacter(Character)
     Character.Actions.ToolAction = function(Self,...)
         if Window.Flags["AR2/Firemodes"] then
             local FireModes = Self.EquippedItem.FireModes
+            if not FireModes then return OldToolAction(Self,...) end
             if not table.find(FireModes,"Semiautomatic") then
                 setreadonly(FireModes,false)
                 table.insert(FireModes,"Semiautomatic")
@@ -880,12 +923,32 @@ Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local 
 
     return Old(Self,Name,unpack(Args))
 end)
-local OldFire = Bullets.Fire
+local OldGetFirearmTargetInfo = Reticle.GetFirearmTargetInfo
+Reticle.GetFirearmTargetInfo = function(Self,...)
+    local Returned = {OldGetFirearmTargetInfo(Self,...)}
+    local Script = getcallingscript()
+    local Args = {...}
+
+    if Script.Name == "Client Main" and SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
+        if Window.Flags["AR2/MagicBullet/Enabled"] then
+            Returned[1] = Args[3].Muzzle.CFrame
+            local Direction = Returned[1].Position - SilentAim[3].Position
+            local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
+            Returned[1] = Returned[1].Position - Direction.Unit * Distance
+        end
+        Returned[2] = (SilentAim[4] - Returned[1]).Unit
+        ProjectileBeam(Returned[1],SilentAim[4])
+    end
+
+    return unpack(Returned)
+end
+--[[local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...) local Args = {...}
+    print(Args[1].Muzzle,Args[2].Muzzle,Args[3].Muzzle)
     if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
         Args[5] = (SilentAim[4] - Args[4]).Unit
     end return OldFire(Self,unpack(Args))
-end
+end]]
 -- Old Recoil Control
 --[[local OldPost = Animators.Post
 Animators.Post = function(Self,Name,...) local Args = {...}
@@ -1039,33 +1102,39 @@ end)
 Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/AntiZombie/Enabled"] then return end
     local Closest = GetCharactersInRadius(Zombies.Mobs,250)
+    if not Closest then return end
 
     for Index,Character in pairs(Closest) do
-        local IsNetworkOwned = isnetworkowner(Character.PrimaryPart)
-        Character.PrimaryPart.Anchored = IsNetworkOwned
+        local PrimaryPart = Character.PrimaryPart
+        local IsNetworkOwned = isnetworkowner(PrimaryPart)
+        PrimaryPart.Anchored = IsNetworkOwned
 
         if Window.Flags["AR2/AntiZombie/KnifeAura"] and IsNetworkOwned then
             if not PlayerClass.Character then return end
-            if (Character.PrimaryPart.Position - Camera.CFrame.Position).Magnitude >= 50 then continue end
+
+            local Magnitude = (PrimaryPart.Position - PlayerClass.Character.RootPart.Position).Magnitude
+            if Magnitude >= 12 then continue end
             local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-            if Melee then Network:Send("Melee Swing",Melee.Id,1)
-                Network:Send("Melee Hit Register",Melee.Id,
-                Character.PrimaryPart,"Flesh")
+            if Melee then
+                Network:Send("Melee Swing",Melee.Id,1)
+                Network:Send("Melee Hit Register",Melee.Id,PrimaryPart)
             end
         end
     end
 end)
 
+--PlayerClass.Character.Animator:StopAnimationReplicated("Death.Standing Forwards", true);
 Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/KnifeAura"] then return end
-    local Closest = GetCharactersInRadius(Characters,50)
-
+    local Closest = GetCharactersInRadius(Characters,20)
+    if not Closest then return end
+    
     for Index,Character in pairs(Closest) do
         if not PlayerClass.Character then return end
         local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-        if Melee then Network:Send("Melee Swing",Melee.Id,1)
-            Network:Send("Melee Hit Register",Melee.Id,
-            Character.PrimaryPart,"Flesh")
+        if Melee then
+            Network:Send("Melee Swing",Melee.Id,1)
+            Network:Send("Melee Hit Register",Melee.Id,Character.PrimaryPart)
         end
     end
 end)
