@@ -132,48 +132,8 @@ function GetTeam(Target,Character,Mode)
         return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
     end else return true,WhiteColor end
 end
-if game.GameId == 580765040 then
-    function GetCharacter(Target,Mode)
-        local Character = Target.Character
-        if not Character then return end
-        return Character,Character.PrimaryPart
-    end
-    function GetTeam(Target,Character,Mode)
-        local LPCharacter = LocalPlayer.Character
-        if not LPCharacter then return end
-        if FindFirstChild(Character,"Team")
-        and FindFirstChild(LPCharacter,"Team") then
-            if Character.Team.Value ~= LPCharacter.Team.Value
-            or Character.Team.Value == "None" then
-                return true,Character.PrimaryPart.Color
-            end
-        end return false,Character.PrimaryPart.Color
-    end
-elseif game.GameId == 1054526971 then
-    local function RequireModule(Name)
-        for Index, Instance in pairs(getloadedmodules()) do
-            if Instance.Name == Name then
-                return require(Instance)
-            end
-        end
-    end
 
-    repeat task.wait() until RequireModule("SquadInterface")
-    local Squads = RequireModule("SquadInterface")
-    function GetTeam(Target,Character,Mode)
-        if Mode == "Player" then
-            if Target.Neutral then
-                local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
-                local TargetColor = Squads._tags[Target] and Squads._tags[Target].Tag.TextLabel.TextColor3 or WhiteColor
-                return TargetColor == WhiteColor and true or LPColor == TargetColor,TargetColor
-            else
-                return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
-            end
-        else
-            return not FindFirstChildWhichIsA(Character,"ProximityPrompt",true),WhiteColor
-        end
-    end
-elseif game.GameId == 1168263273 then
+if game.GameId == 1168263273 then -- Bad Business
     local TeamService = game:GetService("Teams")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Tortoiseshell = require(ReplicatedStorage:WaitForChild("TS"))
@@ -197,7 +157,7 @@ elseif game.GameId == 1168263273 then
         local Team,LPTeam = GetPlayerTeam(Target),GetPlayerTeam(LocalPlayer)
         return LPTeam ~= Team or Team == "FFA",Tortoiseshell.Teams.Colors[Team]
     end
-elseif game.GameId == 1586272220 then
+elseif game.GameId == 1586272220 then -- Steel Titans
     local function GetPlayerTank(Player)
         local Character = FindFirstChild(Player,"Char")
         if not Character then return end
@@ -213,6 +173,58 @@ elseif game.GameId == 1586272220 then
         return Character.Stats.Health.Value,
         Character.Stats.Health.Orig.Value,
         Character.Stats.Health.Value > 0
+    end
+elseif game.GameId == 580765040 then -- RAGDOLL UNIVERSE
+    function GetCharacter(Target,Mode)
+        local Character = Target.Character
+        if not Character then return end
+        return Character,Character.PrimaryPart
+    end
+    function GetTeam(Target,Character,Mode)
+        local LPCharacter = LocalPlayer.Character
+        if not LPCharacter then return end
+        if FindFirstChild(Character,"Team")
+        and FindFirstChild(LPCharacter,"Team") then
+            if Character.Team.Value ~= LPCharacter.Team.Value
+            or Character.Team.Value == "None" then
+                return true,Character.PrimaryPart.Color
+            end
+        end return false,Character.PrimaryPart.Color
+    end
+elseif game.GameId == 358276974 or game.GameId == 3495983524 then -- Apocalypse Rising 2
+    function GetHealth(Target,Character,Mode)
+        local Health = Character.Stats.Health.Base
+        return Health.Value,100,Health.Value > 0
+    end
+    --[[function GetTeam(Target,Character,Mode)
+        if Mode == "Player" then
+        if Target.Neutral then return true,Target.TeamColor.Color else
+            return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
+        end else return true,WhiteColor end
+    end]]
+elseif game.GameId == 1054526971 then -- Blackhawk Rescue Mission 5
+    local function RequireModule(Name)
+        for Index, Instance in pairs(getloadedmodules()) do
+            if Instance.Name == Name then
+                return require(Instance)
+            end
+        end
+    end
+
+    repeat task.wait() until RequireModule("SquadInterface")
+    local Squads = RequireModule("SquadInterface")
+    function GetTeam(Target,Character,Mode)
+        if Mode == "Player" then
+            if Target.Neutral then
+                local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
+                local TargetColor = Squads._tags[Target] and Squads._tags[Target].Tag.TextLabel.TextColor3 or WhiteColor
+                return TargetColor == WhiteColor and true or LPColor == TargetColor,TargetColor
+            else
+                return LocalPlayer.Team ~= Target.Team,Target.TeamColor.Color
+            end
+        else
+            return not FindFirstChildWhichIsA(Character,"ProximityPrompt",true),WhiteColor
+        end
     end
 end
 
