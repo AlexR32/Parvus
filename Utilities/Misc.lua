@@ -54,8 +54,9 @@ end
 
 function Misc:NewThreadLoop(Wait,Function)
     task.spawn(function()
-        while task.wait(Wait) do
-            local Success,Error = pcall(Function)
+        while true do
+            local Delta = task.wait(Wait)
+            local Success,Error = pcall(Function,Delta)
             if not Success then
                 warn("thread error " .. Error)
             elseif Error == "break" then

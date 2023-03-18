@@ -133,7 +133,7 @@ function GetTeam(Target,Character,Mode)
     end else return true,WhiteColor end
 end
 
-if game.GameId == 1168263273 then -- Bad Business
+if game.GameId == 1168263273 or game.GameId == 3360073263 then -- Bad Business
     local TeamService = game:GetService("Teams")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Tortoiseshell = require(ReplicatedStorage:WaitForChild("TS"))
