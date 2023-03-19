@@ -58,6 +58,22 @@ for Index,Table in pairs(getgc(true)) do
     end
 end
 
+--[[local function RenameCharacter(Player)
+    if not Player.Character then return end
+    Player.Character.Name = ("%s (%s)"):format(Player.Name,Player.DisplayName)
+end
+for Index,Player in pairs(PlayerService:GetPlayers()) do
+    RenameCharacter(Player)
+    Player.CharacterAdded:Connect(function()
+        RenameCharacter(Player)
+    end)
+end
+PlayerService.PlayerAdded:Connect(function(Player)
+    Player.CharacterAdded:Connect(function()
+        RenameCharacter(Player)
+    end)
+end)]]
+
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,
 Vector3.new(0,math.abs(Framework.Configs.Globals.ProjectileGravity),0),2
 local ItemMemory,NoClipEvent,NoClipObjects,TeleportBypass = {},nil,{},false
@@ -66,7 +82,7 @@ local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 --setclipboard("Roblox.GameLauncher.joinGameInstance(" .. game.PlaceId .. ", \"" .. tostring(game.JobId) .. "\");")
 
 --[[RenderSettings.Loot = 1
-RenderSettings.Elements = 20
+RenderSettings.Elements = 1
 RenderSettings.Detail = -1]]
 RenderSettings.Terrain = 36
 
@@ -328,13 +344,16 @@ local Window = Parvus.Utilities.UI:Window({
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
-            RecoilSection:Toggle({Name = "Silent Magic Bullet",Flag = "AR2/MagicBullet/Enabled",Value = false})
-            RecoilSection:Slider({Name = "Magic Bullet Depth",Flag = "AR2/MagicBullet/Depth",Min = 1,Max = 5,Value = 5,Unit = "studs"})
-            RecoilSection:Toggle({Name = "Unlock Firemodes",Flag = "AR2/Firemodes",Value = false})
-            RecoilSection:Toggle({Name = "No Spread",Flag = "AR2/NoSpread",Value = false})
-            RecoilSection:Toggle({Name = "No Camera Flinch",Flag = "AR2/NoFlinch",Value = false})
-            RecoilSection:Toggle({Name = "Instant Reload",Flag = "AR2/InstantReload",Value = false})
+            RecoilSection:Toggle({Name = "Silent Wallbang",Flag = "AR2/MagicBullet/Enabled",Value = false})
+            RecoilSection:Slider({Name = "Wallbang Depth",Flag = "AR2/MagicBullet/Depth",Min = 1,Max = 5,Value = 5,Unit = "studs"})
             RecoilSection:Divider()
+            RecoilSection:Toggle({Name = "No Recoil",Flag = "AR2/NoRecoil",Value = false})
+            RecoilSection:Toggle({Name = "No Spread",Flag = "AR2/NoSpread",Value = false})
+            RecoilSection:Toggle({Name = "No Wobble",Flag = "AR2/NoWobble",Value = false})
+            RecoilSection:Toggle({Name = "No Camera Flinch",Flag = "AR2/NoFlinch",Value = false})
+            RecoilSection:Toggle({Name = "Unlock Firemodes",Flag = "AR2/UnlockFiremodes",Value = false})
+            RecoilSection:Toggle({Name = "Instant Reload",Flag = "AR2/InstantReload",Value = false})
+            --[[RecoilSection:Divider()
             RecoilSection:Toggle({Name = "Recoil Control",Flag = "AR2/Recoil/Enabled",Value = false})
             RecoilSection:Slider({Name = "Shift Force",Flag = "AR2/Recoil/ShiftForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Roll Bias",Flag = "AR2/Recoil/RollBias",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -342,7 +361,7 @@ local Window = Parvus.Utilities.UI:Window({
             RecoilSection:Slider({Name = "Slide Force",Flag = "AR2/Recoil/SlideForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "KickUp Force",Flag = "AR2/Recoil/KickUpForce",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Slider({Name = "Bob Force",Flag = "AR2/Bob/Force",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            RecoilSection:Slider({Name = "Bob Damping",Flag = "AR2/Bob/Damping",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            RecoilSection:Slider({Name = "Bob Damping",Flag = "AR2/Bob/Damping",Min = 0,Max = 100,Value = 0,Unit = "%"})]]
         end
         local VehSection = MiscTab:Section({Name = "Vehicle",Side = "Left"}) do
             VehSection:Toggle({Name = "Enabled",Flag = "AR2/Vehicle/Enabled",Value = false})
@@ -372,7 +391,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
 
             TargetSection:Toggle({Name = "Loop Teleport",Flag = "AR2/Teleport/Loop",Value = false}):Keybind()
-            TargetSection:Slider({Name = "Teleport Speed",Flag = "AR2/Teleport/Speed",Min = 10,Max = 50,Value = 20})
+            TargetSection:Slider({Name = "Teleport Speed",Flag = "AR2/Teleport/Speed",Min = 10,Max = 50,Value = 20,Unit = "studs",Wide = true})
             --[[TargetSection:Button({Name = "TP Zombies",Callback = function()
                 local OldAntiZombie = Window:GetValue("AR2/AntiZombie/Enabled")
                 Window:SetValue("AR2/AntiZombie/Enabled",false)
@@ -404,30 +423,34 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly Enabled",Flag = "AR2/Fly/Enabled",Value = false}):Keybind({Flag = "AR2/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Speed",Flag = "AR2/Fly/Speed",Min = 10,Max = 50,Value = 20})
-            CharSection:Divider()
-            CharSection:Toggle({Name = "WalkSpeed Enabled",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
-            CharSection:Slider({Name = "WalkSpeed Value",Flag = "AR2/WalkSpeed/Value",Min = 0,Max = 10,Precise = 1,Value = 2.5})
-            CharSection:Divider()
-            CharSection:Toggle({Name = "JumpPower Enabled",Flag = "AR2/JumpPower/Enabled",Value = false}):Keybind()
-            CharSection:Slider({Name = "JumpPower Value",Flag = "AR2/JumpPower/Value",Min = 32,Max = 500,Value = 32})
-            CharSection:Divider()
-            CharSection:Toggle({Name = "Equip In Air",Flag = "AR2/EquipInAir",Value = false})
-            CharSection:Toggle({Name = "Equip In Water",Flag = "AR2/EquipInWater",Value = false})
+            CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 10,Max = 50,Value = 20,Unit = "studs",Wide = true})
+            --CharSection:Divider()
+            CharSection:Toggle({Name = "Walk Speed",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
+            CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 10,Precise = 1,Value = 2.5,Unit = "studs",Wide = true})
+            --CharSection:Divider()
+            CharSection:Toggle({Name = "Jump Height",Flag = "AR2/JumpHeight/Enabled",Value = false}):Keybind()
+            CharSection:Toggle({Name = "No Fall Check",Flag = "AR2/JumpHeight/NoFallCheck",Value = true})
             CharSection:Toggle({Name = "No Fall Impact",Flag = "AR2/NoFallImpact",Value = false})
-            CharSection:Toggle({Name = "No Jump Delay",Flag = "AR2/NoJumpDelay",Value = false})
-            CharSection:Button({Name = "Respawn (lose loot)",Callback = function()
-                task.spawn(function()
-                    SetIdentity(2)
-                    PlayerClass:LoadCharacter()
-                end)
-            end})
+            CharSection:Toggle({Name = "No Jump Debounce",Flag = "AR2/JumpHeight/NoJumpDebounce",Value = false})
+            CharSection:Slider({Name = "",Flag = "AR2/JumpHeight/Height",Min = 4.8,Max = 20,Precise = 1,Value = 4.8,Unit = "studs",Wide = true})
+            --CharSection:Divider()
+            CharSection:Toggle({Name = "Use In Air",Flag = "AR2/UseInAir",Value = false})
+            CharSection:Toggle({Name = "Use In Water",Flag = "AR2/UseInWater",Value = false})
+            CharSection:Toggle({Name = "Fast Respawn",Flag = "AR2/FastRespawn",Value = false})
             CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
             Callback = function(Bool)
                 if not PlayerClass.Character then return end
                 if Bool then PlayerClass.Character.Animator:PlayAnimationReplicated("Death.Standing Forwards",true)
                 else PlayerClass.Character.Animator:StopAnimationReplicated("Death.Standing Forwards",true) end
             end})
+            CharSection:Button({Name = "Respawn (lose loot)",Callback = function()
+                task.spawn(function() SetIdentity(2)
+                    PlayerClass:LoadCharacter()
+                end)
+            end})
+            --[[CharSection:Button({Name = "Invisible",Callback = function()
+                if not PlayerClass.Character then return end
+            end})]]
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
             MiscSection:Toggle({Name = "KnifeAura",Flag = "AR2/KnifeAura",Value = false})
@@ -531,7 +554,7 @@ local function IsVisible(Enabled,BodyPart)
     BodyPart.Position - Camera.CFrame.Position)
 end
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return (Origin + Velocity * Time) + (Gravity ^ Time / GravityCorrection)
+    return (Origin + Velocity * Time) + (Gravity * Time * Time / GravityCorrection)
 end
 local function GetClosest(Enabled,
     TeamCheck,VisibilityCheck,DistanceCheck,
@@ -728,7 +751,7 @@ local function PlayerWalkSpeed()
     if not PlayerClass.Character then return end
     local RootPart = PlayerClass.Character.RootPart
     local MoveDirection = InputToVelocity() * XZ
-    RootPart.CFrame += MoveDirection * Window.Flags["AR2/WalkSpeed/Value"]
+    RootPart.CFrame += MoveDirection * Window.Flags["AR2/WalkSpeed/Speed"]
 end
 
 local function HookCharacter(Character)
@@ -752,18 +775,24 @@ local function HookCharacter(Character)
     Character.SetSitting = function(...)
         return OldSetSitting(...)
     end]]
-    local OldJumped = Character.Jumped.Fire
-    Character.Jumped.Fire = function(...)
-        if Window.Flags["AR2/NoJumpDelay"] then
-            Character.JumpDebounce = 0
+    local OldJump = Character.Actions.Jump
+    Character.Actions.Jump = function(Self,...)
+        local Args = {...}
+
+        if Window.Flags["AR2/JumpHeight/NoJumpDebounce"] then
+            Self.JumpDebounce = 0
         end
 
-        if Window.Flags["AR2/JumpPower/Enabled"] then
-            Character.Humanoid.JumpPower = Window.Flags["AR2/JumpPower/Value"]
+        if Args[1] == "Begin" and Window.Flags["AR2/JumpHeight/Enabled"] then
+            if Self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall
+            and not Window.Flags["AR2/JumpHeight/NoFallCheck"] then return end
+
+            Self.Humanoid.UseJumpPower = false
+            Self.Humanoid.JumpHeight = Window.Flags["AR2/JumpHeight/Height"]
             Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
 
-        return OldJumped(...)
+        return OldJump(Self,...)
     end
     local OldPlayReloadAnimation = Character.Animator.PlayReloadAnimation
     Character.Animator.PlayReloadAnimation = function(Self,...)
@@ -782,19 +811,25 @@ local function HookCharacter(Character)
 
         return unpack(ReturnArgs)
     end
-    -- fix wobble
-    --[[for Index,Spring in pairs({"WobblePos","WobbleRot","RotationVelocity","MoveVelocity"}) do
-        local OldSpring = Character.Animator.Springs[Spring].Retune
-        Character.Animator.Springs[Spring].Retune = function(Self,Force,Damping,...)
-            if Window.Flags["AR2/Recoil/Enabled"] then
-                Force = Force * (Window.Flags["AR2/Bob/Force"] / 100)
-                Damping = Damping * (Window.Flags["AR2/Bob/Damping"] / 100)
-            end return OldSpring(Self,Force,Damping,...)
+    --[[for Index,Spring in pairs(Character.Animator.Springs) do
+        local OldRetune = Spring.Retune
+        Spring.Retune = function(Self,Force,...)
+            if Window.Flags["AR2/NoWobble"] then Force = 0 end
+            return OldRetune(Self,Force,...)
         end
     end]]
+    for Index,Spring in pairs({"WobblePos","WobbleRot","RotationVelocity","MoveVelocity"}) do
+        Spring = Character.Animator.Springs[Spring]
+
+        local OldRetune = Spring.Retune
+        Spring.Retune = function(Self,Force,...)
+            if Window.Flags["AR2/NoWobble"] then Force = 0 end
+            return OldRetune(Self,Force,...)
+        end
+    end
     local OldToolAction = Character.Actions.ToolAction
     Character.Actions.ToolAction = function(Self,...)
-        if Window.Flags["AR2/Firemodes"] then
+        if Window.Flags["AR2/UnlockFiremodes"] then
             local FireModes = Self.EquippedItem.FireModes
             if not FireModes then return OldToolAction(Self,...) end
 
@@ -824,36 +859,6 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
 
     return OldNamecall(Self,...)
 end)
-setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
-    if Window.Flags["AR2/NoSpread"] then
-        return GetSpreadAngle(
-            {MoveState = "Walking",Zooming = true},
-            {FirstPerson = true},...
-        )
-    end
-
-    return GetSpreadAngle(Character,CCamera,...)
-end)
-setupvalue(Bullets.Fire,5,function(...)
-    if Window.Flags["AR2/NoFlinch"] then return end
-    return FlinchCamera(...)
-end)
-setupvalue(Bullets.Fire,7,function(Character,Item,...)
-    local ReturnArgs = {GetFireImpulse(Character,Item,...)}
-    if Window.Flags["AR2/Recoil/Enabled"] then
-        ReturnArgs[1][1] = ReturnArgs[1][1] * (Window.Flags["AR2/Recoil/ShiftForce"] / 100)
-        ReturnArgs[1][2] = ReturnArgs[1][2] * (Window.Flags["AR2/Recoil/RollBias"] / 100)
-        ReturnArgs[1][3] = ReturnArgs[1][3] * (Window.Flags["AR2/Recoil/RaiseForce"] / 100)
-        ReturnArgs[1][4] = ReturnArgs[1][4] * (Window.Flags["AR2/Recoil/SlideForce"] / 100)
-        ReturnArgs[1][5] = ReturnArgs[1][5] * (Window.Flags["AR2/Recoil/KickUpForce"] / 100)
-    end return unpack(ReturnArgs)
-end)
-setupvalue(InteractHeartbeat,11,function(...)
-    if Window.Flags["AR2/InstantSearch"] then
-        local Args = {FindItemData(...)}
-        Args[4] = 0 return unpack(Args)
-    end return FindItemData(...)
-end)
 Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local Args = {...}
     if table.find(SanityBans,Name) and not table.find(SanityBans,Args[1]) then return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
@@ -874,18 +879,56 @@ Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local 
 
     return Old(Self,Name,unpack(Args))
 end)
+--[[Parvus.Utilities.Misc:FixUpValue(Network.Bounce,function(Old,Self,Name,...) local Args = {...}
+    print(Name)
+    return Old(Self,Name,unpack(Args))
+end)
+Parvus.Utilities.Misc:FixUpValue(Network.Fetch,function(Old,Self,Name,...) local Args = {...}
+    print(Name)
+    return Old(Self,Name,unpack(Args))
+end)]]
+setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
+    if Window.Flags["AR2/NoSpread"] then
+        return GetSpreadAngle(
+            {MoveState = "Walking",Zooming = true},
+            {FirstPerson = true},...
+        )
+    end
+
+    return GetSpreadAngle(Character,CCamera,...)
+end)
+setupvalue(Bullets.Fire,5,function(...)
+    if Window.Flags["AR2/NoFlinch"] then return end
+    return FlinchCamera(...)
+end)
+setupvalue(Bullets.Fire,7,function(Character,Item,...)
+    local ReturnArgs = {GetFireImpulse(Character,Item,...)}
+    if Window.Flags["AR2/NoRecoil"] then
+        ReturnArgs[1][1] = 0
+        ReturnArgs[1][2] = 0
+        ReturnArgs[1][3] = 0
+        ReturnArgs[1][4] = 0
+        ReturnArgs[1][5] = 0
+    end return unpack(ReturnArgs)
+end)
+setupvalue(InteractHeartbeat,11,function(...)
+    if Window.Flags["AR2/InstantSearch"] then
+        local Args = {FindItemData(...)}
+        Args[4] = 0 return unpack(Args)
+    end return FindItemData(...)
+end)
 local OldGetFirearmTargetInfo = Reticle.GetFirearmTargetInfo
 Reticle.GetFirearmTargetInfo = function(Self,...)
     local ReturnArgs = {OldGetFirearmTargetInfo(Self,...)}
-    local Script = getcallingscript()
+    local Script = tostring(getcallingscript())
     local Args = {...}
 
-    if Script.Name == "Client Main" and SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
+    if Script == "Client Main" and SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
         if Window.Flags["AR2/MagicBullet/Enabled"] then
             --ReturnArgs[1] = Args[3].Muzzle.CFrame
-            local Direction = ReturnArgs[1].Position - SilentAim[3].Position
+            local Direction = ReturnArgs[1]- SilentAim[3].Position
             local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
-            ReturnArgs[1] = ReturnArgs[1].Position - Direction.Unit * Distance
+            ReturnArgs[1] = ReturnArgs[1] - Direction.Unit * Distance
         end
         ReturnArgs[2] = (SilentAim[4] - ReturnArgs[1]).Unit
         ProjectileBeam(ReturnArgs[1],SilentAim[4])
@@ -919,12 +962,12 @@ end
 local OldCharacterGroundCast = Raycasting.CharacterGroundCast
 Raycasting.CharacterGroundCast = function(Self,Position,LengthDown,...)
     if PlayerClass.Character and Position == PlayerClass.Character.RootPart.CFrame then
-        if Window.Flags["AR2/EquipInAir"] then LengthDown = 1e6 end
+        if Window.Flags["AR2/UseInAir"] then LengthDown = 1e6 end
     end return OldCharacterGroundCast(Self,Position,LengthDown,...)
 end
 local OldSwimCheckCast = Raycasting.SwimCheckCast
 Raycasting.SwimCheckCast = function(Self,...)
-    if Window.Flags["AR2/EquipInWater"] then return nil end
+    if Window.Flags["AR2/UseInWater"] then return nil end
     return OldSwimCheckCast(Self,...)
 end
 local OldPlayAnimationReplicated = Animators.PlayAnimationReplicated
@@ -955,6 +998,19 @@ VehicleController.new = function(...)
     end
 
     return unpack(ReturnArgs)
+end
+local OldCD = Events["Character Dead"]
+Events["Character Dead"] = function(...)
+    if Window.Flags["AR2/FastRespawn"] then
+        task.spawn(function() SetIdentity(2)
+            PlayerClass:UnloadCharacter()
+            Interface:Hide("Reticle")
+            task.wait(0.5)
+            PlayerClass:LoadCharacter()
+        end)
+    end
+
+    return OldCD(...)
 end
 local OldICA = Events["Inventory Container Added"]
 Events["Inventory Container Added"] = function(Id,Data,...)

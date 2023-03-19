@@ -166,7 +166,7 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
 
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark/Enabled",Value = true,
             Callback = function(Bool) Window.Watermark.Enabled = Bool end}):Keybind({Flag = "UI/Watermark/Keybind"})
-            
+
             MenuSection:Button({Name = "Rejoin",Side = "Left",Callback = Parvus.Utilities.Misc.ReJoin})
             MenuSection:Button({Name = "Server Hop",Side = "Left",Callback = Parvus.Utilities.Misc.ServerHop})
         end
