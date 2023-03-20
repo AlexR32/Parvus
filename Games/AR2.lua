@@ -48,6 +48,7 @@ local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local FlinchCamera = getupvalue(Bullets.Fire,5)
 local GetFireImpulse = getupvalue(Bullets.Fire,7)
 local RenderSettings = getupvalue(World.GetDistance,1)
+if type(Events) == "function" then Events = getupvalue(Network.Add,2) end
 
 local InteractHeartbeat,FindItemData
 for Index,Table in pairs(getgc(true)) do
@@ -1000,17 +1001,19 @@ VehicleController.new = function(...)
     return unpack(ReturnArgs)
 end
 local OldCD = Events["Character Dead"]
-Events["Character Dead"] = function(...)
-    if Window.Flags["AR2/FastRespawn"] then
-        task.spawn(function() SetIdentity(2)
-            PlayerClass:UnloadCharacter()
-            Interface:Hide("Reticle")
-            task.wait(0.5)
-            PlayerClass:LoadCharacter()
-        end)
-    end
+if OldCD then
+    Events["Character Dead"] = function(...)
+        if Window.Flags["AR2/FastRespawn"] then
+            task.spawn(function() SetIdentity(2)
+                PlayerClass:UnloadCharacter()
+                Interface:Hide("Reticle")
+                task.wait(0.5)
+                PlayerClass:LoadCharacter()
+            end)
+        end
 
-    return OldCD(...)
+        return OldCD(...)
+    end
 end
 local OldICA = Events["Inventory Container Added"]
 Events["Inventory Container Added"] = function(Id,Data,...)
