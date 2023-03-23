@@ -169,6 +169,12 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
 
             MenuSection:Button({Name = "Rejoin",Side = "Left",Callback = Parvus.Utilities.Misc.ReJoin})
             MenuSection:Button({Name = "Server Hop",Side = "Left",Callback = Parvus.Utilities.Misc.ServerHop})
+            MenuSection:Button({Name = "Copy Lua Invite",Side = "Left",Callback = function()
+                setclipboard("game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
+            end})
+            MenuSection:Button({Name = "Copy JSON Invite",Side = "Left",Callback = function()
+                setclipboard("Roblox.GameLauncher.joinGameInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
+            end})
         end
 
         OptionsTab:AddConfigSection("Parvus","Left")

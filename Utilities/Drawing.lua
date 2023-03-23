@@ -91,9 +91,9 @@ local function WorldToScreen(WorldPosition)
 end
 
 -- CalculateBox by mickeyrbx (highly edited)
-local function CalculateBox(Model,Position,Distance) local Size = Model:GetExtentsSize()
+local function CalculateBox(Model,Position,Distance) local Size = Vector3.new(4, 5, 1)--Model:GetExtentsSize()
     local ScaleFactor = 1 / (Distance * Tan(Rad(Camera.FieldOfView / 2)) * 2) * 1000
-    Size = AntiAliasingXY(ScaleFactor * Size.X,ScaleFactor * Size.Y)
+    Size = AntiAliasingXY(Size.X * ScaleFactor,Size.Y * ScaleFactor)
     return AntiAliasingP(Position - Size / 2),Size
 end
 -- Offscreen Arrows by Blissful
