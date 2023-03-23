@@ -841,10 +841,6 @@ Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local 
     if table.find(SanityBans,Name) and not table.find(SanityBans,Args[1]) then return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
 
-    if Name == "Bullet Impact" then
-        print(repr(Args[7]))
-    end
-
     if Name == "Set Character State" then
         if TeleportBypass
         or Window.Flags["AR2/SSCS"]

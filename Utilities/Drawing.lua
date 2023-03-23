@@ -32,6 +32,8 @@ local BlackColor = ColorNew(0,0,0)
 local LerpColor = BlackColor.Lerp
 local Fonts = Drawing.Fonts
 
+local CharacterSize = Vector3.new(4,5,1)
+
 if not HighlightContainer then
     local CoreGui = game:GetService("CoreGui")
     getgenv().HighlightContainer = Instance.new("Folder")
@@ -91,7 +93,7 @@ local function WorldToScreen(WorldPosition)
 end
 
 -- CalculateBox by mickeyrbx (highly edited)
-local function CalculateBox(Model,Position,Distance) local Size = Vector3.new(4, 5, 1)--Model:GetExtentsSize()
+local function CalculateBox(Model,Position,Distance) local Size = CharacterSize --Model:GetExtentsSize()
     local ScaleFactor = 1 / (Distance * Tan(Rad(Camera.FieldOfView / 2)) * 2) * 1000
     Size = AntiAliasingXY(Size.X * ScaleFactor,Size.Y * ScaleFactor)
     return AntiAliasingP(Position - Size / 2),Size
