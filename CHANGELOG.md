@@ -1,3 +1,39 @@
+### Update 23/03/23
+```markdown
+# AR2
++ added teleport
++ walkspeed method updated
++ jumppower method updated
++ added no fall check for jumppower
++ added fast respawn
++ added respawn button
++ added play dead
++ added zombie melee aura
++ added player melee aura
++ added instant reload
++ added silent wallbang (magic bullet)
+* fixed lighting section not showing
+
+* and other misc changes
+# Universal
++ new silent aim modes
+* made silent aim modes toggable
+* fixed lighting section not showing
+# Global
++ added copy lua invite and copy json invite (server jobid)
++ new bodyparts and priority system
+- removed dynamic fov (useless)
++ new trigger bot
+# ESP
++ made boxes static size
++ added support for ar2 health
+* fixed health check issue
+# UI
++ added disabletoggle value for toggle keybind
+
+(this is not full changelog cuz theres much more under the hood)
+(this update is not actually finished but i decided to release it now because the script hasn't been updated for a long time)
+```
 ### Update 09/03/23
 ```markdown
 # Global
