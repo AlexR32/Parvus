@@ -395,7 +395,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
 
             TargetSection:Toggle({Name = "Loop Teleport",Flag = "AR2/Teleport/Loop",Value = false}):Keybind()
-            TargetSection:Slider({Name = "Teleport Speed",Flag = "AR2/Teleport/Speed",Min = 10,Max = 50,Value = 20,Unit = "studs",Wide = true})
+            TargetSection:Slider({Name = "Teleport Speed",Flag = "AR2/Teleport/Speed",Min = 1,Max = 50,Value = 20,Unit = "studs",Wide = true})
             --[[TargetSection:Button({Name = "TP Zombies",Callback = function()
                 local OldAntiZombie = Window:GetValue("AR2/AntiZombie/Enabled")
                 Window:SetValue("AR2/AntiZombie/Enabled",false)
@@ -427,7 +427,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly Enabled",Flag = "AR2/Fly/Enabled",Value = false}):Keybind({Flag = "AR2/Fly/Keybind"})
-            CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 10,Max = 50,Value = 20,Unit = "studs",Wide = true})
+            CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 1,Max = 50,Value = 5,Unit = "studs",Wide = true})
             --CharSection:Divider()
             CharSection:Toggle({Name = "Walk Speed",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 10,Precise = 1,Value = 2.5,Unit = "studs",Wide = true})
