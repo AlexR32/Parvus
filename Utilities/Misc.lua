@@ -232,8 +232,9 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,Wide = true,
+            local TileOffset = BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,Wide = true,
             Callback = function(Number) Window.Background.TileSize = UDim2.fromOffset(Number,Number) end})
+            Window.Background.TileSize = UDim2.fromOffset(TileOffset.Value,TileOffset.Value)
         end
         local CrosshairSection = OptionsTab:Section({Name = "Custom Crosshair",Side = "Right"}) do
             CrosshairSection:Toggle({Name = "Enabled",Flag = "Crosshair/Enabled",Value = false})
@@ -259,9 +260,9 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
 end
 
 function Misc:InitAutoLoad(Window)
-    Window:SetValue("Background/Offset",74)
     Window:AutoLoadConfig("Parvus")
-    Window:SetValue("UI/Enabled",Window.Flags["UI/OOL"])
+    Window:SetValue("UI/Enabled",
+    Window.Flags["UI/OOL"])
 end
 
 function Misc:LightingSection(Tab,Side)

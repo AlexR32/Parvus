@@ -35,11 +35,13 @@ local Network = Framework.Libraries.Network
 local Bullets = Framework.Libraries.Bullets
 local Cameras = Framework.Libraries.Cameras
 local World = Framework.Libraries.World
-local Reticle = Interface:Get("Reticle")
 
+local Globals = Framework.Configs.Globals
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
+
 local CharacterCamera = Cameras.CameraList.Character
+local Reticle = Interface:Get("Reticle")
 
 local Events = getupvalue(Network.Add,1)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
@@ -80,7 +82,7 @@ PlayerService.PlayerAdded:Connect(function(Player)
 end)]]
 
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,
-Vector3.new(0,math.abs(Framework.Configs.Globals.ProjectileGravity),0),2
+math.abs(Globals.ProjectileGravity),2
 local ItemMemory,NoClipEvent,NoClipObjects,TeleportBypass = {},nil,{},false
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 
@@ -554,9 +556,6 @@ local function IsVisible(Enabled,BodyPart)
     return not Raycast(Camera.CFrame.Position,
     BodyPart.Position - Camera.CFrame.Position)
 end
-local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return (Origin + Velocity * Time) + (Gravity * Time * Time / GravityCorrection)
-end
 local function GetClosest(Enabled,
     TeamCheck,VisibilityCheck,DistanceCheck,
     DistanceLimit,FieldOfView,Priority,BodyParts,
@@ -585,9 +584,8 @@ local function GetClosest(Enabled,
                 if not BodyPart then continue end
 
                 local Distance = (BodyPart.Position - Muzzle.Position).Magnitude
-                local BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                BodyPart.AssemblyLinearVelocity - PlayerClass.Character.RootPart.AssemblyLinearVelocity,
-                Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                local BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
 
                 local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
                 if OnScreen and IsVisible(VisibilityCheck,BodyPart) and NotFar(DistanceCheck,Distance,DistanceLimit) then
@@ -597,16 +595,14 @@ local function GetClosest(Enabled,
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                             BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity - PlayerClass.Character.RootPart.AssemblyLinearVelocity,
-                            Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
 
                             ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
                         elseif Priority ~= "Closest" then
                             BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity - PlayerClass.Character.RootPart.AssemblyLinearVelocity,
-                            Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+                            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
 
                             ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
                         end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,BodyPartPosition,ScreenPosition}

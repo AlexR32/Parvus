@@ -31,7 +31,7 @@ end
 
 local SilentAim,Aimbot,Trigger,AutoshootHitbox = nil,false,false,nil
 local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS),{},nil
-local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,Vector3.new(0,150,0),2
+local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,150,2--Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
 local NewRandom,FlyPosition,JitterValue,SpinValue = Random.new(),nil,1,0
@@ -1152,9 +1152,9 @@ local function GetClosestAllFOV(Enabled,
     return Closest
 end
 
-local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+--[[local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
     return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end
+end]]
 local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
     DistanceLimit,FieldOfView,Priority,BodyParts,PredictionEnabled
 )
@@ -1175,8 +1175,10 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
                 if not BodyPart then continue end
 
                 local Velocity,Distance = LPCharacter.PrimaryPart.AssemblyLinearVelocity,(BodyPart.Position - Camera.CFrame.Position).Magnitude
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
+                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
+                --[[local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
 
                 if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
                     local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
@@ -1185,12 +1187,16 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
                         if Priority == "Random" then
                             Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
                             BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
+                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
+                            --[[ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
                         elseif Priority ~= "Closest" then
                             BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
+                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
+                            --[[ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
+                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
                         end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
                     end
                 end
@@ -1283,7 +1289,7 @@ end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
     local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
-        ProjectileGravity = Vector3.new(0,Projectiles[Args[1]].Gravity,0)
+        ProjectileGravity = Projectiles[Args[1]].Gravity --Vector3.new(0,Projectiles[Args[1]].Gravity,0)
     end return Old(Self,...)
 end)
 

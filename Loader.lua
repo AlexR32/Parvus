@@ -64,6 +64,7 @@ getgenv().Parvus = {
 Parvus.Utilities.UI = LoadScript("Utilities/UI")
 Parvus.Utilities.Misc = LoadScript("Utilities/Misc")
 Parvus.Utilities.Drawing = LoadScript("Utilities/Drawing")
+Parvus.Utilities.Physics = LoadScript("Utilities/Physics")
 
 Parvus.Loadstring = GetFile("Utilities/Loadstring.lua")
 Parvus.Cursor = GetFile("Utilities/ArrowCursor.png")
