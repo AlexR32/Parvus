@@ -804,6 +804,7 @@ local function HookCharacter(Character)
     local OldToolAction = Character.Actions.ToolAction
     Character.Actions.ToolAction = function(Self,...)
         if Window.Flags["AR2/UnlockFiremodes"] then
+            if not Self.EquippedItem then return OldToolAction(Self,...) end
             local FireModes = Self.EquippedItem.FireModes
             if not FireModes then return OldToolAction(Self,...) end
 
@@ -926,37 +927,41 @@ setupvalue(InteractHeartbeat,11,function(...)
         Args[4] = 0 return unpack(Args)
     end return FindItemData(...)
 end)
-local OldGetFirearmTargetInfo = Reticle.GetFirearmTargetInfo
+--[[local OldGetFirearmTargetInfo = Reticle.GetFirearmTargetInfo
 Reticle.GetFirearmTargetInfo = function(Self,...)
     local ReturnArgs = {OldGetFirearmTargetInfo(Self,...)}
     local Script = tostring(getcallingscript())
-    --local Args = {...}
 
     if Script == "Client Main" and SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-        if Window.Flags["AR2/MagicBullet/Enabled"] --[[and not Window.Flags["AR2/InstantHit"]] then
-            --ReturnArgs[1] = Args[3].Muzzle.CFrame
+        if Window.Flags["AR2/MagicBullet/Enabled"] then
             local Direction = ReturnArgs[1] - SilentAim[3].Position
             local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
             ReturnArgs[1] = ReturnArgs[1] - Direction.Unit * Distance
         end
-        --[[if Window.Flags["AR2/InstantHit"] then
-            ReturnArgs[2] = (SilentAim[3].Position - ReturnArgs[1]).Unit
-            ProjectileBeam(ReturnArgs[1],SilentAim[3].Position,Color3.new(0,1,0))
-        else]]
-            ReturnArgs[2] = (SilentAim[4] - ReturnArgs[1]).Unit
-            ProjectileBeam(ReturnArgs[1],SilentAim[4],Color3.new(0,0,1))
-        --end
+
+        ReturnArgs[2] = (SilentAim[4] - ReturnArgs[1]).Unit
+        ProjectileBeam(ReturnArgs[1],SilentAim[4],Color3.new(0,0,1))
     end
 
     return unpack(ReturnArgs)
-end
---[[local OldFire = Bullets.Fire
-Bullets.Fire = function(Self,...) local Args = {...}
-    print(Args[1].Muzzle,Args[2].Muzzle,Args[3].Muzzle)
-    if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-        Args[5] = (SilentAim[4] - Args[4]).Unit
-    end return OldFire(Self,unpack(Args))
 end]]
+local OldFire = Bullets.Fire
+Bullets.Fire = function(Self,...)
+    local Args = {...}
+
+    if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
+        if Window.Flags["AR2/MagicBullet/Enabled"] then
+            local Direction = Args[4] - SilentAim[3].Position
+            local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
+            Args[4] = Args[4] - Direction.Unit * Distance
+        end
+
+        Args[5] = (SilentAim[4] - Args[4]).Unit
+        ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
+    end
+
+    return OldFire(Self,unpack(Args))
+end
 -- Old Recoil Control
 --[[local OldPost = Animators.Post
 Animators.Post = function(Self,Name,...) local Args = {...}

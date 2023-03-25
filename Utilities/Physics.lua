@@ -20,7 +20,7 @@ __LICENSE = "GNU General Public License, version 3"
 
 -- Utility functions
 
-local eps = 1e-9 -- definitely small enough
+local eps = 1e-9 -- definitely small enough (0.000000001)
 
 -- checks if d is close enough to 0 to be considered 0 (for our purposes)
 local function isZero(d)
@@ -42,7 +42,7 @@ end
 	ax^2 + bx + c = 0
 --]]
 
-function solveQuadric(c0, c1, c2)
+local function solveQuadric(c0, c1, c2)
 	local s0, s1
 
 	local p, q, D
@@ -77,7 +77,7 @@ end
 	ax^3 + bx^2 + cx + d = 0
 --]]
 
-function solveCubic(c0, c1, c2, c3)
+local function solveCubic(c0, c1, c2, c3)
 	local s0, s1, s2
 
 	local num, sub
@@ -151,7 +151,7 @@ end
 	ax^4 + bx^3 + cx^2 + dx + e = 0
 --]]
 
-function solveQuartic(c0, c1, c2, c3, c4)
+local function solveQuartic(c0, c1, c2, c3, c4)
 	local s0, s1, s2, s3
 
 	local coeffs = {}
@@ -255,7 +255,8 @@ function solveQuartic(c0, c1, c2, c3, c4)
 	if (num > 2) then s2 = s2 - sub end
 	if (num > 3) then s3 = s3 - sub end
 
-	return {s0, s1, s2, s3}
+	--return s0, s1, s2, s3
+	return {s3, s2, s1, s0}
 end
 
 local module = {}
@@ -285,14 +286,31 @@ function module.SolveTrajectory(
 		j*j + h*h + k*k
 	)
 
-	if solutions and solutions[4] > 0 then
-		local t = solutions[4]
+	if solutions then
+		local posRoots = table.create(2)
+		for index = 1, #solutions do --filter out the negative roots
+			local solution = solutions[index]
+			if solution > 0 then
+				table.insert(posRoots, solution)
+			end
+		end
+		if posRoots[1] then
+			local t = posRoots[1]
+			local d = (h + p*t)/t
+			local e = (j + q*t - l*t*t)/t
+			local f = (k + r*t)/t
+			return origin + Vector3.new(d, e, f)
+		end
+	end
+
+	--[[if solutions and solutions[1] > 0 then
+		local t = solutions[1]
 		local d = (h + p*t)/t
 		local e = (j + q*t - l*t*t)/t
 		local f = (k + r*t)/t
 
 		return origin + Vector3.new(d, e, f)
-	end
+	end]]
 end
 
 return module
