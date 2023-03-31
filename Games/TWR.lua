@@ -215,7 +215,7 @@ local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-local function NotFar(Enabled,P1,P2)
+local function NotFarAway(Enabled,P1,P2)
     if not Enabled then return true end
     return P1 <= P2
 end
@@ -239,7 +239,7 @@ local function GetClosest(Enabled,
             local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
             local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
 
-            if OnScreen and IsVisible(VisibilityCheck,BodyPart,NPC) and NotFar(DistanceCheck,Distance,DistanceLimit) then
+            if OnScreen and IsVisible(VisibilityCheck,BodyPart,NPC) and NotFarAway(DistanceCheck,Distance,DistanceLimit) then
                 local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
                 if FieldOfView >= Magnitude then

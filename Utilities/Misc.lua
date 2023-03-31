@@ -70,7 +70,8 @@ function Misc:FixUpValue(fn,hook,global)
         old = hookfunction(fn,function(...)
             return hook(old,...)
         end)
-    else local old = nil
+    else
+        local old = nil
         old = hookfunction(fn,function(...)
             return hook(old,...)
         end)
@@ -167,12 +168,12 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
             MenuSection:Toggle({Name = "Watermark",Flag = "UI/Watermark/Enabled",Value = true,
             Callback = function(Bool) Window.Watermark.Enabled = Bool end}):Keybind({Flag = "UI/Watermark/Keybind"})
 
-            MenuSection:Button({Name = "Rejoin",Side = "Left",Callback = Parvus.Utilities.Misc.ReJoin})
-            MenuSection:Button({Name = "Server Hop",Side = "Left",Callback = Parvus.Utilities.Misc.ServerHop})
-            MenuSection:Button({Name = "Copy Lua Invite",Side = "Left",Callback = function()
+            MenuSection:Button({Name = "Rejoin",Callback = Parvus.Utilities.Misc.ReJoin})
+            MenuSection:Button({Name = "Server Hop",Callback = Parvus.Utilities.Misc.ServerHop})
+            MenuSection:Button({Name = "Copy Lua Invite",Callback = function()
                 setclipboard("game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
             end})
-            MenuSection:Button({Name = "Copy JSON Invite",Side = "Left",Callback = function()
+            MenuSection:Button({Name = "Copy JS Invite",Callback = function()
                 setclipboard("Roblox.GameLauncher.joinGameInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
             end})
         end
@@ -181,12 +182,8 @@ function Misc:SettingsSection(Window,UIKeybind,CustomMouse)
 
         local DiscordSection = OptionsTab:Section({Name = "Discord",Side = "Left"}) do
             DiscordSection:Label({Text = "Invite Code: sYqDpbPYb7"})
-
-            DiscordSection:Button({Name = "Copy Invite Link",Side = "Left",
-            Callback = function() setclipboard("https://discord.gg/sYqDpbPYb7") end})
-
-            DiscordSection:Button({Name = "Join Through Discord App",Side = "Left",
-            Callback = Parvus.Utilities.Misc.JoinDiscord})
+            DiscordSection:Button({Name = "Copy Invite Link",Callback = function() setclipboard("https://discord.gg/sYqDpbPYb7") end})
+            DiscordSection:Button({Name = "Join Through Discord App",Callback = Parvus.Utilities.Misc.JoinDiscord})
         end
 
         local BackgroundSection = OptionsTab:Section({Name = "Background",Side = "Right"}) do

@@ -69,6 +69,8 @@ local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
 local HeartbeatConnections = getupvalue(Tortoiseshell.Timer.BindToHeartbeat,1)
 local RenderStepConnections = getupvalue(Tortoiseshell.Timer.BindToRenderStep,1)
 
+local OldControl = HeartbeatConnections["Control"]
+
 local Notify = Instance.new("BindableEvent")
 Notify.Event:Connect(function(Text)
     Parvus.Utilities.UI:Notification2(Text)
@@ -766,7 +768,19 @@ Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
 do
-    local OldNamecall,OldTaskSpawn = nil,nil
+    --[[for Index,Value in pairs(getgc(true)) do
+        if type(Value) ~= "table" then continue end
+        if rawget(Value,"Maid") and rawget(Value,"Payload") and rawget(Value,"Console") and rawget(Value,"Mobile") and rawget(Value,"Math")
+        and rawget(Value,"Timer") and rawget(Value,"Raycast") and rawget(Value,"Network") and rawget(Value,"Input") and rawget(Value,"Players")
+        and rawget(Value,"UI") and rawget(Value,"Camera") and rawget(Value,"Projectiles") and rawget(Value,"Effects") and rawget(Value,"Teams")
+        and rawget(Value,"Damage") and rawget(Value,"Items") and rawget(Value,"Characters") and rawget(Value,"Clothing") and rawget(Value,"Levels")
+        and rawget(Value,"Skins") and rawget(Value,"Charms") and rawget(Value,"Stickers") and rawget(Value,"Profiles") and rawget(Value,"Menu") then
+            if Value.Network.TS then continue end
+            table.clear(Value)
+        end
+    end]]
+
+    local OldNamecall = nil
     OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         if checkcaller() then return OldNamecall(Self,...) end
         local Method,Args = getnamecallmethod(),{...}
@@ -777,9 +791,18 @@ do
                 print("blocked",Args[2]) return
             end
         end
+        if Method == "Destroy" and Self.Parent == LocalPlayer.Character then
+            if os.clock() - getupvalue(OldControl,3) <= 1 then
+                print("int check",Self.Name)
+            else
+                print("blocked",Self.Name)
+                return
+            end
+        end
 
         return OldNamecall(Self,...)
     end)
+    --[[local OldTaskSpawn = nil
     OldTaskSpawn = hookfunction(getrenv().task.spawn,function(...)
         if checkcaller() then return OldTaskSpawn(...) end
 
@@ -797,7 +820,7 @@ do
         end
 
         return OldTaskSpawn(...)
-    end)
+    end)]]
 end
 
 local WallCheckParams = RaycastParams.new()
@@ -834,14 +857,13 @@ local function InEnemyTeam(Player)
     local LPTeam = GetPlayerTeam(LocalPlayer)
     return LPTeam ~= Team or Team == "FFA"
 end
-local function NotFar(Enabled,P1,P2)
+local function CloseTo(Enabled,Distance,Limit)
     if not Enabled then return true end
-    return P1 <= P2
+    return Distance <= Limit
 end
-local function IsVisible(Enabled,BodyPart)
+local function IsVisible(Enabled,Origin,Position)
     if not Enabled then return true end
-    return not Raycast(Camera.CFrame.Position,
-    BodyPart.Position - Camera.CFrame.Position,
+    return not Raycast(Origin,Position - Origin,
     {Workspace.Geometry,Workspace.Terrain})
 end
 
@@ -854,13 +876,14 @@ local function FindWeaponModel()
 end
 local function GetHitbox(Player)
     local Character = Characters[Player]
+
     if not Character then return end
     if Character.Parent == nil then return end
-    return Character:WaitForChild("Hitbox")
+    return Character,Character:FindFirstChild("Hitbox")
 end
 local function IsCharacterInShield(Character)
-    local Health = Character:WaitForChild("Health")
-    return not Health:FindFirstChild("Shield")
+    local Health = Character:FindFirstChild("Health")
+    return Health and not Health:FindFirstChild("Shield")
 end
 local function GetBodyPart(Hitbox,Name)
     for Index,Part in pairs(Hitbox:GetChildren()) do
@@ -995,7 +1018,7 @@ local function ProjectileBeam(Origin,Direction)
 end
 local function ComputeProjectiles(Config,Hitbox)
     local ReticlePosition = Tortoiseshell.Input.Reticle:GetPosition()
-    local RayResult =  Raycast(ReticlePosition,Hitbox.Position - ReticlePosition,{Hitbox})
+    local RayResult = Raycast(ReticlePosition,Hitbox.Position - ReticlePosition,{Hitbox})
     if not RayResult then return end
 
     local ShootProjectiles = {}
@@ -1121,40 +1144,42 @@ local function GetClosestAllFOV(Enabled,
     local Distance,Closest = math.huge,nil
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
+        if not InEnemyTeam(Player) then continue end
 
-        local Hitbox = GetHitbox(Player)
-        if not Hitbox then continue end
-        local Character = Hitbox.Parent
+        local Character,Hitbox = GetHitbox(Player)
+        if not Character or not Hitbox then continue end
+
         local Shield = IsCharacterInShield(Character)
-        if Shield and InEnemyTeam(Player) then
-            for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = GetBodyPart(Hitbox,BodyPart) if not BodyPart then continue end
-                local Magnitude = (BodyPart.Position - Camera.CFrame.Position).Magnitude
+        if not Shield then continue end
 
-                if IsVisible(VisibilityCheck,BodyPart)
-                and NotFar(DistanceCheck,Distance,DistanceLimit) then
-                    if Distance >= Magnitude then
-                        if Priority == "Random" then
-                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                            BodyPart = GetBodyPart(Hitbox,Priority)
-                            if not BodyPart then continue end
-                        elseif Priority ~= "Closest" then
-                            BodyPart = GetBodyPart(Hitbox,Priority)
-                            if not BodyPart then continue end
-                        end
-                        Distance,Closest = Magnitude,{Player,Character,BodyPart}
-                    end
-                end
+        for Index,BodyPart in ipairs(BodyParts) do
+            BodyPart = GetBodyPart(Hitbox,BodyPart)
+            if not BodyPart then continue end
+
+            local CameraPosition = Camera.CFrame.Position
+            local BodyPartPosition = BodyPart.Position
+
+            local Magnitude = (BodyPartPosition - CameraPosition).Magnitude
+            if not CloseTo(DistanceCheck,Magnitude,DistanceLimit) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
+            if Magnitude >= Distance then continue end
+
+            if Priority == "Random" then
+                Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                BodyPart = GetBodyPart(Hitbox,Priority)
+                if not BodyPart then continue end
+            elseif Priority ~= "Closest" then
+                BodyPart = GetBodyPart(Hitbox,Priority)
+                if not BodyPart then continue end
             end
+
+            Distance,Closest = Magnitude,{Player,Character,BodyPart}
         end
     end
 
     return Closest
 end
 
---[[local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end]]
 local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
     DistanceLimit,FieldOfView,Priority,BodyParts,PredictionEnabled
 )
@@ -1162,45 +1187,48 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
     if not Enabled then return end
     local LPCharacter,Closest = Characters[LocalPlayer],nil
     if not (LPCharacter and LPCharacter.PrimaryPart) then return end
+    local CameraPosition = Camera.CFrame.Position
 
-    for Index,Player in pairs(PlayerService:GetPlayers()) do
+    for Index,Player in ipairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
-        if InEnemyTeam(Player) then
-            local Hitbox = GetHitbox(Player)
-            if not Hitbox then continue end
-            local Character = Hitbox.Parent
+        if not InEnemyTeam(Player) then continue end
 
-            for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = GetBodyPart(Hitbox,BodyPart)
-                if not BodyPart then continue end
+        local Character,Hitbox = GetHitbox(Player)
+        if not Character or not Hitbox then continue end
 
-                local Velocity,Distance = LPCharacter.PrimaryPart.AssemblyLinearVelocity,(BodyPart.Position - Camera.CFrame.Position).Magnitude
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
-                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
-                --[[local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                BodyPart.AssemblyLinearVelocity - Velocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
+        for Index,BodyPart in ipairs(BodyParts) do
+            BodyPart = GetBodyPart(Hitbox,BodyPart)
+            if not BodyPart then continue end
 
-                if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFar(DistanceCheck,Distance,DistanceLimit) then
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+            local BodyPartPosition = BodyPart.Position
+            local Distance = (BodyPartPosition - CameraPosition).Magnitude
+            if not CloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
 
-                    if FieldOfView >= Magnitude then
-                        if Priority == "Random" then
-                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
-                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
-                            --[[ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
-                        elseif Priority ~= "Closest" then
-                            BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
-                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position)
-                            --[[ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)]]
-                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
-                    end
-                end
+            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(CameraPosition,BodyPartPosition,
+            BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPartPosition
+            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            if not OnScreen then continue end
+
+            local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+            if Magnitude >= FieldOfView then continue end
+
+            if Priority == "Random" then
+                Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
+                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+                if not OnScreen then continue end
+            elseif Priority ~= "Closest" then
+                BodyPart = GetBodyPart(Hitbox,Priority) if not BodyPart then continue end
+                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Camera.CFrame.Position,
+                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity,GravityCorrection) or BodyPart.Position
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+                if not OnScreen then continue end
             end
+
+            FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
         end
     end
 
@@ -1288,19 +1316,30 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
-    local Args = {...} if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
+    local Args = {...}
+
+    if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
         ProjectileGravity = Projectiles[Args[1]].Gravity --Vector3.new(0,Projectiles[Args[1]].Gravity,0)
-    end return Old(Self,...)
+    end
+
+    return Old(Self,...)
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Old,Self,...)
-    local Args = {...} if Window.Flags["BB/Recoil/Enabled"] and Args[4] and Args[4].Gravity then
-        Args[4].Gravity = Args[4].Gravity * (Window.Flags["BB/Recoil/BulletDrop"] / 100)
-    end return Old(Self,unpack(Args))
+    if Window.Flags["BB/Recoil/Enabled"] then
+        local Args = {...} if Args[4] and Args[4].Gravity then
+            Args[4].Gravity = Args[4].Gravity * (Window.Flags["BB/Recoil/BulletDrop"] / 100)
+            return Old(Self,unpack(Args))
+        end
+    end
+
+    return Old(Self,...)
 end)
 
 Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,...)
-    local Args = {...} if Args[1] then WeaponModel = Args[3]
+    local Args = {...}
+
+    if Args[1] then WeaponModel = Args[3]
         if Window.Flags["BB/ThirdPerson/Enabled"] then
             task.spawn(function() task.wait(0.5)
                 for Index,Value in pairs(Workspace.Arms:GetDescendants()) do
@@ -1337,14 +1376,17 @@ end)]]
 
 local OldCamera = RenderStepConnections["Camera"]
 RenderStepConnections["Camera"] = function(...)
-    local Args = {OldCamera(...)}
     if Window.Flags["BB/ThirdPerson/Enabled"] then
+        local Args = {OldCamera(...)}
+
         local LPCharacter = Characters[LocalPlayer]
         if LPCharacter and LPCharacter.Parent then
             Camera.CFrame = Camera.CFrame * CFrame.new(0,0,Window.Flags["BB/ThirdPerson/FOV"])
         end
+        return unpack(Args)
     end
-    return unpack(Args)
+
+    return OldCamera(...)
 end
 
 local OldFirstPerson = RenderStepConnections["FirstPerson"]
@@ -1354,12 +1396,11 @@ RenderStepConnections["FirstPerson"] = function(...)
     return OldFirstPerson(...)
 end
 
-local OldControl = HeartbeatConnections["Control"]
 HeartbeatConnections["Control"] = function(...)
-    local Args = {OldControl(...)}
-
     local LPCharacter = Characters[LocalPlayer]
     if LPCharacter and LPCharacter.Parent and LPCharacter.PrimaryPart then
+        local Args = {OldControl(...)}
+
         if Window.Flags["BB/Fly/Enabled"] and FlyPosition then
             FlyPosition += InputToVelocity() * Window.Flags["BB/Fly/Speed"]
             LPCharacter.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
@@ -1370,21 +1411,27 @@ HeartbeatConnections["Control"] = function(...)
             local Yaw = GetAntiAimValue(Window.Flags["BB/AntiAim/Yaw/Value"],Window.Flags["BB/AntiAim/Yaw/Mode"][1])
             LPCharacter.PrimaryPart.CFrame *= CFrame.Angles(math.rad(180 * Roll),math.rad(180 * Yaw),0)
         end
+
+        return unpack(Args)
     end
 
-    return unpack(Args)
+    return OldControl(...)
 end
 
 for Index,Event in pairs(Events) do
     if Event.Event == "Item_Throwable" then
         local OldCallback = Event.Callback
-        Event.Callback = function(...) local Args = {...}
+        Event.Callback = function(...)
+            local Args = {...}
+
             Parvus.Utilities.Misc:NewThreadLoop(0,function()
                 if Args[2].Parent == nil then return "break" end
                 if AutoshootHitbox then
                     Args[2].PrimaryPart.Position = AutoshootHitbox[3].Position
                 end
-            end) return OldCallback(...)
+            end)
+
+            return OldCallback(...)
         end
     end
 end
@@ -1439,7 +1486,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
         end
     end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0.025,function()
+Parvus.Utilities.Misc:NewThreadLoop(1/15,function()
     CustomizeWeapon(
         Window.Flags["BB/WC/Enabled"]
         and not Window.Flags["BB/ThirdPerson/Enabled"],
