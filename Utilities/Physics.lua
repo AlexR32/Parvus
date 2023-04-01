@@ -269,6 +269,7 @@ function module.SolveTrajectory(
 	gravity,
 	gravityCorrection
 )
+
 	gravity = gravity or workspace.Gravity
 	gravityCorrection = gravityCorrection or 2
 

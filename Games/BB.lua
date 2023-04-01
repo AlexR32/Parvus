@@ -26,11 +26,11 @@ if game.PlaceVersion > 1344 then
 end
 
 --local ReplicatedStorage = game:GetService("ReplicatedStorage")
---local Tortoiseshell = require(ReplicatedStorage.TS)
+--local Tortoiseshell = getupvalue(require(ReplicatedStorage.TS),2)
 -- // TODO: Get LocalPlayer Character
 
 local SilentAim,Aimbot,Trigger,AutoshootHitbox = nil,false,false,nil
-local Tortoiseshell,HitmarkerScripts,WeaponModel = require(ReplicatedStorage.TS),{},nil
+local Tortoiseshell,HitmarkerScripts,WeaponModel = getupvalue(require(ReplicatedStorage.TS),2),{},nil
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,150,2--Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","Invoke","GetSetting","FireProjectile"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
