@@ -48,7 +48,6 @@ local Window = Parvus.Utilities.UI:Window({
 
             AimbotSection:Toggle({Name = "Always Enabled",Flag = "Aimbot/AlwaysEnabled",Value = false})
 
-            AimbotSection:Toggle({Name = "Team Check",Flag = "Aimbot/TeamCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
             AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
@@ -81,7 +80,6 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
             
-            SilentAimSection:Toggle({Name = "Team Check",Flag = "SilentAim/TeamCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/VisibilityCheck",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
@@ -113,7 +111,6 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Toggle({Name = "Always Enabled",Flag = "Trigger/AlwaysEnabled",Value = false})
             TriggerSection:Toggle({Name = "Hold Mouse Button",Flag = "Trigger/HoldMouseButton",Value = false})
 
-            TriggerSection:Toggle({Name = "Team Check",Flag = "Trigger/TeamCheck",Value = false})
             TriggerSection:Toggle({Name = "Distance Check",Flag = "Trigger/DistanceCheck",Value = false})
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/VisibilityCheck",Value = false})
 
@@ -218,7 +215,7 @@ local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-local function NotFar(Enabled,P1,P2)
+local function NotFarAway(Enabled,P1,P2)
     if not Enabled then return true end
     return P1 <= P2
 end
@@ -229,9 +226,8 @@ local function IsVisible(Enabled,BodyPart,Character)
     {Character,LocalPlayer.Character})
 end
 local function GetClosest(Enabled,
-    TeamCheck,VisibilityCheck,DistanceCheck,
-    DistanceLimit,FieldOfView,Priority,BodyParts,
-    PredictionEnabled,ProjectileSpeed,ProjectileGravity
+    VisibilityCheck,DistanceCheck,DistanceLimit,
+    FieldOfView,Priority,BodyParts
 )
 
     if not Enabled then return end local Closest = nil
@@ -239,11 +235,11 @@ local function GetClosest(Enabled,
         for Index,BodyPart in pairs(BodyParts) do
             BodyPart = NPC:FindFirstChild(BodyPart)
             if not BodyPart then continue end
-            
+
             local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
             local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
-            
-            if OnScreen and IsVisible(VisibilityCheck,BodyPart,NPC) and NotFar(DistanceCheck,Distance,DistanceLimit) then
+
+            if OnScreen and IsVisible(VisibilityCheck,BodyPart,NPC) and NotFarAway(DistanceCheck,Distance,DistanceLimit) then
                 local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
 
                 if FieldOfView >= Magnitude then
@@ -305,12 +301,12 @@ RayModule.Cast = function(...)
         end
         if math.random(100) <= Window.Flags["SilentAim/HitChance"] then
             if Window.Flags["TWR/InstantHit"] then
-                local LookVector = SilentAim[2].CFrame * CFrame.new(0,0,-2)
+                local LookVector = SilentAim[3].CFrame * CFrame.new(0,0,-2)
                 Args[1] = LookVector.Position
-                Args[2] = SilentAim[2].Position - LookVector.Position
+                Args[2] = SilentAim[3].Position - LookVector.Position
             else
                 Args[1] = Camera.CFrame.Position
-                Args[2] = SilentAim[2].Position - Camera.CFrame.Position
+                Args[2] = SilentAim[3].Position - Camera.CFrame.Position
             end
         end
     end
@@ -347,7 +343,6 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 
     AimAt(GetClosest(
         Window.Flags["Aimbot/Enabled"],
-        Window.Flags["Aimbot/TeamCheck"],
         Window.Flags["Aimbot/VisibilityCheck"],
         Window.Flags["Aimbot/DistanceCheck"],
         Window.Flags["Aimbot/DistanceLimit"],
@@ -359,7 +354,6 @@ end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
-        Window.Flags["SilentAim/TeamCheck"],
         Window.Flags["SilentAim/VisibilityCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
         Window.Flags["SilentAim/DistanceLimit"],
@@ -373,7 +367,6 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/TeamCheck"],
         Window.Flags["Trigger/VisibilityCheck"],
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/DistanceLimit"],
@@ -387,7 +380,6 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         while task.wait() do
             TriggerClosest = GetClosest(
                 Window.Flags["Trigger/Enabled"],
-                Window.Flags["Trigger/TeamCheck"],
                 Window.Flags["Trigger/VisibilityCheck"],
                 Window.Flags["Trigger/DistanceCheck"],
                 Window.Flags["Trigger/DistanceLimit"],

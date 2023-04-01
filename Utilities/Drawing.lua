@@ -138,7 +138,7 @@ end
 if game.GameId == 1168263273 or game.GameId == 3360073263 then -- Bad Business
     local TeamService = game:GetService("Teams")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Tortoiseshell = require(ReplicatedStorage:WaitForChild("TS"))
+    local Tortoiseshell = getupvalue(require(ReplicatedStorage.TS),2)
     local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 
     local function GetPlayerTeam(Player)
@@ -195,6 +195,7 @@ elseif game.GameId == 580765040 then -- RAGDOLL UNIVERSE
     end
 elseif game.GameId == 358276974 or game.GameId == 3495983524 then -- Apocalypse Rising 2
     function GetHealth(Target,Character,Mode)
+        if not Character.Stats:FindFirstChild("Health") then return -15,100,false end
         local Health = Character.Stats.Health.Base
         return Health.Value,100,Health.Value > 0
     end
