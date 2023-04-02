@@ -65,7 +65,7 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
-            SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = false})
+            --SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = false})
 
             SilentAimSection:Toggle({Name = "Team Check",Flag = "SilentAim/TeamCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
@@ -294,15 +294,15 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
         local Command = string.sub(Args[1],11)
         if (Command == "d" or Command == "j") then
-            local Direction = SilentAim[4] - Args[3]
+            local Direction = SilentAim[3].Position - Args[3]
             Args[4] = Direction.Unit
             Args[8] = Vector3.zero
             Args[10] = 0
 
             OldNamecall(Self,unpack(Args))
             task.spawn(function() local Time = tick()
-                task.wait((SilentAim[4] - Args[3]).Magnitude / ProjectileSpeed)
-                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[4],
+                task.wait((SilentAim[3].Position - Args[3]).Magnitude / ProjectileSpeed)
+                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[3].Position,
                 SilentAim[3],tick() - Time,Direction,SilentAim[3].Size.Y)
             end) return
         end
@@ -382,8 +382,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/DistanceLimit"],
         Window.Flags["SilentAim/FieldOfView"],
         Window.Flags["SilentAim/Priority"][1],
-        Window.Flags["SilentAim/BodyParts"],
-        Window.Flags["SilentAim/Prediction"]
+        Window.Flags["SilentAim/BodyParts"]
     )
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
