@@ -469,9 +469,9 @@ local function InEnemyTeam(Enabled,Player)
         return LocalPlayer.Team ~= Player.Team
     end
 end
-local function IsFarAway(Enabled,Distance,Limit)
+local function IsCloseTo(Enabled,Distance,Limit)
     if not Enabled then return true end
-    return Distance >= Limit
+    return Distance <= Limit
 end
 local function IsVisible(Enabled,BodyPart,Character)
     if not Enabled then return true end

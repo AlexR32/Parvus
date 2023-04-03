@@ -159,9 +159,9 @@ local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-local function IsFarAway(Enabled,Distance,Limit)
+local function IsCloseTo(Enabled,Distance,Limit)
     if not Enabled then return true end
-    return Distance >= Limit
+    return Distance <= Limit
 end
 local function IsVisible(Enabled,Origin,Position,Character)
     if not Enabled then return true end
@@ -190,7 +190,7 @@ local function GetClosest(Enabled,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
-            if IsFarAway(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsCloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition,Character) then continue end
             local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
 

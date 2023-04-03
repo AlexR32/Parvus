@@ -857,9 +857,9 @@ local function InEnemyTeam(Player)
     local LPTeam = GetPlayerTeam(LocalPlayer)
     return LPTeam ~= Team or Team == "FFA"
 end
-local function IsFarAway(Enabled,Distance,Limit)
+local function IsCloseTo(Enabled,Distance,Limit)
     if not Enabled then return true end
-    return Distance >= Limit
+    return Distance <= Limit
 end
 local function IsVisible(Enabled,Origin,Position)
     if not Enabled then return true end
@@ -1161,7 +1161,7 @@ local function GetClosestAllFOV(Enabled,
             local BodyPartPosition = BodyPart.Position
 
             local Magnitude = (BodyPartPosition - CameraPosition).Magnitude
-            if not IsFarAway(DistanceCheck,Magnitude,DistanceLimit) then continue end
+            if not IsCloseTo(DistanceCheck,Magnitude,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
             if Magnitude >= Distance then continue end
 
@@ -1204,7 +1204,7 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
-            if IsFarAway(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsCloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
 
             BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(CameraPosition,BodyPartPosition,
