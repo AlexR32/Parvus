@@ -18,7 +18,7 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(0.5) until Loaded1
 end
 
-if game.PlaceVersion > 1344 then
+if game.PlaceVersion > 1347 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -162,7 +162,7 @@ local Window = Parvus.Utilities.UI:Window({
 
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
-            AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
+            AimbotSection:Slider({Name = "Sensitivity",Flag = "Aimbot/Sensitivity",Min = 0,Max = 100,Value = 20,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
             AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
 
@@ -857,9 +857,9 @@ local function InEnemyTeam(Player)
     local LPTeam = GetPlayerTeam(LocalPlayer)
     return LPTeam ~= Team or Team == "FFA"
 end
-local function CloseTo(Enabled,Distance,Limit)
+local function IsFarAway(Enabled,Distance,Limit)
     if not Enabled then return true end
-    return Distance <= Limit
+    return Distance >= Limit
 end
 local function IsVisible(Enabled,Origin,Position)
     if not Enabled then return true end
@@ -867,13 +867,13 @@ local function IsVisible(Enabled,Origin,Position)
     {Workspace.Geometry,Workspace.Terrain})
 end
 
-local function FindWeaponModel()
+--[[local function FindWeaponModel()
     for Index,Instance in pairs(Workspace:GetChildren()) do
         if Instance:FindFirstChild("AnimationController") then
             return Instance
         end
     end
-end
+end]]
 local function GetHitbox(Player)
     local Character = Characters[Player]
 
@@ -894,14 +894,14 @@ local function GetBodyPart(Hitbox,Name)
         end
     end
 end
-local function GetEquippedController()
+--[[local function GetEquippedController()
     local Controllers = Tortoiseshell.Items:GetControllers()
     for Weapon,Controller in pairs(Controllers) do
         if Controller.Equipped then
             return Controller
         end
     end
-end
+end]]
 local function GetEquippedWeapon()
     local Controllers = Tortoiseshell.Items:GetControllers()
     for Weapon,Controller in pairs(Controllers) do
@@ -1142,6 +1142,8 @@ local function GetClosestAllFOV(Enabled,
 
     if not Enabled then return end
     local Distance,Closest = math.huge,nil
+    local CameraPosition = Camera.CFrame.Position
+
     for Index,Player in pairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
         if not InEnemyTeam(Player) then continue end
@@ -1156,11 +1158,10 @@ local function GetClosestAllFOV(Enabled,
             BodyPart = GetBodyPart(Hitbox,BodyPart)
             if not BodyPart then continue end
 
-            local CameraPosition = Camera.CFrame.Position
             local BodyPartPosition = BodyPart.Position
 
             local Magnitude = (BodyPartPosition - CameraPosition).Magnitude
-            if not CloseTo(DistanceCheck,Magnitude,DistanceLimit) then continue end
+            if not IsFarAway(DistanceCheck,Magnitude,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
             if Magnitude >= Distance then continue end
 
@@ -1191,10 +1192,11 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
 
     for Index,Player in ipairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
-        if not InEnemyTeam(Player) then continue end
 
         local Character,Hitbox = GetHitbox(Player)
         if not Character or not Hitbox then continue end
+
+        if not InEnemyTeam(Player) then continue end
 
         for Index,BodyPart in ipairs(BodyParts) do
             BodyPart = GetBodyPart(Hitbox,BodyPart)
@@ -1202,7 +1204,7 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
-            if not CloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
+            if IsFarAway(DistanceCheck,Distance,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
 
             BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(CameraPosition,BodyPartPosition,
@@ -1234,13 +1236,13 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
 
     return Closest
 end
-local function AimAt(Hitbox,Smoothing)
+local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
+    local MouseLocation = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothing,
-        (Hitbox[4].Y - Mouse.Y) * Smoothing
+        (Hitbox[4].X - MouseLocation.X) * Sensitivity,
+        (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
     )
 end
 
@@ -1448,7 +1450,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
-    ),Window.Flags["Aimbot/Smoothing"] / 100)
+    ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SilentAim = GetClosest(
@@ -1460,6 +1462,38 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/Priority"][1],
         Window.Flags["SilentAim/BodyParts"]
     )
+end)
+Parvus.Utilities.Misc:NewThreadLoop(0,function()
+    if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
+    if not iswindowactive() then return end
+
+    local TriggerClosest = GetClosest(
+        Window.Flags["Trigger/Enabled"],
+        Window.Flags["Trigger/VisibilityCheck"],
+        Window.Flags["Trigger/DistanceCheck"],
+        Window.Flags["Trigger/DistanceLimit"],
+        Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/Priority"][1],
+        Window.Flags["Trigger/BodyParts"],
+        Window.Flags["Trigger/Prediction"]
+    ) if not TriggerClosest then return end
+
+    task.wait(Window.Flags["Trigger/Delay"])
+    Tortoiseshell.Input:AutomateBegan("Shoot")
+    if Window.Flags["Trigger/HoldMouseButton"] then
+        while task.wait() do
+            TriggerClosest = GetClosest(
+                Window.Flags["Trigger/Enabled"],
+                Window.Flags["Trigger/VisibilityCheck"],
+                Window.Flags["Trigger/DistanceCheck"],
+                Window.Flags["Trigger/DistanceLimit"],
+                Window.Flags["Trigger/FieldOfView"],
+                Window.Flags["Trigger/Priority"][1],
+                Window.Flags["Trigger/BodyParts"],
+                Window.Flags["Trigger/Prediction"]
+            ) if not TriggerClosest or not Trigger then break end
+        end
+    end Tortoiseshell.Input:AutomateEnded("Shoot")
 end)
 
 Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
@@ -1518,7 +1552,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["BB/Rage/Autoshoot/Enabled"]
         or Window.Flags["BB/Rage/TeleGrenade"]
         or Window.Flags["BB/Rage/KnifeAura"],
-        Window.Flags["BB/Rage/Autoshoot/VisiblityCheck"],
+        Window.Flags["BB/Rage/Autoshoot/VisibilityCheck"],
         Window.Flags["BB/Rage/Autoshoot/DistanceCheck"],
         Window.Flags["BB/Rage/Autoshoot/DistanceLimit"],
         Window.Flags["BB/Rage/Autoshoot/Priority"][1],
@@ -1540,37 +1574,6 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
     JitterValue = JitterValue == -1 and 1 or -1
     SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
-end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
-    if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
-
-    local TriggerClosest = GetClosest(
-        Window.Flags["Trigger/Enabled"],
-        Window.Flags["Trigger/VisibilityCheck"],
-        Window.Flags["Trigger/DistanceCheck"],
-        Window.Flags["Trigger/DistanceLimit"],
-        Window.Flags["Trigger/FieldOfView"],
-        Window.Flags["Trigger/Priority"][1],
-        Window.Flags["Trigger/BodyParts"],
-        Window.Flags["Trigger/Prediction"]
-    ) if not TriggerClosest then return end
-
-    task.wait(Window.Flags["Trigger/Delay"])
-    Tortoiseshell.Input:AutomateBegan("Shoot")
-    if Window.Flags["Trigger/HoldMouseButton"] then
-        while task.wait() do
-            TriggerClosest = GetClosest(
-                Window.Flags["Trigger/Enabled"],
-                Window.Flags["Trigger/VisibilityCheck"],
-                Window.Flags["Trigger/DistanceCheck"],
-                Window.Flags["Trigger/DistanceLimit"],
-                Window.Flags["Trigger/FieldOfView"],
-                Window.Flags["Trigger/Priority"][1],
-                Window.Flags["Trigger/BodyParts"],
-                Window.Flags["Trigger/Prediction"]
-            ) if not TriggerClosest or not Trigger then break end
-        end
-    end Tortoiseshell.Input:AutomateEnded("Shoot")
 end)
 
 Workspace.Characters.ChildAdded:Connect(function(Child)

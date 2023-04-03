@@ -262,12 +262,8 @@ end
 local module = {}
 
 function module.SolveTrajectory(
-	origin,
-	targetPos,
-	targetVelocity,
-	projectileSpeed,
-	gravity,
-	gravityCorrection
+	origin,targetPos,targetVelocity,
+	projectileSpeed,gravity,gravityCorrection
 )
 
 	gravity = gravity or workspace.Gravity

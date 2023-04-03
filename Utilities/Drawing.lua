@@ -314,30 +314,30 @@ function DrawingLibrary:SetupCrosshair(Flags)
         CrosshairL.Visible,CrosshairR.Visible,CrosshairT.Visible,CrosshairB.Visible = CrosshairEnabled,CrosshairEnabled,CrosshairEnabled,CrosshairEnabled
 
         if CrosshairEnabled then
-            local Mouse = UserInputService:GetMouseLocation()
+            local MouseLocation = UserInputService:GetMouseLocation()
             local Color = Flags["Crosshair/Color"]
             local Size = Flags["Crosshair/Size"]
             local Gap = Flags["Crosshair/Gap"]
 
             CrosshairL.Color = Color[6]
             CrosshairL.Transparency = 1-Color[4]
-            CrosshairL.From = Mouse - V2New(Gap,0)
-            CrosshairL.To = Mouse - V2New(Size + Gap,0)
+            CrosshairL.From = MouseLocation - V2New(Gap,0)
+            CrosshairL.To = MouseLocation - V2New(Size + Gap,0)
 
             CrosshairR.Color = Color[6]
             CrosshairR.Transparency = 1-Color[4]
-            CrosshairR.From = Mouse + V2New(Gap + 1,0)
-            CrosshairR.To = Mouse + V2New(Size + (Gap + 1),0)
+            CrosshairR.From = MouseLocation + V2New(Gap + 1,0)
+            CrosshairR.To = MouseLocation + V2New(Size + (Gap + 1),0)
 
             CrosshairT.Color = Color[6]
             CrosshairT.Transparency = 1-Color[4]
-            CrosshairT.From = Mouse - V2New(0,Gap)
-            CrosshairT.To = Mouse - V2New(0,Size + Gap)
+            CrosshairT.From = MouseLocation - V2New(0,Gap)
+            CrosshairT.To = MouseLocation - V2New(0,Size + Gap)
 
             CrosshairB.Color = Color[6]
             CrosshairB.Transparency = 1-Color[4]
-            CrosshairB.From = Mouse + V2New(0,Gap + 1)
-            CrosshairB.To = Mouse + V2New(0,Size + (Gap + 1))
+            CrosshairB.From = MouseLocation + V2New(0,Gap + 1)
+            CrosshairB.To = MouseLocation + V2New(0,Size + (Gap + 1))
         end
     end)
 end
@@ -352,7 +352,7 @@ function DrawingLibrary:FOVCircle(Flag,Flags)
 
         if FOVCircle.Visible then
             local FOV = GetFlag(Flags,Flag,"/FieldOfView") --DynamicFOV(GetFlag(Flags,Flag,"/DynamicFOV"),GetFlag(Flags,Flag,"/FieldOfView"))
-            local Position = UserInputService:GetMouseLocation()
+            local MouseLocation = UserInputService:GetMouseLocation()
 
             local Color = GetFlag(Flags,Flag,"/FOVCircle/Color")
             FOVCircle.Transparency = 1-Color[4] FOVCircle.Color = Color[6]
@@ -364,8 +364,11 @@ function DrawingLibrary:FOVCircle(Flag,Flags)
             Outline.Thickness = FOVCircle.Thickness + 2
             Outline.NumSides = FOVCircle.NumSides
 
-            FOVCircle.Radius = FOV Outline.Radius = FOV
-            FOVCircle.Position = Position Outline.Position = Position
+            FOVCircle.Radius = FOV
+            Outline.Radius = FOV
+
+            FOVCircle.Position = MouseLocation
+            Outline.Position = MouseLocation
         end
     end)
 end
