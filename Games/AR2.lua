@@ -150,7 +150,7 @@ local Window = Parvus.Utilities.UI:Window({
             --AimbotSection:Toggle({Name = "Team Check",Flag = "Aimbot/TeamCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
-            AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
+            AimbotSection:Slider({Name = "Sensitivity",Flag = "Aimbot/Sensitivity",Min = 0,Max = 100,Value = 20,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
             AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
 
@@ -547,14 +547,13 @@ local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-local function NotFarAway(Enabled,P1,P2)
-    if not Enabled then return true end
-    return P1 <= P2
+local function IsDistanceLimited(Enabled,Distance,Limit)
+    if not Enabled then return end
+    return Distance >= Limit
 end
-local function IsVisible(Enabled,BodyPart)
+local function IsVisible(Enabled,Origin,Position)
     if not Enabled then return true end
-    return not Raycast(Camera.CFrame.Position,
-    BodyPart.Position - Camera.CFrame.Position)
+    return not Raycast(Origin,Position - Origin)
 end
 local function GetClosest(Enabled,
     TeamCheck,VisibilityCheck,DistanceCheck,
@@ -562,65 +561,68 @@ local function GetClosest(Enabled,
     PredictionEnabled
 )
 
+    if not Enabled then return end
     if not PlayerClass.Character then return end
-    if not Enabled then return end local Closest = nil
-
     local Weapon = PlayerClass.Character.Instance.Equipped:FindFirstChildOfClass("Model")
     if not Weapon then return end
 
     local Muzzle = Weapon:FindFirstChild("Muzzle")
     if not Muzzle then return end
 
-    for Index,Player in pairs(PlayerService:GetPlayers()) do
+
+    local CameraPosition,Closest = Camera.CFrame.Position,nil
+    for Index,Player in ipairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
-        local Character = Player.Character
 
-        if Character --[[and InEnemyTeam(TeamCheck,Player)]] then
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-            if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+        local Character = Player.Character if not Character then continue end
+        if not InEnemyTeam(TeamCheck,Player) then continue end
 
-            for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = Character:FindFirstChild(BodyPart)
-                if not BodyPart then continue end
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
 
-                local Distance = (BodyPart.Position - Muzzle.Position).Magnitude
-                local BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-                BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+        for Index,BodyPart in ipairs(BodyParts) do
+            BodyPart = Character:FindFirstChild(BodyPart)
+            if not BodyPart then continue end
 
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
-                if OnScreen and IsVisible(VisibilityCheck,BodyPart) and NotFarAway(DistanceCheck,Distance,DistanceLimit) then
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+            local BodyPartPosition = BodyPart.Position
+            local Distance = (BodyPartPosition - CameraPosition).Magnitude
+            if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
 
-                    if FieldOfView >= Magnitude then
-                        if Priority == "Random" then
-                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+            BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            if not OnScreen then continue end
 
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
-                        elseif Priority ~= "Closest" then
-                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-                            BodyPart.Position,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPart.Position
+            local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+            if Magnitude >= FieldOfView then continue end
 
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
-                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,BodyPartPosition,ScreenPosition}
-                    end
-                end
+            if Priority == "Random" then
+                Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
+                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+                BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            elseif Priority ~= "Closest" then
+                BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
+                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
+                BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
             end
+
+            FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,BodyPartPosition,ScreenPosition}
         end
     end
 
     return Closest
 end
-local function AimAt(Hitbox,Smoothing)
+local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
+    local MouseLocation = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[5].X - Mouse.X) * Smoothing,
-        (Hitbox[5].Y - Mouse.Y) * Smoothing
+        (Hitbox[5].X - MouseLocation.X) * Sensitivity,
+        (Hitbox[5].Y - MouseLocation.Y) * Sensitivity
     )
 end
 
@@ -957,7 +959,7 @@ Bullets.Fire = function(Self,...)
         end
 
         Args[5] = (SilentAim[4] - Args[4]).Unit
-        ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
+        --ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
     end
 
     return OldFire(Self,unpack(Args))
@@ -1072,7 +1074,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
-    ),Window.Flags["Aimbot/Smoothing"] / 100)
+    ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SilentAim = GetClosest(
@@ -1089,6 +1091,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
+    if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],

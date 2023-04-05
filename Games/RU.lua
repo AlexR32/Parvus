@@ -35,7 +35,7 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Toggle({Name = "Team Check",Flag = "Aimbot/TeamCheck",Value = false})
             AimbotSection:Toggle({Name = "Distance Check",Flag = "Aimbot/DistanceCheck",Value = false})
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
-            AimbotSection:Slider({Name = "Smoothing",Flag = "Aimbot/Smoothing",Min = 0,Max = 100,Value = 20,Unit = "%"})
+            AimbotSection:Slider({Name = "Sensitivity",Flag = "Aimbot/Sensitivity",Min = 0,Max = 100,Value = 20,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
             AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
 
@@ -65,7 +65,7 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
-            SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = false})
+            --SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = false})
 
             SilentAimSection:Toggle({Name = "Team Check",Flag = "SilentAim/TeamCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
@@ -202,21 +202,22 @@ local function Raycast(Origin,Direction,Filter)
     return Workspace:Raycast(Origin,Direction,WallCheckParams)
 end
 
-local function InEnemyTeam(Character)
+local function InEnemyTeam(Enabled,Character)
+    if not Enabled then return true end
+
     if Character and Character:FindFirstChild("Team") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Team") then
-        return Character.Team.Value ~= LocalPlayer.Character.Team.Value
-        or Character.Team.Value == "None"
+        return Character.Team.Value ~= LocalPlayer.Character.Team.Value or Character.Team.Value == "None"
     end
+
     return true
 end
-local function NotFarAway(Enabled,P1,P2)
-    if not Enabled then return true end
-    return P1 <= P2
+local function IsDistanceLimited(Enabled,Distance,Limit)
+    if not Enabled then return end
+    return Distance >= Limit
 end
-local function IsVisible(Enabled,BodyPart,Character)
+local function IsVisible(Enabled,Origin,Position,Character)
     if not Enabled then return true end
-    return not Raycast(Camera.CFrame.Position,
-    BodyPart.Position - Camera.CFrame.Position,
+    return not Raycast(Origin,Position - Origin,
     {Character,LocalPlayer.Character})
 end
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
@@ -228,52 +229,66 @@ local function GetClosest(Enabled,
     PredictionEnabled
 )
 
-    if not Enabled then return end local Closest = nil
-    for Index,Player in pairs(PlayerService:GetPlayers()) do
+    if not Enabled then return end
+    local CameraPosition,Closest = Camera.CFrame.Position,nil
+    for Index,Player in ipairs(PlayerService:GetPlayers()) do
         if Player == LocalPlayer then continue end
-        local Character = Player.Character
 
-        if Character and InEnemyTeam(TeamCheck,Player) then
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-            if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+        local Character = Player.Character if not Character then continue end
+        if not InEnemyTeam(TeamCheck,Player) then continue end
 
-            for Index,BodyPart in pairs(BodyParts) do
-                BodyPart = Character:FindFirstChild(BodyPart)
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
+
+        for Index,BodyPart in ipairs(BodyParts) do
+            BodyPart = Character:FindFirstChild(BodyPart)
+            if not BodyPart then continue end
+
+            local BodyPartPosition = BodyPart.Position
+            local Distance = (BodyPartPosition - CameraPosition).Magnitude
+            if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition,Character) then continue end
+
+            BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPartPosition,
+            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            if not OnScreen then continue end
+
+            local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+            if Magnitude >= FieldOfView then continue end
+
+            if Priority == "Random" then
+                Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
+                BodyPart = Character:FindFirstChild(Priority)
                 if not BodyPart then continue end
 
-                local Distance = (BodyPart.Position - Camera.CFrame.Position).Magnitude
-                local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
+                BodyPartPosition = BodyPart.Position
+                BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPartPosition,
+                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            elseif Priority ~= "Closest" then
+                BodyPart = Character:FindFirstChild(Priority)
+                if not BodyPart then continue end
 
-                if OnScreen and IsVisible(VisibilityCheck,BodyPart,Character) and NotFarAway(DistanceCheck,Distance,DistanceLimit) then
-                    local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
-
-                    if FieldOfView >= Magnitude then
-                        if Priority == "Random" then
-                            Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
-                        elseif Priority ~= "Closest" then
-                            BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                            ScreenPosition,OnScreen = Camera:WorldToViewportPoint(PredictionEnabled and CalculateTrajectory(BodyPart.Position,
-                            BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPart.Position)
-                        end FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
-                    end
-                end
+                BodyPartPosition = BodyPart.Position
+                BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPartPosition,
+                BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPartPosition
+                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
             end
+
+            FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,ScreenPosition}
         end
     end
 
     return Closest
 end
-local function AimAt(Hitbox,Smoothing)
+local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local Mouse = UserInputService:GetMouseLocation()
+    local MouseLocation = UserInputService:GetMouseLocation()
 
     mousemoverel(
-        (Hitbox[4].X - Mouse.X) * Smoothing,
-        (Hitbox[4].Y - Mouse.Y) * Smoothing
+        (Hitbox[4].X - MouseLocation.X) * Sensitivity,
+        (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
     )
 end
 
@@ -294,15 +309,15 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
         local Command = string.sub(Args[1],11)
         if (Command == "d" or Command == "j") then
-            local Direction = SilentAim[4] - Args[3]
+            local Direction = SilentAim[3].Position - Args[3]
             Args[4] = Direction.Unit
             Args[8] = Vector3.zero
             Args[10] = 0
 
             OldNamecall(Self,unpack(Args))
             task.spawn(function() local Time = tick()
-                task.wait((SilentAim[4] - Args[3]).Magnitude / ProjectileSpeed)
-                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[4],
+                task.wait((SilentAim[3].Position - Args[3]).Magnitude / ProjectileSpeed)
+                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[3].Position,
                 SilentAim[3],tick() - Time,Direction,SilentAim[3].Size.Y)
             end) return
         end
@@ -371,7 +386,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
-    ),Window.Flags["Aimbot/Smoothing"] / 100)
+    ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     SilentAim = GetClosest(
@@ -382,12 +397,12 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/DistanceLimit"],
         Window.Flags["SilentAim/FieldOfView"],
         Window.Flags["SilentAim/Priority"][1],
-        Window.Flags["SilentAim/BodyParts"],
-        Window.Flags["SilentAim/Prediction"]
+        Window.Flags["SilentAim/BodyParts"]
     )
 end)
 Parvus.Utilities.Misc:NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
+    if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],
