@@ -228,7 +228,7 @@ local function InEnemyTeam(Enabled,Player)
 end
 local function IsDistanceLimited(Enabled,Distance,Limit)
     if not Enabled then return end
-    return Distance <= Limit
+    return Distance >= Limit
 end
 local function IsVisible(Enabled,Origin,Position,Character)
     if not Enabled then return true end
