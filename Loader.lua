@@ -65,6 +65,7 @@ Parvus.Utilities.UI = LoadScript("Utilities/UI")
 Parvus.Utilities.Misc = LoadScript("Utilities/Misc")
 Parvus.Utilities.Physics = LoadScript("Utilities/Physics")
 Parvus.Utilities.Drawing = LoadScript("Utilities/Drawing")
+Parvus.Utilities.Physics = LoadScript("Utilities/Physics")
 
 Parvus.Cursor = GetFile("Utilities/ArrowCursor.png")
 Parvus.Loadstring = GetFile("Utilities/Loadstring")
