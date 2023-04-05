@@ -547,8 +547,8 @@ local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
     return LocalPlayer.Team ~= Player.Team
 end
-local function IsCloseTo(Enabled,Distance,Limit)
-    if not Enabled then return true end
+local function IsDistanceLimited(Enabled,Distance,Limit)
+    if not Enabled then return end
     return Distance <= Limit
 end
 local function IsVisible(Enabled,Origin,Position)
@@ -586,8 +586,9 @@ local function GetClosest(Enabled,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
-            if not IsCloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
+            if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
+
             BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
             BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
             local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)

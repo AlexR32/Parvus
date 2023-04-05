@@ -469,14 +469,13 @@ local function InEnemyTeam(Enabled,Player)
         return LocalPlayer.Team ~= Player.Team
     end
 end
-local function IsCloseTo(Enabled,Distance,Limit)
-    if not Enabled then return true end
+local function IsDistanceLimited(Enabled,Distance,Limit)
+    if not Enabled then return end
     return Distance <= Limit
 end
-local function IsVisible(Enabled,BodyPart,Character)
+local function IsVisible(Enabled,Origin,Position,Character)
     if not Enabled then return true end
-    return not Raycast(Camera.CFrame.Position,
-    BodyPart.Position - Camera.CFrame.Position,
+    return not Raycast(Origin,Position - Origin,
     {Character,RaycastFolder,LocalPlayer.Character})
 end
 local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
@@ -517,6 +516,9 @@ local function GetClosest(Enabled,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
+            if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition,Character) then continue end
+
             BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPartPosition,
             BodyPart.AssemblyLinearVelocity,Distance / ProjectileSpeed,ProjectileGravity) or BodyPartPosition
             local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)

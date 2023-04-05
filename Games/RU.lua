@@ -211,8 +211,8 @@ local function InEnemyTeam(Enabled,Character)
 
     return true
 end
-local function IsCloseTo(Enabled,Distance,Limit)
-    if not Enabled then return true end
+local function IsDistanceLimited(Enabled,Distance,Limit)
+    if not Enabled then return end
     return Distance <= Limit
 end
 local function IsVisible(Enabled,Origin,Position,Character)
@@ -246,7 +246,7 @@ local function GetClosest(Enabled,
 
             local BodyPartPosition = BodyPart.Position
             local Distance = (BodyPartPosition - CameraPosition).Magnitude
-            if not IsCloseTo(DistanceCheck,Distance,DistanceLimit) then continue end
+            if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
             if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition,Character) then continue end
 
             BodyPartPosition = PredictionEnabled and CalculateTrajectory(BodyPartPosition,
