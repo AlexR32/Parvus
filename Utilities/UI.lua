@@ -642,11 +642,10 @@ function Assets:Toggle(Parent,ScreenAsset,Window,Toggle)
 	end)
 	Toggle:GetPropertyChangedSignal("Value"):Connect(function(Value)
 		Toggle.ColorConfig[1] = Value
-		Window.Flags[Toggle.Flag] = Value
-		Toggle.Callback(Value)
-
 		ToggleAsset.Tick.BackgroundColor3 = Value
 		and Window.Color or Color3.fromRGB(60,60,60)
+		Window.Flags[Toggle.Flag] = Value
+		Toggle.Callback(Value)
 	end)
 
 	function Toggle:ToolTip(Text)

@@ -123,7 +123,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end Parvus.Utilities.Misc:LightingSection(VisualsTab,"Left")
+        end Parvus.Utilities:LightingSection(VisualsTab,"Left")
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local TESPSection = MiscTab:Section({Name = "Thunderstruck ESP",Side = "Left"}) do
@@ -138,11 +138,11 @@ local Window = Parvus.Utilities.UI:Window({
             LESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Legendary/DistanceCheck",Value = false})
             LESPSection:Slider({Name = "Distance",Flag = "ESP/Legendary/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
         end
-    end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
-Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities:SetupWatermark(Window)
+Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -230,7 +230,7 @@ local function AimAt(Hitbox,Sensitivity)
     )
 end
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(

@@ -47,7 +47,7 @@ end
 getgenv().Parvus = {
     Source = "https://raw.githubusercontent.com/AlexR32/Parvus/" .. Branch .. "/",
 
-    Utilities = {},Games = {
+    Games = {
         ["Universal" ] = {Name = "Universal",                 Script = "Universal" },
         ["1168263273"] = {Name = "Bad Business",              Script = "Games/BB"  },
         ["3360073263"] = {Name = "Bad Business PTR",          Script = "Games/BB"  },
@@ -61,11 +61,10 @@ getgenv().Parvus = {
     }
 }
 
+Parvus.Utilities = LoadScript("Utilities/Main")
 Parvus.Utilities.UI = LoadScript("Utilities/UI")
-Parvus.Utilities.Misc = LoadScript("Utilities/Misc")
 Parvus.Utilities.Physics = LoadScript("Utilities/Physics")
 Parvus.Utilities.Drawing = LoadScript("Utilities/Drawing")
-Parvus.Utilities.Physics = LoadScript("Utilities/Physics")
 
 Parvus.Cursor = GetFile("Utilities/ArrowCursor.png")
 Parvus.Loadstring = GetFile("Utilities/Loadstring")
