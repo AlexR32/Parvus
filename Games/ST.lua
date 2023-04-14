@@ -102,7 +102,7 @@ Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 
 -- Fly Logic
-local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+--[[local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
 local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
 local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
 local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Camera.CFrame)
@@ -113,7 +113,7 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
     local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
-end
+end]]
 
 local function GetPlayerTank(Player)
     local Char = Player:WaitForChild("Char")
@@ -126,7 +126,7 @@ local function PlayerFly(Enabled,Speed,EnableCamera)
     if not Enabled then return end
     local LPTank = GetPlayerTank(LocalPlayer)
     if LPTank and LPTank.PrimaryPart then
-        LPTank.PrimaryPart.AssemblyLinearVelocity = InputToVelocity() * Speed
+        LPTank.PrimaryPart.AssemblyLinearVelocity = Parvus.Utilities.MovementToDirection() * Speed
 
         if not EnableCamera then return end
         LPTank.PrimaryPart.CFrame = LPTank.PrimaryPart.CFrame * Camera.CFrame.Rotation

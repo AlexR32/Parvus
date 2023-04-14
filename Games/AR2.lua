@@ -509,7 +509,7 @@ WallCheckParams.FilterDescendantsInstances = {
 } WallCheckParams.IgnoreWater = true
 
 -- Fly Logic
-local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+--[[local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
 local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
 local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
 local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Camera.CFrame)
@@ -520,7 +520,7 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
     local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
-end
+end]]
 
 local function Raycast(Origin,Direction)
     if not table.find(WallCheckParams.FilterDescendantsInstances,LocalPlayer.Character) then
@@ -744,12 +744,12 @@ local function PlayerFly()
     local RootPart = PlayerClass.Character.RootPart
 
     RootPart.AssemblyLinearVelocity = Vector3.zero
-    RootPart.CFrame += InputToVelocity() * Window.Flags["AR2/Fly/Speed"]
+    RootPart.CFrame += Parvus.Utilities.MovementToDirection() * Window.Flags["AR2/Fly/Speed"]
 end
 local function PlayerWalkSpeed()
     if not PlayerClass.Character then return end
     local RootPart = PlayerClass.Character.RootPart
-    local MoveDirection = InputToVelocity() * XZ
+    local MoveDirection = Parvus.Utilities.MovementToDirection() * Vector3.new(1,0,1)
 
     RootPart.AssemblyLinearVelocity = Vector3.zero
     RootPart.CFrame += MoveDirection * Window.Flags["AR2/WalkSpeed/Speed"]
