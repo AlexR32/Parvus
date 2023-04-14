@@ -94,10 +94,10 @@ local Window = Parvus.Utilities.UI:Window({
                 end
             end}):Keybind()
         end
-    end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 
@@ -150,7 +150,7 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     return OldNamecall(Self, ...)
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     PlayerFly(
         Window.Flags["ST/Fly/Enabled"],
         Window.Flags["ST/Fly/Speed"],

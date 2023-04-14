@@ -422,10 +422,10 @@ local Window = Parvus.Utilities.UI:Window({
                 Network:FireServer("ResetCharacter")
             end})
         end
-    end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",true)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end Parvus.Utilities:SettingsSection(Window,"RightShift",true)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -869,7 +869,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     return OldNamecall(Self,unpack(Args))
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -885,7 +885,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["BRM5/NPCMode"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/TeamCheck"],
@@ -899,7 +899,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["BRM5/NPCMode"]
     )
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
     if not iswindowactive() then return end
 

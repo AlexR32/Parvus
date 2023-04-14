@@ -183,10 +183,10 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-    end Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -373,7 +373,7 @@ LocalPlayer.CharacterAdded:Connect(function(Character)
     CharacterChildAdded(Character)
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -388,7 +388,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Prediction"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/TeamCheck"],
@@ -400,7 +400,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/BodyParts"]
     )
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
     if not iswindowactive() then return end
 

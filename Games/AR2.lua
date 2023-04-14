@@ -297,7 +297,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end Parvus.Utilities.Misc:LightingSection(VisualsTab,"Left")
+        end Parvus.Utilities:LightingSection(VisualsTab,"Left")
     end
     local ESPTab = Window:Tab({Name = "AR2 ESP"}) do
         local ItemSection = ESPTab:Section({Name = "Item ESP",Side = "Left"}) do local Items = {}
@@ -456,10 +456,10 @@ local Window = Parvus.Utilities.UI:Window({
             end}):ToolTip("You will lose loot")
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
-            MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
+            --MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
-            MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
+            --MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
@@ -490,11 +490,11 @@ local Window = Parvus.Utilities.UI:Window({
                 if Bool then Interface:Get("Map"):EnableGodview() else Interface:Get("Map"):DisableGodview() end
             end}):Keybind()
         end
-    end Parvus.Utilities.Misc:SettingsSection(Window,"Period",true)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end Parvus.Utilities:SettingsSection(Window,"Period",true)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
-Parvus.Utilities.Misc:SetupLighting(Window.Flags)
+Parvus.Utilities:SetupWatermark(Window)
+Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -750,6 +750,8 @@ local function PlayerWalkSpeed()
     if not PlayerClass.Character then return end
     local RootPart = PlayerClass.Character.RootPart
     local MoveDirection = InputToVelocity() * XZ
+
+    RootPart.AssemblyLinearVelocity = Vector3.zero
     RootPart.CFrame += MoveDirection * Window.Flags["AR2/WalkSpeed/Speed"]
 end
 
@@ -836,7 +838,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
 
     return OldNamecall(Self,...)
 end)
-Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local Args = {...}
+Parvus.Utilities.FixUpValue(Network.Send,function(Old,Self,Name,...) local Args = {...}
     if table.find(SanityBans,Name) and not table.find(SanityBans,Args[1]) then return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
 
@@ -856,11 +858,11 @@ Parvus.Utilities.Misc:FixUpValue(Network.Send,function(Old,Self,Name,...) local 
 
     return Old(Self,Name,unpack(Args))
 end)
---[[Parvus.Utilities.Misc:FixUpValue(Network.Bounce,function(Old,Self,Name,...) local Args = {...}
+--[[Parvus.Utilities.FixUpValue(Network.Bounce,function(Old,Self,Name,...) local Args = {...}
     print(Name)
     return Old(Self,Name,unpack(Args))
 end)
-Parvus.Utilities.Misc:FixUpValue(Network.Fetch,function(Old,Self,Name,...) local Args = {...}
+Parvus.Utilities.FixUpValue(Network.Fetch,function(Old,Self,Name,...) local Args = {...}
     print(Name)
     return Old(Self,Name,unpack(Args))
 end)]]
@@ -878,7 +880,6 @@ end)
     if Window.Flags["AR2/InstantHit"] then
         local Args = {...}
 
-        local Globals = Framework.Configs.Globals
         local Velocity = (Args[7] * Args[5].FireConfig.MuzzleVelocity) * Globals.MuzzleVelocityMod
         local IsTraveling,TravelTime,TravelDelta,TravelOrigin = true,0,0,Args[6]
         local Blacklist = {Effects,Sounds,Args[4].Instance}
@@ -1061,7 +1062,7 @@ PlayerClass.CharacterAdded:Connect(function(Character)
     HookCharacter(Character)
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -1076,7 +1077,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Prediction"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/TeamCheck"],
@@ -1089,7 +1090,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/Prediction"]
     )
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
     if not iswindowactive() then return end
 
@@ -1123,20 +1124,20 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     end mouse1release()
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Teleport/Loop"] then return end
     Teleport(Window.Flags["AR2/Teleport/List"][1])
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Fly/Enabled"] then return end
     PlayerFly()
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/WalkSpeed/Enabled"] then return end
     PlayerWalkSpeed()
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
+Parvus.Utilities.NewThreadLoop(0.1,function()
     local Closest = GetCharactersInRadius(Zombies.Mobs,250)
     if not Closest then return end
 
@@ -1147,7 +1148,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
         PrimaryPart.Anchored = IsNetworkOwned
         and Window.Flags["AR2/AntiZombie/Enabled"]
 
-        if Window.Flags["AR2/AntiZombie/MeleeAura"] and IsNetworkOwned then
+        --[[if Window.Flags["AR2/AntiZombie/MeleeAura"] and IsNetworkOwned then
             if not PlayerClass.Character then return end
 
             local Melee = PlayerClass.Character.Inventory.Equipment.Melee
@@ -1159,11 +1160,11 @@ Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
             Network:Send("Melee Swing",Melee.Id,1)
             Network:Send("Melee Hit Register",
             Melee.Id,PrimaryPart)
-        end
+        end]]
     end
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
+--[[Parvus.Utilities.NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/MeleeAura"] then return end
     local Closest = GetCharactersInRadius(Characters,20)
     if not Closest then return end
@@ -1177,8 +1178,8 @@ Parvus.Utilities.Misc:NewThreadLoop(0.1,function()
         Network:Send("Melee Hit Register",
         Melee.Id,Character.PrimaryPart)
     end
-end)
-Parvus.Utilities.Misc:NewThreadLoop(1,function()
+end)]]
+Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
     or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
 

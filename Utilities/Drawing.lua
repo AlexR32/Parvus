@@ -399,7 +399,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     for Target,ESP in pairs(DrawingLibrary.ESP) do
         ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
         if ESP.Target.Character and ESP.Target.RootPart then

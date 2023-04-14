@@ -757,10 +757,10 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
             }})
         end
-    end]] Parvus.Utilities.Misc:SettingsSection(Window,"RightShift",false)
-end Parvus.Utilities.Misc:InitAutoLoad(Window)
+    end]] Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+end Parvus.Utilities.InitAutoLoad(Window)
 
-Parvus.Utilities.Misc:SetupWatermark(Window)
+Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
 Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
@@ -828,7 +828,7 @@ WallCheckParams.FilterType = Enum.RaycastFilterType.Whitelist
 WallCheckParams.IgnoreWater = true
 
 -- Fly Logic
-local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
+--[[local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
 local function FixUnit(Vector) if Vector.Magnitude == 0 then return Vector3.zero end return Vector.Unit end
 local function FlatCameraVector(CameraCF) return CameraCF.LookVector * XZ,CameraCF.RightVector * XZ end
 local function InputToVelocity() local LookVector,RightVector = FlatCameraVector(Camera.CFrame)
@@ -839,7 +839,7 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     local Up       = UserInputService:IsKeyDown(Enum.KeyCode.Space) and YPlus or Vector3.zero
     local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
-end
+end]]
 local function GetPlayerTeam(Player)
     for Index,Team in pairs(TeamService:GetChildren()) do
         if Team.Players:FindFirstChild(Player.Name) then
@@ -1246,7 +1246,7 @@ local function AimAt(Hitbox,Sensitivity)
     )
 end
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
+Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     local Args = {...}
 
     if Args[2] == "Shoot" then
@@ -1317,7 +1317,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,..
     return Old(Self,...)
 end)
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
+Parvus.Utilities.FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,...)
     local Args = {...}
 
     if Args[4] == LocalPlayer then ProjectileSpeed = Projectiles[Args[1]].Speed
@@ -1327,7 +1327,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Projectiles.InitProjectile,functi
     return Old(Self,...)
 end)
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Old,Self,...)
+Parvus.Utilities.FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,function(Old,Self,...)
     if Window.Flags["BB/Recoil/Enabled"] then
         local Args = {...} if Args[4] and Args[4].Gravity then
             Args[4].Gravity = Args[4].Gravity * (Window.Flags["BB/Recoil/BulletDrop"] / 100)
@@ -1338,7 +1338,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,fu
     return Old(Self,...)
 end)
 
-Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,...)
+Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,...)
     local Args = {...}
 
     if Args[1] then WeaponModel = Args[3]
@@ -1361,7 +1361,7 @@ Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Se
     return Old(Self,...)
 end,true)
 
---[[Parvus.Utilities.Misc:FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
+--[[Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
     local Args = {Old(Self,...)} local Config = Args[1]
     if Window.Flags["BB/Recoil/Enabled"]
     and (Config and Config.Recoil and Config.Recoil.Default) then
@@ -1404,7 +1404,7 @@ HeartbeatConnections["Control"] = function(...)
         local Args = {OldControl(...)}
 
         if Window.Flags["BB/Fly/Enabled"] and FlyPosition then
-            FlyPosition += InputToVelocity() * Window.Flags["BB/Fly/Speed"]
+            FlyPosition += Parvus.Utilities.MovementToDirection() * Window.Flags["BB/Fly/Speed"]
             LPCharacter.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
             LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
         end
@@ -1426,9 +1426,9 @@ for Index,Event in pairs(Events) do
         Event.Callback = function(...)
             local Args = {...}
 
-            Parvus.Utilities.Misc:NewThreadLoop(0,function()
+            Parvus.Utilities.NewThreadLoop(0,function()
                 if Args[2].Parent == nil then return "break" end
-                if AutoshootHitbox then
+                if AutoshootHitbox and Window.Flags["BB/Rage/TeleGrenade"] then
                     Args[2].PrimaryPart.Position = AutoshootHitbox[3].Position
                 end
             end)
@@ -1438,7 +1438,7 @@ for Index,Event in pairs(Events) do
     end
 end
 
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -1452,7 +1452,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["Aimbot/Prediction"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
         Window.Flags["SilentAim/VisibilityCheck"],
@@ -1463,7 +1463,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["SilentAim/BodyParts"]
     )
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
     if not iswindowactive() then return end
 
@@ -1496,7 +1496,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
     end Tortoiseshell.Input:AutomateEnded("Shoot")
 end)
 
-Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
+Parvus.Utilities.NewThreadLoop(0.25,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
@@ -1520,7 +1520,7 @@ Parvus.Utilities.Misc:NewThreadLoop(0.25,function()
         end
     end
 end)
-Parvus.Utilities.Misc:NewThreadLoop(1/15,function()
+Parvus.Utilities.NewThreadLoop(1/10,function()
     CustomizeWeapon(
         Window.Flags["BB/WC/Enabled"]
         and not Window.Flags["BB/ThirdPerson/Enabled"],
@@ -1547,7 +1547,7 @@ Parvus.Utilities.Misc:NewThreadLoop(1/15,function()
     )
 
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     AutoshootHitbox = GetClosestAllFOV(
         Window.Flags["BB/Rage/Autoshoot/Enabled"]
         or Window.Flags["BB/Rage/TeleGrenade"]
@@ -1559,18 +1559,18 @@ Parvus.Utilities.Misc:NewThreadLoop(0,function()
         Window.Flags["BB/Rage/Autoshoot/BodyParts"]
     )
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["BB/Rage/Autoshoot/Enabled"] then return end
     Autoshoot(AutoshootHitbox,Window.Flags["BB/Rage/Autoshoot/FireRate"])
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["BB/Rage/KnifeAura"] then return end
     KnifeAura(AutoshootHitbox,Window.Flags["BB/Rage/Autoshoot/FireRate"])
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     AutoGrenade(Window.Flags["BB/Rage/AutoGrenade"])
 end)
-Parvus.Utilities.Misc:NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0,function()
     task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
     JitterValue = JitterValue == -1 and 1 or -1
     SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
