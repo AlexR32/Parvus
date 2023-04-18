@@ -657,14 +657,21 @@ local function ProjectileBeam(Origin,Direction,Color)
     return Beam
 end
 
-local function SwingMelee(Character,Melee,Target)
-    local Magnitude = (Target.Position - Character.RootPart.Position).Magnitude
-    if Magnitude >= 12 then return end
+local function SwingMelee(Target)
+    local Character = PlayerClass.Character
+    if not Character then return end
 
-    Network:Send("Melee Swing",Melee.Id,1)
+    local EquippedItem = Character.EquippedItem
+    if not EquippedItem then return end
+
+    if EquippedItem.Type ~= "Melee" then return end
+    local Magnitude = (Target.Position - Character.RootPart.Position).Magnitude
+    if Magnitude >= 10 then return end
+
+    Network:Send("Melee Swing",EquippedItem.Id,1)
 
     local Maid = Maids.new()
-    local AttackConfig = Melee.AttackConfig[1]
+    local AttackConfig = EquippedItem.AttackConfig[1]
     local AnimationPlaying = Character.Animator:PlayAnimationReplicated(AttackConfig.Animation,0.05,AttackConfig.PlaybackSpeedMod)
 	local Track = Character.Animator:GetTrack(AttackConfig.Animation)
 
@@ -672,7 +679,7 @@ local function SwingMelee(Character,Melee,Target)
 		Maid:Give(Track:GetMarkerReachedSignal("Swing"):Connect(function(State)
             if State ~= "Begin" then return end
             Network:Send("Melee Hit Register",
-            Melee.Id,Target,"Flesh")
+            EquippedItem.Id,Target,"Flesh")
 		end))
 	end
 
@@ -681,6 +688,7 @@ local function SwingMelee(Character,Melee,Target)
 	end
 
 	Maid:Destroy()
+    Maid = nil
 end
 function GetCharactersInRadius(Path,Distance)
     if not PlayerClass.Character then return end
@@ -1165,41 +1173,32 @@ end)
 
 Parvus.Utilities.NewThreadLoop(0.1,function()
     local Closest = GetCharactersInRadius(Zombies.Mobs,250)
-    if not Closest then return end
+    if not Closest or not PlayerClass.Character then return end
 
     for Index,Character in pairs(Closest) do
+        if not Character.PrimaryPart then continue end
         local PrimaryPart = Character.PrimaryPart
-        --local IsNetworkOwned = isnetworkowner(PrimaryPart)
 
         PrimaryPart.Anchored = isnetworkowner(PrimaryPart)
         and Window.Flags["AR2/AntiZombie/Enabled"]
 
         if Window.Flags["AR2/AntiZombie/MeleeAura"] then
-            if not PlayerClass.Character then return end
-
-            local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-            if not Melee then return end
-
-            SwingMelee(PlayerClass.Character,Melee,PrimaryPart)
+            SwingMelee(PrimaryPart)
         end
     end
 end)
 
---[[Parvus.Utilities.NewThreadLoop(0.1,function()
+Parvus.Utilities.NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/MeleeAura"] then return end
     local Closest = GetCharactersInRadius(Characters,20)
-    if not Closest then return end
+    if not Closest or not PlayerClass.Character then return end
 
     for Index,Character in pairs(Closest) do
-        if not PlayerClass.Character then return end
-        local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-        if not Melee then return end
-
-        Network:Send("Melee Swing",Melee.Id,1)
-        Network:Send("Melee Hit Register",
-        Melee.Id,Character.PrimaryPart)
+        if not Character.PrimaryPart then continue end
+        local PrimaryPart = Character.PrimaryPart
+        SwingMelee(PrimaryPart)
     end
-end)]]
+end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
     or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
