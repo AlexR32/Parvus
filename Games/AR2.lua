@@ -29,30 +29,32 @@ local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
-local Raycasting = Framework.Libraries.Raycasting
-local Interface = Framework.Libraries.Interface
-local Network = Framework.Libraries.Network
-local Bullets = Framework.Libraries.Bullets
-local Cameras = Framework.Libraries.Cameras
-local World = Framework.Libraries.World
-
 local Globals = Framework.Configs.Globals
+
+local World = Framework.Libraries.World
+local Network = Framework.Libraries.Network
+local Cameras = Framework.Libraries.Cameras
+local Bullets = Framework.Libraries.Bullets
+local Interface = Framework.Libraries.Interface
+local Raycasting = Framework.Libraries.Raycasting
+
+local Maids = Framework.Classes.Maids
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 
+--local ReticleModule = Interface:Get("Reticle")
 local CharacterCamera = Cameras.CameraList.Character
-local Reticle = Interface:Get("Reticle")
 
 local Events = getupvalue(Network.Add,1)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
-local CastLocalBullet = getupvalue(Bullets.Fire,4)
+--local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local FlinchCamera = getupvalue(Bullets.Fire,5)
 local GetFireImpulse = getupvalue(Bullets.Fire,7)
 local RenderSettings = getupvalue(World.GetDistance,1)
 
-local Effects = getupvalue(CastLocalBullet,2)
-local Sounds = getupvalue(CastLocalBullet,3)
-local IsNetworkableHit = getupvalue(CastLocalBullet,12)
+--local Effects = getupvalue(CastLocalBullet,2)
+--local Sounds = getupvalue(CastLocalBullet,3)
+--local IsNetworkableHit = getupvalue(CastLocalBullet,12)
 
 if type(Events) == "function" then Events = getupvalue(Network.Add,2) end
 
@@ -81,14 +83,13 @@ PlayerService.PlayerAdded:Connect(function(Player)
     end)
 end)]]
 
-local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,
-math.abs(Globals.ProjectileGravity),2
+local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
 local ItemMemory,NoClipEvent,NoClipObjects,TeleportBypass = {},nil,{},false
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 
---[[RenderSettings.Loot = 1
-RenderSettings.Elements = 1
-RenderSettings.Detail = -1]]
+--RenderSettings.Loot = 1
+--RenderSettings.Elements = 1
+--RenderSettings.Detail = -1
 RenderSettings.Terrain = 36
 
 -- game data mess
@@ -456,10 +457,10 @@ local Window = Parvus.Utilities.UI:Window({
             end}):ToolTip("You will lose loot")
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
-            --MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
+            MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
-            --MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
+            MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
@@ -656,6 +657,31 @@ local function ProjectileBeam(Origin,Direction,Color)
     return Beam
 end
 
+local function SwingMelee(Character,Melee,Target)
+    local Magnitude = (Target.Position - Character.RootPart.Position).Magnitude
+    if Magnitude >= 12 then return end
+
+    Network:Send("Melee Swing",Melee.Id,1)
+
+    local Maid = Maids.new()
+    local AttackConfig = Melee.AttackConfig[1]
+    local AnimationPlaying = Character.Animator:PlayAnimationReplicated(AttackConfig.Animation,0.05,AttackConfig.PlaybackSpeedMod)
+	local Track = Character.Animator:GetTrack(AttackConfig.Animation)
+
+	if Track then
+		Maid:Give(Track:GetMarkerReachedSignal("Swing"):Connect(function(State)
+            if State ~= "Begin" then return end
+            Network:Send("Melee Hit Register",
+            Melee.Id,Target,"Flesh")
+		end))
+	end
+
+	if AnimationPlaying then
+		AnimationPlaying:Wait()
+	end
+
+	Maid:Destroy()
+end
 function GetCharactersInRadius(Path,Distance)
     if not PlayerClass.Character then return end
 
@@ -1143,24 +1169,19 @@ Parvus.Utilities.NewThreadLoop(0.1,function()
 
     for Index,Character in pairs(Closest) do
         local PrimaryPart = Character.PrimaryPart
-        local IsNetworkOwned = isnetworkowner(PrimaryPart)
+        --local IsNetworkOwned = isnetworkowner(PrimaryPart)
 
-        PrimaryPart.Anchored = IsNetworkOwned
+        PrimaryPart.Anchored = isnetworkowner(PrimaryPart)
         and Window.Flags["AR2/AntiZombie/Enabled"]
 
-        --[[if Window.Flags["AR2/AntiZombie/MeleeAura"] and IsNetworkOwned then
+        if Window.Flags["AR2/AntiZombie/MeleeAura"] then
             if not PlayerClass.Character then return end
 
             local Melee = PlayerClass.Character.Inventory.Equipment.Melee
             if not Melee then return end
 
-            local Magnitude = (PrimaryPart.Position - PlayerClass.Character.RootPart.Position).Magnitude
-            if Magnitude >= 12 then continue end
-
-            Network:Send("Melee Swing",Melee.Id,1)
-            Network:Send("Melee Hit Register",
-            Melee.Id,PrimaryPart)
-        end]]
+            SwingMelee(PlayerClass.Character,Melee,PrimaryPart)
+        end
     end
 end)
 
