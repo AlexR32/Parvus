@@ -234,6 +234,7 @@ end
 
 function DrawingLibrary:AddObject(Object,ObjectName,ObjectPosition,GlobalFlag,Flag,Flags)
     if DrawingLibrary.ObjectESP[Object] then return end
+
     DrawingLibrary.ObjectESP[Object] = {
         Target = {Name = ObjectName,Position = ObjectPosition},
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
