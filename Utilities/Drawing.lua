@@ -234,7 +234,6 @@ end
 
 function DrawingLibrary:AddObject(Object,ObjectName,ObjectPosition,GlobalFlag,Flag,Flags)
     if DrawingLibrary.ObjectESP[Object] then return end
-
     DrawingLibrary.ObjectESP[Object] = {
         Target = {Name = ObjectName,Position = ObjectPosition},
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
@@ -242,6 +241,11 @@ function DrawingLibrary:AddObject(Object,ObjectName,ObjectPosition,GlobalFlag,Fl
 
         Name = DrawingNew("Text",{Visible = false,ZIndex = 1,Center = true,Outline = true})
     }
+
+    if DrawingLibrary.ObjectESP[Object].IsBasePart then
+        DrawingLibrary.ObjectESP[Object].Target.RootPart = ObjectPosition
+        DrawingLibrary.ObjectESP[Object].Target.Position = ObjectPosition.Position
+    end
 end
 function DrawingLibrary:AddESP(Target,Mode,Flag,Flags)
     if DrawingLibrary.ESP[Target] then return end
@@ -384,7 +388,7 @@ RunService.Heartbeat:Connect(function()
         if not GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")
         or not GetFlag(ESP.Flags,ESP.Flag,"/Enabled") then continue end
 
-        ESP.Target.Position = ESP.IsBasePart and ESP.Target.Position.Position or ESP.Target.Position
+        ESP.Target.Position = ESP.IsBasePart and ESP.Target.RootPart.Position or ESP.Target.Position
         ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.Position)
         if ESP.Name.Visible then ESP.Name.Position = ESP.Target.ScreenPosition end
     end

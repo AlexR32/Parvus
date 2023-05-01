@@ -953,13 +953,17 @@ Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 end)
 
 for Index,Item in pairs(RaycastFolder:GetChildren()) do
-    if Item:FindFirstChildWhichIsA("ProximityPrompt",true) then
-        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
-    end
+    if not Item:FindFirstChildWhichIsA("ProximityPrompt",true) then continue end
+    if not Item.PrimaryPart then continue end
+
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end
 
-RaycastFolder.ChildAdded:Connect(function(Item)
-    repeat task.wait() until Item:FindFirstChildWhichIsA("ProximityPrompt",true) --print(Item.Name)
+RaycastFolder.ChildAdded:Connect(function(Item) task.wait(1)
+    if not Item:FindFirstChildWhichIsA("ProximityPrompt",true) then return end
+    if not Item.PrimaryPart then return end
+    --print(Item.Name)
+
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end)
 
