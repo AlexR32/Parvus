@@ -33,6 +33,7 @@ local LerpColor = BlackColor.Lerp
 local Fonts = Drawing.Fonts
 
 local CharacterSize = Vector3.new(4,5,1)
+local FrameRate = 1/30
 
 if not HighlightContainer then
     local CoreGui = game:GetService("CoreGui")
@@ -233,10 +234,11 @@ end
 
 function DrawingLibrary:AddObject(Object,ObjectName,ObjectPosition,GlobalFlag,Flag,Flags)
     if DrawingLibrary.ObjectESP[Object] then return end
+
     DrawingLibrary.ObjectESP[Object] = {
-        IsBasePart = typeof(ObjectPosition) ~= "Vector3",
         Target = {Name = ObjectName,Position = ObjectPosition},
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
+        IsBasePart = typeof(ObjectPosition) ~= "Vector3",
 
         Name = DrawingNew("Text",{Visible = false,ZIndex = 1,Center = true,Outline = true})
     }
@@ -380,26 +382,36 @@ end)
 RunService.Heartbeat:Connect(function()
     for Object,ESP in pairs(DrawingLibrary.ObjectESP) do
         if not GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")
+        or not GetFlag(ESP.Flags,ESP.Flag,"/Enabled") then continue end
+
+        ESP.Target.Position = ESP.IsBasePart and ESP.Target.Position.Position or ESP.Target.Position
+        ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.Position)
+        if ESP.Name.Visible then ESP.Name.Position = ESP.Target.ScreenPosition end
+    end
+end)
+
+Parvus.Utilities.NewThreadLoop(FrameRate,function()
+    for Object,ESP in pairs(DrawingLibrary.ObjectESP) do
+        if not GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")
         or not GetFlag(ESP.Flags,ESP.Flag,"/Enabled") then
             ESP.Name.Visible = false continue
         end
 
-        local Position = ESP.IsBasePart and ESP.Target.Position.Position or ESP.Target.Position
-        local ScreenPosition,OnScreen = WorldToScreen(Position)
-        local Distance = GetDistance(Position)
+        ESP.Target.Distance = GetDistance(ESP.Target.Position)
+        ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.GlobalFlag,"/DistanceCheck"),
+        GetFlag(ESP.Flags,ESP.GlobalFlag,"/Distance"),ESP.Target.Distance)
 
-        local InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.GlobalFlag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.GlobalFlag,"/Distance"),Distance)
-        ESP.Name.Visible = (OnScreen and InTheRange) and (GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled") and GetFlag(ESP.Flags,ESP.Flag,"/Enabled")) or false
+        ESP.Name.Visible = (ESP.Target.OnScreen and ESP.Target.InTheRange) or false
 
-        if ESP.Name.Visible then local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
+        if ESP.Name.Visible then
+            local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
             ESP.Name.Transparency = 1-Color[4] ESP.Name.Color = Color[6]
-            ESP.Name.Text = string.format("%s\n%i studs",ESP.Target.Name,Distance)
-            ESP.Name.Position = V2New(ScreenPosition.X,ScreenPosition.Y)
+            ESP.Name.Text = string.format("%s\n%i studs",ESP.Target.Name,ESP.Target.Distance)
         end
     end
 end)
 
-Parvus.Utilities.NewThreadLoop(0,function()
+RunService.Heartbeat:Connect(function()
     for Target,ESP in pairs(DrawingLibrary.ESP) do
         ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
         if ESP.Target.Character and ESP.Target.RootPart then
@@ -472,7 +484,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     end
 end)
 
-RunService.Heartbeat:Connect(function()
+Parvus.Utilities.NewThreadLoop(FrameRate,function()
     for Target,ESP in pairs(DrawingLibrary.ESP) do
         ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
         or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]

@@ -290,19 +290,18 @@ OldOCIFunction = hookfunction(OCIFunction,function(...)
 end)]]
 
 local OldNamecall = nil
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
         if Args[1] == "CheatKick" then return end
         --[[if Args[1] == "GlobalReplicate" and Args[2].Mag then
             Args[2].Mag = GlobalTable.WeaponModule.Stats.Mag
         elseif Args[1] == "CheatKick" then return end]]
-    end return OldNamecall(Self, unpack(Args))
+    end return OldNamecall(Self,unpack(Args))
 end)
 
 local OldCast = RayModule.Cast
-RayModule.Cast = function(...)
-    local Args = {...}
+RayModule.Cast = function(...) local Args = {...}
 
     if SilentAim and Args[4] == Enum.RaycastFilterType.Blacklist then
         if Window.Flags["TWR/Wallbang"] then
@@ -319,9 +318,11 @@ RayModule.Cast = function(...)
                 Args[2] = SilentAim[3].Position - Camera.CFrame.Position
             end
         end
+
+        return OldCast(unpack(Args))
     end
 
-    return OldCast(unpack(Args))
+    return OldCast(...)
 end
 
 local OldUpdateHUD = GuiModule.UpdateHUD

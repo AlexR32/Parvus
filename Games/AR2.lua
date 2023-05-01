@@ -21,7 +21,7 @@ local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
 local Characters = Workspace.Characters
-local Corpses = Workspace.Corpses
+--local Corpses = Workspace.Corpses
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
@@ -29,30 +29,32 @@ local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
-local Raycasting = Framework.Libraries.Raycasting
-local Interface = Framework.Libraries.Interface
-local Network = Framework.Libraries.Network
-local Bullets = Framework.Libraries.Bullets
-local Cameras = Framework.Libraries.Cameras
-local World = Framework.Libraries.World
-
 local Globals = Framework.Configs.Globals
+
+local World = Framework.Libraries.World
+local Network = Framework.Libraries.Network
+local Cameras = Framework.Libraries.Cameras
+local Bullets = Framework.Libraries.Bullets
+local Interface = Framework.Libraries.Interface
+local Raycasting = Framework.Libraries.Raycasting
+
+local Maids = Framework.Classes.Maids
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 
+--local ReticleModule = Interface:Get("Reticle")
 local CharacterCamera = Cameras.CameraList.Character
-local Reticle = Interface:Get("Reticle")
 
 local Events = getupvalue(Network.Add,1)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
-local CastLocalBullet = getupvalue(Bullets.Fire,4)
+--local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local FlinchCamera = getupvalue(Bullets.Fire,5)
 local GetFireImpulse = getupvalue(Bullets.Fire,7)
 local RenderSettings = getupvalue(World.GetDistance,1)
 
-local Effects = getupvalue(CastLocalBullet,2)
-local Sounds = getupvalue(CastLocalBullet,3)
-local IsNetworkableHit = getupvalue(CastLocalBullet,12)
+--local Effects = getupvalue(CastLocalBullet,2)
+--local Sounds = getupvalue(CastLocalBullet,3)
+--local IsNetworkableHit = getupvalue(CastLocalBullet,12)
 
 if type(Events) == "function" then Events = getupvalue(Network.Add,2) end
 
@@ -81,15 +83,14 @@ PlayerService.PlayerAdded:Connect(function(Player)
     end)
 end)]]
 
-local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,
-math.abs(Globals.ProjectileGravity),2
+local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
 local ItemMemory,NoClipEvent,NoClipObjects,TeleportBypass = {},nil,{},false
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 
---[[RenderSettings.Loot = 1
-RenderSettings.Elements = 1
-RenderSettings.Detail = -1]]
-RenderSettings.Terrain = 36
+--RenderSettings.Loot = 1
+--RenderSettings.Elements = 1
+--RenderSettings.Detail = -1
+--RenderSettings.Terrain = 36
 
 -- game data mess
 local RandomEvents,ItemCategory,ZombieInherits,SanityBans,InfectedScripts = {
@@ -152,7 +153,7 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Toggle({Name = "Visibility Check",Flag = "Aimbot/VisibilityCheck",Value = false})
             AimbotSection:Slider({Name = "Sensitivity",Flag = "Aimbot/Sensitivity",Min = 0,Max = 100,Value = 20,Unit = "%"})
             AimbotSection:Slider({Name = "Field Of View",Flag = "Aimbot/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
-            AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            AimbotSection:Slider({Name = "Distance Limit",Flag = "Aimbot/DistanceLimit",Min = 25,Max = 10000,Value = 250,Unit = "studs"})
 
             local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true}},{}
             for Index,Value in pairs(KnownBodyParts) do
@@ -187,7 +188,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/VisibilityCheck",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
-            SilentAimSection:Slider({Name = "Distance Limit",Flag = "SilentAim/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            SilentAimSection:Slider({Name = "Distance Limit",Flag = "SilentAim/DistanceLimit",Min = 25,Max = 10000,Value = 250,Unit = "studs"})
 
             local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
             for Index,Value in pairs(KnownBodyParts) do
@@ -220,7 +221,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Toggle({Name = "Visibility Check",Flag = "Trigger/VisibilityCheck",Value = false})
 
             TriggerSection:Slider({Name = "Click Delay",Flag = "Trigger/Delay",Min = 0,Max = 1,Precise = 2,Value = 0.15,Unit = "sec"})
-            TriggerSection:Slider({Name = "Distance Limit",Flag = "Trigger/DistanceLimit",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            TriggerSection:Slider({Name = "Distance Limit",Flag = "Trigger/DistanceLimit",Min = 25,Max = 10000,Value = 250,Unit = "studs"})
             TriggerSection:Slider({Name = "Field Of View",Flag = "Trigger/FieldOfView",Min = 0,Max = 500,Value = 25,Unit = "r"})
 
             local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
@@ -240,7 +241,7 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = true})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 10000,Value = 1000,Unit = "studs"})
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -432,7 +433,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 1,Max = 50,Value = 5,Unit = "studs",Wide = true})
             --CharSection:Divider()
             CharSection:Toggle({Name = "Walk Speed",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind()
-            CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 10,Precise = 1,Value = 2.5,Unit = "studs",Wide = true})
+            CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 20,Precise = 1,Value = 2.5,Unit = "studs",Wide = true})
             --CharSection:Divider()
             CharSection:Toggle({Name = "Jump Height",Flag = "AR2/JumpHeight/Enabled",Value = false}):Keybind()
             CharSection:Toggle({Name = "No Fall Check",Flag = "AR2/JumpHeight/NoFallCheck",Value = true})
@@ -456,10 +457,10 @@ local Window = Parvus.Utilities.UI:Window({
             end}):ToolTip("You will lose loot")
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
-            --MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
+            MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
-            --MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
+            MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
@@ -501,6 +502,7 @@ Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
 
+local XZVector = Vector3.new(1,0,1)
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
 WallCheckParams.FilterDescendantsInstances = {
@@ -656,20 +658,50 @@ local function ProjectileBeam(Origin,Direction,Color)
     return Beam
 end
 
+local function SwingMelee(Target)
+    local Character = PlayerClass.Character
+    if not Character then return end
+
+    local EquippedItem = Character.EquippedItem
+    if not EquippedItem then return end
+
+    if EquippedItem.Type ~= "Melee" then return end
+    if (Target.Position - Character.RootPart.Position).Magnitude >= 10 then return end
+
+    Network:Send("Melee Swing",EquippedItem.Id,1)
+
+    local Maid = Maids.new()
+    local AttackConfig = EquippedItem.AttackConfig[1]
+    local AnimationPlaying = Character.Animator:PlayAnimationReplicated(AttackConfig.Animation,0.05,AttackConfig.PlaybackSpeedMod)
+	local Track = Character.Animator:GetTrack(AttackConfig.Animation)
+
+	if Track then
+		Maid:Give(Track:GetMarkerReachedSignal("Swing"):Connect(function(State)
+            if State ~= "Begin" then return end
+            Network:Send("Melee Hit Register",
+            EquippedItem.Id,Target,"Flesh")
+		end))
+	end
+
+	if AnimationPlaying then
+		AnimationPlaying:Wait()
+	end
+
+	Maid:Destroy()
+    Maid = nil
+end
 function GetCharactersInRadius(Path,Distance)
-    if not PlayerClass.Character then return end
+    local PlayerCharacter = PlayerClass.Character
+    if not PlayerCharacter then return end
 
     local Closest = {}
     for Index,Character in pairs(Path:GetChildren()) do
-        if Character == LocalPlayer.Character then continue end
+        if Character == PlayerCharacter.Instance then continue end
         local PrimaryPart = Character.PrimaryPart
         if not PrimaryPart then continue end
 
-        local Magnitude = (PrimaryPart.Position - PlayerClass.Character.RootPart.Position).Magnitude
-        if Distance >= Magnitude then
-            Distance = Magnitude
-            table.insert(Closest,Character)
-        end
+        local Magnitude = (PrimaryPart.Position - PlayerCharacter.RootPart.Position).Magnitude
+        if Distance >= Magnitude then Distance = Magnitude table.insert(Closest,Character) end
     end
 
     return Closest
@@ -749,9 +781,9 @@ end
 local function PlayerWalkSpeed()
     if not PlayerClass.Character then return end
     local RootPart = PlayerClass.Character.RootPart
-    local MoveDirection = Parvus.Utilities.MovementToDirection() * Vector3.new(1,0,1)
+    local MoveDirection = Parvus.Utilities.MovementToDirection() * XZVector
 
-    RootPart.AssemblyLinearVelocity = Vector3.zero
+    --RootPart.AssemblyLinearVelocity += MoveDirection * Window.Flags["AR2/WalkSpeed/Speed"]
     RootPart.CFrame += MoveDirection * Window.Flags["AR2/WalkSpeed/Speed"]
 end
 
@@ -1138,47 +1170,33 @@ Parvus.Utilities.NewThreadLoop(0,function()
 end)
 
 Parvus.Utilities.NewThreadLoop(0.1,function()
-    local Closest = GetCharactersInRadius(Zombies.Mobs,250)
+    local Closest = GetCharactersInRadius(Zombies.Mobs,100)
     if not Closest then return end
 
     for Index,Character in pairs(Closest) do
         local PrimaryPart = Character.PrimaryPart
-        local IsNetworkOwned = isnetworkowner(PrimaryPart)
+        if not PrimaryPart then continue end
 
-        PrimaryPart.Anchored = IsNetworkOwned
-        and Window.Flags["AR2/AntiZombie/Enabled"]
+        PrimaryPart.Anchored = Window.Flags["AR2/AntiZombie/Enabled"]
+        and isnetworkowner(PrimaryPart)
 
-        --[[if Window.Flags["AR2/AntiZombie/MeleeAura"] and IsNetworkOwned then
-            if not PlayerClass.Character then return end
-
-            local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-            if not Melee then return end
-
-            local Magnitude = (PrimaryPart.Position - PlayerClass.Character.RootPart.Position).Magnitude
-            if Magnitude >= 12 then continue end
-
-            Network:Send("Melee Swing",Melee.Id,1)
-            Network:Send("Melee Hit Register",
-            Melee.Id,PrimaryPart)
-        end]]
+        if Window.Flags["AR2/AntiZombie/MeleeAura"] then
+            SwingMelee(PrimaryPart)
+        end
     end
 end)
 
---[[Parvus.Utilities.NewThreadLoop(0.1,function()
+Parvus.Utilities.NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/MeleeAura"] then return end
     local Closest = GetCharactersInRadius(Characters,20)
     if not Closest then return end
 
     for Index,Character in pairs(Closest) do
-        if not PlayerClass.Character then return end
-        local Melee = PlayerClass.Character.Inventory.Equipment.Melee
-        if not Melee then return end
-
-        Network:Send("Melee Swing",Melee.Id,1)
-        Network:Send("Melee Hit Register",
-        Melee.Id,Character.PrimaryPart)
+        local PrimaryPart = Character.PrimaryPart
+        if not PrimaryPart then continue end
+        SwingMelee(PrimaryPart)
     end
-end)]]
+end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
     or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
@@ -1205,6 +1223,23 @@ Parvus.Utilities.NewThreadLoop(1,function()
     end
 end)
 
+for Index,Item in pairs(Loot:GetDescendants()) do
+    if Item:IsA("CFrameValue") then
+        local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
+        if not ItemData then continue end --print(ItemData.Parent.Name)
+
+        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
+            "AR2/ESP/Items","AR2/ESP/Items/" .. ItemData.Parent.Name,Window.Flags
+        )
+    end
+end
+for Index,Event in pairs(Randoms:GetChildren()) do
+    if table.find(RandomEvents,Event.Name) then --print(Event.Name)
+        Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
+            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
+        )
+    end
+end
 for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
     local Config = require(Zombies.Configs[Zombie.Name])
 
@@ -1225,48 +1260,7 @@ for Index,Vehicle in pairs(Vehicles:GetChildren()) do
         "AR2/ESP/Vehicles","AR2/ESP/Vehicles",Window.Flags
     )
 end
-for Index,Item in pairs(Loot:GetDescendants()) do
-    if Item:IsA("CFrameValue") then
-        local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
-        if not ItemData then continue end --print(ItemData.Parent.Name)
 
-        Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.Value.Position,
-            "AR2/ESP/Items","AR2/ESP/Items/" .. ItemData.Parent.Name,Window.Flags
-        )
-    end
-end
-for Index,Event in pairs(Randoms:GetChildren()) do
-    if table.find(RandomEvents,Event.Name) then --print(Event.Name)
-        Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
-            "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
-        )
-    end
-end
-
-Zombies.Mobs.ChildAdded:Connect(function(Zombie)
-    repeat task.wait() until Zombie.PrimaryPart
-    local Config = require(Zombies.Configs[Zombie.Name])
-
-    if not Config.Inherits then return end
-    for Index,Inherit in pairs(Config.Inherits) do
-        if table.find(ZombieInherits,Inherit) then
-            local InheritName = Inherit:gsub(" ",""):gsub("Presets.","")
-            Parvus.Utilities.Drawing:AddObject(
-                Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
-                "AR2/ESP/Zombies/" .. InheritName,Window.Flags
-            )
-        end
-    end
-end)
-Vehicles.ChildAdded:Connect(function(Vehicle)
-    repeat task.wait() until Vehicle.PrimaryPart
-    --print(Vehicle.Name)
-
-    Parvus.Utilities.Drawing:AddObject(
-        Vehicle,Vehicle.Name,Vehicle.PrimaryPart,
-        "AR2/ESP/Vehicles","AR2/ESP/Vehicles",Window.Flags
-    )
-end)
 Loot.DescendantAdded:Connect(function(Item)
     if Item:IsA("CFrameValue") then
         local ItemData = ReplicatedStorage.ItemData:FindFirstChild(Item.Name,true)
@@ -1291,18 +1285,42 @@ Randoms.ChildAdded:Connect(function(Event)
         end
     end
 end)
+Zombies.Mobs.ChildAdded:Connect(function(Zombie)
+    repeat task.wait() until Zombie.PrimaryPart
+    local Config = require(Zombies.Configs[Zombie.Name])
 
-Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
-    Parvus.Utilities.Drawing:RemoveObject(Zombie)
+    if not Config.Inherits then return end
+    for Index,Inherit in pairs(Config.Inherits) do
+        if table.find(ZombieInherits,Inherit) then
+            local InheritName = Inherit:gsub(" ",""):gsub("Presets.","")
+            Parvus.Utilities.Drawing:AddObject(
+                Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
+                "AR2/ESP/Zombies/" .. InheritName,Window.Flags
+            )
+        end
+    end
 end)
-Vehicles.ChildRemoved:Connect(function(Vehicle)
-    Parvus.Utilities.Drawing:RemoveObject(Vehicle)
+Vehicles.ChildAdded:Connect(function(Vehicle)
+    repeat task.wait() until Vehicle.PrimaryPart
+    --print(Vehicle.Name)
+
+    Parvus.Utilities.Drawing:AddObject(
+        Vehicle,Vehicle.Name,Vehicle.PrimaryPart,
+        "AR2/ESP/Vehicles","AR2/ESP/Vehicles",Window.Flags
+    )
 end)
+
 Loot.DescendantRemoving:Connect(function(Item)
     Parvus.Utilities.Drawing:RemoveObject(Item)
 end)
 Randoms.ChildRemoved:Connect(function(Event)
     Parvus.Utilities.Drawing:RemoveObject(Event)
+end)
+Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
+    Parvus.Utilities.Drawing:RemoveObject(Zombie)
+end)
+Vehicles.ChildRemoved:Connect(function(Vehicle)
+    Parvus.Utilities.Drawing:RemoveObject(Vehicle)
 end)
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
