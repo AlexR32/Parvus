@@ -992,7 +992,7 @@ Bullets.Fire = function(Self,...)
         end
 
         Args[5] = (SilentAim[4] - Args[4]).Unit
-        --ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
+        ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
     end
 
     return OldFire(Self,unpack(Args))

@@ -255,8 +255,9 @@ local function solveQuartic(c0, c1, c2, c3, c4)
 	if (num > 2) then s2 = s2 - sub end
 	if (num > 3) then s3 = s3 - sub end
 
+	return s3, s2, s1, s0
 	--return s0, s1, s2, s3
-	return {s3, s2, s1, s0}
+	--return {s3, s2, s1, s0}
 end
 
 local module = {}
@@ -270,11 +271,11 @@ function module.SolveTrajectory(
 	gravityCorrection = gravityCorrection or 2
 
 	local disp = targetPos - origin
-	local h, j, k = disp.X, disp.Y, disp.Z
-	local p, q, r = targetVelocity.X, targetVelocity.Y, targetVelocity.Z
+	--local h, j, k = disp.X, disp.Y, disp.Z
+	--local p, q, r = targetVelocity.X, targetVelocity.Y, targetVelocity.Z
 	local l = -(gravity / gravityCorrection) -- gravity correction
 
-	local solutions = solveQuartic(
+	--[[local solutions = solveQuartic(
 		l*l,
 		-2*q*l,
 		q*q - 2*j*l - projectileSpeed*projectileSpeed + p*p + r*r,
@@ -297,16 +298,33 @@ function module.SolveTrajectory(
 			local f = (k + r*t)/t
 			return origin + Vector3.new(d, e, f)
 		end
+	end]]
+
+	local t0,t1,t2,t3 = solveQuartic(
+		l * l,
+		-gravityCorrection * targetVelocity.Y * l,
+		targetVelocity.Y * targetVelocity.Y - gravityCorrection * disp.Y * l - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
+		gravityCorrection * disp.Y * targetVelocity.Y + gravityCorrection * disp.X * targetVelocity.X + gravityCorrection * disp.Z * targetVelocity.Z,
+		disp.Y * disp.Y + disp.X * disp.X + disp.Z * disp.Z
+	)
+
+	local t = nil
+	if t0 and t0 > 0 then
+		t = t0
+	elseif t1 and t1 > 0 then
+		t = t1
+	elseif t2 and t2 > 0 then
+		t = t2
+	elseif t3 and t3 > 0 then
+		t = t3
 	end
 
-	--[[if solutions and solutions[1] > 0 then
-		local t = solutions[1]
-		local d = (h + p*t)/t
-		local e = (j + q*t - l*t*t)/t
-		local f = (k + r*t)/t
-
-		return origin + Vector3.new(d, e, f)
-	end]]
+	if not t then return origin end
+	return origin + Vector3.new(
+		(disp.X + targetVelocity.X * t) / t,
+		(disp.Y + targetVelocity.Y * t - l * t * t) / t,
+		(disp.Z + targetVelocity.Z * t) / t
+	)
 end
 
 return module
