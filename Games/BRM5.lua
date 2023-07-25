@@ -17,8 +17,8 @@ repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
-local Server = require(Packages:WaitForChild("server"))
-local ServerSettings = getupvalue(Server.Get,1)
+--local Server = require(Packages:WaitForChild("server"))
+--local ServerSettings = getupvalue(Server.Get,1)
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
@@ -288,14 +288,14 @@ local Window = Parvus.Utilities.UI:Window({
         end
     end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
-        local EnvSection = MiscTab:Section({Name = "Environment"}) do
+        --[[local EnvSection = MiscTab:Section({Name = "Environment"}) do
             EnvSection:Toggle({Name = "Enabled",Flag = "BRM5/Lighting/Enabled",Value = false})
             EnvSection:Toggle({Name = "Brightness",Flag = "BRM5/Lighting/Brightness",Value = false,Callback = function(Bool)
                 Lighting.GlobalShadows = not Bool
             end})
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
-        end
+        end]]
         local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
             IESPSection:Toggle({Name = "Enabled",Flag = "ESP/Intel/Enabled",Value = false})
             :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
@@ -404,10 +404,10 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
-            MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
+            --[[MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
             Value = ServerSettings["FIRSTPERSON_LOCKED"],Callback = function(Value)
                 ServerSettings["FIRSTPERSON_LOCKED"] = Value
-            end})
+            end})]]
 
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
                 local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
@@ -775,7 +775,7 @@ HookFunction("AircraftMovement","Update",function(Args)
         Window.Flags["BRM5/Aircraft/Camera"],Args
     ) return Args
 end)
-HookFunction("EnvironmentService","Update",function(Args)
+--[[HookFunction("EnvironmentService","Update",function(Args)
     if Window.Flags["BRM5/Lighting/Enabled"] then
         Args[1]._atmoshperes.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
         if Args[1]._atmoshperes.Desert and Args[1]._atmoshperes.Snow then
@@ -783,7 +783,7 @@ HookFunction("EnvironmentService","Update",function(Args)
             Args[1]._atmoshperes.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
         end
     end return Args
-end)
+end)]]
 
 HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
     if Args[1] == "ReplicateNVG" then
@@ -935,7 +935,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     end mouse1release()
 end)
 
-Lighting.Changed:Connect(function(Property)
+--[[Lighting.Changed:Connect(function(Property)
     if Property == "OutdoorAmbient" and
     Window.Flags["BRM5/Lighting/Brightness"] and
     Lighting.OutdoorAmbient ~= WhiteColor then
@@ -946,7 +946,7 @@ Lighting.Changed:Connect(function(Property)
     Lighting.ClockTime ~= Window.Flags["BRM5/Lighting/Time"] then
         Lighting.ClockTime = Window.Flags["BRM5/Lighting/Time"]
     end
-end)
+end)]]
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
