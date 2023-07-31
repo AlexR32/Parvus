@@ -17,14 +17,19 @@ repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
---local Server = require(Packages:WaitForChild("server"))
---local ServerSettings = getupvalue(Server.Get,1)
+
+-- Temporary method
+local OldIdentity = getthreadidentity()
+setthreadidentity(2)
+local Server = require(Packages:WaitForChild("server"))
+ServerSettings = Server._cache
+setthreadidentity(OldIdentity)
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
 local SilentAim,Aimbot,Trigger = nil,false,false
-local Actors,Squads,Network,NPCFolder,RaycastFolder = nil,nil,{},Workspace:WaitForChild("Bots"),Workspace:WaitForChild("Raycast")
+local Actors,Squads,Network,NPCFolder,RaycastFolder = nil,nil,nil,Workspace:WaitForChild("Bots"),Workspace:WaitForChild("Raycast")
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,Vector3.new(0,Workspace.Gravity,0),2
 local GroundTip,AircraftTip,NoClipEvent,NoClipObjects,WhiteColor = nil,nil,nil,{},Color3.new(1,1,1)
 
@@ -54,8 +59,7 @@ local KnownBodyParts = {
 }
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — " .. Parvus.Game.Name,
-    Position = UDim2.new(0.05,0,0.5,-248)
+    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name)
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
@@ -215,14 +219,14 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 14})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
     end
-    local NPCVisualsTab = Window:Tab({Name = "NPC Visuals"}) do
+    --[[local NPCVisualsTab = Window:Tab({Name = "NPC Visuals"}) do
         local GlobalSection = NPCVisualsTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Colorpicker({Name = "Civilian Color",Flag = "ESP/NPC/Ally",Value = {0.33333334326744,0.75,1,0,false}})
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/NPC/Enemy",Value = {1,0.75,1,0,false}})
@@ -280,28 +284,28 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 14})
             OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/NPC/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-    end
+    end]]
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
-        --[[local EnvSection = MiscTab:Section({Name = "Environment"}) do
+        local EnvSection = MiscTab:Section({Name = "Environment"}) do
             EnvSection:Toggle({Name = "Enabled",Flag = "BRM5/Lighting/Enabled",Value = false})
             EnvSection:Toggle({Name = "Brightness",Flag = "BRM5/Lighting/Brightness",Value = false,Callback = function(Bool)
                 Lighting.GlobalShadows = not Bool
             end})
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
-        end]]
-        local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
+        end
+        --[[local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
             IESPSection:Toggle({Name = "Enabled",Flag = "ESP/Intel/Enabled",Value = false})
             :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
             IESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Intel/DistanceCheck",Value = false})
             IESPSection:Slider({Name = "Distance",Flag = "ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
-        end
+        end]]
         local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
             WeaponSection:Slider({Name = "Recoil Percent",Flag = "BRM5/Recoil/Value",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -337,7 +341,7 @@ local Window = Parvus.Utilities.UI:Window({
                     end table.clear(NoClipObjects)
                 end
             end}):Keybind()
-            CharSection:Toggle({Name = "Anti Skydive",Flag = "BRM5/AntiFall",Value = false}):Keybind()
+            --CharSection:Toggle({Name = "Anti Skydive",Flag = "BRM5/AntiFall",Value = false}):Keybind()
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
@@ -370,6 +374,8 @@ local Window = Parvus.Utilities.UI:Window({
             AirSection:Button({Name = "Setup Switches/Engines",Callback = function()
                 local Aircraft = RequireModule("MovementService")
                 if not Aircraft._handler or not Aircraft._handler._main then return end
+                Network:FireServer("CallInteraction", "Fire", "Canopy")
+
                 EnableSwitch("cicu")
                 EnableSwitch("oxygen")
                 EnableSwitch("battery")
@@ -384,12 +390,13 @@ local Window = Parvus.Utilities.UI:Window({
                 EnableSwitch("fuel_l_l")
                 EnableSwitch("fuel_r_r")
                 EnableSwitch("fuel_l_r")
-                Network:FireServer("CallInteraction", "Fire", "Canopy")
+
                 Parvus.Utilities.UI:Notification({
-                    Title = "Aircraft thingy",
+                    Title = "Parvus Hub",
                     Description = "Please wait till your engines start up, you dont need to touch anything",
                     Duration = 30
                 })
+
                 repeat task.wait() until Aircraft._handler._main.APU.engine.PlaybackSpeed == 1
                 Network:FireServer("CallInteraction","Fire","LeftEngine")
                 Network:FireServer("CallInteraction","Fire","RightEngine")
@@ -404,15 +411,14 @@ local Window = Parvus.Utilities.UI:Window({
             end})
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
-            --[[MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
+            MiscSection:Toggle({Name = "FirstPerson Locked",Flag = "BRM5/Misc/FPLocked",
             Value = ServerSettings["FIRSTPERSON_LOCKED"],Callback = function(Value)
                 ServerSettings["FIRSTPERSON_LOCKED"] = Value
-            end})]]
+            end})
 
             MiscSection:Button({Name = "Enable Fake RGE",Callback = function()
-                local serverSettings = getupvalue(require(ReplicatedStorage.Packages.server).Get,1)
-                if not serverSettings.CHEATS_ENABLED then
-                    serverSettings.CHEATS_ENABLED = true
+                if not ServerSettings.CHEATS_ENABLED then
+                    ServerSettings.CHEATS_ENABLED = true
                     for Index,Connection in pairs(getconnections(RemoteEvent.OnClientEvent)) do
                         Connection.Function("InitRGE")
                     end
@@ -422,7 +428,7 @@ local Window = Parvus.Utilities.UI:Window({
                 Network:FireServer("ResetCharacter")
             end})
         end
-    end Parvus.Utilities:SettingsSection(Window,"RightShift",true)
+    end Parvus.Utilities:SettingsSection(Window,"End",true)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
@@ -449,11 +455,11 @@ local function InputToVelocity() local LookVector,RightVector = FlatCameraVector
     local Down     = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and YMinus or Vector3.zero
     return FixUnit(Forward + Backward + Left + Right + Up + Down)
 end
-local function toScale(value, inputMin, inputMax, outputMin, outputMax)
+--[[local function toScale(value, inputMin, inputMax, outputMin, outputMax)
     local scaledOutput = outputMax - outputMin
     local percentage = value / (inputMax - inputMin)
     return percentage * scaledOutput + outputMin
-end
+end]]
 
 local function Raycast(Origin,Direction,Filter)
     WallCheckParams.FilterDescendantsInstances = Filter
@@ -645,9 +651,9 @@ function TeleportCharacter(Position)
     and LocalPlayer.Character.PrimaryPart
     if not PrimaryPart then return end
 
-    local OldAF = Window:GetValue("BRM5/AntiFall")
+    --local OldAF = Window:GetValue("BRM5/AntiFall")
     local OldNC = Window:GetValue("BRM5/NoClip")
-    Window:SetValue("BRM5/AntiFall",true)
+    --Window:SetValue("BRM5/AntiFall",true)
     Window:SetValue("BRM5/NoClip",true)
 
     LocalPlayer.Character.Humanoid.Sit = true
@@ -656,7 +662,7 @@ function TeleportCharacter(Position)
     TP:Destroy() PrimaryPart.CFrame = CFrame.new(Position)
     LocalPlayer.Character.Humanoid.Sit = false
 
-    Window:SetValue("BRM5/AntiFall",OldAF)
+    --Window:SetValue("BRM5/AntiFall",OldAF)
     Window:SetValue("BRM5/NoClip",OldNC)
 end
 function EnableSwitch(Switch)
@@ -675,28 +681,28 @@ end
 
 Squads = RequireModule("SquadInterface")
 Actors = RequireModule("ActorService")._actors
-local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
+--[[local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
 local RecoilFunction = RequireModule("CharacterCamera").Recoil
-setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))
+setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))]]
 
 HookFunction("ControllerClass","LateUpdate",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
         Args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
     end return Args
 end)
-HookFunction("MovementService","Mount",function(Args)
+--[[HookFunction("MovementService","Mount",function(Args)
     if Window.Flags["BRM5/AntiFall"] then
         if Args[3] == "Skydive" or Args[3] == "Parachute" then
             return
         end
     end return Args
-end)
+end)]]
 HookFunction("ViewmodelClass","Update",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] and Args[3] then
         Args[3] = CFrame.new(Args[3].Position)
     end return Args
 end)
-HookFunction("CameraService","Activate",function(Args)
+--[[HookFunction("CameraService","Activate",function(Args)
     if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
         local RecoilValue = Window.Flags["BRM5/Recoil/Value"]
         Args[3] = Args[3] * (RecoilValue / 100)
@@ -706,10 +712,13 @@ HookFunction("CameraService","Activate",function(Args)
             toScale(RecoilValue,0,100,250,100))
         end
     end return Args
-end)
+end)]]
 HookFunction("CharacterCamera","Update",function(Args)
     if Window.Flags["BRM5/NoBob"] then
         Args[1]._bob = 0
+    end
+    if Window.Flags["BRM5/Recoil/Enabled"] then
+        Args[1]._recoil.Velocity *= Window.Flags["BRM5/Recoil/Value"] / 100
     end return Args
 end)
 HookFunction("FirearmInventory","_firemode",function(Args)
@@ -775,15 +784,15 @@ HookFunction("AircraftMovement","Update",function(Args)
         Window.Flags["BRM5/Aircraft/Camera"],Args
     ) return Args
 end)
---[[HookFunction("EnvironmentService","Update",function(Args)
+HookFunction("EnvironmentService","Update",function(Args)
     if Window.Flags["BRM5/Lighting/Enabled"] then
-        Args[1]._atmoshperes.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
-        if Args[1]._atmoshperes.Desert and Args[1]._atmoshperes.Snow then
-            Args[1]._atmoshperes.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
-            Args[1]._atmoshperes.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
+        Args[1]._atmospheres.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
+        if Args[1]._atmospheres.Desert and Args[1]._atmospheres.Snow then
+            Args[1]._atmospheres.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
+            Args[1]._atmospheres.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
         end
     end return Args
-end)]]
+end)
 
 HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
     if Args[1] == "ReplicateNVG" then
@@ -804,17 +813,12 @@ task.spawn(function()
         if typeof(Table) == "table"
         and rawget(Table,"FireServer")
         and rawget(Table,"InvokeServer") then
-            function Network:FireServer(...)
-                Table:FireServer(...)
-            end
-            function Network:InvokeServer(...)
-                Table:InvokeServer(...)
-            end
+            Network = Table
             break
         end
     end
 end)
-task.spawn(function()
+--[[task.spawn(function()
     for Index,Table in pairs(getgc(true)) do
         if typeof(Table) == "table"
         and rawget(Table,"FireServer")
@@ -831,28 +835,16 @@ task.spawn(function()
                 end
                 return OldFireServer(Self,...)
             end
-            --[[Table.FireServer = function(Self, ...)
-                local Args = {...}
-                if Args[1] ~= "UpdateCharacter" then
-                    print("Network:FireServer(" .. FormatTable(Args) .. ")")
-                end
-                return OldFireServer(Self, ...)
-            end
-            Table.InvokeServer = function(Self, ...)
-                local Args = {...}
-                print("Network:InvokeServer(" .. FormatTable(Args) .. ")")
-                return OldInvokeServer(Self, ...)
-            end]]
         end
     end
-end)
+end)]]
 
 local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
-    if Window.Flags["BRM5/AntiFall"] then
+    --[[if Window.Flags["BRM5/AntiFall"] then
         if Method == "TakeDamage" then return end
-    end
+    end]]
 
     if SilentAim and Method == "Raycast" then
         if math.random(100) <= Window.Flags["SilentAim/HitChance"] then
@@ -935,7 +927,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     end mouse1release()
 end)
 
---[[Lighting.Changed:Connect(function(Property)
+Lighting.Changed:Connect(function(Property)
     if Property == "OutdoorAmbient" and
     Window.Flags["BRM5/Lighting/Brightness"] and
     Lighting.OutdoorAmbient ~= WhiteColor then
@@ -946,32 +938,30 @@ end)
     Lighting.ClockTime ~= Window.Flags["BRM5/Lighting/Time"] then
         Lighting.ClockTime = Window.Flags["BRM5/Lighting/Time"]
     end
-end)]]
+end)
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
 end)
 
-for Index,Item in pairs(RaycastFolder:GetChildren()) do
-    if not Item:FindFirstChildWhichIsA("ProximityPrompt",true) then continue end
-    if not Item.PrimaryPart then continue end
+--[[for Index,Item in pairs(RaycastFolder:GetChildren()) do
+    if not Object:GetAttribute("Compound") then continue end
+    --if not Item.PrimaryPart then continue end
 
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end
-
 RaycastFolder.ChildAdded:Connect(function(Item) task.wait(1)
-    if not Item:FindFirstChildWhichIsA("ProximityPrompt",true) then return end
-    if not Item.PrimaryPart then return end
-    --print(Item.Name)
+    if not Object:GetAttribute("Compound") then continue end
+    --if not Item.PrimaryPart then return end
+    --print(Item.Name,Item.PrimaryPart)
 
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end)
-
 RaycastFolder.ChildRemoved:Connect(function(Item)
     Parvus.Utilities.Drawing:RemoveObject(Item)
-end)
+end)]]
 
-for Index,NPC in pairs(NPCFolder:GetChildren()) do
+--[[for Index,NPC in pairs(NPCFolder:GetChildren()) do
     task.spawn(function()
         if NPC:WaitForChild("HumanoidRootPart",5)
         and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
@@ -987,7 +977,7 @@ NPCFolder.ChildAdded:Connect(function(NPC)
 end)
 NPCFolder.ChildRemoved:Connect(function(NPC)
     Parvus.Utilities.Drawing:RemoveESP(NPC)
-end)
+end)]]
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end

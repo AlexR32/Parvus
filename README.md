@@ -1,6 +1,6 @@
 # Parvus  [![Discord Shield](https://discordapp.com/api/guilds/958056630321303602/widget.png)](https://discord.gg/sYqDpbPYb7)
 Free Roblox Script Hub designed for shooters.  
-Made With :heart: By ***AlexR32#0157***
+Made With :heart: By ***@AlexR32 (Discord)***
 
 - ***This script is still in beta stage of development, so expect some bugs or lack of features.***  
 - ***This script only officially supports Synapse X, since I'm making this script with Synapse, so if you have problems running this script on other executors, just remember that it might be your executor.***  
@@ -14,6 +14,7 @@ local Source = "https://raw.githubusercontent.com/AlexR32/Parvus/" .. Branch .. 
 loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTime)
 
 ```
+
 ### Supported Games
 - [Bad Business](https://www.roblox.com/games/3233893879/)
 - [Blackhawk Rescue Mission 5](https://www.roblox.com/games/2916899287/)
@@ -22,6 +23,7 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
 - [Those Who Remain](https://www.roblox.com/games/488667523/)
 - [The Wild West](https://www.roblox.com/games/2317712696/)
 - [Steel Titans](https://www.roblox.com/games/4746041618/)
+
 ### Features
 ```markdown
 # Universal
@@ -41,7 +43,13 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
     - Body Parts
     - FOV Circle Customization
   * Trigger Bot
-    - Features same as Aimbot
+    - Visibility Check
+    - Distance Check
+    - Click Delay
+    - Team Check
+    - Prediction
+    - Body Parts
+    - FOV Circle Customization
   * Visuals (ESP)
     - Distance Check
     - Ally Color
@@ -63,6 +71,7 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
   * Trigger Bot Inherited
   * Aimbot Inherited
   * ESP Inherited
+
   * NPC ESP
   * Clock Time Changer
   * Fog Density Changer
@@ -81,21 +90,24 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
   * Trigger Bot Inherited
   * Aimbot Inherited
   * ESP Inherited
+
   * Autoshoot (Rage Bot)
   * Weapon Customization
   * Arms Customization
   * Weapon Modification
-  * Pitch Anti-Aim
-  * QE Lean Anti-Aim
-  * Fly + NoClip
-  * Anti-Kick
+  * Redeem Codes
+  * Anti-Aim
+  * NoClip
+  * Fly
 # The Wild West
   * Aimbot Inherited
   * ESP Inherited
+
   * Thunderstruck ESP
   * Legendary Animals ESP
 # Steel Titans
   * ESP Inherited
+
   * Tank Fly
 # RAGDOLL UNIVERSE
   * Silent Aim Inherited
@@ -107,6 +119,7 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
   * Trigger Bot Inherited
   * Aimbot Inherited
   * ESP Inherited
+
   * Wallbang
   * Instant Hit
   * Infinite Ammo
@@ -115,8 +128,9 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
   * Trigger Bot Inherited
   * Aimbot Inherited
   * ESP Inherited
+
   * Anti-Zombie
-  * Anti-Zombie MeleeAura
+  * Zombie MeleeAura
   * No Fall Impact
   * Unlock Firemodes
   * No Spread

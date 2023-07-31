@@ -106,6 +106,22 @@ function MainModule.FixUpValue(fn,hook,global)
     end
 end
 
+function MainModule.InitAutoLoad(Window)
+    Window:AutoLoadConfig("Parvus")
+    Window:SetValue("UI/Enabled",
+    Window.Flags["UI/OOL"])
+end
+function MainModule.SetupWatermark(Self,Window)
+    local GetFPS = Self:SetupFPS()
+    RunService.Heartbeat:Connect(function()
+        if Window.Watermark.Enabled then
+            Window.Watermark.Title = string.format(
+                "Parvus Hub    %s    %i FPS    %i MS",
+                os.date("%X"),GetFPS(),math.round(Ping:GetValue())
+            )
+        end
+    end)
+end
 function MainModule.ReJoin()
     if #PlayerService:GetPlayers() <= 1 then
         LocalPlayer:Kick("\nParvus Hub\nRejoining...")
@@ -185,7 +201,7 @@ function MainModule.SettingsSection(Self,Window,UIKeybind,CustomMouse)
             MenuSection:Button({Name = "Rejoin",Callback = Self.ReJoin})
             MenuSection:Button({Name = "Server Hop",Callback = Self.ServerHop})
             MenuSection:Button({Name = "Copy Lua Invite",Callback = function()
-                setclipboard("game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
+                setclipboard("game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\")")
             end})
             MenuSection:Button({Name = "Copy JS Invite",Callback = function()
                 setclipboard("Roblox.GameLauncher.joinGameInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
@@ -254,21 +270,22 @@ function MainModule.SettingsSection(Self,Window,UIKeybind,CustomMouse)
             CrosshairSection:Slider({Name = "Gap",Flag = "Crosshair/Gap",Min = 0,Max = 10,Value = 2,Unit = "px",Wide = true})
         end
         local CreditsSection = OptionsTab:Section({Name = "Credits",Side = "Right"}) do
-            CreditsSection:Label({Text = "Made by AlexR32#0157"})
-            CreditsSection:Label({Text = "(I dont take friend requests,\nfind me on my server)"})
+            CreditsSection:Label({Text = "Made by AlexR32 @ discord.com"})
+            CreditsSection:Label({Text = "I dont take friend requests\nfind me on my server: sYqDpbPYb7"})
             CreditsSection:Divider({Text = "Special thanks to"})
-            CreditsSection:Label({Text = "Jan for awesome Background Patterns"})
-            CreditsSection:Label({Text = "Infinite Yield Team for Server Hop and Rejoin"})
-            CreditsSection:Label({Text = "Blissful for Offscreen Arrows"})
-            CreditsSection:Label({Text = "coasts for Universal ESP"})
-            CreditsSection:Label({Text = "mickeyrbx for CalculateBox"})
-            CreditsSection:Label({Text = "Kiriot22 for Anti plugin crash"})
-            CreditsSection:Label({Text = "el3tric for Bracket V2"})
+            CreditsSection:Label({Text = "Jan @ v3rmillion.net\nBackground patterns"})
+            --CreditsSection:Label({Text = "Infinite Yield Team\nServer Hop and Rejoin"})
+            CreditsSection:Label({Text = "CornCatCornDog @ v3rmillion.net\nOffscreen Arrows"})
+            --CreditsSection:Label({Text = "coasts @ v3rmillion.net\nUniversal ESP"})
+            CreditsSection:Label({Text = "mickeyrbx @ v3rmillion.net\nCalculateBox"})
+            CreditsSection:Label({Text = "Kiriot22 @ v3rmillion.net\nAnti plugin crash"})
+            CreditsSection:Label({Text = "el3tric @ v3rmillion.net\nBracket V2"})
             CreditsSection:Label({Text = "and much more people\nbehind this project"})
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
         end
     end
 end
+
 function MainModule.LightingSection(Self,Tab,Side)
     local LightingSection = Tab:Section({Name = "Lighting",Side = Side}) do
         LightingSection:Toggle({Name = "Enabled",Flag = "Lighting/Enabled",Value = false,
@@ -297,23 +314,6 @@ function MainModule.LightingSection(Self,Tab,Side)
         Callback = function(Value) sethiddenproperty(Terrain,"Decoration",Value) end})
     end
 end
-function MainModule.SetupWatermark(Self,Window)
-    local GetFPS = Self:SetupFPS()
-    RunService.Heartbeat:Connect(function()
-        if Window.Watermark.Enabled then
-            Window.Watermark.Title = string.format(
-                "Parvus Hub    %s    %i FPS    %i MS",
-                os.date("%X"),GetFPS(),math.round(Ping:GetValue())
-            )
-        end
-    end)
-end
-function MainModule.InitAutoLoad(Window)
-    Window:AutoLoadConfig("Parvus")
-    Window:SetValue("UI/Enabled",
-    Window.Flags["UI/OOL"])
-end
-
 function MainModule.SetupLighting(Self,Flags)
     Self.DefaultLighting = {
         Ambient = Lighting.Ambient,
