@@ -22,9 +22,8 @@ end
 local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — " .. Parvus.Game.Name,
-    Position = UDim2.new(0.05,0,0.5,-173),
-    Size = UDim2.new(0,346,0,346)
+    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
+    Position = UDim2.new(0.5,-173,0.5,-173),Size = UDim2.new(0,346,0,346)
 }) do Window:Watermark({Enabled = true})
 
     local VisualsTab = Window:Tab({Name = "Visuals"}) do
@@ -66,7 +65,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 14})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
@@ -94,7 +93,7 @@ local Window = Parvus.Utilities.UI:Window({
                 end
             end}):Keybind()
         end
-    end Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+    end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)

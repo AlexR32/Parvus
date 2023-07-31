@@ -19,8 +19,7 @@ local KnownBodyParts = {
 }
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — " .. Parvus.Game.Name,
-    Position = UDim2.new(0.05,0,0.5,-248)
+    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
@@ -177,13 +176,13 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 14})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-    end Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+    end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
@@ -307,7 +306,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
 
     if Self.Name == "PewRomote" and Method == "FireServer" and SilentAim
     and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-        local Command = string.sub(Args[1],11)
+        local Command = string.sub(Args[1],12)
         if (Command == "d" or Command == "j") then
             local Direction = SilentAim[3].Position - Args[3]
             Args[4] = Direction.Unit
@@ -317,7 +316,7 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
             OldNamecall(Self,unpack(Args))
             task.spawn(function() local Time = tick()
                 task.wait((SilentAim[3].Position - Args[3]).Magnitude / ProjectileSpeed)
-                Self:FireServer(string.sub(Args[1],1,10) .. "j ",Args[6],SilentAim[3].Position,
+                Self:FireServer(string.sub(Args[1],1,11) .. "j ",Args[6],SilentAim[3].Position,
                 SilentAim[3],tick() - Time,Direction,SilentAim[3].Size.Y)
             end) return
         end

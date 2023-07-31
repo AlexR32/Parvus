@@ -18,7 +18,7 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(0.5) until Loaded1
 end
 
-if game.PlaceVersion > 1350 then
+if game.PlaceVersion > 1394 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -147,8 +147,7 @@ local KnownBodyParts = {
 }
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = "Parvus Hub — " .. Parvus.Game.Name,
-    Position = UDim2.new(0.05,0,0.5,-248)
+    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name)
 }) do Window:Watermark({Enabled = true})
 
     local LegitTab = Window:Tab({Name = "Legit"}) do
@@ -400,7 +399,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
             OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
             OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 18})
+            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 14})
             OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
             OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
@@ -757,7 +756,7 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
             }})
         end
-    end]] Parvus.Utilities:SettingsSection(Window,"RightShift",false)
+    end]] Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
