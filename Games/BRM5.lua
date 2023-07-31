@@ -718,7 +718,7 @@ HookFunction("CharacterCamera","Update",function(Args)
         Args[1]._bob = 0
     end
     if Window.Flags["BRM5/Recoil/Enabled"] then
-        Args[1]._recoil.Velocity = Args[1]._recoil.Velocity * (Window.Flags["BRM5/Recoil/Value"] / 100)
+        Args[1]._recoil.Velocity *= Window.Flags["BRM5/Recoil/Value"] / 100
     end return Args
 end)
 HookFunction("FirearmInventory","_firemode",function(Args)
