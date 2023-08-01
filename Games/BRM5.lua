@@ -361,7 +361,6 @@ local Window = Parvus.Utilities.UI:Window({
                     end table.clear(NoClipObjects)
                 end
             end}):Keybind()
-            --CharSection:Toggle({Name = "Anti Skydive",Flag = "BRM5/AntiFall",Value = false}):Keybind()
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
@@ -602,36 +601,50 @@ local function AimAt(Hitbox,Sensitivity)
     )
 end
 
-local function HookFunction(ModuleName,Function,Callback)
-    local Module,OldFunction = RequireModule(ModuleName)
+function RequireModule(Name)
+    for Index, Instance in pairs(getloadedmodules()) do
+        if Instance.Name == Name then
+            return require(Instance)
+        end
+    end
+end
+local function HookFunction(ModuleName,Function,Hook)
+    local Module,Old = nil,nil
+
     while task.wait() do
+        Module = RequireModule(ModuleName)
         if Module and Module[Function] then
-            OldFunction = Module[Function]
+            Old = Module[Function]
             break
         end
-        Module = RequireModule(ModuleName)
     end
-    Module[Function] = function(...) local Args = Callback({...})
-        if Args then return OldFunction(unpack(Args)) end
+
+    Module[Function] = function(...)
+        return Hook(Old,...)
     end
 end
-local function HookSignal(Signal,Index,Callback)
+local function HookSignal(Signal,Index,Hook)
     local Connection = getconnections(Signal)[Index]
     if not Connection then return end
+
     local OldConnection = Connection.Function
     if not OldConnection then return end
+
     Connection:Disable()
-    Signal:Connect(function(...) local Args = Callback({...})
-        if Args then return OldConnection(unpack(Args)) end
+    Signal:Connect(function(...)
+        return Hook(OldConnection,...)
     end)
 end
-local function AircraftFly(Enabled,Speed,CameraControl,Args)
-    if not Enabled then return Args end
-    Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
-    Args[1]._force.Velocity = InputToVelocity() * Speed
+
+local function AircraftFly(Self,Enabled,Speed,CameraControl)
+    if not Enabled then return end
+
+    Self._force.MaxForce = Vector3.new(1, 1, 1) * 40000000
+    Self._force.Velocity = InputToVelocity() * Speed
+
     if CameraControl then
-        Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
-        Args[1]._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
+        Self._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
+        Self._gyro.CFrame = Camera.CFrame * CFrame.Angles(0,math.pi,0)
     end
 end
 local function Teleport(Position,Velocity)
@@ -672,22 +685,12 @@ local function Teleport(Position,Velocity)
         AlignOrientation:Destroy()
     end return TPModule
 end
-
-function RequireModule(Name)
-    for Index, Instance in pairs(getloadedmodules()) do
-        if Instance.Name == Name then
-            return require(Instance)
-        end
-    end
-end
 function TeleportCharacter(Position)
     local PrimaryPart = LocalPlayer.Character
     and LocalPlayer.Character.PrimaryPart
     if not PrimaryPart then return end
 
-    --local OldAF = Window:GetValue("BRM5/AntiFall")
     local OldNC = Window:GetValue("BRM5/NoClip")
-    --Window:SetValue("BRM5/AntiFall",true)
     Window:SetValue("BRM5/NoClip",true)
 
     LocalPlayer.Character.Humanoid.Sit = true
@@ -696,7 +699,6 @@ function TeleportCharacter(Position)
     TP:Destroy() PrimaryPart.CFrame = CFrame.new(Position)
     LocalPlayer.Character.Humanoid.Sit = false
 
-    --Window:SetValue("BRM5/AntiFall",OldAF)
     Window:SetValue("BRM5/NoClip",OldNC)
 end
 function EnableSwitch(Switch)
@@ -714,51 +716,62 @@ function EnableSwitch(Switch)
 end
 
 RoundInterface = RequireModule("RoundInterface")
---Squads = RequireModule("SquadInterface")
 Actors = RequireModule("ActorService")._actors
+--Squads = RequireModule("SquadInterface")
+
 --[[local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
 local RecoilFunction = RequireModule("CharacterCamera").Recoil
 setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))]]
 
-HookFunction("ControllerClass","LateUpdate",function(Args)
+HookFunction("ControllerClass","LateUpdate",function(Old,Self,...)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
-        Args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
-    end return Args
+        Self.Speed = Window.Flags["BRM5/WalkSpeed/Value"]
+    end
+
+    return Old(Self,...)
 end)
---[[HookFunction("MovementService","Mount",function(Args)
-    if Window.Flags["BRM5/AntiFall"] then
-        if Args[3] == "Skydive" or Args[3] == "Parachute" then
-            return
-        end
-    end return Args
+--[[HookFunction("MovementService","Mount",function(Old,...)
+    return Old(...)
 end)]]
-HookFunction("ViewmodelClass","Update",function(Args)
-    if Window.Flags["BRM5/WalkSpeed/Enabled"] and Args[3] then
-        Args[3] = CFrame.new(Args[3].Position)
-    end return Args
+HookFunction("ViewmodelClass","Update",function(Old,Self,...)
+    local Args = {...}
+
+    if Window.Flags["BRM5/WalkSpeed/Enabled"] and Args[2] then
+        Args[2] = CFrame.new(Args[2].Position)
+    end
+
+    return Old(Self,unpack(Args))
 end)
---[[HookFunction("CameraService","Activate",function(Args)
-    if Window.Flags["BRM5/Recoil/Enabled"] and Args[2] == "Recoil" then
+--[[HookFunction("CameraService","Activate",function(Old,Self,...)
+    local Args = {...}
+
+    if Window.Flags["BRM5/Recoil/Enabled"] and Args[1] == "Recoil" then
         local RecoilValue = Window.Flags["BRM5/Recoil/Value"]
-        Args[3] = Args[3] * (RecoilValue / 100)
+        Args[2] = Args[2] * (RecoilValue / 100)
         if OldRecoilValue ~= RecoilValue then
             OldRecoilValue = RecoilValue
             setconstant(RecoilFunction,6,
             toScale(RecoilValue,0,100,250,100))
         end
-    end return Args
-end)]]
-HookFunction("CharacterCamera","Update",function(Args)
-    if Window.Flags["BRM5/NoBob"] then
-        Args[1]._bob = 0
     end
+
+    return Old(Self,unpack(Args))
+end)]]
+HookFunction("CharacterCamera","Update",function(Old,Self,...)
+    if Window.Flags["BRM5/NoBob"] then
+        Self._bob = 0
+    end
+
     if Window.Flags["BRM5/Recoil/Enabled"] then
-        Args[1]._recoil.Velocity *= Window.Flags["BRM5/Recoil/Value"] / 100
-    end return Args
+        Self._recoil.Velocity *= Window.Flags["BRM5/Recoil/Value"] / 100
+    end
+    
+    return Old(Self,...)
 end)
-HookFunction("FirearmInventory","_firemode",function(Args)
+HookFunction("FirearmInventory","_firemode",function(Old,Self,...)
     if Window.Flags["BRM5/Firemodes"] then
-        local Config = Args[1]._config
+        local Config = Self._config
+
         if not table.find(Config.Tune.Firemodes,1) then
             table.insert(Config.Tune.Firemodes,1)
         end
@@ -768,72 +781,97 @@ HookFunction("FirearmInventory","_firemode",function(Args)
         if not table.find(Config.Tune.Firemodes,3) then
             table.insert(Config.Tune.Firemodes,3)
         end
-    end return Args
+    end
+
+    return Old(Self,...)
 end)
-HookFunction("FirearmInventory","_discharge",function(Args)
+HookFunction("FirearmInventory","_discharge",function(Old,Self,...)
     if Window.Flags["BRM5/RapidFire/Enabled"] then
-        Args[1]._config.Tune.RPM = Window.Flags["BRM5/RapidFire/Value"]
+        Self._config.Tune.RPM = Window.Flags["BRM5/RapidFire/Value"]
     end
     if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._velocity = 1e6
-        Args[1]._range = 1e6
-    end ProjectileSpeed = Args[1]._velocity
-    return Args
+        Self._velocity = 1e6
+        Self._range = 1e6
+    end
+
+    ProjectileSpeed = Self._velocity
+    return Old(Self,...)
 end)
-HookFunction("CharacterMovement","Update",function(Args)
-    if Window.Flags["BRM5/NoStamina"] then Args[1]._exhausted = 0 end
-    return Args
+HookFunction("CharacterMovement","Update",function(Old,Self,...)
+    if Window.Flags["BRM5/NoStamina"] then
+        Self._exhausted = 0
+    end
+
+    return Old(Self,...)
 end)
-HookFunction("TurretMovement","_discharge",function(Args)
+HookFunction("TurretMovement","_discharge",function(Old,Self,...)
     if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._tune.Velocity = 1e6
-        Args[1]._tune.Range = 1e6
-    end ProjectileSpeed = Args[1]._tune.Velocity
-    GroundTip = Args[1]._tip return Args
+        Self._tune.Velocity = 1e6
+        Self._tune.Range = 1e6
+    end
+
+    ProjectileSpeed = Self._tune.Velocity
+    GroundTip = Self._tip
+    return Old(Self,...)
 end)
-HookFunction("AircraftMovement","_discharge",function(Args)
+HookFunction("AircraftMovement","_discharge",function(Old,Self,...)
     if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._tune.Velocity = 1e6
-        Args[1]._tune.Range = 1e6
-    end ProjectileSpeed = Args[1]._tune.Velocity
-    AircraftTip = Args[1]._tip return Args
+        Self._tune.Velocity = 1e6
+        Self._tune.Range = 1e6
+    end
+
+    ProjectileSpeed = Self._tune.Velocity
+    AircraftTip = Self._tip
+    return Old(Self,...)
 end)
-HookFunction("GroundMovement","Update",function(Args)
+HookFunction("GroundMovement","Update",function(Old,Self,...)
     if Window.Flags["BRM5/Vehicle/Enabled"] then
-        Args[1]._tune.Speed = Window.Flags["BRM5/Vehicle/Speed"]
-        Args[1]._tune.Accelerate = Window.Flags["BRM5/Vehicle/Acceleration"]
-    end return Args
+        Self._tune.Speed = Window.Flags["BRM5/Vehicle/Speed"]
+        Self._tune.Accelerate = Window.Flags["BRM5/Vehicle/Acceleration"]
+    end
+
+    return Old(Self,...)
 end)
-HookFunction("HelicopterMovement","Update",function(Args)
+HookFunction("HelicopterMovement","Update",function(Old,Self,...)
     if Window.Flags["BRM5/Helicopter/Enabled"] then
-        Args[1]._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
-    end return Args
+        Self._tune.Speed = Window.Flags["BRM5/Helicopter/Speed"]
+    end
+
+    return Old(Self,...)
 end)
-HookFunction("AircraftMovement","Update",function(Args)
+HookFunction("AircraftMovement","Update",function(Old,Self,...)
     if Window.Flags["BRM5/Aircraft/Enabled"] then
         --[[Args[1]._speed = 1
         Args[1]._gyro.CFrame = Args[1]._gyro.CFrame * CFrame.Angles(math.rad(-Args[3].Y * Args[4] * 50), 0, math.rad(Args[3].X * Args[4] * 50));
         Args[1]._gyro.MaxTorque = Vector3.new(1, 1, 1) * 4000
         Args[1]._force.MaxForce = Vector3.new(1, 1, 1) * 40000000 * Args[1]._speed 
         Args[1]._force.Velocity = Args[1]._main.CFrame.LookVector * -Window.Flags["BRM5/Aircraft/Speed"]]
-        Args[1]._model.RPM.Value = Window.Flags["BRM5/Aircraft/Speed"]
-    end Args = AircraftFly(
+        Self._model.RPM.Value = Window.Flags["BRM5/Aircraft/Speed"]
+    end
+
+    AircraftFly(Self,
         Window.Flags["BRM5/Aircraft/FlyEnabled"],
         Window.Flags["BRM5/Aircraft/FlySpeed"],
-        Window.Flags["BRM5/Aircraft/Camera"],Args
-    ) return Args
+        Window.Flags["BRM5/Aircraft/Camera"]
+    )
+
+    return Old(Self,...)
 end)
-HookFunction("EnvironmentService","Update",function(Args)
+HookFunction("EnvironmentService","Update",function(Old,Self,...)
     if Window.Flags["BRM5/Lighting/Enabled"] then
-        Args[1]._atmospheres.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
-        if Args[1]._atmospheres.Desert and Args[1]._atmospheres.Snow then
-            Args[1]._atmospheres.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
-            Args[1]._atmospheres.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
+        Self._atmospheres.Default.Density = Window.Flags["BRM5/Lighting/Fog"]
+        if Self._atmospheres.Desert and Self._atmospheres.Snow then
+            Self._atmospheres.Desert.Density = Window.Flags["BRM5/Lighting/Fog"]
+            Self._atmospheres.Snow.Density = Window.Flags["BRM5/Lighting/Fog"]
         end
-    end return Args
+    end
+    
+    return Old(Self,...)
 end)
 
-HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
+HookSignal(RemoteEvent.OnClientEvent,1,function(Old,...)
+    local Args = {...}
+
     if Args[1] == "ReplicateNVG" then
         if Window.Flags["BRM5/DisableNVG"] then
             Args[2] = false
@@ -841,10 +879,9 @@ HookSignal(RemoteEvent.OnClientEvent,1,function(Args)
         if Window.Flags["BRM5/NVGShape"] then
             Args[3] = ""
         end
-    --[[elseif Args[1] == "InitInventory" then
-        if Window.Flags["BRM5/AntiFall"]
-        and Args[2] == true then return end]]
-    end return Args
+    end
+
+    return Old(unpack(Args))
 end)
 
 task.spawn(function()
@@ -860,10 +897,10 @@ end)
 
 local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
-    local Method,Args = getnamecallmethod(),{...}
-
-    if SilentAim and Method == "Raycast" then
+    if SilentAim and getnamecallmethod() == "Raycast" then
         if math.random(100) <= Window.Flags["SilentAim/HitChance"] then
+            local Args = {...}
+
             if Args[1] == Camera.CFrame.Position then
                 Args[2] = SilentAim[3].Position - Camera.CFrame.Position
             elseif AircraftTip and Args[1] == AircraftTip.WorldCFrame.Position then
@@ -871,10 +908,12 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
             elseif GroundTip and Args[1] == GroundTip.WorldCFrame.Position then
                 Args[2] = SilentAim[3].Position - GroundTip.WorldCFrame.Position
             end
+
+            return OldNamecall(Self,unpack(Args))
         end
     end
 
-    return OldNamecall(Self,unpack(Args))
+    return OldNamecall(Self,...)
 end)
 
 Parvus.Utilities.NewThreadLoop(0,function()
