@@ -165,6 +165,12 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
             GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            GlobalSection:Button({Name = "Load all Players",Callback = function()
+                for Index,Player in pairs(PlayerService:GetPlayers()) do
+                    if Player == LocalPlayer then continue end
+                    Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
+                end
+            end}):ToolTip("VERY RISKY\nYOU MIGHT CRASH")
         end
         local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
@@ -230,6 +236,16 @@ local Window = Parvus.Utilities.UI:Window({
             GlobalSection:Toggle({Name = "Hide Civilians",Flag = "ESP/NPC/TeamCheck",Value = true})
             GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/NPC/DistanceCheck",Value = true})
             GlobalSection:Slider({Name = "Distance",Flag = "ESP/NPC/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+            GlobalSection:Button({Name = "Load All NPCs",Callback = function()
+                for Index,NPC in pairs(NPCFolder:GetChildren()) do
+                    task.spawn(function()
+                        if NPC:WaitForChild("HumanoidRootPart",5)
+                        and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
+                            Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
+                        end
+                    end)
+                end
+            end}):ToolTip("VERY RISKY\nYOU MIGHT CRASH")
         end
         local BoxSection = NPCVisualsTab:Section({Name = "Boxes",Side = "Left"}) do
             BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/NPC/Box/Enabled",Value = false})
@@ -302,6 +318,13 @@ local Window = Parvus.Utilities.UI:Window({
             :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
             IESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Intel/DistanceCheck",Value = false})
             IESPSection:Slider({Name = "Distance",Flag = "ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
+            IESPSection:Button({Name = "Load all Intels",Callback = function()
+                for Index,Item in pairs(RaycastFolder:GetChildren()) do
+                    if not Item:GetAttribute("Compound") then continue end
+                
+                    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
+                end
+            end}):ToolTip("VERY RISKY\nYOU MIGHT CRASH")
         end
         local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
@@ -937,11 +960,11 @@ Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
 end)
 
-for Index,Item in pairs(RaycastFolder:GetChildren()) do
+--[[for Index,Item in pairs(RaycastFolder:GetChildren()) do
     if not Item:GetAttribute("Compound") then continue end
 
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
-end
+end]]
 RaycastFolder.ChildAdded:Connect(function(Item) task.wait(1)
     if not Item:GetAttribute("Compound") then return end
 
@@ -951,14 +974,14 @@ RaycastFolder.ChildRemoved:Connect(function(Item)
     Parvus.Utilities.Drawing:RemoveObject(Item)
 end)
 
-for Index,NPC in pairs(NPCFolder:GetChildren()) do
+--[[for Index,NPC in pairs(NPCFolder:GetChildren()) do
     task.spawn(function()
         if NPC:WaitForChild("HumanoidRootPart",5)
         and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
             Parvus.Utilities.Drawing:AddESP(NPC,"NPC","ESP/NPC",Window.Flags)
         end
     end)
-end
+end]]
 NPCFolder.ChildAdded:Connect(function(NPC)
     if NPC:WaitForChild("HumanoidRootPart",5)
     and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
@@ -969,10 +992,10 @@ NPCFolder.ChildRemoved:Connect(function(NPC)
     Parvus.Utilities.Drawing:RemoveESP(NPC)
 end)
 
-for Index,Player in pairs(PlayerService:GetPlayers()) do
+--[[for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-end
+end]]
 PlayerService.PlayerAdded:Connect(function(Player)
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
 end)

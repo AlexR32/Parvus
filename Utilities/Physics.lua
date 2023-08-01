@@ -13,10 +13,10 @@
 	and Ferrari's method for all of that).
 --]]
 
-__VERSION = "1.0.0" -- https://semver.org/
-__DESCRIPTION = "Methods for finding the roots of traditional- and higher-degree polynomials (2nd to 4th)."
-__URL = "https://github.com/piqey/lua-polynomials"
-__LICENSE = "GNU General Public License, version 3"
+--__VERSION = "1.0.0" -- https://semver.org/
+--__DESCRIPTION = "Methods for finding the roots of traditional- and higher-degree polynomials (2nd to 4th)."
+--__URL = "https://github.com/piqey/lua-polynomials"
+--__LICENSE = "GNU General Public License, version 3"
 
 -- Utility functions
 

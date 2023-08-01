@@ -51,7 +51,9 @@ local function DrawingNew(Type,Properties)
     local DrawingObject = Drawing.new(Type)
     for Property,Value in pairs(Properties) do
         DrawingObject[Property] = Value
-    end return DrawingObject
+    end
+
+    return DrawingObject
 end
 
 --[[local function GetFontFromName(FontName)
@@ -221,7 +223,7 @@ elseif game.GameId == 1054526971 then -- Blackhawk Rescue Mission 5
         end
     end
 
-    repeat task.wait() until RequireModule("RoundInterface")
+    --repeat task.wait() until RequireModule("RoundInterface")
     local RoundInterface = RequireModule("RoundInterface")
 
     local function GetSkirmishTeam(Player)
