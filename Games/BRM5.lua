@@ -700,7 +700,6 @@ setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))]]
 HookFunction("ControllerClass","LateUpdate",function(Args)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
         Args[1].Speed = Window.Flags["BRM5/WalkSpeed/Value"]
-        if Window.Flags["BRM5/NoStamina"] then Args[1]._exhausted = 0 end
     end return Args
 end)
 --[[HookFunction("MovementService","Mount",function(Args)

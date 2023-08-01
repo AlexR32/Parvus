@@ -4,9 +4,12 @@
 * NPC ESP enabled
 * Intel ESP enabled
 + no stamina loss added
+* team check fixed
+* instant hit fixed
 
-# Global
-* some optimizations
+# Drawing Module
+* some changes that should in theory dont crash roblox on execute
+- temporary removed chams (highlights)
 ```
 ### Update 31/07/23
 ```markdown
