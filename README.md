@@ -18,7 +18,7 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
 ### Supported Games
 - [Bad Business](https://www.roblox.com/games/3233893879/)
 - [Blackhawk Rescue Mission 5](https://www.roblox.com/games/2916899287/)
-- [Apocalypse Rising 2](https://www.roblox.com/games/863266079/)
+- [~~Apocalypse Rising 2~~](https://www.roblox.com/games/863266079/)
 - [RAGDOLL UNIVERSE](https://www.roblox.com/games/1466995005/)
 - [Those Who Remain](https://www.roblox.com/games/488667523/)
 - [The Wild West](https://www.roblox.com/games/2317712696/)

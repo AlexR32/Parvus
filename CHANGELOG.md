@@ -1,3 +1,13 @@
+### Update 1/08/23
+```markdown
+# BRM5
+* NPC ESP enabled
+* Intel ESP enabled
++ no stamina loss added
+
+# Global
+* some optimizations
+```
 ### Update 31/07/23
 ```markdown
 # AR2
