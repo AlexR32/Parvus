@@ -404,7 +404,6 @@ RunService.Heartbeat:Connect(function()
         if not GetFlag(ESP.Flags,ESP.GlobalFlag,"/Enabled")
         or not GetFlag(ESP.Flags,ESP.Flag,"/Enabled") then continue end
 
-        if not ESP.Name.Visible then continue end
         ESP.Target.Position = ESP.IsBasePart and ESP.Target.RootPart.Position or ESP.Target.Position
         ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.Position)
         if ESP.Name.Visible then ESP.Name.Position = ESP.Target.ScreenPosition end
