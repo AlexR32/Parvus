@@ -5,15 +5,12 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 
---repeat task.wait() until Workspace:FindFirstChildOfClass("Terrain")
---local Terrain = Workspace:FindFirstChildOfClass("Terrain")
-
-if not Workspace:FindFirstChild("Bots") then
-    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Join game first",Duration = 5})
+if game.PlaceId == 2916899287 then
+    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Please join the game"})
     return
 end
 
-repeat task.wait() until Workspace:FindFirstChild("Bots")
+--repeat task.wait() until Workspace:FindFirstChild("Bots")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
@@ -29,7 +26,7 @@ local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
 local SilentAim,Aimbot,Trigger = nil,false,false
-local Actors,Squads,Network,NPCFolder,RaycastFolder = nil,nil,nil,Workspace:WaitForChild("Bots"),Workspace:WaitForChild("Raycast")
+local Actors,RoundInterface,Network,NPCFolder,RaycastFolder = nil,nil,nil,Workspace:WaitForChild("Bots"),Workspace:WaitForChild("Raycast")
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1000,Vector3.new(0,Workspace.Gravity,0),2
 local GroundTip,AircraftTip,NoClipEvent,NoClipObjects,WhiteColor = nil,nil,nil,{},Color3.new(1,1,1)
 
@@ -226,7 +223,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
     end
-    --[[local NPCVisualsTab = Window:Tab({Name = "NPC Visuals"}) do
+    local NPCVisualsTab = Window:Tab({Name = "NPC Visuals"}) do
         local GlobalSection = NPCVisualsTab:Section({Name = "Global",Side = "Left"}) do
             GlobalSection:Colorpicker({Name = "Civilian Color",Flag = "ESP/NPC/Ally",Value = {0.33333334326744,0.75,1,0,false}})
             GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/NPC/Enemy",Value = {1,0.75,1,0,false}})
@@ -290,7 +287,7 @@ local Window = Parvus.Utilities.UI:Window({
             OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
             OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
         end
-    end]]
+    end
     local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
         local EnvSection = MiscTab:Section({Name = "Environment"}) do
             EnvSection:Toggle({Name = "Enabled",Flag = "BRM5/Lighting/Enabled",Value = false})
@@ -300,12 +297,12 @@ local Window = Parvus.Utilities.UI:Window({
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
         end
-        --[[local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
+        local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
             IESPSection:Toggle({Name = "Enabled",Flag = "ESP/Intel/Enabled",Value = false})
             :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
             IESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Intel/DistanceCheck",Value = false})
             IESPSection:Slider({Name = "Distance",Flag = "ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
-        end]]
+        end
         local WeaponSection = MiscTab:Section({Name = "Weapon"}) do
             WeaponSection:Toggle({Name = "Recoil",Flag = "BRM5/Recoil/Enabled",Value = false})
             WeaponSection:Slider({Name = "Recoil Percent",Flag = "BRM5/Recoil/Value",Min = 0,Max = 100,Value = 0,Unit = "%"})
@@ -345,6 +342,7 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "No NVG Effect",Flag = "BRM5/DisableNVG",Value = false})
             CharSection:Toggle({Name = "No NVG Shape",Flag = "BRM5/NVGShape",Value = false})
             CharSection:Toggle({Name = "No Camera Bob",Flag = "BRM5/NoBob",Value = false})
+            CharSection:Toggle({Name = "No Stamina Loss",Flag = "BRM5/NoStamina",Value = false})
             CharSection:Toggle({Name = "Speedhack",Flag = "BRM5/WalkSpeed/Enabled",Value = false}):Keybind()
             CharSection:Slider({Name = "Speed",Flag = "BRM5/WalkSpeed/Value",Min = 16,Max = 1000,Value = 120})
         end
@@ -432,11 +430,11 @@ local Window = Parvus.Utilities.UI:Window({
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
-Parvus.Utilities.Drawing:SetupCursor(Window.Flags)
-Parvus.Utilities.Drawing:SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing:FOVCircle("Aimbot",Window.Flags)
-Parvus.Utilities.Drawing:FOVCircle("Trigger",Window.Flags)
-Parvus.Utilities.Drawing:FOVCircle("SilentAim",Window.Flags)
+Parvus.Utilities.Drawing.SetupCursor(Window)
+Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
+Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
+Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
+Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)
 
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -465,15 +463,28 @@ local function Raycast(Origin,Direction,Filter)
     WallCheckParams.FilterDescendantsInstances = Filter
     return Workspace:Raycast(Origin,Direction,WallCheckParams)
 end
+local function GetTeam(Player)
+    for TeamName,TeamData in pairs(RoundInterface.Teams) do
+        for UserId,UserData in pairs(TeamData.Players) do
+            if tonumber(UserId) == Player.UserId then
+                return TeamName
+            end
+        end
+    end
+end
 local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
-    if Player.Neutral then
+    return not Player.Neutral
+    and LocalPlayer.Team ~= Player.Team
+    or GetTeam(LocalPlayer) ~= GetTeam(Player)
+
+    --[[if Player.Neutral then
         local LPColor = Squads._tags[LocalPlayer] and Squads._tags[LocalPlayer].Tag.TextLabel.TextColor3 or WhiteColor
         local TargetColor = Squads._tags[Player] and Squads._tags[Player].Tag.TextLabel.TextColor3 or WhiteColor
         return LPColor ~= TargetColor
     else
         return LocalPlayer.Team ~= Player.Team
-    end
+    end]]
 end
 local function IsDistanceLimited(Enabled,Distance,Limit)
     if not Enabled then return end
@@ -679,7 +690,8 @@ function EnableSwitch(Switch)
     end
 end
 
-Squads = RequireModule("SquadInterface")
+RoundInterface = RequireModule("RoundInterface")
+--Squads = RequireModule("SquadInterface")
 Actors = RequireModule("ActorService")._actors
 --[[local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
 local RecoilFunction = RequireModule("CharacterCamera").Recoil
@@ -740,9 +752,13 @@ HookFunction("FirearmInventory","_discharge",function(Args)
         Args[1]._config.Tune.RPM = Window.Flags["BRM5/RapidFire/Value"]
     end
     if Window.Flags["BRM5/BulletDrop"] then
-        Args[1]._config.Tune.Velocity = 1e6
-        Args[1]._config.Tune.Range = 1e6
-    end ProjectileSpeed = Args[1]._config.Tune.Velocity
+        Args[1]._velocity = 1e6
+        Args[1]._range = 1e6
+    end ProjectileSpeed = Args[1]._velocity
+    return Args
+end)
+HookFunction("CharacterMovement","Update",function(Args)
+    if Window.Flags["BRM5/NoStamina"] then Args[1]._exhausted = 0 end
     return Args
 end)
 HookFunction("TurretMovement","_discharge",function(Args)
@@ -818,33 +834,10 @@ task.spawn(function()
         end
     end
 end)
---[[task.spawn(function()
-    for Index,Table in pairs(getgc(true)) do
-        if typeof(Table) == "table"
-        and rawget(Table,"FireServer")
-        and rawget(Table,"InvokeServer")  then
-            local OldFireServer = Table.FireServer
-            --local OldInvokeServer = Table.InvokeServer
-            Table.FireServer = function(Self,...) local Args = {...}
-                if checkcaller() then return OldFireServer(Self,...) end
-                if Window.Flags["BRM5/AntiFall"] then
-                    if Args[1] == "ReplicateSkydive" and
-                    (Args[2] == 3 or Args[2] == 2) then
-                        return
-                    end
-                end
-                return OldFireServer(Self,...)
-            end
-        end
-    end
-end)]]
 
 local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
-    --[[if Window.Flags["BRM5/AntiFall"] then
-        if Method == "TakeDamage" then return end
-    end]]
 
     if SilentAim and Method == "Raycast" then
         if math.random(100) <= Window.Flags["SilentAim/HitChance"] then
@@ -944,24 +937,21 @@ Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
 end)
 
---[[for Index,Item in pairs(RaycastFolder:GetChildren()) do
-    if not Object:GetAttribute("Compound") then continue end
-    --if not Item.PrimaryPart then continue end
+for Index,Item in pairs(RaycastFolder:GetChildren()) do
+    if not Item:GetAttribute("Compound") then continue end
 
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end
 RaycastFolder.ChildAdded:Connect(function(Item) task.wait(1)
-    if not Object:GetAttribute("Compound") then continue end
-    --if not Item.PrimaryPart then return end
-    --print(Item.Name,Item.PrimaryPart)
+    if not Item:GetAttribute("Compound") then return end
 
     Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
 end)
 RaycastFolder.ChildRemoved:Connect(function(Item)
     Parvus.Utilities.Drawing:RemoveObject(Item)
-end)]]
+end)
 
---[[for Index,NPC in pairs(NPCFolder:GetChildren()) do
+for Index,NPC in pairs(NPCFolder:GetChildren()) do
     task.spawn(function()
         if NPC:WaitForChild("HumanoidRootPart",5)
         and NPC.HumanoidRootPart:WaitForChild("AlignOrientation",5) then
@@ -977,7 +967,7 @@ NPCFolder.ChildAdded:Connect(function(NPC)
 end)
 NPCFolder.ChildRemoved:Connect(function(NPC)
     Parvus.Utilities.Drawing:RemoveESP(NPC)
-end)]]
+end)
 
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end
