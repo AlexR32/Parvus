@@ -117,71 +117,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
     end
-    local VisualsTab = Window:Tab({Name = "Visuals"}) do
-        local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
-            GlobalSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
-            GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
-            GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = true})
-            GlobalSection:Toggle({Name = "Use Player Color",Flag = "ESP/Player/TeamColor",Value = false})
-            GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-        end
-        local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
-            BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/Player/Box/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Healthbar",Flag = "ESP/Player/Box/HealthBar",Value = false})
-            BoxSection:Toggle({Name = "Filled",Flag = "ESP/Player/Box/Filled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Box/Outline",Value = true})
-            BoxSection:Slider({Name = "Thickness",Flag = "ESP/Player/Box/Thickness",Min = 1,Max = 10,Value = 1})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            BoxSection:Divider()
-            BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/Player/Name/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/Player/Name/Outline",Value = true})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/Name/Autoscale",Value = true})
-            BoxSection:Dropdown({Name = "Font",Flag = "ESP/Player/Name/Font",List = {
-                {Name = "UI",Mode = "Button",Value = true},
-                {Name = "System",Mode = "Button"},
-                {Name = "Plex",Mode = "Button"},
-                {Name = "Monospace",Mode = "Button"}
-            }})
-            BoxSection:Slider({Name = "Size",Flag = "ESP/Player/Name/Size",Min = 13,Max = 100,Value = 16})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/Player/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
-            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Highlight/Enabled",Value = false})
-            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/Player/Highlight/Occluded",Value = false})
-            ChamSection:Slider({Name = "Transparency",Flag = "ESP/Player/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/Player/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
-        end
-        local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
-            HeadSection:Toggle({Name = "Enabled",Flag = "ESP/Player/HeadDot/Enabled",Value = false})
-            HeadSection:Toggle({Name = "Filled",Flag = "ESP/Player/HeadDot/Filled",Value = true})
-            HeadSection:Toggle({Name = "Outline",Flag = "ESP/Player/HeadDot/Outline",Value = true})
-            HeadSection:Toggle({Name = "Autoscale",Flag = "ESP/Player/HeadDot/Autoscale",Value = true})
-            HeadSection:Slider({Name = "Radius",Flag = "ESP/Player/HeadDot/Radius",Min = 1,Max = 10,Value = 8})
-            HeadSection:Slider({Name = "NumSides",Flag = "ESP/Player/HeadDot/NumSides",Min = 3,Max = 100,Value = 4})
-            HeadSection:Slider({Name = "Thickness",Flag = "ESP/Player/HeadDot/Thickness",Min = 1,Max = 10,Value = 1})
-            HeadSection:Slider({Name = "Transparency",Flag = "ESP/Player/HeadDot/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local TracerSection = VisualsTab:Section({Name = "Tracers",Side = "Right"}) do
-            TracerSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Tracer/Enabled",Value = false})
-            TracerSection:Toggle({Name = "Outline",Flag = "ESP/Player/Tracer/Outline",Value = true})
-            TracerSection:Dropdown({Name = "Mode",Flag = "ESP/Player/Tracer/Mode",List = {
-                {Name = "From Bottom",Mode = "Button",Value = true},
-                {Name = "From Mouse",Mode = "Button"}
-            }})
-            TracerSection:Slider({Name = "Thickness",Flag = "ESP/Player/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
-            TracerSection:Slider({Name = "Transparency",Flag = "ESP/Player/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
-            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/Player/Arrow/Enabled",Value = false})
-            OoVSection:Toggle({Name = "Filled",Flag = "ESP/Player/Arrow/Filled",Value = true})
-            OoVSection:Toggle({Name = "Outline",Flag = "ESP/Player/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/Player/Arrow/Width",Min = 14,Max = 28,Value = 14})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/Player/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/Player/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-            OoVSection:Slider({Name = "Thickness",Flag = "ESP/Player/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
-            OoVSection:Slider({Name = "Transparency",Flag = "ESP/Player/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
+    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
+        VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
+        VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
+        VisualsSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = true})
+        VisualsSection:Toggle({Name = "Use Player Color",Flag = "ESP/Player/TeamColor",Value = false})
+        VisualsSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
+        VisualsSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
     end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
@@ -291,6 +233,17 @@ local function AimAt(Hitbox,Sensitivity)
     )
 end
 
+local function GetKey()
+    for Index,Table in pairs(getgc(true)) do
+        if type(Table) == "table" and rawget(Table,"ng") then
+            local Event = rawget(Table,"ng")
+            if typeof(Event) ~= "RBXScriptSignal" then continue end
+            local Connection = getconnections(Event)[1]
+            return getupvalue(Connection.Function,1)
+        end
+    end
+end
+
 local function CharacterChildAdded(Character)
     Character.ChildAdded:Connect(function(Child)
         if not Child:IsA("Tool") then return end
@@ -306,8 +259,10 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
 
     if Self.Name == "PewRomote" and Method == "FireServer" and SilentAim
     and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-        local Command = string.sub(Args[1],12)
-        if (Command == "d" or Command == "j") then
+        local Key = GetKey()
+        local Command = string.gsub(Args[1],Key,"")
+
+        if Command == "d" or Command == "j" then
             local Direction = SilentAim[3].Position - Args[3]
             Args[4] = Direction.Unit
             Args[8] = Vector3.zero
@@ -316,9 +271,11 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
             OldNamecall(Self,unpack(Args))
             task.spawn(function() local Time = tick()
                 task.wait((SilentAim[3].Position - Args[3]).Magnitude / ProjectileSpeed)
-                Self:FireServer(string.sub(Args[1],1,11) .. "j ",Args[6],SilentAim[3].Position,
+                Self:FireServer(Key .. "j ",Args[6],SilentAim[3].Position,
                 SilentAim[3],tick() - Time,Direction,SilentAim[3].Size.Y)
-            end) return
+            end)
+
+            return
         end
     end
 

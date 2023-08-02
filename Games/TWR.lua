@@ -127,71 +127,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
     end
-    local VisualsTab = Window:Tab({Name = "Visuals"}) do
-        local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"}) do
-            GlobalSection:Colorpicker({Name = "Ally Color",Flag = "ESP/NPC/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
-            GlobalSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/NPC/Enemy",Value = {1,0.6666666269302368,1,0,false}})
-            GlobalSection:Toggle({Name = "Team Check",Flag = "ESP/NPC/TeamCheck",Value = false})
-            GlobalSection:Toggle({Name = "Use Team Color",Flag = "ESP/NPC/TeamColor",Value = false})
-            GlobalSection:Toggle({Name = "Distance Check",Flag = "ESP/NPC/DistanceCheck",Value = false})
-            GlobalSection:Slider({Name = "Distance",Flag = "ESP/NPC/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
-        end
-        local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
-            BoxSection:Toggle({Name = "Box Enabled",Flag = "ESP/NPC/Box/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Healthbar",Flag = "ESP/NPC/Box/HealthBar",Value = false})
-            BoxSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Box/Filled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Box/Outline",Value = true})
-            BoxSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Box/Thickness",Min = 1,Max = 10,Value = 1})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            BoxSection:Divider()
-            BoxSection:Toggle({Name = "Name Enabled",Flag = "ESP/NPC/Name/Enabled",Value = false})
-            BoxSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Name/Outline",Value = true})
-            BoxSection:Toggle({Name = "Autoscale",Flag = "ESP/NPC/Name/Autoscale",Value = true})
-            BoxSection:Dropdown({Name = "Font",Flag = "ESP/NPC/Name/Font",List = {
-                {Name = "UI",Mode = "Button",Value = true},
-                {Name = "System",Mode = "Button"},
-                {Name = "Plex",Mode = "Button"},
-                {Name = "Monospace",Mode = "Button"}
-            }})
-            BoxSection:Slider({Name = "Size",Flag = "ESP/NPC/Name/Size",Min = 13,Max = 100,Value = 16})
-            BoxSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
-            ChamSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Highlight/Enabled",Value = false})
-            ChamSection:Toggle({Name = "Occluded",Flag = "ESP/NPC/Highlight/Occluded",Value = false})
-            ChamSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-            ChamSection:Colorpicker({Name = "Outline Color",Flag = "ESP/NPC/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
-        end
-        local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
-            HeadSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/HeadDot/Enabled",Value = false})
-            HeadSection:Toggle({Name = "Filled",Flag = "ESP/NPC/HeadDot/Filled",Value = true})
-            HeadSection:Toggle({Name = "Outline",Flag = "ESP/NPC/HeadDot/Outline",Value = true})
-            HeadSection:Toggle({Name = "Autoscale",Flag = "ESP/NPC/HeadDot/Autoscale",Value = true})
-            HeadSection:Slider({Name = "Radius",Flag = "ESP/NPC/HeadDot/Radius",Min = 1,Max = 10,Value = 8})
-            HeadSection:Slider({Name = "NumSides",Flag = "ESP/NPC/HeadDot/NumSides",Min = 3,Max = 100,Value = 4})
-            HeadSection:Slider({Name = "Thickness",Flag = "ESP/NPC/HeadDot/Thickness",Min = 1,Max = 10,Value = 1})
-            HeadSection:Slider({Name = "Transparency",Flag = "ESP/NPC/HeadDot/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local TracerSection = VisualsTab:Section({Name = "Tracers",Side = "Right"}) do
-            TracerSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Tracer/Enabled",Value = false})
-            TracerSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Tracer/Outline",Value = true})
-            TracerSection:Dropdown({Name = "Mode",Flag = "ESP/NPC/Tracer/Mode",List = {
-                {Name = "From Bottom",Mode = "Button",Value = true},
-                {Name = "From Mouse",Mode = "Button"}
-            }})
-            TracerSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
-            TracerSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
-        local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
-            OoVSection:Toggle({Name = "Enabled",Flag = "ESP/NPC/Arrow/Enabled",Value = false})
-            OoVSection:Toggle({Name = "Filled",Flag = "ESP/NPC/Arrow/Filled",Value = true})
-            OoVSection:Toggle({Name = "Outline",Flag = "ESP/NPC/Arrow/Outline",Value = true})
-            OoVSection:Slider({Name = "Width",Flag = "ESP/NPC/Arrow/Width",Min = 14,Max = 28,Value = 14})
-            OoVSection:Slider({Name = "Height",Flag = "ESP/NPC/Arrow/Height",Min = 14,Max = 28,Value = 28})
-            OoVSection:Slider({Name = "Distance From Center",Flag = "ESP/NPC/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-            OoVSection:Slider({Name = "Thickness",Flag = "ESP/NPC/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
-            OoVSection:Slider({Name = "Transparency",Flag = "ESP/NPC/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
-        end
+    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,true) do
+        VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
+        VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
+        VisualsSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
+        VisualsSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
+        VisualsSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
+        VisualsSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
     end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
