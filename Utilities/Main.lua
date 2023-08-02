@@ -286,6 +286,89 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
     end
 end
 
+function Utility.ESPSection(Self,Window,Name,Flag,BoxEnabled,ChamEnabled,HeadEnabled,TracerEnabled,OoVEnabled,LightingEnabled)
+    local VisualsTab = Window:Tab({Name = Name}) do
+        local GlobalSection = VisualsTab:Section({Name = "Global",Side = "Left"})
+        if BoxEnabled then
+            local BoxSection = VisualsTab:Section({Name = "Boxes",Side = "Left"}) do
+                BoxSection:Toggle({Name = "Box Enabled",Flag = Flag .. "/Box/Enabled",Value = false})
+                BoxSection:Toggle({Name = "Healthbar",Flag = Flag .. "/Box/HealthBar",Value = false})
+                --BoxSection:Toggle({Name = "Corners",Flag = Flag .. "/Box/Corners",Value = false})
+
+                BoxSection:Toggle({Name = "Filled",Flag = Flag .. "/Box/Filled",Value = false})
+                BoxSection:Toggle({Name = "Outline",Flag = Flag .. "/Box/Outline",Value = true})
+                BoxSection:Slider({Name = "Thickness",Flag = Flag .. "/Box/Thickness",Min = 1,Max = 4,Value = 1})
+                BoxSection:Slider({Name = "Transparency",Flag = Flag .. "/Box/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+                BoxSection:Slider({Name = "Corner Size",Flag = Flag .. "/Box/Corners/Size",Min = 10,Max = 100,Value = 100,Unit = "%"})
+                BoxSection:Divider()
+                BoxSection:Toggle({Name = "Name Enabled",Flag = Flag .. "/Name/Enabled",Value = false})
+                BoxSection:Toggle({Name = "Distance Enabled",Flag = Flag .. "/Distance/Enabled",Value = false})
+                BoxSection:Toggle({Name = "Weapon Enabled",Flag = Flag .. "/Weapon/Enabled",Value = false})
+                BoxSection:Toggle({Name = "Outline",Flag = Flag .. "/Name/Outline",Value = true})
+                BoxSection:Toggle({Name = "Autoscale",Flag = Flag .. "/Name/Autoscale",Value = true})
+                --[[BoxSection:Dropdown({Name = "Font",Flag = Flag .. "/Name/Font",List = {
+                    {Name = "UI",Mode = "Button",Value = true},
+                    {Name = "System",Mode = "Button"},
+                    {Name = "Plex",Mode = "Button"},
+                    {Name = "Monospace",Mode = "Button"}
+                }})]]
+                BoxSection:Slider({Name = "Size",Flag = Flag .. "/Name/Size",Min = 1,Max = 100,Value = 14})
+                BoxSection:Slider({Name = "Transparency",Flag = Flag .. "/Name/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            end
+        end
+        --[[if ChamEnabled then
+            local ChamSection = VisualsTab:Section({Name = "Chams",Side = "Left"}) do
+                ChamSection:Toggle({Name = "Enabled",Flag = Flag .. "/Highlight/Enabled",Value = false})
+                ChamSection:Toggle({Name = "Occluded",Flag = Flag .. "/Highlight/Occluded",Value = false})
+                ChamSection:Slider({Name = "Transparency",Flag = Flag .. "/Highlight/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+                ChamSection:Colorpicker({Name = "Outline Color",Flag = Flag .. "/Highlight/OutlineColor",Value = {1,1,0,0.5,false}})
+            end
+        end]]
+        if HeadEnabled then
+            local HeadSection = VisualsTab:Section({Name = "Head Dots",Side = "Right"}) do
+                HeadSection:Toggle({Name = "Enabled",Flag = Flag .. "/HeadDot/Enabled",Value = false})
+                --HeadSection:Toggle({Name = "Filled",Flag = Flag .. "/HeadDot/Filled",Value = true})
+                HeadSection:Toggle({Name = "Outline",Flag = Flag .. "/HeadDot/Outline",Value = true})
+                HeadSection:Toggle({Name = "Autoscale",Flag = Flag .. "/HeadDot/Autoscale",Value = true})
+                HeadSection:Slider({Name = "Size",Flag = Flag .. "/HeadDot/Size",Min = 1,Max = 100,Value = 15})
+                HeadSection:Slider({Name = "Smoothness",Flag = Flag .. "/HeadDot/Smoothness",Min = 0,Max = 100,Value = 10,Unit = "%"})
+                --HeadSection:Slider({Name = "NumSides",Flag = Flag .. "/HeadDot/NumSides",Min = 3,Max = 100,Value = 4})
+                --HeadSection:Slider({Name = "Thickness",Flag = Flag .. "/HeadDot/Thickness",Min = 1,Max = 10,Value = 1})
+                HeadSection:Slider({Name = "Transparency",Flag = Flag .. "/HeadDot/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            end
+        end
+        if TracerEnabled then
+            local TracerSection = VisualsTab:Section({Name = "Tracers",Side = "Right"}) do
+                TracerSection:Toggle({Name = "Enabled",Flag = Flag .. "/Tracer/Enabled",Value = false})
+                TracerSection:Toggle({Name = "Outline",Flag = Flag .. "/Tracer/Outline",Value = true})
+                TracerSection:Dropdown({Name = "Mode",Flag = Flag .. "/Tracer/Mode",List = {
+                    {Name = "From Bottom",Mode = "Button",Value = true},
+                    {Name = "From Mouse",Mode = "Button"}
+                }})
+                TracerSection:Slider({Name = "Thickness",Flag = Flag .. "/Tracer/Thickness",Min = 1,Max = 10,Value = 1})
+                TracerSection:Slider({Name = "Transparency",Flag = Flag .. "/Tracer/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            end
+        end
+        --[[if OoVEnabled then
+            local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
+                OoVSection:Toggle({Name = "Enabled",Flag = Flag .. "/Arrow/Enabled",Value = false})
+                OoVSection:Toggle({Name = "Filled",Flag = Flag .. "/Arrow/Filled",Value = true})
+                OoVSection:Toggle({Name = "Outline",Flag = Flag .. "/Arrow/Outline",Value = true})
+                OoVSection:Slider({Name = "Width",Flag = Flag .. "/Arrow/Width",Min = 14,Max = 28,Value = 14})
+                OoVSection:Slider({Name = "Height",Flag = Flag .. "/Arrow/Height",Min = 14,Max = 28,Value = 28})
+                OoVSection:Slider({Name = "Distance From Center",Flag = Flag .. "/Arrow/Radius",Min = 80,Max = 200,Value = 200})
+                OoVSection:Slider({Name = "Thickness",Flag = Flag .. "/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
+                OoVSection:Slider({Name = "Transparency",Flag = Flag .. "/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
+            end
+        end]]
+        if LightingEnabled then
+            Self:LightingSection(VisualsTab)
+        end
+
+        return GlobalSection
+    end
+end
+
 function Utility.LightingSection(Self,Tab,Side)
     local LightingSection = Tab:Section({Name = "Lighting",Side = Side}) do
         LightingSection:Toggle({Name = "Enabled",Flag = "Lighting/Enabled",Value = false,

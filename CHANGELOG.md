@@ -1,3 +1,19 @@
+### Update 2/08/23
+```markdown
+# Drawing
+* completely rewrited
++ added weapon text
++ added healthbar text
+- removed out of view arrows (will be added again in future)
+- removed chams/highlights (will be added again in future)
+
+# AR2
++ added again
+- only esp working right now
+
+# RU
+* silent aim fixed
+```
 ### Update 1/08/23
 ```markdown
 # BRM5

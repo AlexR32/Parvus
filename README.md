@@ -1,6 +1,6 @@
 # Parvus  [![Discord Shield](https://discordapp.com/api/guilds/958056630321303602/widget.png)](https://discord.gg/sYqDpbPYb7)
 Free Roblox Script Hub designed for shooters.  
-Made With :heart: By ***@AlexR32 (Discord)***
+Made With :heart: By ***AlexR32 @ discord.com***
 
 - ***This script is still in beta stage of development, so expect some bugs or lack of features.***  
 - ***This script only officially supports Synapse X, since I'm making this script with Synapse, so if you have problems running this script on other executors, just remember that it might be your executor.***  
