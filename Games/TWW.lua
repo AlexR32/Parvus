@@ -32,6 +32,7 @@ local Window = Parvus.Utilities.UI:Window({
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
 
+            AimbotSection:Toggle({Name = "Thirdperson Mode",Flag = "Aimbot/Thirdperson",Value = false})
             AimbotSection:Toggle({Name = "Always Enabled",Flag = "Aimbot/AlwaysEnabled",Value = false})
 
             AimbotSection:Toggle({Name = "Team Check",Flag = "Aimbot/TeamCheck",Value = false})
@@ -163,12 +164,16 @@ local function GetClosest(Enabled,
 end
 local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local MouseLocation = UserInputService:GetMouseLocation()
+    if Window.Flags["Aimbot/Thirdperson"] then
+        mousemoverel(Hitbox[3].Position,true,Sensitivity)
+        return
+    end
 
-    mousemoverel(
+    local MouseLocation = UserInputService:GetMouseLocation()
+    mousemoverel(Vector2.new(
         (Hitbox[4].X - MouseLocation.X) * Sensitivity,
         (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
-    )
+    ))
 end
 
 Parvus.Utilities.NewThreadLoop(0,function()

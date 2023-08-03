@@ -286,7 +286,7 @@ elseif game.GameId == 1054526971 then -- Blackhawk Rescue Mission 5
         end
     end
 
-    --repeat task.wait() until RequireModule("RoundInterface")
+    repeat task.wait() until RequireModule("RoundInterface")
     local RoundInterface = RequireModule("RoundInterface")
 
     local function GetSkirmishTeam(Player)
@@ -351,7 +351,7 @@ end
 function DrawingLibrary.RemoveObject(Self,Target)
     local ESP = Self.ObjectESP[Target]
     if not ESP then return end
-    ESP.Name:Remove()
+    ESP.Name:Destroy()
 
     Clear(Self.ObjectESP[Target])
     Self.ObjectESP[Target] = nil

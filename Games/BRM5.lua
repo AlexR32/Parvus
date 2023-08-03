@@ -56,7 +56,8 @@ local KnownBodyParts = {
 }
 
 local Window = Parvus.Utilities.UI:Window({
-    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name)
+    Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
+    Position = UDim2.new(0.5,-248 * 4,0.5,-248)
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
@@ -600,13 +601,16 @@ function EnableSwitch(Switch)
     end
 end
 
-RoundInterface = RequireModule("RoundInterface")
-Actors = RequireModule("ActorService")._actors
---Squads = RequireModule("SquadInterface")
-
 --[[local OldRecoilValue = Window.Flags["BRM5/Recoil/Value"]
 local RecoilFunction = RequireModule("CharacterCamera").Recoil
 setconstant(RecoilFunction,6,toScale(OldRecoilValue,0,100,250,100))]]
+
+repeat task.wait() until RequireModule("RoundInterface")
+RoundInterface = RequireModule("RoundInterface")
+repeat task.wait() until RequireModule("ActorService")
+Actors = RequireModule("ActorService")._actors
+--repeat task.wait() until RequireModule("SquadInterface")
+--Squads = RequireModule("SquadInterface")
 
 HookFunction("ControllerClass","LateUpdate",function(Old,Self,...)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then

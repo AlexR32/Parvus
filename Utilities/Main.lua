@@ -1,5 +1,7 @@
 local ContextActionService = game:GetService("ContextActionService")
+local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
@@ -24,6 +26,17 @@ do -- Thanks to Kiriot22
     OldPluginManager = hookfunction(getrenv().PluginManager,function()
         return error(Message)
     end)
+
+    getgenv().mousemoverel = function(Position,Thirdperson,Sensitivity)
+        if Thirdperson then
+            local TI = TweenInfo.new(Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+            TweenService:Create(Camera, TI, {CFrame = CFrame.new(Camera.CFrame.Position, Position)}):Play()
+            return
+        end
+
+        local PointRay = Camera:ViewportPointToRay(Position.X,Position.Y)
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position,PointRay.Origin + PointRay.Direction)
+    end
 end
 
 repeat task.wait() until Stats.Network:FindFirstChild("ServerStatsItem")
