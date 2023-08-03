@@ -127,13 +127,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
     end
-    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,true) do
-        VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
-        VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
-        VisualsSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
-        VisualsSection:Toggle({Name = "Use Team Color",Flag = "ESP/Player/TeamColor",Value = false})
-        VisualsSection:Toggle({Name = "Distance Check",Flag = "ESP/Player/DistanceCheck",Value = false})
-        VisualsSection:Slider({Name = "Distance",Flag = "ESP/Player/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/NPC",true,true,true,true,true,true) do
+        VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/NPC/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
+        VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/NPC/Enemy",Value = {1,0.6666666269302368,1,0,false}})
+        VisualsSection:Toggle({Name = "Team Check",Flag = "ESP/NPC/TeamCheck",Value = false})
+        VisualsSection:Toggle({Name = "Use Team Color",Flag = "ESP/NPC/TeamColor",Value = false})
+        VisualsSection:Toggle({Name = "Distance Check",Flag = "ESP/NPC/DistanceCheck",Value = false})
+        VisualsSection:Slider({Name = "Distance",Flag = "ESP/NPC/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
     end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
