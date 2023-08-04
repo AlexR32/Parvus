@@ -1,3 +1,12 @@
+### Update 4/08/23
+```markdown
+# Drawing
++ added out of view arrows
++ added chams/highlights
+
+# BRM5
+* should be fixed now
+```
 ### Update 2/08/23
 ```markdown
 # Drawing

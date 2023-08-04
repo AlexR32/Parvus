@@ -23,7 +23,7 @@ local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
-    Position = UDim2.new(0.5,-173,0.5,-173),Size = UDim2.new(0,346,0,346)
+    Position = UDim2.new(0.5,-173 * 3,0.5,-173),Size = UDim2.new(0,346,0,346)
 }) do Window:Watermark({Enabled = true})
 
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,false,false,true,false) do
