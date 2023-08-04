@@ -359,12 +359,12 @@ function Utility.ESPSection(Self,Window,Name,Flag,BoxEnabled,ChamEnabled,HeadEna
         if OoVEnabled then
             local OoVSection = VisualsTab:Section({Name = "Offscreen Arrows",Side = "Right"}) do
                 OoVSection:Toggle({Name = "Enabled",Flag = Flag .. "/Arrow/Enabled",Value = false})
-                OoVSection:Toggle({Name = "Filled",Flag = Flag .. "/Arrow/Filled",Value = true})
-                OoVSection:Toggle({Name = "Outline",Flag = Flag .. "/Arrow/Outline",Value = true})
+                --OoVSection:Toggle({Name = "Filled",Flag = Flag .. "/Arrow/Filled",Value = true})
+                --OoVSection:Toggle({Name = "Outline",Flag = Flag .. "/Arrow/Outline",Value = true})
                 OoVSection:Slider({Name = "Width",Flag = Flag .. "/Arrow/Width",Min = 14,Max = 28,Value = 14})
                 OoVSection:Slider({Name = "Height",Flag = Flag .. "/Arrow/Height",Min = 14,Max = 28,Value = 28})
-                OoVSection:Slider({Name = "Distance From Center",Flag = Flag .. "/Arrow/Radius",Min = 80,Max = 200,Value = 200})
-                OoVSection:Slider({Name = "Thickness",Flag = Flag .. "/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
+                OoVSection:Slider({Name = "Distance From Center",Flag = Flag .. "/Arrow/Radius",Min = 80,Max = 200,Value = 150})
+                --OoVSection:Slider({Name = "Thickness",Flag = Flag .. "/Arrow/Thickness",Min = 1,Max = 10,Value = 1})
                 OoVSection:Slider({Name = "Transparency",Flag = Flag .. "/Arrow/Transparency",Min = 0,Max = 1,Precise = 2,Value = 0})
             end
         end

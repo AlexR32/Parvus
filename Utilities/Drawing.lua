@@ -49,16 +49,11 @@ local DrawingLibrary = {
 }
 
 --local CharacterSize = Vector3.new(4,5,1)
-local FrameRate = 1/60--1/30
+local FrameRate = 1/60 --1/30
 
 if not RESPContainer then
     getgenv().RESPContainer = InsertService:LoadLocalAsset("rbxassetid://11313408229")
     RESPContainer.Parent = CoreGui
-end
-if not HighlightContainer then
-    getgenv().HighlightContainer = Instance.new("Folder")
-    HighlightContainer.Name = "HighlightContainer"
-    HighlightContainer.Parent = CoreGui
 end
 
 local function RESPNew()
@@ -190,7 +185,7 @@ local function RotateVector(Vector,Radians)
     )
 end
 local function RelativeToCenter(Size)
-    return AntiAliasingP(Camera.ViewportSize / 2 - Size)
+    return Camera.ViewportSize / 2 - Size
 end
 
 function GetCharacter(Target,Mode)
