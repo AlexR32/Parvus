@@ -16,11 +16,11 @@ local Events = ReplicatedStorage:WaitForChild("Events")
 local RemoteEvent = Events:WaitForChild("RemoteEvent")
 
 -- Temporary method
-local OldIdentity = getthreadidentity()
-setthreadidentity(2)
+--local OldIdentity = getthreadidentity()
+--setthreadidentity(2)
 local Server = require(Packages:WaitForChild("server"))
 ServerSettings = Server._cache
-setthreadidentity(OldIdentity)
+--setthreadidentity(OldIdentity)
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
@@ -57,7 +57,7 @@ local KnownBodyParts = {
 
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
-    Position = UDim2.new(0.5,-248 * 4,0.5,-248)
+    Position = UDim2.new(0.5,-248 * 3,0.5,-248)
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do

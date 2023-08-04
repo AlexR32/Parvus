@@ -14,6 +14,7 @@ local Cos = math.cos
 local Rad = math.rad
 local Sin = math.sin
 local Tan = math.tan
+local Abs = math.abs
 local Deg = math.deg
 local Atan2 = math.atan2
 local Clamp = math.clamp
@@ -54,27 +55,25 @@ if not RESPContainer then
     getgenv().RESPContainer = InsertService:LoadLocalAsset("rbxassetid://11313408229")
     RESPContainer.Parent = CoreGui
 end
---[[if not HighlightContainer then
+if not HighlightContainer then
     getgenv().HighlightContainer = Instance.new("Folder")
     HighlightContainer.Name = "HighlightContainer"
     HighlightContainer.Parent = CoreGui
-end]]
+end
 
 local function RESPNew()
     local RESPObject = Instance.new("Folder")
     RESPContainer.Storage.Box:Clone().Parent = RESPObject
+    RESPContainer.Storage.Arrow:Clone().Parent = RESPObject
     RESPContainer.Storage.Tracer:Clone().Parent = RESPObject
     RESPContainer.Storage.HeadDot:Clone().Parent = RESPObject
+    local Highlight = Instance.new("Highlight")
+    Highlight.Parent = RESPObject
 
     RESPObject.Name = "RESPObject"
     RESPObject.Parent = RESPContainer
     return RESPObject
 end
---[[local function HighlightNew()
-    local Highlight = Instance.new("Highlight")
-    Highlight.Parent = HighlightContainer
-    return Highlight
-end]]
 local function DrawingNew(Type,Properties)
     local DrawingObject = Drawing.new(Type)
     for Property,Value in pairs(Properties) do
@@ -84,17 +83,9 @@ local function DrawingNew(Type,Properties)
     return DrawingObject
 end
 
---[[local function GetFontFromName(FontName)
-    return (FontName == "UI" and 0)
-    or (FontName == "System" and 1)
-    or (FontName == "Plex" and 2)
-    or (FontName == "Monospace" and 3)
-    or 0
-end]]
-
-local function GetFlag(F,F1,F2) return F[F1..F2] end
---local function GetFont(Font) return Fonts[Font] end
-
+local function GetFlag(F,F1,F2)
+    return F[F1..F2]
+end
 local function GetDistance(Position)
     return (Position - Camera.CFrame.Position).Magnitude
 end
@@ -114,18 +105,18 @@ end]]
 local function ToUDim2(Vector)
     return UDim2.fromOffset(Vector.X,Vector.Y)
 end
---[[local function AntiAliasingXY(X,Y)
+local function AntiAliasingXY(X,Y)
     return V2New(Floor(X),Floor(Y))
 end
 local function AntiAliasingP(P)
     return V2New(Floor(P.X),Floor(P.Y))
-end]]
+end
 local function WorldToScreen(WorldPosition)
     local Screen,OnScreen = WTVP(Camera,WorldPosition)
     return V2New(Screen.X,Screen.Y),OnScreen,Screen.Z
 end
 
--- this on from devforum too
+-- this one from devforum too
 local function CalculateLine(A,B,Thickness)
 	local Position = (A + B) / 2
 	local Distance = (A - B).Magnitude
@@ -149,12 +140,44 @@ local function EvalHealth(Percent)
 		end
 	end
 end
+-- this one from devforum
+local RIGHT = "rbxassetid://319692151"
+local LEFT = "rbxassetid://319692171"
+local function CalculateTriangle(Triangle1, Triangle2, A, B, C)
+	local AB,AC,BC = B - A,C - A,C - B
+	local ABD,ACD,BCD = AB:Dot(AB),AC:Dot(AC),BC:Dot(BC)
+
+	if ABD > ACD and ABD > BCD then
+		C,A = A,C
+	elseif ACD > BCD and ACD > ABD then
+		A,B = B,A
+	end
+
+	AB,AC,BC = B - A, C - A, C - B
+	local M1,M2 = (A + B) / 2,(A + C) / 2
+
+	local Unit = BC.Unit
+	local Height = Unit:Cross(AB)
+	local Flip = Height >= 0
+
+	local Theta = Deg(Atan2(Unit.Y, Unit.X)) + (Flip and 0 or 180)
+	
+    Triangle1.Rotation = Theta
+    Triangle1.Image = Flip and LEFT or RIGHT
+	Triangle1.Position = UDim2FromOffset(M2.X,M2.Y)
+	Triangle1.Size = UDim2FromOffset(Abs(Unit:Dot(AC)),Height)
+
+    Triangle2.Rotation = Theta
+    Triangle2.Image = Flip and RIGHT or LEFT
+	Triangle2.Position = UDim2FromOffset(M1.X,M1.Y)
+	Triangle2.Size = UDim2FromOffset(Abs(Unit:Dot(AB)),Height)
+end
 -- CalculateBox by mickeyrbx (highly edited)
 local function CalculateBox(Model,Position,Distance) local Size = Model:GetExtentsSize()
     return Position,Size * 1 / (Distance * Tan(Rad(Camera.FieldOfView / 2)) * 2) * 1000
 end
 -- Offscreen Arrows by Blissful
---[[local function GetRelative(Position)
+local function GetRelative(Position)
     local Relative = PointToObjectSpace(Camera.CFrame,Position)
     return V2New(-Relative.X,-Relative.Z)
 end
@@ -167,8 +190,8 @@ local function RotateVector(Vector,Radians)
     )
 end
 local function RelativeToCenter(Size)
-    return Camera.ViewportSize / 2 - Size
-end]]
+    return AntiAliasingP(Camera.ViewportSize / 2 - Size)
+end
 
 function GetCharacter(Target,Mode)
     if Mode == "Player" then
@@ -316,7 +339,7 @@ function DrawingLibrary.AddObject(Self,Object,ObjectName,ObjectPosition,GlobalFl
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
         IsBasePart = typeof(ObjectPosition) ~= "Vector3",
 
-        Name = RESPContainer.Storage.Box.Title:Clone()
+        Name = RESPContainer.Storage.ObjectName:Clone()
     }
 
     Self.ObjectESP[Object].Name.Parent = RESPContainer
@@ -333,7 +356,6 @@ function DrawingLibrary.AddESP(Self,Target,Mode,Flag,Flags)
     Self.ESP[Target] = {
         Target = {},Mode = Mode,
         Flag = Flag,Flags = Flags,
-        --Highlight = HighlightNew(),
         RESP = RESPNew()
     }
 end
@@ -341,7 +363,6 @@ end
 function DrawingLibrary.RemoveESP(Self,Target)
     local ESP = Self.ESP[Target]
     if not ESP then return end
-    --ESP.Highlight:Destroy()
     ESP.RESP:Destroy()
 
     Clear(Self.ESP[Target])
@@ -497,6 +518,14 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
         if ESP.Target.Character and ESP.Target.RootPart then
             ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.RootPart.Position)
 
+            --[[ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
+            ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
+            ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
+            ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
+            ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
+            or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
+            or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])]]
+
             if ESP.Target.OnScreen then
                 ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
                 ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
@@ -507,14 +536,14 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
                     or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
                     or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
 
-                    --[[if ESP.Highlight.Enabled then
+                    if ESP.RESP.Highlight.Enabled then
                         local OutlineColor = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")
-                        ESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
+                        ESP.RESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
                         and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop
-                        ESP.Highlight.Adornee = ESP.Target.Character ESP.Highlight.FillColor = ESP.Target.Color
-                        ESP.Highlight.OutlineColor = OutlineColor[6] ESP.Highlight.OutlineTransparency = OutlineColor[4]
-                        ESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
-                    end]]
+                        ESP.RESP.Highlight.Adornee = ESP.Target.Character ESP.RESP.Highlight.FillColor = ESP.Target.Color
+                        ESP.RESP.Highlight.OutlineColor = OutlineColor[6] ESP.RESP.Highlight.OutlineTransparency = OutlineColor[4]
+                        ESP.RESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
+                    end
                     if ESP.RESP.Tracer.Visible or ESP.RESP.HeadDot.Visible then
                         local Head = FindFirstChild(ESP.Target.Character,"Head",true)
                         if Head then local HeadPosition = WorldToScreen(Head.Position)
@@ -619,15 +648,15 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
                             ESP.RESP.Box.HealthBar.Stroke.Transparency = Outline
                             ESP.RESP.Box.HealthBar.Position = UDim2New(0,-(Thickness + 3),0.5,0)
                             ESP.RESP.Box.HealthBar.Size = UDim2New(0,Thickness,1,Thickness * 2)
-                            ESP.RESP.Box.HealthBar.Line.BackgroundTransparency = Transparency
-                            ESP.RESP.Box.HealthBar.Line.Size = UDim2New(1,0,ESP.Target.HealthPercent,0)
-                            ESP.RESP.Box.HealthBar.Line.BackgroundColor3 = EvalHealth(ESP.Target.HealthPercent)
+                            ESP.RESP.Box.HealthBar.Health.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.HealthBar.Health.Size = UDim2New(1,0,ESP.Target.HealthPercent,0)
+                            ESP.RESP.Box.HealthBar.Health.BackgroundColor3 = EvalHealth(ESP.Target.HealthPercent)
                         end
 
-                        if ESP.RESP.Box.Title.Visible
-                        or ESP.RESP.Box.Distance.Visible
-                        or ESP.RESP.Box.Weapon.Visible
-                        or ESP.RESP.Box.HealthBar.Visible then
+                        if ESP.RESP.Box.TextLists.Top.Title.Visible
+                        or ESP.RESP.Box.TextLists.Left.Health.Visible
+                        or ESP.RESP.Box.TextLists.Bottom.Distance.Visible
+                        or ESP.RESP.Box.TextLists.Right.Weapon.Visible then
                             local Size = GetFlag(ESP.Flags,ESP.Flag,"/Name/Size")
                             local Autoscale = GetFlag(ESP.Flags,ESP.Flag,"/Name/Autoscale")
                             Autoscale = ClampDistance(Autoscale,Size,ESP.Target.Distance)
@@ -636,54 +665,90 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
                             Outline = GetFlag(ESP.Flags,ESP.Flag,"/Name/Outline")
                             Outline = Outline and math.min(Transparency,0.5) or 1
 
-                            if ESP.RESP.Box.HealthBar.Visible then
-                                ESP.RESP.Box.HealthBar.Line.Title.TextSize = Autoscale
-                                ESP.RESP.Box.HealthBar.Line.Title.Size = UDim2New(0,25,0,Autoscale)
-                                ESP.RESP.Box.HealthBar.Line.Title.TextTransparency = Transparency
-                                ESP.RESP.Box.HealthBar.Line.Title.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.HealthBar.Line.Title.Text = tostring(math.floor(ESP.Target.HealthPercent * 100)) .. "%"
-                            end
+                            ESP.RESP.Box.TextLists.Top.Position = UDim2New(0.5,0,0,-(Thickness + 3))
+                            ESP.RESP.Box.TextLists.Left.Position = UDim2New(0,-(Thickness * 2 + 6),0.5,0)
+                            ESP.RESP.Box.TextLists.Bottom.Position = UDim2New(0.5,0,1,Thickness + 3)
+                            ESP.RESP.Box.TextLists.Right.Position = UDim2New(1,Thickness + 3,0.5,0)
 
-                            if ESP.RESP.Box.Title.Visible then
-                                ESP.RESP.Box.Title.TextSize = Autoscale
-                                ESP.RESP.Box.Title.Size = UDim2New(1,2,0,Autoscale)
-                                ESP.RESP.Box.Title.TextTransparency = Transparency
-                                ESP.RESP.Box.Title.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.Title.Text = ESP.Mode == "Player" and Target.Name or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC")
+                            if ESP.RESP.Box.TextLists.Top.Title.Visible then
+                                ESP.RESP.Box.TextLists.Top.Title.TextSize = Autoscale
+                                ESP.RESP.Box.TextLists.Top.Title.Size = UDim2New(1,0,0,Autoscale)
+                                ESP.RESP.Box.TextLists.Top.Title.TextTransparency = Transparency
+                                ESP.RESP.Box.TextLists.Top.Title.TextStrokeTransparency = Outline
+                                ESP.RESP.Box.TextLists.Top.Title.Text = ESP.Mode == "Player" and Target.Name
+                                or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC")
                             end
-                            if ESP.RESP.Box.Distance.Visible then
-                                ESP.RESP.Box.Distance.TextSize = Autoscale
-                                ESP.RESP.Box.Distance.Size = UDim2New(1,2,0,Autoscale)
-                                ESP.RESP.Box.Distance.Position = UDim2New(0.5,0,1,ESP.RESP.Box.Title.TextSize + 2)
-                                ESP.RESP.Box.Distance.TextTransparency = Transparency
-                                ESP.RESP.Box.Distance.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.Distance.Text = tostring(math.floor(ESP.Target.Distance)) .. " studs"
+                            if ESP.RESP.Box.TextLists.Left.Health.Visible then
+                                ESP.RESP.Box.TextLists.Left.Health.TextSize = Autoscale
+                                ESP.RESP.Box.TextLists.Left.Health.Size = UDim2New(1,0,0,Autoscale)
+                                ESP.RESP.Box.TextLists.Left.Health.TextTransparency = Transparency
+                                ESP.RESP.Box.TextLists.Left.Health.TextStrokeTransparency = Outline
+                                ESP.RESP.Box.TextLists.Left.Health.Text = tostring(math.floor(ESP.Target.HealthPercent * 100)) .. "%"
                             end
-                            if ESP.RESP.Box.Weapon.Visible then
-                                ESP.RESP.Box.Weapon.TextSize = Autoscale
-                                ESP.RESP.Box.Weapon.Size = UDim2New(1,2,0,Autoscale)
-                                ESP.RESP.Box.Weapon.Position = UDim2New(1,(Thickness * 2) + 6,0,-(Thickness - 2))
-                                ESP.RESP.Box.Weapon.TextTransparency = Transparency
-                                ESP.RESP.Box.Weapon.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.Weapon.Text = ESP.Target.Weapon
+                            if ESP.RESP.Box.TextLists.Bottom.Distance.Visible then
+                                ESP.RESP.Box.TextLists.Bottom.Distance.TextSize = Autoscale
+                                ESP.RESP.Box.TextLists.Bottom.Distance.Size = UDim2New(1,0,0,Autoscale)
+                                ESP.RESP.Box.TextLists.Bottom.Distance.TextTransparency = Transparency
+                                ESP.RESP.Box.TextLists.Bottom.Distance.TextStrokeTransparency = Outline
+                                ESP.RESP.Box.TextLists.Bottom.Distance.Text = tostring(math.floor(ESP.Target.Distance)) .. " studs"
+                            end
+                            if ESP.RESP.Box.TextLists.Right.Weapon.Visible then
+                                ESP.RESP.Box.TextLists.Right.Weapon.TextSize = Autoscale
+                                ESP.RESP.Box.TextLists.Right.Weapon.Size = UDim2New(1,0,0,Autoscale)
+                                ESP.RESP.Box.TextLists.Right.Weapon.TextTransparency = Transparency
+                                ESP.RESP.Box.TextLists.Right.Weapon.TextStrokeTransparency = Outline
+                                ESP.RESP.Box.TextLists.Right.Weapon.Text = ESP.Target.Weapon
                             end
                         end
                     end
+                end
+            else
+                if ESP.RESP.Arrow.Left.Visible and ESP.RESP.Arrow.Right.Visible then
+                    ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
+                    ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
+                    ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
+                    ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
+                    ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
+                    or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
+                    or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
+
+                    local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Transparency")
+                    local Direction = GetRelative(ESP.Target.RootPart.Position).Unit
+                    local SideLength = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Width") / 2
+                    local ArrowRadius = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Radius")
+                    local Base,Radians90 = Direction * ArrowRadius,Rad(90)
+
+                    local RTCBL = RelativeToCenter(Base + RotateVector(Direction,Radians90) * SideLength)
+                    local RTCT = RelativeToCenter(Direction * (ArrowRadius + GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Height")))
+                    local RTCBR = RelativeToCenter(Base + RotateVector(Direction,-Radians90) * SideLength)
+
+                    ESP.RESP.Arrow.Left.ImageColor3 = ESP.Target.Color
+                    ESP.RESP.Arrow.Right.ImageColor3 = ESP.Target.Color
+                    ESP.RESP.Arrow.Left.ImageTransparency = Transparency
+                    ESP.RESP.Arrow.Right.ImageTransparency = Transparency
+
+                    CalculateTriangle(ESP.RESP.Arrow.Left,ESP.RESP.Arrow.Right,RTCBL,RTCT,RTCBR)
                 end
             end
         end
 
         local TeamCheck = (not GetFlag(ESP.Flags,ESP.Flag,"/TeamCheck") and not ESP.Target.InEnemyTeam) or ESP.Target.InEnemyTeam
         local Visible = ESP.Target.RootPart and ESP.Target.OnScreen and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
+        local ArrowVisible = ESP.Target.RootPart and (not ESP.Target.OnScreen) and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
+
+        ESP.RESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
 
         ESP.RESP.Box.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/Enabled") or false
         ESP.RESP.Tracer.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Enabled") or false
         ESP.RESP.HeadDot.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Enabled") or false
+        ESP.RESP.Arrow.Left.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
+        ESP.RESP.Arrow.Right.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
         ESP.RESP.Box.HealthBar.Visible = ESP.RESP.Box.Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/HealthBar") and not ESP.Target.BoxTooSmall or false
 
-        ESP.RESP.Box.Title.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Name/Enabled") or false
-        ESP.RESP.Box.Distance.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Distance/Enabled") or false
-        ESP.RESP.Box.Weapon.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Weapon/Enabled") or false
+        ESP.RESP.Box.TextLists.Top.Title.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Name/Enabled") or false
+        ESP.RESP.Box.TextLists.Left.Health.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Health/Enabled") or false
+        ESP.RESP.Box.TextLists.Bottom.Distance.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Distance/Enabled") or false
+        ESP.RESP.Box.TextLists.Right.Weapon.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Weapon/Enabled") or false
     end
 end)
 
