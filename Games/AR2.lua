@@ -400,6 +400,12 @@ local Window = Parvus.Utilities.UI:Window({
             --CharSection:Toggle({Name = "Use In Air",Flag = "AR2/UseInAir",Value = false})
             CharSection:Toggle({Name = "Use In Water",Flag = "AR2/UseInWater",Value = false})
             CharSection:Toggle({Name = "Fast Respawn",Flag = "AR2/FastRespawn",Value = false})
+            CharSection:Toggle({Name = "Staff Join",Flag = "AR2/StaffJoin",Value = false})
+            CharSection:Dropdown({HideName = true,Flag = "AR2/StaffJoin/List",List = {
+                {Name = "Server Hop",Mode = "Button",Value = true}
+                {Name = "Notify",Mode = "Button",Value = false}
+                {Name = "Kick",Mode = "Button",Value = false}
+            }})
             --[[CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
             Callback = function(Bool)
                 if not PlayerClass.Character then return end
@@ -574,17 +580,19 @@ end
 local function CheckForAdmin(Player)
     local Success,Result = nil,nil
 
-    repeat task.wait();
-        Success, Result = pcall(Player.GetRankInGroup, Player, 15434910);
-    until Success;
+    repeat task.wait()
+        Success,Result = pcall(Player.GetRankInGroup, Player, 15434910)
+    until Success
 
     if Result and Window.Flags["AR2/StaffJoin"] then
         local Role = Roles[Result]
 
         if Role then
-            local Message = ("A Staff Member Has Joined Or Is In Your Game | Name: %s ID: %d Roles: %s"):format(Player.Name,Player.UserId,Role)
+            local Message = ("Staff member has joined or is in your game\nName: %s\nUserId: %s\nRole: %s"):format(Player.Name,Player.UserId,Role)
             if Window.Flags["AR2/StaffJoin/List"][1] == "Kick" then
-                LocalPlayer:Kick(Msg);
+                LocalPlayer:Kick(Message)
+            elseif Window.Flags["AR2/StaffJoin/List"][1] == "Server Hop" then
+                Parvus.Utilities.ServerHop()
             elseif Window.Flags["AR2/StaffJoin/List"][1] == "Notify" then
                 UI:Notification2({Title = Message,Duration = 10})
             end
