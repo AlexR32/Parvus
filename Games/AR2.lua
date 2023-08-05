@@ -402,8 +402,8 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "Fast Respawn",Flag = "AR2/FastRespawn",Value = false})
             CharSection:Toggle({Name = "Staff Join",Flag = "AR2/StaffJoin",Value = false})
             CharSection:Dropdown({HideName = true,Flag = "AR2/StaffJoin/List",List = {
-                {Name = "Server Hop",Mode = "Button",Value = true}
-                {Name = "Notify",Mode = "Button",Value = false}
+                {Name = "Server Hop",Mode = "Button",Value = true},
+                {Name = "Notify",Mode = "Button",Value = false},
                 {Name = "Kick",Mode = "Button",Value = false}
             }})
             --[[CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
