@@ -106,8 +106,8 @@ function Utility.NewThreadLoop(Wait,Function)
         end
     end)
 end
-function Utility.FixUpValue(fn,hook,global)
-    if global then
+function Utility.FixUpValue(fn,hook,gvar)
+    if gvar then
         old = hookfunction(fn,function(...)
             return hook(old,...)
         end)

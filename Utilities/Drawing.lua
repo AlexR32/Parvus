@@ -338,8 +338,6 @@ function DrawingLibrary.AddObject(Self,Object,ObjectName,ObjectPosition,GlobalFl
     }
 
     Self.ObjectESP[Object].Name.Parent = RESPContainer
-    Self.ObjectESP[Object].Name.Size = UDim2New(0,50,0,14)
-
     if Self.ObjectESP[Object].IsBasePart then
         Self.ObjectESP[Object].Target.RootPart = ObjectPosition
         Self.ObjectESP[Object].Target.Position = ObjectPosition.Position
@@ -497,7 +495,7 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
 
         if ESP.Name.Visible then
             local Color = GetFlag(ESP.Flags,ESP.Flag,"/Color")
-            ESP.Name.TextStrokeTransparency = math.min(Color[4],0.5)
+            ESP.Name.TextStrokeTransparency = math.max(Color[4],0.5)
             ESP.Name.TextTransparency = Color[4]
             ESP.Name.TextColor3 = Color[6]
 
