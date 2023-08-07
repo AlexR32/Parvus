@@ -1,3 +1,32 @@
+### Update 07/08/23
+```markdown
+# AR2
+* fixed some container esp things
++ added new lighting to misc
+- removed lighting from visuals
+* updated AR2 ESP Database
+* updated vehicle section
+* fixed melee aura
+```
+### Update 06/08/23
+```markdown
+# AR2
++ added fly
++ added zombie meleeaura
++ added player meleeaura
+* misc fixes
+```
+### Update 05/08/23
+```markdown
+# AR2
+* fixed
+- melee aura removed
+- anti zombie removed
+- teleport removed
+- fly removed
+# Drawing
+* fixed object esp transparency
+```
 ### Update 4/08/23
 ```markdown
 # Drawing

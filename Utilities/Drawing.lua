@@ -329,6 +329,9 @@ end
 function DrawingLibrary.AddObject(Self,Object,ObjectName,ObjectPosition,GlobalFlag,Flag,Flags)
     if Self.ObjectESP[Object] then return end
 
+
+    --setidentity(6)
+    --setthreadidentity(6)
     Self.ObjectESP[Object] = {
         Target = {Name = ObjectName,Position = ObjectPosition},
         Flag = Flag,GlobalFlag = GlobalFlag,Flags = Flags,
