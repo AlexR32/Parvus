@@ -13,6 +13,11 @@ if identifyexecutor() ~= "Synapse X" then
     }) repeat task.wait(1) until Loaded
 end]]
 
+for Index,Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
+    print("Found ScriptContext error detection, removing")
+    Connection:Disable()
+end
+
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
@@ -74,10 +79,6 @@ for Index,Table in pairs(getgc(true)) do
     end
 end
 
-for Index,Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
-    print("Found ScriptContext error detection, removing")
-    Connection:Disable()
-end
 --[[local function RenameCharacter(Player)
     if not Player.Character then return end
     Player.Character.Name = ("%s (%s)"):format(Player.Name,Player.DisplayName)
@@ -344,7 +345,7 @@ local Window = Parvus.Utilities.UI:Window({
             LightingSection:Toggle({Name = "Enabled",Flag = "AR2/Lighting/Enabled",Value = false,
             Callback = function(Bool) if not Bool then LightingState.BaseTime = OldBaseTime end end})
             --LightingSection:Toggle({Name = "Positive StartTime",Flag = "AR2/Lighting/StartTime",Value = false})
-            LightingSection:Slider({Name = "Time",Flag = "AR2/Lighting/Time",Min = 0,Max = 24,Precise = 1,Value = 0,Unit = "hours"})
+            LightingSection:Slider({Name = "Time",Flag = "AR2/Lighting/Time",Min = 0,Max = 24,Precise = 1,Value = 12,Unit = "hours"})
 
             for Name,LightingMode in pairs(getupvalue(Lighting.GetState,4)) do
                 LModes[#LModes + 1] = {Name = Name,Mode = "Button",Value = false,
@@ -691,29 +692,55 @@ local function SwingMelee(Target)
     if not EquippedItem then return end
 
     if EquippedItem.Type ~= "Melee" then return end
-    if (Target.Position - Character.RootPart.Position).Magnitude >= 10 then return end
-
-    local Time = workspace:GetServerTimeNow()
-    Network:Send("Melee Swing",Time,EquippedItem.Id,EquippedItem.ComboIndex)
-
-    local Maid = Maids.new()
     local AttackConfig = EquippedItem.AttackConfig[1]
-    local AnimationPlaying = Character.Animator:PlayAnimationReplicated(AttackConfig.Animation,0.05,AttackConfig.PlaybackSpeedMod)
+
+    local Time = Workspace:GetServerTimeNow()
+    Network:Send("Melee Swing",Time,EquippedItem.Id,1)
+    local Stopped = Character.Animator:PlayAnimationReplicated(AttackConfig.Animation,0.05,AttackConfig.PlaybackSpeedMod)
     local Track = Character.Animator:GetTrack(AttackConfig.Animation)
 
     if Track then
+        local Maid = Maids.new()
         Maid:Give(Track:GetMarkerReachedSignal("Swing"):Connect(function(State)
             if State ~= "Begin" then return end
             Network:Send("Melee Hit Register",EquippedItem.Id,Time,Target,"Flesh",false)
+            Maid:Destroy()
+            Maid = nil
         end))
+
+        Stopped:Wait()
+    end
+end
+function GetEnemyForMelee(Player,Zombie)
+    local PlayerCharacter = PlayerClass.Character
+    if not PlayerCharacter then return end
+
+    local Closest = nil
+    local ClosestMagnitude = 10
+
+    if Zombie then
+        for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
+            local PrimaryPart = Zombie.PrimaryPart
+            if not PrimaryPart then continue end
+
+            local Magnitude = (PrimaryPart.Position - PlayerCharacter.RootPart.Position).Magnitude
+            if ClosestMagnitude >= Magnitude then Closest,ClosestMagnitude = PrimaryPart,Magnitude end
+        end
     end
 
-    if AnimationPlaying then
-        AnimationPlaying:Wait()
+    if Player then
+        ClosestMagnitude = 10
+        for Index,Character in pairs(Characters:GetChildren()) do
+            if Character == PlayerCharacter.Instance then continue end
+            local PrimaryPart = Character.PrimaryPart
+            if not PrimaryPart then continue end
+
+            local Magnitude = (PrimaryPart.Position - PlayerCharacter.RootPart.Position).Magnitude
+            if ClosestMagnitude >= Magnitude then Closest,ClosestMagnitude = PrimaryPart,Magnitude end
+        end
     end
 
-    Maid:Destroy()
-    Maid = nil
+    return Closest
 end
 function GetCharactersInRadius(Path,Distance)
     local PlayerCharacter = PlayerClass.Character
@@ -1234,38 +1261,22 @@ Parvus.Utilities.NewThreadLoop(0,function(Delta)
     RootPart.AssemblyLinearVelocity = Vector3.zero
     RootPart.CFrame += MoveDirection * Delta * Window.Flags["AR2/Fly/Speed"] * 100
 end)
-
 Parvus.Utilities.NewThreadLoop(0.1,function()
-    if not Window.Flags["AR2/AntiZombie/MeleeAura"] then return end
-    local Closest = GetCharactersInRadius(Zombies.Mobs,20)
-    if not Closest then return end
+    if not Window.Flags["AR2/MeleeAura"]
+    and not Window.Flags["AR2/AntiZombie/MeleeAura"] then return end
 
-    for Index,Character in pairs(Closest) do
-        local PrimaryPart = Character.PrimaryPart
-        if not PrimaryPart then continue end
+    local EnemyRoot = GetEnemyForMelee(
+        Window.Flags["AR2/MeleeAura"],
+        Window.Flags["AR2/AntiZombie/MeleeAura"]
+    )
 
-        --PrimaryPart.Anchored = Window.Flags["AR2/AntiZombie/Enabled"]
-
-        --if Window.Flags["AR2/AntiZombie/MeleeAura"] then
-            SwingMelee(PrimaryPart)
-        --end
-    end
-end)
-Parvus.Utilities.NewThreadLoop(0.1,function()
-    if not Window.Flags["AR2/MeleeAura"] then return end
-    local Closest = GetCharactersInRadius(Characters,20)
-    if not Closest then return end
-
-    for Index,Character in pairs(Closest) do
-        local PrimaryPart = Character.PrimaryPart
-        if not PrimaryPart then continue end
-        SwingMelee(PrimaryPart)
-    end
+    if not EnemyRoot then return end
+    SwingMelee(EnemyRoot)
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Lighting/Enabled"] then return end
     local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
-    LightingState.BaseTime = Time - Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength
+    LightingState.BaseTime = Time - ((Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength) % 1440)
 end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Enabled"]
