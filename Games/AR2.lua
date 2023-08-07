@@ -35,6 +35,7 @@ local World = Framework.Libraries.World
 local Network = Framework.Libraries.Network
 local Cameras = Framework.Libraries.Cameras
 local Bullets = Framework.Libraries.Bullets
+local Lighting = Framework.Libraries.Lighting
 local Interface = Framework.Libraries.Interface
 local Raycasting = Framework.Libraries.Raycasting
 
@@ -49,7 +50,12 @@ local Events = getupvalue(Network.Add,1)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
 local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local GetFireImpulse = getupvalue(Bullets.Fire,6)
+local LightingState = getupvalue(Lighting.GetState,1)
 local RenderSettings = getupvalue(World.GetDistance,1)
+
+local SetWheelSpeeds = getupvalue(VehicleController.Step,2)
+--local SetSteerWheels = getupvalue(VehicleController.Step,3)
+--local ApplyDragForce = getupvalue(VehicleController.Step,4)
 
 --local Effects = getupvalue(CastLocalBullet,2)
 --local Sounds = getupvalue(CastLocalBullet,3)
@@ -89,8 +95,19 @@ PlayerService.PlayerAdded:Connect(function(Player)
 end)]]
 
 local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
-local ItemMemory,NoClipEvent,NoClipObjects,TeleportBypass = {},nil,{},false
+local ItemMemory,NoClipEvent,NoClipObjects = {},nil,{}
+local OldBaseTime = LightingState.BaseTime
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
+
+local AddObject = Instance.new("BindableEvent")
+AddObject.Event:Connect(function(...)
+    Parvus.Utilities.Drawing:AddObject(...)
+end)
+
+local RemoveObject = Instance.new("BindableEvent")
+RemoveObject.Event:Connect(function(...)
+    Parvus.Utilities.Drawing:RemoveObject(...)
+end)
 
 --RenderSettings.Loot = 1
 --RenderSettings.Elements = 1
@@ -98,7 +115,40 @@ local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 --RenderSettings.Terrain = 36
 
 -- game data mess
-local AdminRoles = {
+local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
+    {"ATVCrashsiteRenegade01",false},{"BankTruckRobbery01",false},{"BeachedAluminumBoat01",false},{"BeechcraftGemBroker01",false},
+    {"CampSovietBandit01",false},{"ConstructionWorksite01",false},{"CrashPrisonBus01",false},{"DryGhillieSpawner01",true},
+    {"FuneralProcession01",false},{"GraveFresh01",false},{"GraveNumberOne1",false},{"LifePreserverMilitary01",true},
+    {"LifePreserverSoviet01",false},{"LifePreserverSpecOps01",true},{"MilitaryBlockade01",false},{"MilitaryConvoy01",true},
+    {"ParamedicScene01",false},{"PartyTrailerDisco01",false},{"PartyTrailerTechnoGold",false},{"PartyTrailerTechnoGoldDeagleMod1",false},
+    {"PirateTreasure01",true},{"PoliceBlockade01",false},{"PoolsClosed01",false},{"PopupCampsite01",false},
+    {"PopupFishing01",false},{"PopupFishing02",false},{"RaiderConvoy01",true},{"RaiderFight01",true},
+    {"RaiderFight02",true},{"RaiderWanderer01",true},{"RandomCrashCessna01",false},{"SeahawkCrashsite04",true},
+    {"SeahawkCrashsite05",true},{"SeahawkCrashsite06",true},{"SeahawkCrashsite07",true},{"SeahawkCrashsiteRogue01",true},
+    {"SedanHaul01",false},{"SpecialForcesCrash01",true},{"StashFood01",false},{"StashFood02",false},
+    {"StashFood03",false},{"StashGeneral01",false},{"StashGeneral02",false},{"StashGeneral03",false},
+    {"StashMedical01",false},{"StashMedical02",false},{"StashMedical03",false},{"StashWeaponHigh01",false},
+    {"StashWeaponHigh02",false},{"StashWeaponHigh03",false},{"StashWeaponMid01",false},{"StashWeaponMid02",false},
+    {"StashWeaponMid03",false},{"StrandedStation01",false},{"StrandedStationKeyboard01",false}
+},
+{
+    {"Containers",false},{"Accessories",true},{"Ammo",false},{"Attachments",false},
+    {"Backpacks",false},{"Belts",true},{"Clothing",true},{"Consumables",true},
+    {"Firearms",false},{"Hats",true},{"Medical",false},{"Melees",false},
+    {"Miscellaneous",false},{"Utility",false},{"VehicleParts",false},{"Vests",true}
+},
+{
+    {"Presets.Behavior Boss Level 01",true},{"Presets.Behavior Boss Level 02",true},{"Presets.Behavior Boss Level 03",true},
+    {"Presets.Behavior Common Level 01",false},{"Presets.Behavior Common Level 02",false},{"Presets.Behavior Common Level 03",false},
+    {"Presets.Behavior Common Thrall Level 01",false},{"Presets.Behavior MiniBoss Level 01",false},{"Presets.Behavior MiniBoss Level 02",false},
+    {"Presets.Skin Tone Dark",false},{"Presets.Skin Tone Dark Servant",false},{"Presets.Skin Tone Light",false},{"Presets.Skin Tone LightMid",false},
+    {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
+},
+{
+    "Chat Message Send","Ping Return","Movestate Sync Request","Character Humanoid Update","Character Root Update","Get Player Stance Speed",
+    "Force Charcter Save","Update Character State","Sync Near Chunk Loot","Resync Character Physics","Update Character Position"
+},
+{
     [110] = "Contractor",
     [120] = "Moderator",
     [125] = "Senior Moderator",
@@ -107,33 +157,6 @@ local AdminRoles = {
     [200] = "Developer",
     [255] = "Host"
 }
-
-local RandomEvents,ItemCategory,ZombieInherits,SanityBans = {
-"ATVCrashsiteRenegade01","CampSovietBandit01","CrashPrisonBus01",
-"LifePreserverMilitary01","LifePreserverSoviet01","LifePreserverSpecOps01",
-"MilitaryBlockade01","MilitaryConvoy01","PartyTrailerDisco01",
-"PartyTrailerTechnoGold","PartyTrailerTechnoGoldDeagleMod1",
-"PirateTreasure01","SeahawkCrashsite04","SeahawkCrashsite05",
-"SeahawkCrashsite06","SeahawkCrashsite07","SpecialForcesCrash01",
-"SeahawkCrashsiteRogue01","BankTruckRobbery01","StrandedStationKeyboard01",
-
--- Christmas Random Events
---[["SnowmanStructure02","SnowmanStructure01","ChristmasTreeHouse01",
-"ChristmasTreeSpecialForces01","ChristmasTreeHouse03","ChristmasSantaSleigh03",
-"ChristmasTreeHouse02","ChristmasSantaSleigh02","ChristmasSantaSleigh01",
-"ChristmasSantaSleigh04","GhillieGiftBoxEvent","ChristmasSnowmanWreck01","ChristmasTreeHouse04"]]},
-
-{"Containers","Accessories","Ammo","Attachments","Backpacks","Belts","Clothing",
-"Consumables","Firearms","Hats","Medical","Melees","Utility","VehicleParts","Vests"},
-
-{"Presets.Behavior Boss Level 01","Presets.Behavior Boss Level 02","Presets.Behavior Boss Level 03",
-"Presets.Behavior Common Level 01","Presets.Behavior Common Level 02","Presets.Behavior Common Level 03",
-"Presets.Behavior Common Thrall Level 01","Presets.Behavior MiniBoss Level 01","Presets.Behavior MiniBoss Level 02",
-"Presets.Skin Tone Dark","Presets.Skin Tone Dark Servant","Presets.Skin Tone Light","Presets.Skin Tone LightMid",
-"Presets.Skin Tone LightMidDark","Presets.Skin Tone Mid","Presets.Skin Tone MidDark","Presets.Skin Tone Servant"},
-
-{"Chat Message Send","Ping Return","Movestate Sync Request","Character Humanoid Update","Character Root Update","Get Player Stance Speed",
-"Force Charcter Save","Update Character State","Sync Near Chunk Loot","Resync Character Physics","Update Character Position"}
 
 local KnownBodyParts = {
     {"Head",true},{"HumanoidRootPart",true},
@@ -246,7 +269,7 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
     end
-    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,true) do
+    local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
         VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
         VisualsSection:Toggle({Name = "Team Check",Flag = "ESP/Player/TeamCheck",Value = false})
@@ -259,50 +282,80 @@ local Window = Parvus.Utilities.UI:Window({
             ItemSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Items/Enabled",Value = false})
             ItemSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Items/DistanceCheck",Value = true})
             ItemSection:Slider({Name = "Distance",Flag = "AR2/ESP/Items/Distance",Min = 25,Max = 5000,Value = 50,Unit = "studs"})
-            for Index,Name in pairs(ItemCategory) do
-                local ItemFlag = "AR2/ESP/Items/" .. Name Window.Flags[ItemFlag .. "/Enabled"] = false
-                Items[#Items + 1] = {Name = Name,Mode = "Toggle",Value = false,
-                    Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0,false}},
+
+            for Index,Data in pairs(ItemCategory) do
+                local ItemFlag = "AR2/ESP/Items/" .. Data[1]
+                Window.Flags[ItemFlag .. "/Enabled"] = Data[2]
+
+                Items[#Items + 1] = {
+                    Name = Data[1],Mode = "Toggle",Value = Data[2],
+                    Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0.5,false}},
                     Callback = function(Selected,Option) Window.Flags[ItemFlag .. "/Enabled"] = Option.Value end
                 }
-            end ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
+            end
+            
+            ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
         local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Left"}) do local ZIs = {}
             ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
             ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
             ZombiesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Zombies/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
 
-            for Index,Inherit in pairs(ZombieInherits) do
-                local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
-                local REFlag = "AR2/ESP/Zombies/" .. InheritName
-                Window.Flags[REFlag .. "/Enabled"] = false
+            for Index,Data in pairs(ZombieInherits) do
+                local Name = Data[1]:gsub("Presets.",""):gsub(" ","")
+                local ZIFlag = "AR2/ESP/Zombies/" .. Name
+                Window.Flags[ZIFlag .. "/Enabled"] = Data[2]
 
-                ZIs[#ZIs + 1] = {Name = InheritName,Mode = "Toggle",Value = true,
-                    Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
-                    Callback = function(Selected,Option) Window.Flags[REFlag .. "/Enabled"] = Option.Value end
+                ZIs[#ZIs + 1] = {
+                    Name = Name,Mode = "Toggle",Value = Data[2],
+                    Colorpicker = {Flag = ZIFlag .. "/Color",Value = {1,0,1,0.5,false}},
+                    Callback = function(Selected,Option) Window.Flags[ZIFlag .. "/Enabled"] = Option.Value end
                 }
-            end ZombiesSection:Dropdown({Name = "ESP List",Flag = "AR2/Zombies",List = ZIs})
+            end
+            
+            ZombiesSection:Dropdown({Name = "ESP List",Flag = "AR2/Zombies",List = ZIs})
         end
         local RESection = ESPTab:Section({Name = "Random Events ESP",Side = "Right"}) do local REs = {}
             RESection:Toggle({Name = "Enabled",Flag = "AR2/ESP/RandomEvents/Enabled",Value = false})
             RESection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/RandomEvents/DistanceCheck",Value = true})
             RESection:Slider({Name = "Distance",Flag = "AR2/ESP/RandomEvents/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
-            for Index,Name in pairs(RandomEvents) do
-                local REFlag = "AR2/ESP/RandomEvents/" .. Name Window.Flags[REFlag .. "/Enabled"] = false
-                REs[#REs + 1] = {Name = Name,Mode = "Toggle",Value = true,
-                    Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0,false}},
+
+            for Index,Data in pairs(RandomEvents) do
+                local REFlag = "AR2/ESP/RandomEvents/" .. Data[1]
+                Window.Flags[REFlag .. "/Enabled"] = Data[2]
+
+                REs[#REs + 1] = {
+                    Name = Data[1],Mode = "Toggle",Value = Data[2],
+                    Colorpicker = {Flag = REFlag .. "/Color",Value = {1,0,1,0.5,false}},
                     Callback = function(Selected,Option) Window.Flags[REFlag .. "/Enabled"] = Option.Value end
                 }
-            end RESection:Dropdown({Name = "ESP List",Flag = "AR2/RandomEvents",List = REs})
+            end
+            
+            RESection:Dropdown({Name = "ESP List",Flag = "AR2/RandomEvents",List = REs})
         end
         local VehiclesSection = ESPTab:Section({Name = "Vehicles ESP",Side = "Right"}) do
             VehiclesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Vehicles/Enabled",Value = false})
             VehiclesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Vehicles/DistanceCheck",Value = true})
-            VehiclesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Vehicles/Color",Value = {1,0,1,0,false}})
+            VehiclesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Vehicles/Color",Value = {1,0,1,0.5,false}})
             VehiclesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Vehicles/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
         end
     end
-    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do local LModes = {}
+        local LightingSection = MiscTab:Section({Name = "Lighting",Side = "Left"}) do
+            LightingSection:Toggle({Name = "Enabled",Flag = "AR2/Lighting/Enabled",Value = false,
+            Callback = function(Bool) if not Bool then LightingState.BaseTime = OldBaseTime end end})
+            LightingSection:Toggle({Name = "Positive StartTime",Flag = "AR2/Lighting/StartTime",Value = false})
+            LightingSection:Slider({Name = "Time",Flag = "AR2/Lighting/Time",Min = 0,Max = 24,Precise = 1,Value = 0})
+
+            for Name,LightingMode in pairs(getupvalue(Lighting.GetState,4)) do
+                LModes[#LModes + 1] = {Name = Name,Mode = "Button",Value = false,
+                Callback = function() Lighting:SetMode(Name) end}
+            end
+
+            LightingSection:Dropdown({Name = "Lighting Mode",Flag = "AR2/Lighting/Modes",List = LModes})
+            LightingSection:Button({Name = "Reset Lighting Mode",Callback = function() Lighting:Reset() end})
+
+        end
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
             --RecoilSection:Toggle({Name = "Instant Hit",Flag = "AR2/InstantHit",Value = false})
             RecoilSection:Toggle({Name = "Silent Wallbang",Flag = "AR2/MagicBullet/Enabled",Value = false}):Keybind({Flag = "AR2/MagicBullet/Keybind"})
@@ -326,8 +379,9 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local VehSection = MiscTab:Section({Name = "Vehicle",Side = "Left"}) do
             VehSection:Toggle({Name = "Enabled",Flag = "AR2/Vehicle/Enabled",Value = false})
-            VehSection:Slider({Name = "Speed",Flag = "AR2/Vehicle/Speed",Min = 100,Max = 500,Value = 200})
-            VehSection:Slider({Name = "Steer",Flag = "AR2/Vehicle/Steer",Min = 100,Max = 500,Value = 200})
+            VehSection:Toggle({Name = "Instant Action",Flag = "AR2/Vehicle/Instant",Value = true})
+            VehSection:Slider({Name = "Max Speed",Flag = "AR2/Vehicle/MaxSpeed",Min = 0,Max = 500,Value = 100,Unit = "mph"})
+            --VehSection:Slider({Name = "Steer",Flag = "AR2/Vehicle/Steer",Min = 100,Max = 500,Value = 200})
             --[[VehSection:Slider({Name = "Damping",Flag = "AR2/Vehicle/Damping",Min = 0,Max = 200,Value = 100})
             VehSection:Slider({Name = "Velocity",Flag = "AR2/Vehicle/Velocity",Min = 0,Max = 200,Value = 100})]]
         end
@@ -400,8 +454,8 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "Fast Respawn",Flag = "AR2/FastRespawn",Value = false})
             CharSection:Toggle({Name = "Staff Join",Flag = "AR2/StaffJoin",Value = false})
             CharSection:Dropdown({HideName = true,Flag = "AR2/StaffJoin/List",List = {
-                {Name = "Server Hop",Mode = "Button",Value = true},
-                {Name = "Notify",Mode = "Button",Value = false},
+                {Name = "Server Hop",Mode = "Button",Value = false},
+                {Name = "Notify",Mode = "Button",Value = true},
                 {Name = "Kick",Mode = "Button",Value = false}
             }})
             --[[CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
@@ -456,7 +510,7 @@ local Window = Parvus.Utilities.UI:Window({
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
-Parvus.Utilities:SetupLighting(Window.Flags)
+--Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
@@ -801,6 +855,16 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         end
     end
 
+    --[[if Method == "SetMinutesAfterMidnight" then
+        local Args = {...}
+
+        if Window.Flags["AR2/Lighting/Enabled"] then
+            Args[1] = Window.Flags["AR2/Lighting/Time"]
+        end
+
+        return OldNamecall(Self,unpack(Args))
+    end]]
+
     if Method == "GetChildren"
     and (Self == ReplicatedFirst
     or Self == ReplicatedStorage) then
@@ -903,6 +967,44 @@ setupvalue(Bullets.Fire,6,function(...)
 
     return GetFireImpulse(...)
 end)
+setupvalue(VehicleController.Step,2,function(Self,...)
+    if Window.Flags["AR2/Vehicle/Enabled"] then
+        local Args = {...}
+
+        for Index,Wheel in pairs(Self.Wheels:GetChildren()) do
+            local DriveMotor = Wheel:FindFirstChild("Drive Motor")
+            local PrimaryPart = Wheel.PrimaryPart
+
+            if not DriveMotor or not PrimaryPart then continue end
+
+            local MoveVector = -Args[1]
+            if Window.Flags["AR2/Vehicle/Instant"] then
+                MoveVector = PlayerClass.Character.MoveVector.Z
+            end
+
+            PrimaryPart.CustomPhysicalProperties = PhysicalProperties.new(10,5,0)
+            DriveMotor.AngularVelocity = (Window.Flags["AR2/Vehicle/MaxSpeed"] / (PrimaryPart.Size.Y * 0.5)) * MoveVector
+        end
+
+        return
+    end
+
+    return SetWheelSpeeds(Self,...)
+end)
+--[[setupvalue(VehicleController.Step,3,function(Self,...)
+    if Window.Flags["AR2/Vehicle/Enabled"] then
+        return
+    end
+
+    return SetSteerWheels(Self,...)
+end)
+setupvalue(VehicleController.Step,4,function(Self,...)
+    if Window.Flags["AR2/Vehicle/Enabled"] then
+        return
+    end
+
+    return ApplyDragForce(Self,...)
+end)]]
 setupvalue(InteractHeartbeat,11,function(...)
     if Window.Flags["AR2/InstantSearch"] then
         local ReturnArgs = {FindItemData(...)}
@@ -976,7 +1078,7 @@ Animators.PlayAnimationReplicated = function(Self,Path,...)
     if Path == "Actions.Fall Impact" and Window.Flags["AR2/NoFallImpact"] then return end
     return OldPlayAnimationReplicated(Self,Path,...)
 end
-local OldVC = VehicleController.new
+--[[local OldVC = VehicleController.new
 VehicleController.new = function(...)
     local ReturnArgs = {OldVC(...)}
 
@@ -998,7 +1100,9 @@ VehicleController.new = function(...)
     end
 
     return unpack(ReturnArgs)
-end
+end]]
+
+--Events["Character Rubber Band Rest"] = function() print("rubber") return false end
 local OldCD = Events["Character Dead"]
 if OldCD then
     Events["Character Dead"] = function(...)
@@ -1014,24 +1118,43 @@ if OldCD then
         return OldCD(...)
     end
 end
---Events["Character Rubber Band Rest"] = function() print("rubber") return false end
+
+local OldLSU = Events["Lighting State Update"]
+Events["Lighting State Update"] = function(Data,...)
+    LightingState = Data
+    OldBaseTime = LightingState.BaseTime
+    print("Lighting State Updated")
+    return OldLSU(Data,...)
+end
 local OldICA = Events["Inventory Container Added"]
 Events["Inventory Container Added"] = function(Id,Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldICA(Id,Data,...) end
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
-        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
-    end return OldICA(Id,Data,...)
+
+    --print(Data.Type)
+
+    if Data.Type ~= "Corpse" or Data.Type ~= "Vehicle" then
+        if Data.WorldPosition and Length(Data.Occupants) > 0 then
+            AddObject:Fire(Data.Id,CIIC(Data),Data.WorldPosition,
+            "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
+        end
+    end
+    
+    return OldICA(Id,Data,...)
 end
 local OldCC = Events["Container Changed"]
 Events["Container Changed"] = function(Data,...)
     if not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return OldCC(Data,...) end
 
-    Parvus.Utilities.Drawing:RemoveObject(Data.Id)
-    if Data.WorldPosition and Length(Data.Occupants) > 0 and not string.find(Data.Type,"Corpse") then
-        Parvus.Utilities.Drawing:AddObject(Data.Id,CIIC(Data),Data.WorldPosition,
-        "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
-    end return OldCC(Data,...)
+    RemoveObject:Fire(Data.Id)
+
+    if Data.Type ~= "Corpse" or Data.Type ~= "Vehicle" then
+        if Data.WorldPosition and Length(Data.Occupants) > 0 then
+            AddObject:Fire(Data.Id,CIIC(Data),Data.WorldPosition,
+            "AR2/ESP/Items","AR2/ESP/Items/Containers",Window.Flags)
+        end
+    end
+        
+    return OldCC(Data,...)
 end
 
 if PlayerClass.Character then
@@ -1150,9 +1273,14 @@ Parvus.Utilities.NewThreadLoop(0.1,function()
         SwingMelee(PrimaryPart)
     end
 end)
+Parvus.Utilities.NewThreadLoop(0,function()
+    if not Window.Flags["AR2/Lighting/Enabled"] then return end
+    local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
+    LightingState.BaseTime = Time - Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength
+end)
 Parvus.Utilities.NewThreadLoop(1,function()
-    if not Window.Flags["AR2/ESP/Items/Containers/Enabled"]
-    or not Window.Flags["AR2/ESP/Items/Enabled"] then return end
+    if not Window.Flags["AR2/ESP/Items/Enabled"]
+    and not Window.Flags["AR2/ESP/Items/Containers/Enabled"] then return end
 
     local Items = GetItemsInRadius(100)
 
@@ -1168,7 +1296,7 @@ Parvus.Utilities.NewThreadLoop(1,function()
             if Network:Fetch("Inventory Container Group Connect",Item) then
                 Network:Send("Inventory Container Group Disconnect")
                 table.insert(ItemMemory,Item)
-                local Pos = ItemMemory[#ItemMemory]
+                local Pos = #ItemMemory
                 task.wait(30)
                 table.remove(ItemMemory,Pos)
             end
@@ -1187,7 +1315,8 @@ for Index,Item in pairs(Loot:GetDescendants()) do
     end
 end
 for Index,Event in pairs(Randoms:GetChildren()) do
-    if table.find(RandomEvents,Event.Name) then --print(Event.Name)
+    for Index,Data in pairs(RandomEvents) do
+        if Event.Name ~= Data[1] then continue end --print(Event.Name)
         Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
         )
@@ -1198,8 +1327,10 @@ for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
 
     if not Config.Inherits then continue end
     for Index,Inherit in pairs(Config.Inherits) do
-        if table.find(ZombieInherits,Inherit) then
-            local InheritName = Inherit:gsub(" ",""):gsub("Presets.","")
+        for Index,Data in pairs(ZombieInherits) do
+            if Inherit.Name ~= Data[1] then continue end --print(Inherit.Name)
+            local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
+
             Parvus.Utilities.Drawing:AddObject(
                 Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
                 "AR2/ESP/Zombies/"..InheritName,Window.Flags
@@ -1225,7 +1356,8 @@ Loot.DescendantAdded:Connect(function(Item)
     end
 end)
 Randoms.ChildAdded:Connect(function(Event)
-    if table.find(RandomEvents,Event.Name) then --print(Event.Name)
+    for Index,Data in pairs(RandomEvents) do
+        if Event.Name ~= Data[1] then continue end --print(Event.Name)
         Parvus.Utilities.Drawing:AddObject(Event,Event.Name,Event.Value.Position,
             "AR2/ESP/RandomEvents","AR2/ESP/RandomEvents/" .. Event.Name,Window.Flags
         )
@@ -1244,11 +1376,13 @@ Zombies.Mobs.ChildAdded:Connect(function(Zombie)
 
     if not Config.Inherits then return end
     for Index,Inherit in pairs(Config.Inherits) do
-        if table.find(ZombieInherits,Inherit) then
-            local InheritName = Inherit:gsub(" ",""):gsub("Presets.","")
+        for Index,Data in pairs(ZombieInherits) do
+            if Inherit.Name ~= Data[1] then continue end --print(Inherit.Name)
+            local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
+
             Parvus.Utilities.Drawing:AddObject(
                 Zombie,Zombie.Name,Zombie.PrimaryPart,"AR2/ESP/Zombies",
-                "AR2/ESP/Zombies/" .. InheritName,Window.Flags
+                "AR2/ESP/Zombies/"..InheritName,Window.Flags
             )
         end
     end
