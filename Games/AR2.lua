@@ -95,8 +95,7 @@ PlayerService.PlayerAdded:Connect(function(Player)
 end)]]
 
 local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
-local ItemMemory,NoClipEvent,NoClipObjects = {},nil,{}
-local OldBaseTime = LightingState.BaseTime
+local ItemMemory,NoClipEvent,NoClipObjects,OldBaseTime = {},nil,{},LightingState.BaseTime
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 
 local AddObject = Instance.new("BindableEvent")
@@ -344,8 +343,8 @@ local Window = Parvus.Utilities.UI:Window({
         local LightingSection = MiscTab:Section({Name = "Lighting",Side = "Left"}) do
             LightingSection:Toggle({Name = "Enabled",Flag = "AR2/Lighting/Enabled",Value = false,
             Callback = function(Bool) if not Bool then LightingState.BaseTime = OldBaseTime end end})
-            LightingSection:Toggle({Name = "Positive StartTime",Flag = "AR2/Lighting/StartTime",Value = false})
-            LightingSection:Slider({Name = "Time",Flag = "AR2/Lighting/Time",Min = 0,Max = 24,Precise = 1,Value = 0})
+            --LightingSection:Toggle({Name = "Positive StartTime",Flag = "AR2/Lighting/StartTime",Value = false})
+            LightingSection:Slider({Name = "Time",Flag = "AR2/Lighting/Time",Min = 0,Max = 24,Precise = 1,Value = 0,Unit = "hours"})
 
             for Name,LightingMode in pairs(getupvalue(Lighting.GetState,4)) do
                 LModes[#LModes + 1] = {Name = Name,Mode = "Button",Value = false,
@@ -855,16 +854,6 @@ OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
         end
     end
 
-    --[[if Method == "SetMinutesAfterMidnight" then
-        local Args = {...}
-
-        if Window.Flags["AR2/Lighting/Enabled"] then
-            Args[1] = Window.Flags["AR2/Lighting/Time"]
-        end
-
-        return OldNamecall(Self,unpack(Args))
-    end]]
-
     if Method == "GetChildren"
     and (Self == ReplicatedFirst
     or Self == ReplicatedStorage) then
@@ -1123,7 +1112,7 @@ local OldLSU = Events["Lighting State Update"]
 Events["Lighting State Update"] = function(Data,...)
     LightingState = Data
     OldBaseTime = LightingState.BaseTime
-    print("Lighting State Updated")
+    --print("Lighting State Updated")
     return OldLSU(Data,...)
 end
 local OldICA = Events["Inventory Container Added"]
