@@ -24,7 +24,7 @@ local Window = Parvus.Utilities.UI:Window({
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
-        local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
+        --[[local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
@@ -55,15 +55,8 @@ local Window = Parvus.Utilities.UI:Window({
             AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/FOVCircle/Color",Value = {1,0.66666662693024,1,0.25,false}})
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
-            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
-            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
-            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
-            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
-            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
+        end]]
+        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Left"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
             --SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = false})
@@ -84,7 +77,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = BodyPartsList})
         end
-        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
+        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Left"}) do
             SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/FOVCircle/Enabled",Value = true})
             SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
@@ -118,6 +111,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = PriorityList})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
+        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Right"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
+        end
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -132,7 +132,7 @@ end Parvus.Utilities.InitAutoLoad(Window)
 Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
+--Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)
 
@@ -225,7 +225,7 @@ local function GetClosest(Enabled,
 
     return Closest
 end
-local function AimAt(Hitbox,Sensitivity)
+--[[local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
     if Window.Flags["Aimbot/Thirdperson"] then
         mousemoverel(Hitbox[3].Position,true,Sensitivity)
@@ -237,7 +237,7 @@ local function AimAt(Hitbox,Sensitivity)
         (Hitbox[4].X - MouseLocation.X) * Sensitivity,
         (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
     ))
-end
+end]]
 
 local function GetKey()
     for Index,Table in pairs(getgc(true)) do
@@ -335,7 +335,7 @@ LocalPlayer.CharacterAdded:Connect(function(Character)
     CharacterChildAdded(Character)
 end)
 
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -349,7 +349,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
-end)
+end)]]
 Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
@@ -364,7 +364,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
-    if not iswindowactive() then return end
+    --if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],

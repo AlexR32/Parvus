@@ -7,14 +7,18 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local SilentAim,Aimbot,Trigger = nil,false,false
-local NPCFolder = Workspace.Entities.Infected
 
-repeat task.wait() until LocalPlayer.PlayerScripts:FindFirstChild("Client")
+LocalPlayer.PlayerScripts:WaitForChild("Client")
+local Objectives = Workspace.World.Objectives
+local NPCFolder = Workspace.Entities.Infected
+local Items = Workspace.Ignore.Items
+
 local RayModule = require(ReplicatedStorage.SharedModules.Utilities.Ray)
---local Bullets = require(LocalPlayer.PlayerScripts.Client.Bullets)
-local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
---[[local Client = getsenv(LocalPlayer.PlayerScripts.Client)
-local GlobalTable = getupvalue(Client.RHit,2)]]
+local Bullet = require(LocalPlayer.PlayerScripts.Modules.Other.Bullet)
+local Interact = require(LocalPlayer.PlayerScripts.Client.Interact)
+--local GuiModule = require(LocalPlayer.PlayerScripts.Client.Gui)
+--local Client = getsenv(LocalPlayer.PlayerScripts.Client)
+--local GlobalTable = getupvalue(Client.RHit,2)
 
 --[[local OCIFunction = nil
 for Index,Function in pairs(getgc()) do
@@ -22,6 +26,13 @@ for Index,Function in pairs(getgc()) do
         OCIFunction = Function
     end
 end if not OCIFunction then return end]]
+
+-- Game Database
+local ItemPickups = {
+    {"50 Cal",false},{"Ammo",false},{"Bandages",false},{"Barbed Wire",false},
+    {"Body Armor",false},{"Clap Bomb",false},{"Energy Drink",false},{"Frag",false},
+    {"Gas Mask",false},{"Jack",false},{"Medkit",false},{"Molotov",false},{"Nerve Gas",false}
+}
 
 local KnownBodyParts = {
     {"Head",true},{"HumanoidRootPart",true},{"Torso",false},
@@ -35,13 +46,7 @@ local Window = Parvus.Utilities.UI:Window({
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
-        local MiscSection = CombatTab:Section({Name = "Misc",Side = "Left"}) do
-            MiscSection:Toggle({Name = "Unlimited Mag",Flag = "TWR/InfMag",Value = false})
-            MiscSection:Toggle({Name = "Unlimited Pool",Flag = "TWR/InfPool",Value = false})
-            MiscSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim Required")
-            MiscSection:Toggle({Name = "Instant Hit",Flag = "TWR/InstantHit",Value = false}):ToolTip("Silent Aim Required\nAlso Enables Wallbang")
-        end
-        local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
+        --[[local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
@@ -69,15 +74,8 @@ local Window = Parvus.Utilities.UI:Window({
             AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/FOVCircle/Color",Value = {1,0.66666662693024,1,0.25,false}})
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
-            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
-            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
-            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
-            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
-            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
+        end]]
+        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Left"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
@@ -95,7 +93,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = BodyPartsList})
         end
-        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
+        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Left"}) do
             SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/FOVCircle/Enabled",Value = true})
             SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
@@ -127,6 +125,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = PriorityList})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
+        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Right"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
+        end
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/NPC",true,true,true,true,true,true) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/NPC/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -135,13 +140,51 @@ local Window = Parvus.Utilities.UI:Window({
         VisualsSection:Toggle({Name = "Use Team Color",Flag = "ESP/NPC/TeamColor",Value = false})
         VisualsSection:Toggle({Name = "Distance Check",Flag = "ESP/NPC/DistanceCheck",Value = false})
         VisualsSection:Slider({Name = "Distance",Flag = "ESP/NPC/Distance",Min = 25,Max = 1000,Value = 250,Unit = "studs"})
+    end
+    local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
+        local WeaponSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
+            WeaponSection:Toggle({Name = "Wallbang",Flag = "TWR/Wallbang",Value = false}):ToolTip("Silent Aim required")
+            WeaponSection:Toggle({Name = "Instant Hit",Flag = "TWR/InstantHit",Value = false}):ToolTip("Silent Aim required\nAlso enables Wallbang")
+            WeaponSection:Divider()
+            WeaponSection:Toggle({Name = "Unlimited Ammo Mag",Flag = "TWR/InfMag",Value = false})
+            WeaponSection:Toggle({Name = "Unlimited Ammo Pool",Flag = "TWR/InfPool",Value = false})
+            --[[WeaponSection:Divider()
+            WeaponSection:Toggle({Name = "Damage Multiplier",Flag = "TWR/Damage/Enabled",Value = false})
+            WeaponSection:Slider({Name = "",Flag = "TWR/Damage/Value",Min = 100,Max = 200,Value = 100,Unit = "%",Wide = true})]]
+            --[[WeaponSection:Divider()
+            WeaponSection:Toggle({Name = "Firerate Multiplier",Flag = "TWR/Firerate/Enabled",Value = false})
+            WeaponSection:Slider({Name = "",Flag = "TWR/Firerate/Value",Min = 100,Max = 200,Value = 100,Unit = "%",Wide = true})
+            WeaponSection:Divider()
+            WeaponSection:Toggle({Name = "Recoil Control",Flag = "TWR/Recoil/Enabled",Value = false})
+            WeaponSection:Slider({Name = "Recoil Shake",Flag = "TWR/Recoil/RecoilShake",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WeaponSection:Slider({Name = "Verticle Recoil",Flag = "TWR/Recoil/VerticleRecoil",Min = 0,Max = 100,Value = 0,Unit = "%"})
+            WeaponSection:Slider({Name = "Horizontal Recoil",Flag = "TWR/Recoil/HorizontalRecoil",Min = 0,Max = 100,Value = 0,Unit = "%"})]]
+        end
+        local ItemSection = MiscTab:Section({Name = "Item ESP",Side = "Left"}) do local Items = {}
+            ItemSection:Toggle({Name = "Enabled",Flag = "TWR/ESP/Items/Enabled",Value = false})
+            ItemSection:Toggle({Name = "Distance Check",Flag = "TWR/ESP/Items/DistanceCheck",Value = false})
+            ItemSection:Slider({Name = "Distance",Flag = "TWR/ESP/Items/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
+
+            for Index,Data in pairs(ItemPickups) do
+                local ItemFlag = "TWR/ESP/Items/" .. Data[1]
+                Window.Flags[ItemFlag .. "/Enabled"] = Data[2]
+
+                Items[#Items + 1] = {
+                    Name = Data[1],Mode = "Toggle",Value = Data[2],
+                    Colorpicker = {Flag = ItemFlag .. "/Color",Value = {1,0,1,0.5,false}},
+                    Callback = function(Selected,Option) Window.Flags[ItemFlag .. "/Enabled"] = Option.Value end
+                }
+            end
+            
+            ItemSection:Dropdown({Name = "ESP List",Flag = "TWR/Items",List = Items})
+        end
     end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
+--Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)
 
@@ -210,15 +253,15 @@ local function GetClosest(Enabled,
 
     return Closest
 end
-local function AimAt(Hitbox,Sensitivity)
+--[[local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local MouseLocation = UserInputService:GetMouseLocation()
 
-    mousemoverel(
+    local MouseLocation = UserInputService:GetMouseLocation()
+    mousemoverel(Vector2.new(
         (Hitbox[4].X - MouseLocation.X) * Sensitivity,
         (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
-    )
-end
+    ))
+end]]
 
 --[[OldOCIFunction = nil
 OldOCIFunction = hookfunction(OCIFunction,function(...)
@@ -233,17 +276,20 @@ end)]]
 
 local OldNamecall = nil
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
-    local Method,Args = getnamecallmethod(),{...}
-    if Method == "FireServer" then
-        if Args[1] == "CheatKick" then return end
-        --[[if Args[1] == "GlobalReplicate" and Args[2].Mag then
-            Args[2].Mag = GlobalTable.WeaponModule.Stats.Mag
-        elseif Args[1] == "CheatKick" then return end]]
-    end return OldNamecall(Self,unpack(Args))
+    if getnamecallmethod() == "FireServer" then
+        local Args = {...}
+
+        if Args[1] == "CheatKick" then
+            return
+        end
+    end
+
+    return OldNamecall(Self,...)
 end)
 
 local OldCast = RayModule.Cast
-RayModule.Cast = function(...) local Args = {...}
+RayModule.Cast = function(...)
+    local Args = {...}
 
     if SilentAim and Args[4] == Enum.RaycastFilterType.Blacklist then
         if Window.Flags["TWR/Wallbang"] then
@@ -267,31 +313,49 @@ RayModule.Cast = function(...) local Args = {...}
     return OldCast(...)
 end
 
-local OldUpdateHUD = GuiModule.UpdateHUD
-GuiModule.UpdateHUD = function(...) local Args = {...}
-    if Args[1].Equipped == 3 then return OldUpdateHUD(...) end
+--[[local OldBulletUpdate = Bullet.Update
+Bullet.Update = function(Self,...)
+    if Window.Flags["TWR/Damage/Enabled"] then
+        Self.damage = Self.damage * Window.Flags["TWR/Damage/Value"] / 100
+    end
+    return OldBulletUpdate(Self,...)
+end]]
+
+local OldInteractUpdate = Interact.Update
+Interact.Update = function(Self,...)
+    local Args = {...}
 
     if Args[1].Equipped then
-        local Weapon = Args[4][Args[1].Equipped]
+        local Weapon = Args[3][Args[1].Equipped]
         local WeaponStats = Args[1].WeaponModule.Stats
-        if (WeaponStats.Mag and WeaponStats.Mag >= 1)
-        and WeaponStats.WeaponType then
-            if Window.Flags["TWR/InfMag"] then
-                Weapon.Mag = WeaponStats.Mag
-            end if Window.Flags["TWR/InfPool"] then
-                Weapon.Pool = WeaponStats.Pool
-            end
+
+        if WeaponStats.Mag and Window.Flags["TWR/InfMag"] then
+            Weapon.Mag = WeaponStats.Mag
         end
-    --[[elseif Args[1].GunnerInfo.Mounted then
-        if Window.Flags["TWR/InfMag"] then
-            Args[1].GunnerInfo.Mag = 300
+
+        if WeaponStats.Pool and Window.Flags["TWR/InfPool"] then
+            Weapon.Pool = WeaponStats.Pool
+        end
+
+        --[[if WeaponStats.RPM and Window.Flags["TWR/Firerate/Enabled"] then
+            Weapon.RPM = WeaponStats.RPM * Window.Flags["TWR/Firerate/Value"]
+        end
+
+        print(repr(Weapon))
+        if WeaponStats.RecoilShake and WeaponStats.VerticleRecoil and WeaponStats.HorizontalRecoil then
+            local Enabled = Window.Flags["TWR/Recoil/Enabled"]
+            Weapon.RecoilShake = Enabled and WeaponStats.RecoilShake * Window.Flags["TWR/Recoil/RecoilShake"] / 100 or WeaponStats.RecoilShake
+            Weapon.VerticleRecoil = Enabled and WeaponStats.VerticleRecoil * Window.Flags["TWR/Recoil/VerticleRecoil"] / 100 or WeaponStats.VerticleRecoil
+            Weapon.HorizontalRecoil = Enabled and WeaponStats.HorizontalRecoil * Window.Flags["TWR/Recoil/HorizontalRecoil"] / 100 or WeaponStats.HorizontalRecoil
         end]]
+
+        return OldInteractUpdate(Self,unpack(Args))
     end
 
-    return OldUpdateHUD(...)
+    return OldInteractUpdate(...)
 end
 
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -303,7 +367,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
-end)
+end)]]
 Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
@@ -317,7 +381,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
-    if not iswindowactive() then return end
+    --if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],
@@ -347,6 +411,19 @@ end)
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
+end)
+
+for Index,Item in pairs(Items:GetChildren()) do
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart.Position,
+    "TWR/ESP/Items","TWR/ESP/Items/" .. Item.Name,Window.Flags)
+end
+Items.ChildAdded:Connect(function(Item)
+    repeat task.wait(1) until Item.PrimaryPart
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart.Position,
+    "TWR/ESP/Items","TWR/ESP/Items/" .. Item.Name,Window.Flags)
+end)
+Items.ChildRemoved:Connect(function(Item)
+    Parvus.Utilities.Drawing:RemoveObject(Item)
 end)
 
 for Index,NPC in pairs(NPCFolder:GetChildren()) do
