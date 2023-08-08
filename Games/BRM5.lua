@@ -199,16 +199,16 @@ local Window = Parvus.Utilities.UI:Window({
             EnvSection:Slider({Name = "Clock Time",Flag = "BRM5/Lighting/Time",Min = 0,Max = 24,Value = 12})
             EnvSection:Slider({Name = "Fog Density",Flag = "BRM5/Lighting/Fog",Min = 0,Max = 1,Precise = 3,Value = 0.255})
         end
-        local IESPSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
-            IESPSection:Toggle({Name = "Enabled",Flag = "ESP/Intel/Enabled",Value = false})
+        local IntelSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
+            IntelSection:Toggle({Name = "Enabled",Flag = "BRM5/ESP/Intel/Enabled",Value = false})
             :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
-            IESPSection:Toggle({Name = "Distance Check",Flag = "ESP/Intel/DistanceCheck",Value = false})
-            IESPSection:Slider({Name = "Distance",Flag = "ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
-            --[[IESPSection:Button({Name = "Load all Intels",Callback = function()
+            IntelSection:Toggle({Name = "Distance Check",Flag = "BRM5/ESP/Intel/DistanceCheck",Value = false})
+            IntelSection:Slider({Name = "Distance",Flag = "BRM5/ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
+            --[[IntelSection:Button({Name = "Load all Intels",Callback = function()
                 for Index,Item in pairs(RaycastFolder:GetChildren()) do
                     if not Item:GetAttribute("Compound") then continue end
                 
-                    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
+                    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"BRM5/ESP/Intel","BRM5/ESP/Intel",Window.Flags)
                 end
             end}):ToolTip("VERY RISKY\nYOU MIGHT CRASH")]]
         end
@@ -891,12 +891,14 @@ end)
 for Index,Item in pairs(RaycastFolder:GetChildren()) do
     if not Item:GetAttribute("Compound") then continue end
 
-    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,
+    "BRM5/ESP/Intel","BRM5/ESP/Intel",Window.Flags)
 end
 RaycastFolder.ChildAdded:Connect(function(Item) task.wait(1)
     if not Item:GetAttribute("Compound") then return end
 
-    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,"ESP/Intel","ESP/Intel",Window.Flags)
+    Parvus.Utilities.Drawing:AddObject(Item,Item.Name,Item.PrimaryPart,
+    "BRM5/ESP/Intel","BRM5/ESP/Intel",Window.Flags)
 end)
 RaycastFolder.ChildRemoved:Connect(function(Item)
     Parvus.Utilities.Drawing:RemoveObject(Item)
