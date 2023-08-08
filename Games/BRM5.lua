@@ -61,9 +61,6 @@ local Window = Parvus.Utilities.UI:Window({
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
-        local MiscSection = CombatTab:Section({Name = "Other",Side = "Left"}) do
-            MiscSection:Toggle({Name = "NPC Mode",Flag = "BRM5/NPCMode",Value = true})
-        end
         --[[local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
@@ -117,7 +114,10 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = BodyPartsList})
         end
-        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Left"}) do
+        local MiscSection = CombatTab:Section({Name = "Other",Side = "Right"}) do
+            MiscSection:Toggle({Name = "NPC Mode",Flag = "BRM5/NPCMode",Value = true})
+        end
+        local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
             SAFOVSection:Toggle({Name = "Enabled",Flag = "SilentAim/FOVCircle/Enabled",Value = true})
             SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
@@ -125,7 +125,7 @@ local Window = Parvus.Utilities.UI:Window({
             SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
-        local TriggerSection = CombatTab:Section({Name = "Trigger",Side = "Right"}) do
+        --[[local TriggerSection = CombatTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
             :Keybind({Flag = "Trigger/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
@@ -157,7 +157,7 @@ local Window = Parvus.Utilities.UI:Window({
             TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
             TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
+        end]]
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
