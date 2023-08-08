@@ -6,20 +6,20 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 
-local FXModule = nil
+--local FXModule = nil
 --local Functions = nil
-for Index,Value in pairs(getgc(true)) do
+--[[for Index,Value in pairs(getgc(true)) do
     if type(Value) == "table" then
         if rawget(Value,"ViewArmor") then
             FXModule = Value
-        --[[elseif rawget(Value,"DisableUpperVisuals") then
-            Functions = Value]]
+        --elseif rawget(Value,"DisableUpperVisuals") then
+            --Functions = Value
         end
     end
-end
+end]]
 
 --local XRay = getupvalue(FXModule.xray,2)
-local proceedArmor = getupvalue(FXModule.ViewArmor,7)
+--local proceedArmor = getupvalue(FXModule.ViewArmor,7)
 
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
@@ -40,7 +40,7 @@ local Window = Parvus.Utilities.UI:Window({
             FlySection:Toggle({Name = "Attach To Camera",Flag = "ST/Fly/Camera",Value = true})
             FlySection:Slider({Name = "Speed",Flag = "ST/Fly/Speed",Min = 100,Max = 500,Value = 100})
         end
-        local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
+        --[[local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
             MiscSection:Toggle({Name = "XRay",Flag = "ST/XRay",Value = false,Callback = function(Bool)
                 local NumBool = Bool and 1 or 0
                 for Index,Child in pairs(Workspace:GetChildren()) do
@@ -54,7 +54,7 @@ local Window = Parvus.Utilities.UI:Window({
                     end
                 end
             end}):Keybind()
-        end
+        end]]
     end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
@@ -95,21 +95,22 @@ local function PlayerFly(Enabled,Speed,EnableCamera)
     end
 end
 
-local OldNamecall = nil
-OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+--[[local OldNamecall = nil
+OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method,Args = getnamecallmethod(),{...}
     if Method == "FireServer" then
         if Self.Name == "XEvent" then
             return
         end
-    --[[elseif Method == "addItem" then
+    elseif Method == "addItem" then
         if Args[1] == BodyVelocity
         or Args[1] == BodyGyro then
             return
-        end]]
+        end
     end
-    return OldNamecall(Self, ...)
-end)
+
+    return OldNamecall(Self,...)
+end)]]
 
 Parvus.Utilities.NewThreadLoop(0,function()
     PlayerFly(
@@ -119,7 +120,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     )
 end)
 
-for Index,Child in pairs(Workspace:GetChildren()) do
+--[[for Index,Child in pairs(Workspace:GetChildren()) do
     if not Window.Flags["ST/XRay"] then continue end
     if Child:FindFirstChild("Owner") and
     Child.Owner.Value ~= LocalPlayer.Name
@@ -140,7 +141,7 @@ Workspace.ChildAdded:Connect(function(Child)
         --XRay(Child.Main.Hitboxes,true,1)
         --Functions.DisableUpperVisuals(Child)
     end
-end)
+end)]]
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera

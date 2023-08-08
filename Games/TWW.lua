@@ -27,7 +27,7 @@ local Window = Parvus.Utilities.UI:Window({
     Position = UDim2.new(0.5,-248 * 3,0.5,-248)
 }) do Window:Watermark({Enabled = true})
 
-    local CombatTab = Window:Tab({Name = "Combat"}) do
+    --[[local CombatTab = Window:Tab({Name = "Combat"}) do
         local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
@@ -59,7 +59,7 @@ local Window = Parvus.Utilities.UI:Window({
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
-    end
+    end]]
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,true) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
         VisualsSection:Colorpicker({Name = "Enemy Color",Flag = "ESP/Player/Enemy",Value = {1,0.6666666269302368,1,0,false}})
@@ -88,7 +88,7 @@ Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
+--Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -163,7 +163,7 @@ local function GetClosest(Enabled,
 
     return Closest
 end
-local function AimAt(Hitbox,Sensitivity)
+--[[local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
     if Window.Flags["Aimbot/Thirdperson"] then
         mousemoverel(Hitbox[3].Position,true,Sensitivity)
@@ -175,9 +175,9 @@ local function AimAt(Hitbox,Sensitivity)
         (Hitbox[4].X - MouseLocation.X) * Sensitivity,
         (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
     ))
-end
+end]]
 
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -190,7 +190,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
-end)
+end)]]
 
 -- Legendary ESP
 for Index,Object in pairs(Workspace.WORKSPACE_Entities.Animals:GetChildren()) do

@@ -175,11 +175,12 @@ local Window = Parvus.Utilities.UI:Window({
 }) do Window:Watermark({Enabled = true})
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
-        local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
+        --[[local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
             AimbotSection:Toggle({Name = "Enabled",Flag = "Aimbot/Enabled",Value = false})
             :Keybind({Flag = "Aimbot/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Aimbot = Window.Flags["Aimbot/Enabled"] and KeyDown end})
 
+            AimbotSection:Toggle({Name = "Thirdperson Mode",Flag = "Aimbot/Thirdperson",Value = false})
             AimbotSection:Toggle({Name = "Always Enabled",Flag = "Aimbot/AlwaysEnabled",Value = false})
             AimbotSection:Toggle({Name = "Prediction",Flag = "Aimbot/Prediction",Value = true})
 
@@ -205,15 +206,8 @@ local Window = Parvus.Utilities.UI:Window({
             AFOVSection:Colorpicker({Name = "Color",Flag = "Aimbot/FOVCircle/Color",Value = {1,0.66666662693024,1,0.25,false}})
             AFOVSection:Slider({Name = "NumSides",Flag = "Aimbot/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             AFOVSection:Slider({Name = "Thickness",Flag = "Aimbot/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Left"}) do
-            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
-            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
-            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
-            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
-            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
-        end
-        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Right"}) do
+        end]]
+        local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Left"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
             SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = true})
@@ -242,7 +236,7 @@ local Window = Parvus.Utilities.UI:Window({
             SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
-        local TriggerSection = CombatTab:Section({Name = "Trigger",Side = "Right"}) do
+        --[[local TriggerSection = CombatTab:Section({Name = "Trigger",Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled",Flag = "Trigger/Enabled",Value = false})
             :Keybind({Flag = "Trigger/Keybind",Value = "MouseButton2",Mouse = true,DisableToggle = true,
             Callback = function(Key,KeyDown) Trigger = Window.Flags["Trigger/Enabled"] and KeyDown end})
@@ -268,6 +262,13 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Priority",Flag = "Trigger/Priority",List = PriorityList})
             TriggerSection:Dropdown({Name = "Body Parts",Flag = "Trigger/BodyParts",List = BodyPartsList})
         end
+        local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle",Side = "Right"}) do
+            TFOVSection:Toggle({Name = "Enabled",Flag = "Trigger/FOVCircle/Enabled",Value = true})
+            TFOVSection:Toggle({Name = "Filled",Flag = "Trigger/FOVCircle/Filled",Value = false})
+            TFOVSection:Colorpicker({Name = "Color",Flag = "Trigger/FOVCircle/Color",Value = {0.0833333358168602,0.6666666269302368,1,0.25,false}})
+            TFOVSection:Slider({Name = "NumSides",Flag = "Trigger/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            TFOVSection:Slider({Name = "Thickness",Flag = "Trigger/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
+        end]]
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -513,8 +514,8 @@ Parvus.Utilities:SetupWatermark(Window)
 --Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
+--Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
+--Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)
 
 local XZVector = Vector3.new(1,0,1)
@@ -620,15 +621,19 @@ local function GetClosest(Enabled,
 
     return Closest
 end
-local function AimAt(Hitbox,Sensitivity)
+--[[local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
-    local MouseLocation = UserInputService:GetMouseLocation()
+    if Window.Flags["Aimbot/Thirdperson"] then
+        mousemoverel(Hitbox[3].Position,true,Sensitivity)
+        return
+    end
 
-    mousemoverel(
-        (Hitbox[5].X - MouseLocation.X) * Sensitivity,
-        (Hitbox[5].Y - MouseLocation.Y) * Sensitivity
-    )
-end
+    local MouseLocation = UserInputService:GetMouseLocation()
+    mousemoverel(Vector2.new(
+        (Hitbox[4].X - MouseLocation.X) * Sensitivity,
+        (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
+    ))
+end]]
 
 local function CheckForAdmin(Player)
     if Window.Flags["AR2/StaffJoin"] then
@@ -1180,7 +1185,7 @@ PlayerClass.CharacterAdded:Connect(function(Character)
     HookCharacter(Character)
 end)
 
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
     AimAt(GetClosest(
@@ -1194,7 +1199,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
     ),Window.Flags["Aimbot/Sensitivity"] / 100)
-end)
+end)]]
 Parvus.Utilities.NewThreadLoop(0,function()
     SilentAim = GetClosest(
         Window.Flags["SilentAim/Enabled"],
@@ -1208,9 +1213,9 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["SilentAim/Prediction"]
     )
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
-    if not iswindowactive() then return end
+    --if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],
@@ -1240,7 +1245,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
             ) if not TriggerClosest or not Trigger then break end
         end
     end mouse1release()
-end)
+end)]]
 
 Parvus.Utilities.NewThreadLoop(0,function(Delta)
     if not Window.Flags["AR2/WalkSpeed/Enabled"] then return end
