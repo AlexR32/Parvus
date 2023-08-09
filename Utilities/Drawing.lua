@@ -48,7 +48,7 @@ local DrawingLibrary = {
     })
 }
 
---local CharacterSize = Vector3.new(4,5,1)
+local CharacterSize = nil--Vector3.new(4,5,1)
 local FrameRate = 1/60 --1/30
 
 if not RESPContainer then
@@ -168,7 +168,8 @@ local function CalculateTriangle(Triangle1, Triangle2, A, B, C)
 	Triangle2.Size = UDim2FromOffset(Abs(Unit:Dot(AB)),Height)
 end
 -- CalculateBox by mickeyrbx (highly edited)
-local function CalculateBox(Model,Position,Distance) local Size = Model:GetExtentsSize()
+local function CalculateBox(Model,Position,Distance)
+    local Size = CharacterSize or Model:GetExtentsSize()
     return Position,Size * 1 / (Distance * Tan(Rad(Camera.FieldOfView / 2)) * 2) * 1000
 end
 -- Offscreen Arrows by Blissful
@@ -284,10 +285,11 @@ elseif game.GameId == 580765040 then -- RAGDOLL UNIVERSE
         return tostring(FindFirstChildOfClass(Character,"Tool") or "Hands")
     end
 elseif game.GameId == 358276974 or game.GameId == 3495983524 then -- Apocalypse Rising 2
-    --[[function GetHealth(Target,Character,Mode)
-        local Health = Character.Stats.Health.Base
+    CharacterSize = Vector3.new(4,5,1)
+    function GetHealth(Target,Character,Mode)
+        local Health = Target.Stats.Health
         return Health.Value,100,Health.Value > 0
-    end]]
+    end
 
     function GetWeapon(Target,Character,Mode)
         return tostring(Character.Animator.EquippedItem.ItemName.Value or "Hands")

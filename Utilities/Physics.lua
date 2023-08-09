@@ -262,6 +262,12 @@ end
 
 local module = {}
 
+--[[
+local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
+    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
+end
+]]
+
 function module.SolveTrajectory(
 	origin,targetPos,targetVelocity,
 	projectileSpeed,gravity,gravityCorrection
@@ -271,36 +277,9 @@ function module.SolveTrajectory(
 	gravityCorrection = gravityCorrection or 2
 
 	local disp = targetPos - origin
-	--local h, j, k = disp.X, disp.Y, disp.Z
-	--local p, q, r = targetVelocity.X, targetVelocity.Y, targetVelocity.Z
-	local l = -(gravity / gravityCorrection) -- gravity correction
+	local l = -(gravity / gravityCorrection)
 
-	--[[local solutions = solveQuartic(
-		l*l,
-		-2*q*l,
-		q*q - 2*j*l - projectileSpeed*projectileSpeed + p*p + r*r,
-		2*j*q + 2*h*p + 2*k*r,
-		j*j + h*h + k*k
-	)
-
-	if solutions then
-		local posRoots = table.create(2)
-		for index = 1, #solutions do --filter out the negative roots
-			local solution = solutions[index]
-			if solution > 0 then
-				table.insert(posRoots, solution)
-			end
-		end
-		if posRoots[1] then
-			local t = posRoots[1]
-			local d = (h + p*t)/t
-			local e = (j + q*t - l*t*t)/t
-			local f = (k + r*t)/t
-			return origin + Vector3.new(d, e, f)
-		end
-	end]]
-
-	local t0,t1,t2,t3 = solveQuartic(
+	local s0,s1,s2,s3 = solveQuartic(
 		l * l,
 		-gravityCorrection * targetVelocity.Y * l,
 		targetVelocity.Y * targetVelocity.Y - gravityCorrection * disp.Y * l - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
@@ -308,22 +287,22 @@ function module.SolveTrajectory(
 		disp.Y * disp.Y + disp.X * disp.X + disp.Z * disp.Z
 	)
 
-	local t = nil
-	if t0 and t0 > 0 then
-		t = t0
-	elseif t1 and t1 > 0 then
-		t = t1
-	elseif t2 and t2 > 0 then
-		t = t2
-	elseif t3 and t3 > 0 then
-		t = t3
+	local s = nil
+	if s0 and s0 > 0 then
+		s = s0
+	elseif s1 and s1 > 0 then
+		s = s1
+	elseif s2 and s2 > 0 then
+		s = s2
+	elseif s3 and s3 > 0 then
+		s = s3
 	end
 
-	if not t then return origin end
+	if not s then return origin end
 	return origin + Vector3.new(
-		(disp.X + targetVelocity.X * t) / t,
-		(disp.Y + targetVelocity.Y * t - l * t * t) / t,
-		(disp.Z + targetVelocity.Z * t) / t
+		(disp.X + targetVelocity.X * s) / s,
+		(disp.Y + targetVelocity.Y * s - l * s * s) / s,
+		(disp.Z + targetVelocity.Z * s) / s
 	)
 end
 
