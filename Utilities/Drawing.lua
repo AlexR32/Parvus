@@ -288,7 +288,10 @@ elseif game.GameId == 358276974 or game.GameId == 3495983524 then -- Apocalypse 
     CharacterSize = Vector3.new(4,5,1)
     function GetHealth(Target,Character,Mode)
         local Health = Target.Stats.Health
-        return Health.Value,100,Health.Value > 0
+        local Bonus = Target.Stats.HealthBonus
+
+        return Health.Value + Bonus.Value,
+        100 + Bonus.Value,Health.Value > 0
     end
 
     function GetWeapon(Target,Character,Mode)

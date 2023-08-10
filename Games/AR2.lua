@@ -22,6 +22,7 @@ local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
 
+local Mannequin = ReplicatedStorage.Assets.Mannequin
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
@@ -129,8 +130,9 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
-    "Chat Message Send","Ping Return","Movestate Sync Request","Character Humanoid Update","Character Root Update","Get Player Stance Speed",
-    "Force Charcter Save","Update Character State","Sync Near Chunk Loot","Resync Character Physics","Update Character Position"
+    "Chat Message Send","Ping Return","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard","Statistic Report","Sync Debug Info",
+    "Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State","Sync Near Chunk Loot",
+    "Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
 },
 {
     [110] = "Contractor",
@@ -462,6 +464,34 @@ local Window = Parvus.Utilities.UI:Window({
             end}):ToolTip("You will lose loot")]]
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
+
+            -- Very basic head expander idc
+            MiscSection:Toggle({Name = "Head Expander",Flag = "AR2/HeadExpander",Value = false,Callback = function(Bool)
+                if Bool then
+                    for Index,Player in pairs(PlayerService:GetPlayers()) do
+                        if Player == LocalPlayer then continue end
+                        if not Player.Character then continue end
+                        local Character = Player.Character
+                        local Head = Character.Head
+                
+                        Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
+                        Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+                    end
+                else
+                    for Index,Player in pairs(PlayerService:GetPlayers()) do
+                        if Player == LocalPlayer then continue end
+                        if not Player.Character then continue end
+                        local Character = Player.Character
+                        local Head = Character.Head
+                
+                        Head.Size = Mannequin.Head.Size
+                        Head.Transparency = Mannequin.Head.Transparency
+                    end
+                end
+            end})
+            MiscSection:Slider({Name = "Size Mult",Flag = "AR2/HeadExpander/Value",Min = 1,Max = 20,Value = 10,Unit = "x",Wide = true})
+            MiscSection:Slider({Name = "Transparency",Flag = "AR2/HeadExpander/Transparency",Min = 0,Max = 1,Value = 0.5,Precise = 1,Wide = true})
+            MiscSection:Divider()
             MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
@@ -851,7 +881,15 @@ local function HookCharacter(Character)
     end
 end
 
-local OldNamecall = nil
+local OldIndex,OldNamecall = nil,nil
+OldIndex = hookmetamethod(game,"__index",function(Self,Index)
+    if tostring(Self) == "Head" and Index == "Size" then
+        return Vector3.one * 1.15
+    end
+
+    return OldIndex(Self,Index)
+end)
+
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method = getnamecallmethod()
 
@@ -1264,6 +1302,18 @@ Parvus.Utilities.NewThreadLoop(0.1,function()
     if not EnemyRoot then return end
     SwingMelee(EnemyRoot)
 end)
+Parvus.Utilities.NewThreadLoop(1,function()
+    if not Window.Flags["AR2/HeadExpander"] then return end
+    for Index,Player in pairs(PlayerService:GetPlayers()) do
+        if Player == LocalPlayer then continue end
+        if not Player.Character then continue end
+        local Character = Player.Character
+        local Head = Character.Head
+
+        Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
+        Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+    end
+end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Lighting/Enabled"] then return end
     local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
@@ -1322,6 +1372,7 @@ for Index,Corpse in pairs(Corpses:GetChildren()) do
     )
 end
 for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
+    if not Zombie.PrimaryPart then continue end
     local Config = require(Zombies.Configs[Zombie.Name])
 
     if not Config.Inherits then continue end
