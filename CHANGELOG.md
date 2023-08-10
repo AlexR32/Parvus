@@ -1,3 +1,41 @@
+### Update 10/08/23
+```markdown
+# AR2
++ added corpses esp
++ added head expander
+
+* health now uses 'bounus' health too
+* boxes now should not be too big sometime
+* some code cleanup from old testing things
+* silent aim prediction now will be always enabled
+* silent aim 'body part priority' disabled (useless)
+* added option to disable projectile tracers (was enabled always now its disabled by default)
+* increased default speed for walkspeed and fly
+* renamed no fall check to infinite jump
+* increased jump height max slider value
+* fixed map esp sometimes not showing some newly added players
+* team check now uses squad members and should ignore them
+* improved performance for vehicle mod
+* silent aim prediction should be less buggy
+* silent wallbang now uses silent aim prediction (previously not lol)
+* fixed zombie esp
+# BRM5
+* fixed intel esp (typo)
+
+***some notes:***
+1. if you dont have projectile tracer when shooting or you have 'nan' or 'nan2' it means prediction miss calculates somehow
+2. team check might be broken i didn't test it enough
+i will be trying to fix this bugs in future updates
+```
+### Update 08/08/23
+```markdown
+# Global
+- aimbot removed
+- trigger bot removed (except bb)
+# TWR
++ added item esp
+* misc changes
+```
 ### Update 07/08/23
 ```markdown
 # AR2

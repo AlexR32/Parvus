@@ -22,11 +22,12 @@ local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local Aimbot,SilentAim,Trigger = false,nil,nil
 
+local Mannequin = ReplicatedStorage.Assets.Mannequin
 local LootBins = Workspace.Map.Shared.LootBins
 local Randoms = Workspace.Map.Shared.Randoms
 local Vehicles = Workspace.Vehicles.Spawned
 local Characters = Workspace.Characters
---local Corpses = Workspace.Corpses
+local Corpses = Workspace.Corpses
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
@@ -35,8 +36,7 @@ repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
 local Globals = Framework.Configs.Globals
-
-local World = Framework.Libraries.World
+--local World = Framework.Libraries.World
 local Network = Framework.Libraries.Network
 local Cameras = Framework.Libraries.Cameras
 local Bullets = Framework.Libraries.Bullets
@@ -48,15 +48,16 @@ local Maids = Framework.Classes.Maids
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 
-local ReticleModule = Interface:Get("Reticle")
+--local ReticleModule = Interface:Get("Reticle")
 local CharacterCamera = Cameras:GetCamera("Character")
 
 local Events = getupvalue(Network.Add,1)
+--local EventsQueue = getupvalue(Network.Add,2)
 local GetSpreadAngle = getupvalue(Bullets.Fire,1)
 local CastLocalBullet = getupvalue(Bullets.Fire,4)
 local GetFireImpulse = getupvalue(Bullets.Fire,6)
 local LightingState = getupvalue(Lighting.GetState,1)
-local RenderSettings = getupvalue(World.GetDistance,1)
+--local RenderSettings = getupvalue(World.GetDistance,1)
 
 local SetWheelSpeeds = getupvalue(VehicleController.Step,2)
 --local SetSteerWheels = getupvalue(VehicleController.Step,3)
@@ -75,29 +76,13 @@ for Index,Table in pairs(getgc(true)) do
     if type(Table) == "table" and rawget(Table,"Rate") == 0.05 then
         InteractHeartbeat = Table.Action
         FindItemData = getupvalue(InteractHeartbeat,11)
-        --print(debug.getinfo(FindItemData).name)
     end
 end
 
---[[local function RenameCharacter(Player)
-    if not Player.Character then return end
-    Player.Character.Name = ("%s (%s)"):format(Player.Name,Player.DisplayName)
-end
-for Index,Player in pairs(PlayerService:GetPlayers()) do
-    RenameCharacter(Player)
-    Player.CharacterAdded:Connect(function()
-        RenameCharacter(Player)
-    end)
-end
-PlayerService.PlayerAdded:Connect(function(Player)
-    Player.CharacterAdded:Connect(function()
-        RenameCharacter(Player)
-    end)
-end)]]
-
-local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
-local ItemMemory,NoClipEvent,NoClipObjects,OldBaseTime = {},nil,{},LightingState.BaseTime
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
+local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
+local SquadData,OldBaseTime = nil,LightingState.BaseTime
+local ItemMemory,NoClipEvent,NoClipObjects = {},nil,{}
 
 local AddObject = Instance.new("BindableEvent")
 AddObject.Event:Connect(function(...)
@@ -145,8 +130,9 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
-    "Chat Message Send","Ping Return","Movestate Sync Request","Character Humanoid Update","Character Root Update","Get Player Stance Speed",
-    "Force Charcter Save","Update Character State","Sync Near Chunk Loot","Resync Character Physics","Update Character Position"
+    "Chat Message Send","Ping Return","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard","Statistic Report","Sync Debug Info",
+    "Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State","Sync Near Chunk Loot",
+    "Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
 },
 {
     [110] = "Contractor",
@@ -210,22 +196,21 @@ local Window = Parvus.Utilities.UI:Window({
         local SilentAimSection = CombatTab:Section({Name = "Silent Aim",Side = "Left"}) do
             SilentAimSection:Toggle({Name = "Enabled",Flag = "SilentAim/Enabled",Value = false}):Keybind({Mouse = true,Flag = "SilentAim/Keybind"})
 
-            SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = true})
+            --SilentAimSection:Toggle({Name = "Prediction",Flag = "SilentAim/Prediction",Value = true})
 
-            --SilentAimSection:Toggle({Name = "Team Check",Flag = "SilentAim/TeamCheck",Value = false})
+            SilentAimSection:Toggle({Name = "Team Check",Flag = "SilentAim/TeamCheck",Value = false})
             SilentAimSection:Toggle({Name = "Distance Check",Flag = "SilentAim/DistanceCheck",Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check",Flag = "SilentAim/VisibilityCheck",Value = false})
             SilentAimSection:Slider({Name = "Hit Chance",Flag = "SilentAim/HitChance",Min = 0,Max = 100,Value = 100,Unit = "%"})
             SilentAimSection:Slider({Name = "Field Of View",Flag = "SilentAim/FieldOfView",Min = 0,Max = 500,Value = 100,Unit = "r"})
             SilentAimSection:Slider({Name = "Distance Limit",Flag = "SilentAim/DistanceLimit",Min = 25,Max = 10000,Value = 250,Unit = "studs"})
 
-            local PriorityList,BodyPartsList = {{Name = "Closest",Mode = "Button",Value = true},{Name = "Random",Mode = "Button"}},{}
+            local BodyPartsList = {}
             for Index,Value in pairs(KnownBodyParts) do
-                PriorityList[#PriorityList + 1] = {Name = Value[1],Mode = "Button",Value = false}
                 BodyPartsList[#BodyPartsList + 1] = {Name = Value[1],Mode = "Toggle",Value = Value[2]}
             end
 
-            SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
+            --SilentAimSection:Dropdown({Name = "Priority",Flag = "SilentAim/Priority",List = PriorityList})
             SilentAimSection:Dropdown({Name = "Body Parts",Flag = "SilentAim/BodyParts",List = BodyPartsList})
         end
         local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle",Side = "Right"}) do
@@ -297,6 +282,12 @@ local Window = Parvus.Utilities.UI:Window({
             
             ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
+        local CorpsesSection = ESPTab:Section({Name = "Corpses ESP",Side = "Left"}) do
+            CorpsesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Corpses/Enabled",Value = false})
+            CorpsesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Corpses/DistanceCheck",Value = true})
+            CorpsesSection:Colorpicker({Name = "Color",Flag = "AR2/ESP/Corpses/Color",Value = {1,0,1,0.5,false}})
+            CorpsesSection:Slider({Name = "Distance",Flag = "AR2/ESP/Corpses/Distance",Min = 25,Max = 5000,Value = 1500,Unit = "studs"})
+        end
         local ZombiesSection = ESPTab:Section({Name = "Zombies ESP",Side = "Left"}) do local ZIs = {}
             ZombiesSection:Toggle({Name = "Enabled",Flag = "AR2/ESP/Zombies/Enabled",Value = false})
             ZombiesSection:Toggle({Name = "Distance Check",Flag = "AR2/ESP/Zombies/DistanceCheck",Value = true})
@@ -359,6 +350,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
             --RecoilSection:Toggle({Name = "Instant Hit",Flag = "AR2/InstantHit",Value = false})
+            RecoilSection:Toggle({Name = "Projectile Tracer",Flag = "AR2/ProjectileTracer",Value = false})
             RecoilSection:Toggle({Name = "Silent Wallbang",Flag = "AR2/MagicBullet/Enabled",Value = false}):Keybind({Flag = "AR2/MagicBullet/Keybind"})
             RecoilSection:Slider({Name = "Wallbang Depth",Flag = "AR2/MagicBullet/Depth",Min = 1,Max = 5,Value = 5,Unit = "studs"})
             RecoilSection:Divider()
@@ -439,16 +431,16 @@ local Window = Parvus.Utilities.UI:Window({
         end]]
         local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
             CharSection:Toggle({Name = "Fly Enabled",Flag = "AR2/Fly/Enabled",Value = false}):Keybind({Flag = "AR2/Fly/Keybind"})
-            CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 0,Max = 10,Precise = 1,Value = 0.4,Unit = "studs",Wide = true})
+            CharSection:Slider({Name = "",Flag = "AR2/Fly/Speed",Min = 0,Max = 10,Precise = 1,Value = 0.7,Unit = "studs",Wide = true})
             --CharSection:Divider()
             CharSection:Toggle({Name = "Walk Speed",Flag = "AR2/WalkSpeed/Enabled",Value = false}):Keybind({Flag = "AR2/WalkSpeed/Keybind"})
-            CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 1.4,Precise = 1,Value = 0.4,Unit = "studs",Wide = true})
+            CharSection:Slider({Name = "",Flag = "AR2/WalkSpeed/Speed",Min = 0,Max = 1.4,Precise = 1,Value = 0.7,Unit = "studs",Wide = true})
             --CharSection:Divider()
             CharSection:Toggle({Name = "Jump Height",Flag = "AR2/JumpHeight/Enabled",Value = false}):Keybind({Flag = "AR2/JumpHeight/Keybind"})
-            CharSection:Toggle({Name = "No Fall Check",Flag = "AR2/JumpHeight/NoFallCheck",Value = false})
+            CharSection:Toggle({Name = "Infinite Jump",Flag = "AR2/JumpHeight/NoFallCheck",Value = false})
             CharSection:Toggle({Name = "No Fall Impact",Flag = "AR2/NoFallImpact",Value = false})
-            CharSection:Toggle({Name = "No Jump Debounce",Flag = "AR2/JumpHeight/NoJumpDebounce",Value = false})
-            CharSection:Slider({Name = "",Flag = "AR2/JumpHeight/Height",Min = 4.8,Max = 20,Precise = 1,Value = 4.8,Unit = "studs",Wide = true})
+            CharSection:Toggle({Name = "No Jump Debounce",Flag = "AR2/NoJumpDebounce",Value = false})
+            CharSection:Slider({Name = "",Flag = "AR2/JumpHeight/Height",Min = 4.8,Max = 100,Precise = 1,Value = 4.8,Unit = "studs",Wide = true})
             --CharSection:Divider()
             --CharSection:Toggle({Name = "Use In Air",Flag = "AR2/UseInAir",Value = false})
             CharSection:Toggle({Name = "Use In Water",Flag = "AR2/UseInWater",Value = false})
@@ -472,6 +464,34 @@ local Window = Parvus.Utilities.UI:Window({
             end}):ToolTip("You will lose loot")]]
         end
         local MiscSection = MiscTab:Section({Name = "Other",Side = "Right"}) do
+
+            -- Very basic head expander idc
+            MiscSection:Toggle({Name = "Head Expander",Flag = "AR2/HeadExpander",Value = false,Callback = function(Bool)
+                if Bool then
+                    for Index,Player in pairs(PlayerService:GetPlayers()) do
+                        if Player == LocalPlayer then continue end
+                        if not Player.Character then continue end
+                        local Character = Player.Character
+                        local Head = Character.Head
+                
+                        Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
+                        Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+                    end
+                else
+                    for Index,Player in pairs(PlayerService:GetPlayers()) do
+                        if Player == LocalPlayer then continue end
+                        if not Player.Character then continue end
+                        local Character = Player.Character
+                        local Head = Character.Head
+                
+                        Head.Size = Mannequin.Head.Size
+                        Head.Transparency = Mannequin.Head.Transparency
+                    end
+                end
+            end})
+            MiscSection:Slider({Name = "Size Mult",Flag = "AR2/HeadExpander/Value",Min = 1,Max = 20,Value = 10,Unit = "x",Wide = true})
+            MiscSection:Slider({Name = "Transparency",Flag = "AR2/HeadExpander/Transparency",Min = 0,Max = 1,Value = 0.5,Precise = 1,Wide = true})
+            MiscSection:Divider()
             MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
@@ -503,9 +523,7 @@ local Window = Parvus.Utilities.UI:Window({
                     end table.clear(NoClipObjects)
                 end
             end}):Keybind()
-            MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false,Callback = function(Bool)
-                if Bool then Interface:Get("Map"):EnableGodview() else Interface:Get("Map"):DisableGodview() end
-            end}):Keybind()
+            MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false})
         end
     end Parvus.Utilities:SettingsSection(Window,"End",true)
 end Parvus.Utilities.InitAutoLoad(Window)
@@ -525,7 +543,6 @@ WallCheckParams.FilterDescendantsInstances = {
     Workspace.Effects,Workspace.Sounds,
     Workspace.Locations,Workspace.Spawns
 } WallCheckParams.IgnoreWater = true
-
 
 local function Raycast(Origin,Direction)
     if not table.find(WallCheckParams.FilterDescendantsInstances,LocalPlayer.Character) then
@@ -550,7 +567,13 @@ local function Raycast(Origin,Direction)
 end
 local function InEnemyTeam(Enabled,Player)
     if not Enabled then return true end
-    return LocalPlayer.Team ~= Player.Team
+    if SquadData and SquadData.Members then
+        if table.find(SquadData.Members,Player.Name) then
+            return false
+        end
+    end
+
+    return true
 end
 local function IsDistanceLimited(Enabled,Distance,Limit)
     if not Enabled then return end
@@ -562,17 +585,16 @@ local function IsVisible(Enabled,Origin,Position)
 end
 local function GetClosest(Enabled,
     TeamCheck,VisibilityCheck,DistanceCheck,
-    DistanceLimit,FieldOfView,Priority,BodyParts,
-    PredictionEnabled
+    DistanceLimit,FieldOfView,BodyParts
 )
 
     if not Enabled then return end
     if not PlayerClass.Character then return end
-    local Weapon = PlayerClass.Character.Instance.Equipped:FindFirstChildOfClass("Model")
+    --[[local Weapon = PlayerClass.Character.Instance.Equipped:FindFirstChildOfClass("Model")
     if not Weapon then return end
 
     local Muzzle = Weapon:FindFirstChild("Muzzle")
-    if not Muzzle then return end
+    if not Muzzle then return end]]
 
 
     local CameraPosition,Closest = Camera.CFrame.Position,nil
@@ -582,40 +604,22 @@ local function GetClosest(Enabled,
         local Character = Player.Character if not Character then continue end
         if not InEnemyTeam(TeamCheck,Player) then continue end
 
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        if not Humanoid then continue end if Humanoid.Health <= 0 then continue end
-
         for Index,BodyPart in ipairs(BodyParts) do
             BodyPart = Character:FindFirstChild(BodyPart)
             if not BodyPart then continue end
 
             local BodyPartPosition = BodyPart.Position
-            local Distance = (BodyPartPosition - CameraPosition).Magnitude
+            local Distance = (BodyPart.Position - CameraPosition).Magnitude
             if IsDistanceLimited(DistanceCheck,Distance,DistanceLimit) then continue end
-            if not IsVisible(VisibilityCheck,CameraPosition,BodyPartPosition) then continue end
+            if not IsVisible(VisibilityCheck,CameraPosition,BodyPart.Position) then continue end
 
-            BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-            BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
-            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
+            local ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPart.Position)
             if not OnScreen then continue end
 
             local Magnitude = (Vector2.new(ScreenPosition.X,ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
             if Magnitude >= FieldOfView then continue end
 
-            if Priority == "Random" then
-                Priority = KnownBodyParts[math.random(#KnownBodyParts)][1]
-                BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-                BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
-                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
-            elseif Priority ~= "Closest" then
-                BodyPart = Character:FindFirstChild(Priority) if not BodyPart then continue end
-                BodyPartPosition = PredictionEnabled and Parvus.Utilities.Physics.SolveTrajectory(Muzzle.Position,
-                BodyPartPosition,BodyPart.AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity) or BodyPartPosition
-                ScreenPosition,OnScreen = Camera:WorldToViewportPoint(BodyPartPosition)
-            end
-
-            FieldOfView,Closest = Magnitude,{Player,Character,BodyPart,BodyPartPosition,ScreenPosition}
+            FieldOfView,Closest = Magnitude,{Player,Character,BodyPart}
         end
     end
 
@@ -659,31 +663,34 @@ local function CheckForAdmin(Player)
     end
 end
 
-local function ProjectileBeam(Origin,Direction,Color)
+local function ProjectileBeam(Origin,Target,Color)
     local Beam = Instance.new("Part")
 
     Beam.BottomSurface = Enum.SurfaceType.Smooth
     Beam.TopSurface = Enum.SurfaceType.Smooth
     Beam.Material = Enum.Material.SmoothPlastic
-    Beam.Color = Color
 
     Beam.CanCollide = false
     Beam.CanTouch = false
     Beam.CanQuery = false
     Beam.Anchored = true
 
-    Beam.Size = Vector3.new(0.1,0.1,(Origin - Direction).Magnitude)
-    Beam.CFrame = CFrame.new(Origin,Direction) * CFrame.new(0,0,-Beam.Size.Z / 2)
+    Beam.Color = Color
+    Beam.Size = Vector3.new(0.1,0.1,(Origin - Target).Magnitude)
+    Beam.CFrame = CFrame.new(Origin,Target) * CFrame.new(0,0,-Beam.Size.Z / 2)
 
     Beam.Parent = Workspace
 
     task.spawn(function()
-        local Time = 60 * 1
+        local Time = 1 * 60
+
         for Index = 1,Time do
             RunService.Heartbeat:Wait()
             Beam.Transparency = Index / Time
             --Beam.Color = Color3.new(0,0,1)
-        end Beam:Destroy()
+        end
+
+        Beam:Destroy()
     end)
 
     return Beam
@@ -814,7 +821,7 @@ local function HookCharacter(Character)
     Character.Actions.Jump = function(Self,...)
         local Args = {...}
 
-        if Window.Flags["AR2/JumpHeight/NoJumpDebounce"] then
+        if Window.Flags["AR2/NoJumpDebounce"] then
             Self.JumpDebounce = 0
         end
 
@@ -874,7 +881,15 @@ local function HookCharacter(Character)
     end
 end
 
-local OldNamecall = nil
+local OldIndex,OldNamecall = nil,nil
+OldIndex = hookmetamethod(game,"__index",function(Self,Index)
+    if tostring(Self) == "Head" and Index == "Size" then
+        return Vector3.one * 1.15
+    end
+
+    return OldIndex(Self,Index)
+end)
+
 OldNamecall = hookmetamethod(game,"__namecall",function(Self,...)
     local Method = getnamecallmethod()
 
@@ -901,9 +916,8 @@ Network.Send = function(Self,Name,...)
     if table.find(SanityBans,Name) then print("bypassed",Name) return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
 
-
+    local Args = {...}
     if Name == "Set Character State" then
-        local Args = {...}
         if Window.Flags["AR2/SSCS"] then
             Args[1] = "Climbing"
         end
@@ -925,7 +939,7 @@ setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
         local OldZooming = Character.Zooming
         local OldFirstPerson = CCamera.FirstPerson
 
-        Character.MoveState = "Walking"
+        Character.MoveState = "Crouching"
         Character.Zooming = true
         CCamera.FirstPerson = true
 
@@ -992,17 +1006,16 @@ setupvalue(VehicleController.Step,2,function(Self,...)
     if Window.Flags["AR2/Vehicle/Enabled"] then
         local Args = {...}
 
+        local MoveVector = -Args[1]
+        if Window.Flags["AR2/Vehicle/Instant"] then
+            MoveVector = PlayerClass.Character.MoveVector.Z
+        end
+
         for Index,Wheel in pairs(Self.Wheels:GetChildren()) do
             local DriveMotor = Wheel:FindFirstChild("Drive Motor")
             local PrimaryPart = Wheel.PrimaryPart
 
             if not DriveMotor or not PrimaryPart then continue end
-
-            local MoveVector = -Args[1]
-            if Window.Flags["AR2/Vehicle/Instant"] then
-                MoveVector = PlayerClass.Character.MoveVector.Z
-            end
-
             PrimaryPart.CustomPhysicalProperties = PhysicalProperties.new(10,5,0)
             DriveMotor.AngularVelocity = (Window.Flags["AR2/Vehicle/MaxSpeed"] / (PrimaryPart.Size.Y * 0.5)) * MoveVector
         end
@@ -1029,44 +1042,39 @@ end)]]
 setupvalue(InteractHeartbeat,11,function(...)
     if Window.Flags["AR2/InstantSearch"] then
         local ReturnArgs = {FindItemData(...)}
-        ReturnArgs[4] = 0
+        if ReturnArgs[4] then ReturnArgs[4] = 0 end
 
         return unpack(ReturnArgs)
     end
 
     return FindItemData(...)
 end)
---[[local OldGetFirearmTargetInfo = Reticle.GetFirearmTargetInfo
-Reticle.GetFirearmTargetInfo = function(Self,...)
-    local ReturnArgs = {OldGetFirearmTargetInfo(Self,...)}
-    local Script = tostring(getcallingscript())
-
-    if Script == "Client Main" and SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-        if Window.Flags["AR2/MagicBullet/Enabled"] then
-            local Direction = ReturnArgs[1] - SilentAim[3].Position
-            local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
-            ReturnArgs[1] = ReturnArgs[1] - Direction.Unit * Distance
-        end
-
-        ReturnArgs[2] = (SilentAim[4] - ReturnArgs[1]).Unit
-        ProjectileBeam(ReturnArgs[1],SilentAim[4],Color3.new(0,0,1))
-    end
-
-    return unpack(ReturnArgs)
-end]]
 local OldFire = Bullets.Fire
 Bullets.Fire = function(Self,...)
     if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
         local Args = {...}
 
         if Window.Flags["AR2/MagicBullet/Enabled"] then
-            local Direction = Args[4] - SilentAim[3].Position
+            local Direction = SilentAim[3].Position - Args[4]
             local Distance = math.clamp(Direction.Magnitude,0,Window.Flags["AR2/MagicBullet/Depth"])
-            Args[4] = Args[4] - Direction.Unit * Distance
+            Args[4] = Args[4] + Direction.Unit * Distance
         end
 
-        Args[5] = (SilentAim[4] - Args[4]).Unit
-        ProjectileBeam(Args[4],SilentAim[4],Color3.new(0,0,1))
+        local BodyPartPosition = Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
+        SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)
+
+        if (SilentAim[3].Position - Args[4]).Magnitude == 0 then
+            print('nan')
+        end
+
+        if (BodyPartPosition - Args[4]).Magnitude == 0 then
+            print('nan2')
+        else
+            Args[5] = (BodyPartPosition - Args[4]).Unit
+            if Window.Flags["AR2/ProjectileTracer"] then
+                ProjectileBeam(Args[4],BodyPartPosition,Color3.new(0,0,1))
+            end
+        end
 
         return OldFire(Self,unpack(Args))
     end
@@ -1099,6 +1107,7 @@ Animators.PlayAnimationReplicated = function(Self,Path,...)
     if Path == "Actions.Fall Impact" and Window.Flags["AR2/NoFallImpact"] then return end
     return OldPlayAnimationReplicated(Self,Path,...)
 end
+-- Old Vehicle Mod
 --[[local OldVC = VehicleController.new
 VehicleController.new = function(...)
     local ReturnArgs = {OldVC(...)}
@@ -1123,7 +1132,6 @@ VehicleController.new = function(...)
     return unpack(ReturnArgs)
 end]]
 
---Events["Character Rubber Band Rest"] = function() print("rubber") return false end
 local OldCD = Events["Character Dead"]
 if OldCD then
     Events["Character Dead"] = function(...)
@@ -1139,13 +1147,23 @@ if OldCD then
         return OldCD(...)
     end
 end
-
+Events["Character Rubber Band Rest"] = function()
+    print("rubber band")
+    return false
+end
 local OldLSU = Events["Lighting State Update"]
 Events["Lighting State Update"] = function(Data,...)
     LightingState = Data
     OldBaseTime = LightingState.BaseTime
     --print("Lighting State Updated")
     return OldLSU(Data,...)
+end
+local OldSquadUpdate = Events["Squad Update"]
+Events["Squad Update"] = function(Data,...)
+    SquadData = Data
+    --print(repr(SquadData))
+    --print("Squad Updated")
+    return OldSquadUpdate(Data,...)
 end
 local OldICA = Events["Inventory Container Added"]
 Events["Inventory Container Added"] = function(Id,Data,...)
@@ -1185,6 +1203,14 @@ PlayerClass.CharacterAdded:Connect(function(Character)
     HookCharacter(Character)
 end)
 
+Interface:GetVisibilityChangedSignal("Map"):Connect(function(Visible)
+    if Visible and Window.Flags["AR2/MapESP"] then
+        Interface:Get("Map"):EnableGodview()
+    else
+        Interface:Get("Map"):DisableGodview()
+    end
+end)
+
 --[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
 
@@ -1208,9 +1234,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
         Window.Flags["SilentAim/DistanceCheck"],
         Window.Flags["SilentAim/DistanceLimit"],
         Window.Flags["SilentAim/FieldOfView"],
-        Window.Flags["SilentAim/Priority"][1],
-        Window.Flags["SilentAim/BodyParts"],
-        Window.Flags["SilentAim/Prediction"]
+        Window.Flags["SilentAim/BodyParts"]
     )
 end)
 --[[Parvus.Utilities.NewThreadLoop(0,function()
@@ -1278,6 +1302,18 @@ Parvus.Utilities.NewThreadLoop(0.1,function()
     if not EnemyRoot then return end
     SwingMelee(EnemyRoot)
 end)
+Parvus.Utilities.NewThreadLoop(1,function()
+    if not Window.Flags["AR2/HeadExpander"] then return end
+    for Index,Player in pairs(PlayerService:GetPlayers()) do
+        if Player == LocalPlayer then continue end
+        if not Player.Character then continue end
+        local Character = Player.Character
+        local Head = Character.Head
+
+        Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
+        Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+    end
+end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Lighting/Enabled"] then return end
     local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
@@ -1327,13 +1363,22 @@ for Index,Event in pairs(Randoms:GetChildren()) do
         )
     end
 end
+for Index,Corpse in pairs(Corpses:GetChildren()) do
+    if Corpse.Name == "Zombie" then continue end
+    if not Corpse.PrimaryPart then continue end
+    Parvus.Utilities.Drawing:AddObject(
+        Corpse,Corpse.Name,Corpse.PrimaryPart,
+        "AR2/ESP/Corpses","AR2/ESP/Corpses",Window.Flags
+    )
+end
 for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
+    if not Zombie.PrimaryPart then continue end
     local Config = require(Zombies.Configs[Zombie.Name])
 
     if not Config.Inherits then continue end
     for Index,Inherit in pairs(Config.Inherits) do
         for Index,Data in pairs(ZombieInherits) do
-            if Inherit.Name ~= Data[1] then continue end --print(Inherit.Name)
+            if Inherit ~= Data[1] then continue end --print(Inherit.Name)
             local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
 
             Parvus.Utilities.Drawing:AddObject(
@@ -1375,6 +1420,14 @@ Randoms.ChildAdded:Connect(function(Event)
         end
     end
 end)
+Corpses.ChildAdded:Connect(function(Corpse)
+    if Corpse.Name == "Zombie" then return end
+    repeat task.wait() until Corpse.PrimaryPart
+    Parvus.Utilities.Drawing:AddObject(
+        Corpse,Corpse.Name,Corpse.PrimaryPart,
+        "AR2/ESP/Corpses","AR2/ESP/Corpses",Window.Flags
+    )
+end)
 Zombies.Mobs.ChildAdded:Connect(function(Zombie)
     repeat task.wait() until Zombie.PrimaryPart
     local Config = require(Zombies.Configs[Zombie.Name])
@@ -1382,7 +1435,7 @@ Zombies.Mobs.ChildAdded:Connect(function(Zombie)
     if not Config.Inherits then return end
     for Index,Inherit in pairs(Config.Inherits) do
         for Index,Data in pairs(ZombieInherits) do
-            if Inherit.Name ~= Data[1] then continue end --print(Inherit.Name)
+            if Inherit ~= Data[1] then continue end --print(Inherit.Name)
             local InheritName = Inherit:gsub("Presets.",""):gsub(" ","")
 
             Parvus.Utilities.Drawing:AddObject(
@@ -1407,6 +1460,9 @@ Loot.DescendantRemoving:Connect(function(Item)
 end)
 Randoms.ChildRemoved:Connect(function(Event)
     Parvus.Utilities.Drawing:RemoveObject(Event)
+end)
+Corpses.ChildRemoved:Connect(function(Corpse)
+    Parvus.Utilities.Drawing:RemoveObject(Corpse)
 end)
 Zombies.Mobs.ChildRemoved:Connect(function(Zombie)
     Parvus.Utilities.Drawing:RemoveObject(Zombie)

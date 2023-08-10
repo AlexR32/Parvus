@@ -202,7 +202,7 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local IntelSection = MiscTab:Section({Name = "Intel ESP",Side = "Left"}) do
             IntelSection:Toggle({Name = "Enabled",Flag = "BRM5/ESP/Intel/Enabled",Value = false})
-            :Colorpicker({Flag = "ESP/Intel/Color",Value = {1,0,1,0.5,false}})
+            :Colorpicker({Flag = "BRM5/ESP/Intel/Color",Value = {1,0,1,0.5,false}})
             IntelSection:Toggle({Name = "Distance Check",Flag = "BRM5/ESP/Intel/DistanceCheck",Value = false})
             IntelSection:Slider({Name = "Distance",Flag = "BRM5/ESP/Intel/Distance",Min = 25,Max = 5000,Value = 1000,Unit = "studs"})
             --[[IntelSection:Button({Name = "Load all Intels",Callback = function()
@@ -616,6 +616,33 @@ repeat task.wait() until RequireModule("ActorService")
 Actors = RequireModule("ActorService")._actors
 --repeat task.wait() until RequireModule("SquadInterface")
 --Squads = RequireModule("SquadInterface")
+
+--[[local ChunkService = RequireModule("ChunkService")
+ChunkService.LODEnabled = false
+
+local function ResetWaste()
+    local ChunkService = RequireModule("ChunkService")
+    local _loaded = ChunkService._loaded
+
+	for key, val in pairs(_loaded) do
+		if key:GetAttribute("Waste") == nil then continue end
+		val[4] = false
+		val[5] = nil
+
+		for _, child in pairs(key:GetChildren()) do
+			if not ChunkService._leaves[child] then continue end
+			ChunkService._leaves[child].Node:Destroy()
+			ChunkService._leaves[child] = nil
+		end
+
+		key:Destroy()
+		_loaded[key] = nil
+	end
+
+	ChunkService._chunk = ""
+end
+
+ResetWaste()]]
 
 HookFunction("ControllerClass","LateUpdate",function(Old,Self,...)
     if Window.Flags["BRM5/WalkSpeed/Enabled"] then
