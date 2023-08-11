@@ -262,48 +262,31 @@ end
 
 local module = {}
 
---[[
-local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end
-]]
-
-function module.SolveTrajectory(
-	origin,targetPos,targetVelocity,
-	projectileSpeed,gravity,gravityCorrection
-)
-
+function module.SolveTrajectory(origin, targetPosition, targetVelocity, projectileSpeed, gravity, gravityCorrection)
 	gravity = gravity or workspace.Gravity
 	gravityCorrection = gravityCorrection or 2
 
-	local disp = targetPos - origin
-	local l = -(gravity / gravityCorrection)
+	local delta = targetPosition - origin
+	gravity = -gravity / gravityCorrection
 
-	local s0,s1,s2,s3 = solveQuartic(
-		l * l,
-		-gravityCorrection * targetVelocity.Y * l,
-		targetVelocity.Y * targetVelocity.Y - gravityCorrection * disp.Y * l - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
-		gravityCorrection * disp.Y * targetVelocity.Y + gravityCorrection * disp.X * targetVelocity.X + gravityCorrection * disp.Z * targetVelocity.Z,
-		disp.Y * disp.Y + disp.X * disp.X + disp.Z * disp.Z
+	-- time of flight
+	local tof = solveQuartic(
+		gravity * gravity,
+		-2 * targetVelocity.Y * gravity,
+		targetVelocity.Y * targetVelocity.Y - 2 * delta.Y * gravity - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
+		2 * delta.Y * targetVelocity.Y + 2 * delta.X * targetVelocity.X + 2 * delta.Z * targetVelocity.Z,
+		delta.Y * delta.Y + delta.X * delta.X + delta.Z * delta.Z
 	)
-
-	local s = nil
-	if s0 and s0 > 0 then
-		s = s0
-	elseif s1 and s1 > 0 then
-		s = s1
-	elseif s2 and s2 > 0 then
-		s = s2
-	elseif s3 and s3 > 0 then
-		s = s3
+	
+	if tof and tof > 0 then
+		return origin + Vector3.new(
+			(delta.X + targetVelocity.X * tof) / tof,
+			(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
+			(delta.Z + targetVelocity.Z * tof) / tof
+		)
 	end
-
-	if not s then return origin end
-	return origin + Vector3.new(
-		(disp.X + targetVelocity.X * s) / s,
-		(disp.Y + targetVelocity.Y * s - l * s * s) / s,
-		(disp.Z + targetVelocity.Z * s) / s
-	)
+	
+	return targetPosition
 end
 
 return module

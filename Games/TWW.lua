@@ -218,7 +218,10 @@ end
 
 for Index,Object in pairs(Regions) do
     for Index,Object in pairs(Object:GetDescendants()) do
-        if Object:FindFirstChild("Strike2",true) then print("Adding:",Object.Name)
+        Object = Object:FindFirstChild("Strike2",true)
+        if Object then
+            print(Object.Parent,Object.Parent.Parent)
+            Object = Object.Parent.Parent print("Adding:",Object.Name)
             Parvus.Utilities.Drawing:AddObject(Object,Object.Name,Object.PrimaryPart,
             "ESP/Thunderstruck","ESP/Thunderstruck",Window.Flags)
         end

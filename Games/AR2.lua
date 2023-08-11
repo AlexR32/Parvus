@@ -1063,17 +1063,9 @@ Bullets.Fire = function(Self,...)
         local BodyPartPosition = Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
         SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)
 
-        if (SilentAim[3].Position - Args[4]).Magnitude == 0 then
-            print('nan')
-        end
-
-        if (BodyPartPosition - Args[4]).Magnitude == 0 then
-            print('nan2')
-        else
-            Args[5] = (BodyPartPosition - Args[4]).Unit
-            if Window.Flags["AR2/ProjectileTracer"] then
-                ProjectileBeam(Args[4],BodyPartPosition,Color3.new(0,0,1))
-            end
+        Args[5] = (BodyPartPosition - Args[4]).Unit
+        if Window.Flags["AR2/ProjectileTracer"] then
+            ProjectileBeam(Args[4],BodyPartPosition,Color3.new(0,0,1))
         end
 
         return OldFire(Self,unpack(Args))
