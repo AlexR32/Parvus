@@ -8,9 +8,9 @@
 	Just decorating our package for any programmers
 	that might possibly be snooping around in here;
 	you know, trying to understand and harness the
-	potential of all the black magic that'tof been
-	packed in here (you can thank Cardano'tof formula
-	and Ferrari'tof method for all of that).
+	potential of all the black magic that's been
+	packed in here (you can thank Cardano's formula
+	and Ferrari's method for all of that).
 --]]
 
 --__VERSION = "1.0.0" -- https://semver.org/
@@ -95,7 +95,7 @@ local function solveCubic(c0, c1, c2, c3)
 	p = (1 / 3) * (-(1 / 3) * sq_A + B)
 	q = 0.5 * ((2 / 27) * A * sq_A - (1 / 3) * A * B + C)
 
-	-- use Cardano'tof formula
+	-- use Cardano's formula
 	cb_p = p * p * p
 	D = q * q + cb_p
 
@@ -255,9 +255,9 @@ local function solveQuartic(c0, c1, c2, c3, c4)
 	if (num > 2) then s2 = s2 - sub end
 	if (num > 3) then s3 = s3 - sub end
 
-	--return s3, s2, s1, s0
+	return s3, s2, s1, s0
 	--return s0, s1, s2, s3
-	return {s3, s2, s1, s0}
+	--return {s3, s2, s1, s0}
 end
 
 local module = {}
@@ -269,7 +269,8 @@ function module.SolveTrajectory(origin, targetPosition, targetVelocity, projecti
 	local delta = targetPosition - origin
 	gravity = -gravity / gravityCorrection
 
-	local solutions = solveQuartic(
+	-- time of flight
+	local tof = solveQuartic(
 		gravity * gravity,
 		-2 * targetVelocity.Y * gravity,
 		targetVelocity.Y * targetVelocity.Y - 2 * delta.Y * gravity - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
@@ -277,26 +278,12 @@ function module.SolveTrajectory(origin, targetPosition, targetVelocity, projecti
 		delta.Y * delta.Y + delta.X * delta.X + delta.Z * delta.Z
 	)
 	
-	if solutions then
-		local positionRoots = table.create(2)
-		for index = 1, #solutions do
-			local solution = solutions[index]
-			if solution > 0 then
-				table.insert(positionRoots, solution)
-			end
-		end
-
-		if positionRoots[1] then
-			local tof = positionRoots[1] -- time of flight
-
-			return origin + Vector3.new(
-				(delta.X + targetVelocity.X * tof) / tof,
-				(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
-				(delta.Z + targetVelocity.Z * tof) / tof
-			)
-		end
-		
-		return targetPosition
+	if tof and tof > 0 then
+		return origin + Vector3.new(
+			(delta.X + targetVelocity.X * tof) / tof,
+			(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
+			(delta.Z + targetVelocity.Z * tof) / tof
+		)
 	end
 	
 	return targetPosition
