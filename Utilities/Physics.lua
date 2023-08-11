@@ -8,9 +8,9 @@
 	Just decorating our package for any programmers
 	that might possibly be snooping around in here;
 	you know, trying to understand and harness the
-	potential of all the black magic that's been
-	packed in here (you can thank Cardano's formula
-	and Ferrari's method for all of that).
+	potential of all the black magic that'tof been
+	packed in here (you can thank Cardano'tof formula
+	and Ferrari'tof method for all of that).
 --]]
 
 --__VERSION = "1.0.0" -- https://semver.org/
@@ -95,7 +95,7 @@ local function solveCubic(c0, c1, c2, c3)
 	p = (1 / 3) * (-(1 / 3) * sq_A + B)
 	q = 0.5 * ((2 / 27) * A * sq_A - (1 / 3) * A * B + C)
 
-	-- use Cardano's formula
+	-- use Cardano'tof formula
 	cb_p = p * p * p
 	D = q * q + cb_p
 
@@ -255,55 +255,51 @@ local function solveQuartic(c0, c1, c2, c3, c4)
 	if (num > 2) then s2 = s2 - sub end
 	if (num > 3) then s3 = s3 - sub end
 
-	return s3, s2, s1, s0
+	--return s3, s2, s1, s0
 	--return s0, s1, s2, s3
-	--return {s3, s2, s1, s0}
+	return {s3, s2, s1, s0}
 end
 
 local module = {}
 
---[[
-local function CalculateTrajectory(Origin,Velocity,Time,Gravity)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
-end
-]]
-
-function module.SolveTrajectory(
-	origin,targetPos,targetVelocity,
-	projectileSpeed,gravity,gravityCorrection
-)
-
+function module.SolveTrajectory(origin, targetPosition, targetVelocity, projectileSpeed, gravity, gravityCorrection)
 	gravity = gravity or workspace.Gravity
 	gravityCorrection = gravityCorrection or 2
 
-	local disp = targetPos - origin
-	local l = -(gravity / gravityCorrection)
+	local delta = targetPosition - origin
+	gravity = -gravity / gravityCorrection
 
-	local s0,s1,s2,s3 = solveQuartic(
-		l * l,
-		-gravityCorrection * targetVelocity.Y * l,
-		targetVelocity.Y * targetVelocity.Y - gravityCorrection * disp.Y * l - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
-		gravityCorrection * disp.Y * targetVelocity.Y + gravityCorrection * disp.X * targetVelocity.X + gravityCorrection * disp.Z * targetVelocity.Z,
-		disp.Y * disp.Y + disp.X * disp.X + disp.Z * disp.Z
+	local solutions = solveQuartic(
+		gravity * gravity,
+		-2 * targetVelocity.Y * gravity,
+		targetVelocity.Y * targetVelocity.Y - 2 * delta.Y * gravity - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
+		2 * delta.Y * targetVelocity.Y + 2 * delta.X * targetVelocity.X + 2 * delta.Z * targetVelocity.Z,
+		delta.Y * delta.Y + delta.X * delta.X + delta.Z * delta.Z
 	)
+	
+	if solutions then
+		local positionRoots = table.create(2)
+		for index = 1, #solutions do
+			local solution = solutions[index]
+			if solution > 0 then
+				table.insert(positionRoots, solution)
+			end
+		end
 
-	local s = nil
-	if s0 and s0 > 0 then
-		s = s0
-	elseif s1 and s1 > 0 then
-		s = s1
-	elseif s2 and s2 > 0 then
-		s = s2
-	elseif s3 and s3 > 0 then
-		s = s3
+		if positionRoots[1] then
+			local tof = positionRoots[1] -- time of flight
+
+			return origin + Vector3.new(
+				(delta.X + targetVelocity.X * tof) / tof,
+				(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
+				(delta.Z + targetVelocity.Z * tof) / tof
+			)
+		end
+		
+		return targetPosition
 	end
-
-	if not s then return origin end
-	return origin + Vector3.new(
-		(disp.X + targetVelocity.X * s) / s,
-		(disp.Y + targetVelocity.Y * s - l * s * s) / s,
-		(disp.Z + targetVelocity.Z * s) / s
-	)
+	
+	return targetPosition
 end
 
 return module
