@@ -478,7 +478,7 @@ local Window = Parvus.Utilities.UI:Window({
 
                         Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
                         Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
-                        Head.CanCollide = true
+                        Head.CanCollide = false
                     end
                 else
                     for Index,Player in pairs(PlayerService:GetPlayers()) do
