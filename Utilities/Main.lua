@@ -220,15 +220,7 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
                 setclipboard("Roblox.GameLauncher.joinGameInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\");")
             end})
         end
-
         OptionsTab:AddConfigSection("Parvus","Left")
-
-        local DiscordSection = OptionsTab:Section({Name = "Discord",Side = "Left"}) do
-            DiscordSection:Label({Text = "Invite Code: sYqDpbPYb7"})
-            DiscordSection:Button({Name = "Copy Invite Link",Callback = function() setclipboard("https://discord.gg/sYqDpbPYb7") end})
-            DiscordSection:Button({Name = "Join Through Discord App",Callback = Self.JoinDiscord})
-        end
-
         local BackgroundSection = OptionsTab:Section({Name = "Background",Side = "Right"}) do
             BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
@@ -281,6 +273,11 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
             :Colorpicker({Flag = "Crosshair/Color",Value = {1,1,1,0,false}})
             CrosshairSection:Slider({Name = "Size",Flag = "Crosshair/Size",Min = 0,Max = 20,Value = 4,Unit = "px",Wide = true})
             CrosshairSection:Slider({Name = "Gap",Flag = "Crosshair/Gap",Min = 0,Max = 10,Value = 2,Unit = "px",Wide = true})
+        end
+        local DiscordSection = OptionsTab:Section({Name = "Discord",Side = "Right"}) do
+            DiscordSection:Label({Text = "Invite Code: sYqDpbPYb7"})
+            DiscordSection:Button({Name = "Copy Invite Link",Callback = function() setclipboard("https://discord.gg/sYqDpbPYb7") end})
+            DiscordSection:Button({Name = "Join Through Discord App",Callback = Self.JoinDiscord})
         end
         local CreditsSection = OptionsTab:Section({Name = "Credits",Side = "Right"}) do
             CreditsSection:Label({Text = "Made by AlexR32 @ discord.com"})

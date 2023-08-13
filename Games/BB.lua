@@ -12,11 +12,11 @@ local LoadingGui = PlayerGui:WaitForChild("LoadingGui")
 repeat task.wait(0.5) until not LoadingGui.Enabled
 
 local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
-if identifyexecutor() ~= "Synapse X" then
+--[[if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
         {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded1 = true end},
     }) repeat task.wait(0.5) until Loaded1
-end
+end]]
 
 if game.PlaceVersion > 1394 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
@@ -958,14 +958,24 @@ local function ProjectileBeam(Origin,Direction)
     return Beam
 end
 local function ComputeProjectiles(Config,Hitbox)
-    local ReticlePosition = Tortoiseshell.Input.Reticle:GetPosition()
-    local RayResult = Raycast(ReticlePosition,Hitbox.Position - ReticlePosition,{Hitbox})
+    --local ReticlePosition = Tortoiseshell.Input.Reticle:GetPosition()
+    local HitboxPosition = Hitbox.Position --[[+ Vector3.new(
+        NewRandom:NextNumber(-(Hitbox.Size.X / 2),Hitbox.Size.X / 2),
+        NewRandom:NextNumber(-(Hitbox.Size.Y / 2),Hitbox.Size.Y / 2),
+        NewRandom:NextNumber(-(Hitbox.Size.Z / 2),Hitbox.Size.Z / 2)
+    )]]
+
+    local ReticlePosition = Camera.CFrame.Position
+    local LookVector = HitboxPosition - ReticlePosition
+    ReticlePosition = ReticlePosition + LookVector.Unit * 3
+
+    local RayResult = Raycast(ReticlePosition,LookVector,{Hitbox})
     if not RayResult then return end
 
     local ShootProjectiles = {}
     for Index = 1,Config.Projectile.Amount do
         table.insert(ShootProjectiles,{
-            ((Hitbox.Position - ReticlePosition).Unit + Vector3.new(0,Config.Projectile.GravityCorrection / 1000,0)).Unit,
+            (LookVector.Unit + Vector3.new(0,Config.Projectile.GravityCorrection / 1000,0)).Unit,
             Tortoiseshell.Projectiles:GetID()
         })
     end
@@ -999,12 +1009,11 @@ local function Autoshoot(Hitbox,FireRate)
 
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Tortoiseshell.Network:Fire("Projectiles","__Hit",
-                    Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[1],nil)
+                    Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[2])
                 end
 
                 if Window.Flags["BB/Rage/Hitmarker"] then
-                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,
-                    Config.Projectile.Amount and Config.Projectile.Amount > 3)
+                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,#ShootProjectiles > 3)
                 end
             end)
 
@@ -1052,7 +1061,7 @@ local function KnifeAura(Hitbox,FireRate)
                 end
 
                 Parvus.Utilities.UI:Notification2({
-                    Title = ("Autoshoot | Stab %s"):format(Hitbox[1].Name),
+                    Title = ("Knife Aura | Stab %s"):format(Hitbox[1].Name),
                     Color = Color3.new(1,0.5,0.25),Duration = 3
                 }) task.wait(1/(Config.Melee.Speed*FireRate))
             end
@@ -1200,7 +1209,7 @@ local function GetClosest(Enabled,VisibilityCheck,DistanceCheck,
 
     return Closest
 end
-local function AimAt(Hitbox,Sensitivity)
+--[[local function AimAt(Hitbox,Sensitivity)
     if not Hitbox then return end
     if Window.Flags["BB/ThirdPerson/Enabled"] then
         mousemoverel(Hitbox[3].Position,true,Sensitivity)
@@ -1212,19 +1221,19 @@ local function AimAt(Hitbox,Sensitivity)
         (Hitbox[4].X - MouseLocation.X) * Sensitivity,
         (Hitbox[4].Y - MouseLocation.Y) * Sensitivity
     ))
-end
+end]]
 
 Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     local Args = {...}
 
     if Args[2] == "Shoot" then
         if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
-            local Weapon,Config = GetEquippedWeapon()
-            local ShootProjectiles,ReticlePosition,RayPosition,
-            RayNormal = ComputeProjectiles(Config,SilentAim[3])
-            if not ShootProjectiles then return end
-
             task.spawn(function()
+                local Weapon,Config = GetEquippedWeapon()
+                local ShootProjectiles,ReticlePosition,RayPosition,
+                RayNormal = ComputeProjectiles(Config,SilentAim[3])
+                if not ShootProjectiles then return end
+
                 Old(Self,"Item_Paintball","Shoot",
                 Weapon,ReticlePosition,ShootProjectiles)
 
@@ -1234,11 +1243,10 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
                 if not SilentAim then return end
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Old(Self,"Projectiles","__Hit",Projectile[2],
-                    RayPosition,SilentAim[3],RayNormal,SilentAim[1],nil)
+                    RayPosition,SilentAim[3],RayNormal,SilentAim[2])
                 end
 
-                Tortoiseshell.UI.Events.Hitmarker:Fire(SilentAim[3],RayPosition,
-                Config.Projectile.Amount and Config.Projectile.Amount > 3)
+                Tortoiseshell.UI.Events.Hitmarker:Fire(SilentAim[3],RayPosition,#ShootProjectiles > 3)
 
                 if Window.Flags["BB/BulletTracer/Enabled"] then
                     ProjectileBeam(Camera.CFrame.Position - Vector3.new(0,1,0),RayPosition)
