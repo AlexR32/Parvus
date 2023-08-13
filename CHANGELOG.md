@@ -1,3 +1,16 @@
+### Update 14/08/23
+```markdown
+# AR2
+* player esp fixed with staff check enabled
+* head expander fixed, now head doesn't collide with vehicle and other things
+
+# BB
+* silent aim fixed
+* removed synapse check (useless right now)
+
+# Options Tab
+* moved discord section up slightly
+```
 ### Update 10/08/23
 ```markdown
 # AR2
