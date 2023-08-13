@@ -31,7 +31,9 @@ local Corpses = Workspace.Corpses
 local Zombies = Workspace.Zombies
 local Loot = Workspace.Loot
 
-local Framework = require(ReplicatedFirst.Framework) Framework:WaitForLoaded()
+local Framework = require(ReplicatedFirst:WaitForChild("Framework"))
+Framework:WaitForLoaded()
+
 repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
@@ -82,7 +84,7 @@ end
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 local ProjectileSpeed,ProjectileGravity = 1000,math.abs(Globals.ProjectileGravity)
 local SquadData,OldBaseTime = nil,LightingState.BaseTime
-local ItemMemory,NoClipEvent,NoClipObjects = {},nil,{}
+local ItemMemory,NoClipObjects,NoClipEvent = {},{},nil
 
 local AddObject = Instance.new("BindableEvent")
 AddObject.Event:Connect(function(...)
@@ -130,7 +132,7 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
-    "Chat Message Send","Ping Return","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard","Statistic Report","Sync Debug Info",
+    "Chat Message Send","Ping Return","Bullet Impact Interaction","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard","Statistic Report","Sync Debug Info",
     "Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State","Sync Near Chunk Loot",
     "Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
 },
@@ -473,9 +475,10 @@ local Window = Parvus.Utilities.UI:Window({
                         if not Player.Character then continue end
                         local Character = Player.Character
                         local Head = Character.Head
-                
+
                         Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
                         Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+                        Head.CanCollide = true
                     end
                 else
                     for Index,Player in pairs(PlayerService:GetPlayers()) do
@@ -483,9 +486,10 @@ local Window = Parvus.Utilities.UI:Window({
                         if not Player.Character then continue end
                         local Character = Player.Character
                         local Head = Character.Head
-                
+
                         Head.Size = Mannequin.Head.Size
                         Head.Transparency = Mannequin.Head.Transparency
+                        Head.CanCollide = Mannequin.Head.CanCollide
                     end
                 end
             end})
@@ -658,7 +662,7 @@ local function CheckForAdmin(Player)
         elseif Window.Flags["AR2/StaffJoin/List"][1] == "Server Hop" then
             Parvus.Utilities.ServerHop()
         elseif Window.Flags["AR2/StaffJoin/List"][1] == "Notify" then
-            UI:Notification2({Title = Message,Duration = 10})
+            UI:Notification2({Title = Message,Duration = 20})
         end
     end
 end
@@ -883,7 +887,7 @@ end
 
 local OldIndex,OldNamecall = nil,nil
 OldIndex = hookmetamethod(game,"__index",function(Self,Index)
-    if tostring(Self) == "Head" and Index == "Size" then
+    if Window.Flags["AR2/HeadExpander"] and tostring(Self) == "Head" and Index == "Size" then
         return Vector3.one * 1.15
     end
 
@@ -1143,6 +1147,10 @@ Events["Character Rubber Band Rest"] = function()
     print("rubber band")
     return false
 end
+Events["Network Wait"] = function()
+    print("network wait")
+    return true
+end
 local OldLSU = Events["Lighting State Update"]
 Events["Lighting State Update"] = function(Data,...)
     LightingState = Data
@@ -1304,12 +1312,13 @@ Parvus.Utilities.NewThreadLoop(1,function()
 
         Head.Size = Mannequin.Head.Size * Window.Flags["AR2/HeadExpander/Value"]
         Head.Transparency = Window.Flags["AR2/HeadExpander/Transparency"]
+        Head.CanCollide = true
     end
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["AR2/Lighting/Enabled"] then return end
     local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
-    LightingState.BaseTime = Time - ((Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength) % 1440)
+    LightingState.BaseTime = Time + ((Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength) % 1440)
 end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Enabled"]
@@ -1470,11 +1479,11 @@ end)
 for Index,Player in pairs(PlayerService:GetPlayers()) do
     if Player == LocalPlayer then continue end
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-    CheckForAdmin(Player)
+    task.spawn(function() CheckForAdmin(Player) end)
 end
 PlayerService.PlayerAdded:Connect(function(Player)
     Parvus.Utilities.Drawing:AddESP(Player,"Player","ESP/Player",Window.Flags)
-    CheckForAdmin(Player)
+    task.spawn(function() CheckForAdmin(Player) end)
 end)
 PlayerService.PlayerRemoving:Connect(function(Player)
     Parvus.Utilities.Drawing:RemoveESP(Player)
