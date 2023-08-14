@@ -275,7 +275,7 @@ local Window = Parvus.Utilities.UI:Window({
             :Colorpicker({Flag = "BB/BulletTracer/Color",Value = {1,0.75,1,0,true}})
             MiscSection:Toggle({Name = "Hitmarker",Flag = "BB/Rage/Hitmarker",Value = true})
         end
-        local CharacterSection = RageTab:Section({Name = "Character",Side = "Right"}) do
+        --[[local CharacterSection = RageTab:Section({Name = "Character",Side = "Right"}) do
             CharacterSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
             CharacterSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
@@ -315,7 +315,7 @@ local Window = Parvus.Utilities.UI:Window({
                     FlyPosition = LPCharacter.PrimaryPart.Position
                 end
             end}):Keybind({Flag = "BB/Fly/Keybind"})
-            CharacterSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2.5,Precise = 1,Value = 2.5,Wide = true})
+            CharacterSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2,Precise = 1,Value = 2,Wide = true})
             CharacterSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
         end
         local AASection = RageTab:Section({Name = "Anti-Aim",Side = "Right"}) do
@@ -337,7 +337,7 @@ local Window = Parvus.Utilities.UI:Window({
             AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Yaw/Mode",List = {
                 {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
             }})
-        end
+        end]]
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -491,213 +491,7 @@ local Window = Parvus.Utilities.UI:Window({
             end})
             KillSoundSection:Dropdown({HideName = true,Flag = "BB/KillSound/Sound",List = KillSoundsList})
         end
-    end
-    --[[local MiscTab = Window:Tab({Name = "Miscellaneous"}) do
-        local WCSection = MiscTab:Section({Name = "Weapon Customization",Side = "Left"}) do
-            WCSection:Toggle({Name = "Enabled",Flag = "BB/WC/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/WC/Color",Value = {1,0.75,1,0.5,true}})
-            WCSection:Toggle({Name = "Hide Textures",Flag = "BB/WC/Texture",Value = true})
-            WCSection:Slider({Name = "Reflectance",Flag = "BB/WC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            WCSection:Dropdown({Name = "Material",Flag = "BB/WC/Material",List = {
-                {Name = "SmoothPlastic",Mode = "Button"},
-                {Name = "ForceField",Mode = "Button"},
-                {Name = "Neon",Mode = "Button",Value = true},
-                {Name = "Glass",Mode = "Button"}
-            }})
-        end
-        local CCSection = MiscTab:Section({Name = "Character Customization",Side = "Left"}) do
-            CCSection:Toggle({Name = "Enabled",Flag = "BB/CC/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/CC/Color",Value = {1,0.75,1,0.5,true}})
-            CCSection:Toggle({Name = "Hide Textures",Flag = "BB/CC/Texture",Value = true})
-            CCSection:Slider({Name = "Reflectance",Flag = "BB/CC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            CCSection:Dropdown({Name = "Material",Flag = "BB/CC/Material",List = {
-                {Name = "SmoothPlastic",Mode = "Button"},
-                {Name = "ForceField",Mode = "Button"},
-                {Name = "Neon",Mode = "Button",Value = true},
-                {Name = "Glass",Mode = "Button"}
-            }})
-        end
-        local HitSoundSection = MiscTab:Section({Name = "HitSound Customization",Side = "Left"}) do
-
-            local HitSoundsList = {}
-            for Index,Sound in pairs(HitSounds) do
-                HitSoundsList[#HitSoundsList + 1] = {
-                    Name = Sound[1],Mode = "Button",
-                    Callback = function()
-                        local HitSound = nil
-                        for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                            HitmarkerScript.HeadshotSound.Volume = 0
-                            HitSound = HitmarkerScript.HitmarkerSound
-                            HitSound.SoundId = "rbxassetid://" .. Sound[2]
-                        end HitSound:Play()
-                    end
-                }
-            end
-
-            HitSoundSection:Button({Name = "Reset To Defaults",Callback = function()
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerScript.HeadshotSound.Volume = 0.7
-                    HitmarkerScript.HitmarkerSound.Volume = 3.5
-                    HitmarkerScript.HitmarkerSound.PlaybackSpeed = 1.4
-                    HitmarkerScript.HitmarkerSound.SoundId = "rbxassetid://4645745735"
-                end
-            end})
-            HitSoundSection:Slider({Name = "Volume",Flag = "BB/HitSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 3.5,
-            Callback = function(Value)
-                local HitSound = nil
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitSound = HitmarkerScript.HitmarkerSound
-                    HitSound.Volume = Value
-                end HitSound:Play()
-            end})
-            HitSoundSection:Slider({Name = "Pitch",Flag = "BB/HitSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1.4,
-            Callback = function(Value)
-                local HitSound = nil
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitSound = HitmarkerScript.HitmarkerSound
-                    HitSound.PlaybackSpeed = Value
-                end HitSound:Play()
-            end})
-            HitSoundSection:Dropdown({HideName = true,Flag = "BB/HitSound/Sound",List = HitSoundsList})
-        end
-        local WMSection = MiscTab:Section({Name = "Weapon Modification",Side = "Left"}) do
-            WMSection:Toggle({Name = "Auto FireMode",Flag = "BB/FireMode/Enabled",Value = false})
-            WMSection:Toggle({Name = "Recoil Enabled",Flag = "BB/Recoil/Enabled",Value = false})
-            WMSection:Slider({Name = "Weapon Shake",Flag = "BB/Recoil/WeaponScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Camera Shake",Flag = "BB/Recoil/CameraScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Recoil Scale",Flag = "BB/Recoil/RecoilScale",Min = 0,Max = 100,Value = 0,Unit = "%"})
-            WMSection:Slider({Name = "Bullet Drop",Flag = "BB/Recoil/BulletDrop",Min = 0,Max = 100,Value = 0,Unit = "%"})
-        end
-        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
-            MiscSection:Button({Name = "Redeem Codes",Callback = function()
-                local Codes = ""
-                local Success,Error = pcall(function()
-                    Codes = game:HttpGet("https://roblox-bad-business.fandom.com/wiki/Codes")
-                end)
-
-                if Success then
-                    for Code in Codes:gmatch("<td>([%w\n_]*)</td>") do
-                        Tortoiseshell.Network:Invoke("Codes","Redeem",Code:gsub("\n",""))
-                        --Code = Code:gsub("\n","")
-                        --print(Code,Tortoiseshell.Network:Invoke("Codes","Redeem",Code))
-                    end task.wait(0.1)
-                    firesignal(LocalPlayer.PlayerGui.MenuGui.ClaimedFrame.CloseButton.MouseButton1Click)
-                    firesignal(LocalPlayer.PlayerGui.MenuGui.PurchasedFrame.CloseButton.MouseButton1Click)
-                    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "All available codes are claimed!",Duration = 5})
-                else
-                    Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Failed to get the codes:\n" .. Error,Duration = 5})
-                end
-            end})
-        end
-        local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
-            ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
-            :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
-            ACSection:Toggle({Name = "Hide Textures",Flag = "BB/AC/Texture",Value = true})
-            ACSection:Slider({Name = "Reflectance",Flag = "BB/AC/Reflectance",Min = 0,Max = 0.95,Precise = 2,Value = 0})
-            ACSection:Dropdown({Name = "Material",Flag = "BB/AC/Material",List = {
-                {Name = "SmoothPlastic",Mode = "Button"},
-                {Name = "ForceField",Mode = "Button"},
-                {Name = "Neon",Mode = "Button",Value = true},
-                {Name = "Glass",Mode = "Button"}
-            }})
-        end
-        local KillSoundSection = MiscTab:Section({Name = "KillSound Customization",Side = "Right"}) do
-
-            local KillSoundsList = {}
-            for Index,Sound in pairs(HitSounds) do
-                KillSoundsList[#KillSoundsList + 1] = {
-                    Name = Sound[1],Mode = "Button",
-                    Callback = function()
-                        local KillSound = nil
-                        for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                            HitmarkerScript.MedalSound.Volume = 0
-                            KillSound = HitmarkerScript.KillSound
-                            KillSound.SoundId = "rbxassetid://" .. Sound[2]
-                        end KillSound:Play()
-                    end
-                }
-            end
-
-            KillSoundSection:Button({Name = "Reset To Defaults",Callback = function()
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    HitmarkerScript.MedalSound.Volume = 0.8
-                    HitmarkerScript.KillSound.Volume = 1
-                    HitmarkerScript.KillSound.PlaybackSpeed = 1.5
-                    HitmarkerScript.KillSound.SoundId = "rbxassetid://2636743632"
-                end
-            end})
-            KillSoundSection:Slider({Name = "Volume",Flag = "BB/KillSound/Volume",Min = 0,Max = 5,Precise = 1,Value = 1,
-            Callback = function(Value)
-                local KillSound = nil
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    KillSound = HitmarkerScript.KillSound
-                    KillSound.Volume = Value
-                end KillSound:Play()
-            end})
-            KillSoundSection:Slider({Name = "Pitch",Flag = "BB/KillSound/Pitch",Min = 0,Max = 5,Precise = 1,Value = 1.5,
-            Callback = function(Value)
-                local KillSound = nil
-                for Index,HitmarkerScript in pairs(HitmarkerScripts) do
-                    KillSound = HitmarkerScript.KillSound
-                    KillSound.PlaybackSpeed = Value
-                end KillSound:Play()
-            end})
-            KillSoundSection:Dropdown({HideName = true,Flag = "BB/KillSound/Sound",List = KillSoundsList})
-        end
-        local CharSection = MiscTab:Section({Name = "Character",Side = "Right"}) do
-            CharSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
-            CharSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson/Enabled",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if not LPCharacter then return end
-
-                if Window.Flags["BB/ThirdPerson/Outfit"] then
-                    task.spawn(function() SetIdentity(2)
-                        if not CharacterHandlers[LPCharacter] then
-                            HandleCharacter(LPCharacter,LocalPlayer)
-                        end
-                    end)
-                end
-
-                for Index,Value in pairs(LPCharacter:GetDescendants()) do
-                    if Value:IsA("BasePart") then
-                        Value.LocalTransparencyModifier = Bool and 0 or 1
-                    end
-                end
-            end}):Keybind({Flag = "BB/ThirdPerson/Keybind"})
-            CharSection:Toggle({Name = "NoClip",Flag = "BB/NoClip/Enabled",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
-            end}):Keybind({Flag = "BB/NoClip/Keybind"})
-            CharSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
-                    FlyPosition = LPCharacter.PrimaryPart.Position
-                end
-            end}):Keybind({Flag = "BB/Fly/Keybind"})
-            CharSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2.5,Precise = 1,Value = 2.5,Wide = true})
-            CharSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
-        end
-        local AASection = MiscTab:Section({Name = "Anti-Aim",Side = "Right"}) do
-            AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false}):Keybind({Flag = "BB/AntiAim/Keybind"})
-            AASection:Slider({Name = "Refresh Rate",Flag = "BB/AntiAim/RefreshRate",Min = 0,Max = 1,Precise = 2,Value = 0.05,Wide = true})
-            AASection:Slider({Name = "Pitch",Flag = "BB/AntiAim/Pitch/Value",Min = -2,Max = 2,Precise = 2,Value = -2})
-            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Pitch/Mode",List = {
-                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
-            }})
-            AASection:Slider({Name = "Lean",Flag = "BB/AntiAim/Lean/Value",Min = -1.5,Max = 1.5,Precise = 2,Value = 0})
-            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Lean/Mode",List = {
-                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
-            }})
-            AASection:Slider({Name = "Roll",Flag = "BB/AntiAim/Roll/Value",Min = -1,Max = 1,Precise = 2,Value = 1})
-            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Roll/Mode",List = {
-                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
-            }})
-            AASection:Slider({Name = "Yaw",Flag = "BB/AntiAim/Yaw/Value",Min = -1,Max = 1,Precise = 2,Value = 1})
-            AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Yaw/Mode",List = {
-                {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
-            }})
-        end
-    end]] Parvus.Utilities:SettingsSection(Window,"End",false)
+    end Parvus.Utilities:SettingsSection(Window,"End",false)
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
@@ -860,7 +654,7 @@ local function GetGrenade()
         end
     end
 end
-local function GetAntiAimValue(Value,Mode)
+--[[local function GetAntiAimValue(Value,Mode)
     if Mode == "Random" then
         Value = math.abs(Value)
         return NewRandom:NextNumber(-Value,Value)
@@ -870,7 +664,7 @@ local function GetAntiAimValue(Value,Mode)
         Value = Value * SpinValue
     end
     return Value
-end
+end]]
 --[[local function ToggleShoot(Toggle)
     Tortoiseshell.Input[Toggle and "AutomateBegan"
     or "AutomateEnded"](Tortoiseshell.Input,"Shoot")
@@ -957,18 +751,26 @@ local function ProjectileBeam(Origin,Direction)
 
     return Beam
 end
+local function GetReticlePosition(Hitbox)
+    local ReticlePosition = Camera.CFrame.Position
+    local LookVector = (Hitbox.Position - ReticlePosition).Unit
+
+    local Distance = 3
+    local Part,Position = Tortoiseshell.Raycast:CastGeometryAndEnemies(ReticlePosition,LookVector * Distance,LocalPlayer)
+    if Part then Distance = (ReticlePosition - Position).Magnitude - 0.1 end
+
+    return ReticlePosition + LookVector * Distance
+end
 local function ComputeProjectiles(Config,Hitbox)
     --local ReticlePosition = Tortoiseshell.Input.Reticle:GetPosition()
-    local HitboxPosition = Hitbox.Position --[[+ Vector3.new(
-        NewRandom:NextNumber(-(Hitbox.Size.X / 2),Hitbox.Size.X / 2),
-        NewRandom:NextNumber(-(Hitbox.Size.Y / 2),Hitbox.Size.Y / 2),
-        NewRandom:NextNumber(-(Hitbox.Size.Z / 2),Hitbox.Size.Z / 2)
+    --[[local HitboxPosition = Hitbox.Position + Vector3.new(
+        NewRandom:NextNumber(-(Hitbox.Size.X / 4),Hitbox.Size.X / 4),
+        NewRandom:NextNumber(-(Hitbox.Size.Y / 4),Hitbox.Size.Y / 4),
+        NewRandom:NextNumber(-(Hitbox.Size.Z / 4),Hitbox.Size.Z / 4)
     )]]
 
-    local ReticlePosition = Camera.CFrame.Position
-    local LookVector = HitboxPosition - ReticlePosition
-    ReticlePosition = ReticlePosition + LookVector.Unit * 3
-
+    local ReticlePosition = GetReticlePosition(Hitbox)
+    local LookVector = Hitbox.Position - ReticlePosition
     local RayResult = Raycast(ReticlePosition,LookVector,{Hitbox})
     if not RayResult then return end
 
@@ -1011,10 +813,6 @@ local function Autoshoot(Hitbox,FireRate)
                     Tortoiseshell.Network:Fire("Projectiles","__Hit",
                     Projectile[2],RayPosition,Hitbox[3],RayNormal,Hitbox[2])
                 end
-
-                if Window.Flags["BB/Rage/Hitmarker"] then
-                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,#ShootProjectiles > 3)
-                end
             end)
 
             Tortoiseshell.Network:Fire("Item_Paintball","Reload",Weapon)
@@ -1026,6 +824,10 @@ local function Autoshoot(Hitbox,FireRate)
                         Hitbox[1].Name,Ammo.Value
                     ),Color = Color3.new(1,0.5,0.25),Duration = 3
                 })
+
+                if Window.Flags["BB/Rage/Hitmarker"] then
+                    Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,#ShootProjectiles > 3)
+                end
             end
         else local Reloading = State.Reloading.Server
             if not Reloading.Value then
@@ -1268,7 +1070,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
             SilentAim[3],SilentAim[3].Position)
             return Old(Self,unpack(Args))
         end]]
-    elseif Args[2] == "State" then
+    --elseif Args[2] == "State" then
         --[[
         Old(Self,"Character","State","Aiming",true)
         Old(Self,"Character","State","Climbing",true)
@@ -1282,13 +1084,13 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
         Old(Self,"Character","State","Stance","Stand") -- "Crouch","Prone"
         ]]
 
-        if Window.Flags["BB/Rage/Autoshoot/Enabled"]
+        --[[if Window.Flags["BB/Rage/Autoshoot/Enabled"]
         and table.find(DisabledStates,Args[3]) then Args[4] = false end
         if Window.Flags["BB/AntiAim/Enabled"] and Args[3] == "Look" then
             local Pitch = GetAntiAimValue(Window.Flags["BB/AntiAim/Pitch/Value"],Window.Flags["BB/AntiAim/Pitch/Mode"][1])
             local Lean = GetAntiAimValue(Window.Flags["BB/AntiAim/Lean/Value"],Window.Flags["BB/AntiAim/Lean/Mode"][1])
             Args[4] = Pitch Old(Self,"Character","State","Lean",Lean)
-        end return Old(Self,unpack(Args))
+        end return Old(Self,unpack(Args))]]
     end
 
     return Old(Self,...)
@@ -1313,7 +1115,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,functio
     return Old(Self,...)
 end)
 
-Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,A,B,C,...)
+--[[Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,A,B,C,...)
     if A then WeaponModel = C
         if Window.Flags["BB/ThirdPerson/Enabled"] then
             task.spawn(function() task.wait(0.5)
@@ -1332,7 +1134,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,A,
     end
 
     return Old(Self,A,B,C,...)
-end,true)
+end,true)]]
 
 --[[Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
     local Args = {Old(Self,...)} local Config = Args[1]
@@ -1349,7 +1151,7 @@ end,true)
     end return unpack(Args)
 end)]]
 
-local OldCamera = RenderStepConnections["Camera"]
+--[[local OldCamera = RenderStepConnections["Camera"]
 RenderStepConnections["Camera"] = function(...)
     if Window.Flags["BB/ThirdPerson/Enabled"] then
         local Args = {OldCamera(...)}
@@ -1370,9 +1172,9 @@ RenderStepConnections["FirstPerson"] = function(...)
     if Window.Flags["BB/ThirdPerson/Enabled"] then return end
     --setupvalue(OldFirstPerson,9,0) -- No Bob (shit)
     return OldFirstPerson(...)
-end
+end]]
 
-HeartbeatConnections["Control"] = function(...)
+--[[HeartbeatConnections["Control"] = function(...)
     local LPCharacter = Characters[LocalPlayer]
     if LPCharacter and LPCharacter.Parent and LPCharacter.PrimaryPart then
         local Args = {OldControl(...)}
@@ -1392,7 +1194,7 @@ HeartbeatConnections["Control"] = function(...)
     end
 
     return OldControl(...)
-end
+end]]
 
 for Index,Event in pairs(Events) do
     if Event.Event == "Item_Throwable" then
@@ -1440,7 +1242,6 @@ Parvus.Utilities.NewThreadLoop(0,function()
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     if not (Trigger or Window.Flags["Trigger/AlwaysEnabled"]) then return end
-    --if not iswindowactive() then return end
 
     local TriggerClosest = GetClosest(
         Window.Flags["Trigger/Enabled"],
@@ -1500,30 +1301,29 @@ Parvus.Utilities.NewThreadLoop(0.25,function()
 end)
 Parvus.Utilities.NewThreadLoop(1/10,function()
     CustomizeWeapon(
-        Window.Flags["BB/WC/Enabled"]
-        and not Window.Flags["BB/ThirdPerson/Enabled"],
+        Window.Flags["BB/WC/Enabled"],
+        --and not Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/WC/Texture"],
         Window.Flags["BB/WC/Color"],
         Window.Flags["BB/WC/Reflectance"],
         Window.Flags["BB/WC/Material"][1]
     )
     CustomizeArms(
-        Window.Flags["BB/AC/Enabled"]
-        and not Window.Flags["BB/ThirdPerson/Enabled"],
+        Window.Flags["BB/AC/Enabled"],
+        --and not Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/AC/Texture"],
         Window.Flags["BB/AC/Color"],
         Window.Flags["BB/AC/Reflectance"],
         Window.Flags["BB/AC/Material"][1]
     )
-    CustomizeCharacter(
+    --[[CustomizeCharacter(
         Window.Flags["BB/CC/Enabled"]
         and Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/CC/Texture"],
         Window.Flags["BB/CC/Color"],
         Window.Flags["BB/CC/Reflectance"],
         Window.Flags["BB/CC/Material"][1]
-    )
-
+    )]]
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     AutoshootHitbox = GetClosestAllFOV(
@@ -1549,7 +1349,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["BB/Rage/AutoGrenade"] then return end
     AutoGrenade()
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
     JitterValue = JitterValue == -1 and 1 or -1
     SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
@@ -1577,7 +1377,7 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
             end
         end
     end
-end)
+end)]]
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
