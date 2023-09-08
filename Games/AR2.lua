@@ -306,7 +306,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Callback = function(Selected,Option) Window.Flags[ZIFlag .. "/Enabled"] = Option.Value end
                 }
             end
-            
+
             ZombiesSection:Dropdown({Name = "ESP List",Flag = "AR2/Zombies",List = ZIs})
         end
         local RESection = ESPTab:Section({Name = "Random Events ESP",Side = "Right"}) do local REs = {}
@@ -324,7 +324,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Callback = function(Selected,Option) Window.Flags[REFlag .. "/Enabled"] = Option.Value end
                 }
             end
-            
+
             RESection:Dropdown({Name = "ESP List",Flag = "AR2/RandomEvents",List = REs})
         end
         local VehiclesSection = ESPTab:Section({Name = "Vehicles ESP",Side = "Right"}) do
@@ -456,12 +456,12 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Notify",Mode = "Button",Value = true},
                 {Name = "Kick",Mode = "Button",Value = false}
             }})
-            CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
+            --[[CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
             Callback = function(Bool)
                 if not PlayerClass.Character then return end
                 if Bool then PlayerClass.Character.Animator:PlayAnimationReplicated("Death.Standing Backwards",true)
                 else PlayerClass.Character.Animator:StopAnimationReplicated("Death.Standing Backwards",true) end
-            end})
+            end})]]
             CharSection:Button({Name = "Respawn",Callback = function()
                 task.spawn(function() SetIdentity(2)
                     PlayerClass:LoadCharacter()
