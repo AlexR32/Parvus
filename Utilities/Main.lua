@@ -93,6 +93,56 @@ function Utility.MovementToDirection()
     local YMovement = YVector * (Movement.Up - Movement.Down)
     return GetUnit(ZMovement + XMovement + YMovement)
 end
+function Utility.MakeBeam(Origin,Position,Color)
+	--local BeamFolder = Instance.new("Folder")
+
+    local OriginAttachment = Instance.new("Attachment")
+    OriginAttachment.CFrame = CFrame.new(Origin)
+    OriginAttachment.Name = "OriginAttachment"
+    OriginAttachment.Parent = Terrain
+
+    local PositionAttachment = Instance.new("Attachment")
+    PositionAttachment.CFrame = CFrame.new(Position)
+    PositionAttachment.Name = "PositionAttachment"
+    PositionAttachment.Parent = Terrain
+
+	local Beam = Instance.new("Beam")
+
+	Beam.Name = "Beam"
+	Beam.Color = ColorSequence.new(Color[6])
+	Beam.LightEmission = 1
+	Beam.LightInfluence = 1
+	Beam.TextureMode = Enum.TextureMode.Static
+	Beam.TextureSpeed = 0
+	Beam.Transparency = NumberSequence.new(0)
+
+	Beam.Attachment0 = OriginAttachment
+	Beam.Attachment1 = PositionAttachment
+	Beam.FaceCamera = true
+	Beam.Segments = 1
+	Beam.Width0 = 0.1
+	Beam.Width1 = 0.1
+
+	Beam.Parent = Terrain
+
+    --BeamFolder = Terrain
+
+    task.spawn(function()
+        local Time = 1 * 60
+
+        for Index = 1,Time do
+            RunService.Heartbeat:Wait()
+            Beam.Transparency = NumberSequence.new(Index / Time)
+            Beam.Color = ColorSequence.new(Color[6])
+        end
+
+        OriginAttachment:Destroy()
+        PositionAttachment:Destroy()
+        Beam:Destroy()
+    end)
+
+    return Beam
+end
 function Utility.NewThreadLoop(Wait,Function)
     task.spawn(function()
         while true do

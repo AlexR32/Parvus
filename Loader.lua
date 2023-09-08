@@ -83,6 +83,6 @@ Parvus.Game = GetGameInfo()
 LoadScript(Parvus.Game.Script)
 Parvus.Utilities.UI:Notification({
     Title = "Parvus Hub",
-    Description = Parvus.Game.Name .. " loaded!\nThis script is open sourced\nIf you have paid for this script\nOr had to go thru ads you have been scammed.",
-    Duration = NotificationTime
+    Description = Parvus.Game.Name .. " loaded!\n\nThis script is open sourced\nIf you have paid for this script\nOr had to go thru ads\nYou have been scammed.",
+    Duration = 30 --NotificationTime
 }) Parvus.Loaded = true
