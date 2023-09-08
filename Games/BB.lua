@@ -18,7 +18,7 @@ local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://r
     }) repeat task.wait(0.5) until Loaded1
 end]]
 
-if game.PlaceVersion > 1394 then
+if game.PlaceVersion > 1402 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -34,7 +34,7 @@ local Tortoiseshell,HitmarkerScripts,WeaponModel = getupvalue(require(Replicated
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,150,2--Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","GetSetting","FireProjectile","Invoke"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
-local NewRandom,FlyPosition,JitterValue,SpinValue = Random.new(),nil,1,0
+local NewRandom,JitterValue,SpinValue = Random.new(),1,0
 local SetIdentity = setidentity or (syn and syn.set_thread_identity)
 
 for Index,Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do
@@ -110,16 +110,16 @@ local HitSounds = {
     {"Clink","711751971"},
     {"CoD","160432334"},
     {"Lazer Beam","130791043"},
-    
+
     {"Windows XP Error","160715357"},
     {"Windows XP Ding","489390072"},
-    
+
     {"HL Med Kit","4720445506"},
     {"HL Door","4996094887"},
     {"HL Crowbar","546410481"},
     {"HL Revolver","1678424590"},
     {"HL Elevator","237877850"},
-    
+
     {"TF2 HitSound","3455144981"},
     {"TF2 Squasher","3466981613"},
     {"TF2 Retro","3466984142"},
@@ -269,17 +269,17 @@ local Window = Parvus.Utilities.UI:Window({
         end
         local MiscSection = RageTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Toggle({Name = "Knife Aura",Flag = "BB/Rage/KnifeAura",Value = false}):Keybind()
-            MiscSection:Toggle({Name = "Tele-Grenade",Flag = "BB/Rage/TeleGrenade",Value = false}):Keybind()
-            MiscSection:Toggle({Name = "Auto Grenade",Flag = "BB/Rage/AutoGrenade",Value = false}):Keybind()
+            --MiscSection:Toggle({Name = "Tele-Grenade",Flag = "BB/Rage/TeleGrenade",Value = false}):Keybind()
+            --MiscSection:Toggle({Name = "Auto Grenade",Flag = "BB/Rage/AutoGrenade",Value = false}):Keybind()
             MiscSection:Toggle({Name = "Bullet Tracer",Flag = "BB/BulletTracer/Enabled",Value = false})
             :Colorpicker({Flag = "BB/BulletTracer/Color",Value = {1,0.75,1,0,true}})
             MiscSection:Toggle({Name = "Hitmarker",Flag = "BB/Rage/Hitmarker",Value = true})
         end
-        --[[local CharacterSection = RageTab:Section({Name = "Character",Side = "Right"}) do
+        local CharacterSection = RageTab:Section({Name = "Character",Side = "Right"}) do
             CharacterSection:Toggle({Name = "ThirdPerson Load Outfit",Flag = "BB/ThirdPerson/Outfit",Value = false})
             CharacterSection:Toggle({Name = "ThirdPerson",Flag = "BB/ThirdPerson/Enabled",Value = false,Callback = function(Bool)
                 local LPCharacter = Characters[LocalPlayer]
-                if not LPCharacter then return end
+                if not LPCharacter or not WeaponModel then return end
 
                 if Window.Flags["BB/ThirdPerson/Outfit"] then
                     task.spawn(function() SetIdentity(2)
@@ -309,14 +309,9 @@ local Window = Parvus.Utilities.UI:Window({
                 local LPCharacter = Characters[LocalPlayer]
                 if LPCharacter and LPCharacter.PrimaryPart then LPCharacter.PrimaryPart.CanCollide = not Bool end
             end}):Keybind({Flag = "BB/NoClip/Keybind"})
-            CharacterSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false,Callback = function(Bool)
-                local LPCharacter = Characters[LocalPlayer]
-                if Bool and (LPCharacter and LPCharacter.PrimaryPart) then
-                    FlyPosition = LPCharacter.PrimaryPart.Position
-                end
-            end}):Keybind({Flag = "BB/Fly/Keybind"})
-            CharacterSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2,Precise = 1,Value = 2,Wide = true})
-            CharacterSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Wide = true})
+            CharacterSection:Toggle({Name = "Fly",Flag = "BB/Fly/Enabled",Value = false}):Keybind({Flag = "BB/Fly/Keybind"})
+            CharacterSection:Slider({Name = "Fly Speed",Flag = "BB/Fly/Speed",Min = 1,Max = 2,Precise = 1,Value = 2,Unit = "studs",Wide = true})
+            CharacterSection:Slider({Name = "ThirdPerson FOV",Flag = "BB/ThirdPerson/FOV",Min = 1,Max = 79,Value = 15,Unit = "studs",Wide = true})
         end
         local AASection = RageTab:Section({Name = "Anti-Aim",Side = "Right"}) do
             AASection:Toggle({Name = "Enabled",Flag = "BB/AntiAim/Enabled",Value = false}):Keybind({Flag = "BB/AntiAim/Keybind"})
@@ -337,7 +332,7 @@ local Window = Parvus.Utilities.UI:Window({
             AASection:Dropdown({HideName = true,Flag = "BB/AntiAim/Yaw/Mode",List = {
                 {Name = "Static",Value = true},{Name = "Random"},{Name = "Jitter"},{Name = "Spin"}
             }})
-        end]]
+        end
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,true,true,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})
@@ -372,7 +367,7 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
+        --[[local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Button({Name = "Redeem Codes",Callback = function()
                 local Codes = ""
                 local Success,Error = pcall(function()
@@ -392,7 +387,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Failed to get the codes:\n" .. Error,Duration = 5})
                 end
             end})
-        end
+        end]]
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
             ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
@@ -645,7 +640,7 @@ local function GetEquippedWeapon()
         end
     end
 end
-local function GetGrenade()
+--[[local function GetGrenade()
     local Controllers = Tortoiseshell.Items:GetControllers()
     for Weapon,Controller in pairs(Controllers) do
         local Config = WeaponConfigs[Weapon]
@@ -653,8 +648,8 @@ local function GetGrenade()
             return Weapon,Config
         end
     end
-end
---[[local function GetAntiAimValue(Value,Mode)
+end]]
+local function GetAntiAimValue(Value,Mode)
     if Mode == "Random" then
         Value = math.abs(Value)
         return NewRandom:NextNumber(-Value,Value)
@@ -664,11 +659,11 @@ end
         Value = Value * SpinValue
     end
     return Value
-end]]
---[[local function ToggleShoot(Toggle)
+end
+local function ToggleShoot(Toggle)
     Tortoiseshell.Input[Toggle and "AutomateBegan"
     or "AutomateEnded"](Tortoiseshell.Input,"Shoot")
-end]]
+end
 local function CustomizeWeapon(Enabled,HideTextures,Color,Reflectance,Material)
     if not Enabled then return end
     if not WeaponModel then return end
@@ -722,35 +717,6 @@ local function CustomizeCharacter(Enabled,HideTextures,Color,Reflectance,Materia
         end
     end
 end
-local function ProjectileBeam(Origin,Direction)
-    local Beam = Instance.new("Part")
-
-    Beam.BottomSurface = Enum.SurfaceType.Smooth
-    Beam.TopSurface = Enum.SurfaceType.Smooth
-    Beam.Material = Enum.Material.SmoothPlastic
-    Beam.Color = Color3.new(1,0,0)
-
-    Beam.CanCollide = false
-    Beam.CanTouch = false
-    Beam.CanQuery = false
-    Beam.Anchored = true
-
-    Beam.Size = Vector3.new(0.1,0.1,(Origin - Direction).Magnitude)
-    Beam.CFrame = CFrame.new(Origin,Direction) * CFrame.new(0,0,-Beam.Size.Z / 2)
-
-    Beam.Parent = Workspace
-
-    task.spawn(function()
-        local Time = 60 * 1
-        for Index = 1,Time do
-            RunService.Heartbeat:Wait()
-            Beam.Transparency = Index / Time
-            Beam.Color = Window.Flags["BB/BulletTracer/Color"][6]
-        end Beam:Destroy()
-    end)
-
-    return Beam
-end
 local function GetReticlePosition(Hitbox)
     local ReticlePosition = Camera.CFrame.Position
     local LookVector = (Hitbox.Position - ReticlePosition).Unit
@@ -789,10 +755,16 @@ local function Autoshoot(Hitbox,FireRate)
     if not Hitbox then return end
     local Weapon,Config = GetEquippedWeapon()
 
-    if Weapon and Config then local State = Weapon.State
-        local Ammo = State.Ammo.Server local AmmoValue = Ammo.Value
-        local Health = Hitbox[2].Health local HealthValue = Health.Value
-        if AmmoValue > 0 and Config.Controller == "Paintball" then
+    if Weapon and Config and Config.Controller == "Paintball" then
+        local State = Weapon.State
+
+        local Ammo = State.Ammo.Server
+        local AmmoValue = Ammo.Value
+
+        --local Health = Hitbox[2].Health
+        --local HealthValue = Health.Value
+
+        if AmmoValue > 0 then
             local FireMode = State.FireMode.Server
 
             local FireModeFromList = Config.FireModeList[FireMode.Value]
@@ -829,7 +801,8 @@ local function Autoshoot(Hitbox,FireRate)
                     Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,#ShootProjectiles > 3)
                 end
             end
-        else local Reloading = State.Reloading.Server
+        else
+            local Reloading = State.Reloading.Server
             if not Reloading.Value then
                 local ReloadTime = Config.Magazine.ReloadTime
                 local Milliseconds = (ReloadTime % 1) * 10
@@ -856,7 +829,7 @@ local function KnifeAura(Hitbox,FireRate)
                 Hitbox[3].Position,Hitbox[3].Position - Camera.CFrame.Position)
 
                 if Window.Flags["BB/BulletTracer/Enabled"] then
-                    ProjectileBeam(Camera.CFrame.Position - Vector3.new(0,1,0),Hitbox[3].Position)
+                    Parvus.Utilities.MakeBeam(Camera.CFrame.Position - Vector3.new(0,1,0),Hitbox[3].Position,Window.Flags["BB/BulletTracer/Color"])
                 end
                 if Window.Flags["BB/Rage/Hitmarker"] then
                     Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3])
@@ -870,7 +843,7 @@ local function KnifeAura(Hitbox,FireRate)
         end
     end
 end
-local function AutoGrenade()
+--[[local function AutoGrenade()
     local Weapon,Config = GetEquippedWeapon()
     local Grenade,GrenadeConfig = GetGrenade()
     if Weapon and Grenade then
@@ -885,7 +858,7 @@ local function AutoGrenade()
             task.wait(GrenadeConfig.Throwable.CookTime)
         end
     end
-end
+end]]
 local function GetClosestAllFOV(Enabled,
     VisibilityCheck,DistanceCheck,
     DistanceLimit,Priority,BodyParts
@@ -1031,9 +1004,10 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     if Args[2] == "Shoot" then
         if SilentAim and math.random(100) <= Window.Flags["SilentAim/HitChance"] then
             task.spawn(function()
+                local Hitbox = SilentAim
                 local Weapon,Config = GetEquippedWeapon()
                 local ShootProjectiles,ReticlePosition,RayPosition,
-                RayNormal = ComputeProjectiles(Config,SilentAim[3])
+                RayNormal = ComputeProjectiles(Config,Hitbox[3])
                 if not ShootProjectiles then return end
 
                 Old(Self,"Item_Paintball","Shoot",
@@ -1042,16 +1016,15 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
                 task.wait((RayPosition - ReticlePosition).Magnitude
                 / Projectiles[Config.Projectile.Template].Speed)
 
-                if not SilentAim then return end
                 for Index,Projectile in pairs(ShootProjectiles) do
                     Old(Self,"Projectiles","__Hit",Projectile[2],
-                    RayPosition,SilentAim[3],RayNormal,SilentAim[2])
+                    RayPosition,Hitbox[3],RayNormal,Hitbox[2])
                 end
 
-                Tortoiseshell.UI.Events.Hitmarker:Fire(SilentAim[3],RayPosition,#ShootProjectiles > 3)
+                Tortoiseshell.UI.Events.Hitmarker:Fire(Hitbox[3],RayPosition,#ShootProjectiles > 3)
 
                 if Window.Flags["BB/BulletTracer/Enabled"] then
-                    ProjectileBeam(Camera.CFrame.Position - Vector3.new(0,1,0),RayPosition)
+                    Parvus.Utilities.MakeBeam(Camera.CFrame.Position - Vector3.new(0,1,0),RayPosition,Window.Flags["BB/BulletTracer/Color"])
                 end
             end)
 
@@ -1060,7 +1033,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
     elseif Args[2] == "__Hit" then
         if SilentAim then return end
         if Window.Flags["BB/BulletTracer/Enabled"] then
-            ProjectileBeam(Camera.CFrame.Position - Vector3.new(0,1,0),Args[4])
+            Parvus.Utilities.MakeBeam(Camera.CFrame.Position - Vector3.new(0,1,0),Args[4],Window.Flags["BB/BulletTracer/Color"])
         end
     --[[elseif Args[2] == "Throw" then
         if (SilentAim and not Window.Flags["BB/Rage/Autoshoot/Enabled"])
@@ -1070,7 +1043,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
             SilentAim[3],SilentAim[3].Position)
             return Old(Self,unpack(Args))
         end]]
-    --elseif Args[2] == "State" then
+    elseif Args[2] == "State" then
         --[[
         Old(Self,"Character","State","Aiming",true)
         Old(Self,"Character","State","Climbing",true)
@@ -1084,21 +1057,23 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Network.Fire,function(Old,Self,...)
         Old(Self,"Character","State","Stance","Stand") -- "Crouch","Prone"
         ]]
 
-        --[[if Window.Flags["BB/Rage/Autoshoot/Enabled"]
-        and table.find(DisabledStates,Args[3]) then Args[4] = false end
+        if Window.Flags["BB/Rage/Autoshoot/Enabled"] and table.find(DisabledStates,Args[3]) then Args[4] = false end
         if Window.Flags["BB/AntiAim/Enabled"] and Args[3] == "Look" then
             local Pitch = GetAntiAimValue(Window.Flags["BB/AntiAim/Pitch/Value"],Window.Flags["BB/AntiAim/Pitch/Mode"][1])
             local Lean = GetAntiAimValue(Window.Flags["BB/AntiAim/Lean/Value"],Window.Flags["BB/AntiAim/Lean/Mode"][1])
             Args[4] = Pitch Old(Self,"Character","State","Lean",Lean)
-        end return Old(Self,unpack(Args))]]
+        end
+
+        return Old(Self,unpack(Args))
     end
 
     return Old(Self,...)
 end)
 
 Parvus.Utilities.FixUpValue(Tortoiseshell.Projectiles.InitProjectile,function(Old,Self,A,B,C,D,...)
-    if D == LocalPlayer then ProjectileSpeed = Projectiles[A].Speed
-        ProjectileGravity = Projectiles[A].Gravity --Vector3.new(0,Projectiles[A].Gravity,0)
+    if D == LocalPlayer then
+        ProjectileSpeed = Projectiles[A].Speed
+        ProjectileGravity = Projectiles[A].Gravity
     end
 
     return Old(Self,A,B,C,D,...)
@@ -1115,7 +1090,7 @@ Parvus.Utilities.FixUpValue(Tortoiseshell.Raycast.CastGeometryAndEnemies,functio
     return Old(Self,...)
 end)
 
---[[Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,A,B,C,...)
+Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetAnimator,function(Old,Self,A,B,C,...)
     if A then WeaponModel = C
         if Window.Flags["BB/ThirdPerson/Enabled"] then
             task.spawn(function() task.wait(0.5)
@@ -1134,8 +1109,9 @@ end)
     end
 
     return Old(Self,A,B,C,...)
-end,true)]]
+end,true)
 
+-- Old Config Mod
 --[[Parvus.Utilities.FixUpValue(Tortoiseshell.Items.GetConfig,function(Old,Self,...)
     local Args = {Old(Self,...)} local Config = Args[1]
     if Window.Flags["BB/Recoil/Enabled"]
@@ -1151,7 +1127,7 @@ end,true)]]
     end return unpack(Args)
 end)]]
 
---[[local OldCamera = RenderStepConnections["Camera"]
+local OldCamera = RenderStepConnections["Camera"]
 RenderStepConnections["Camera"] = function(...)
     if Window.Flags["BB/ThirdPerson/Enabled"] then
         local Args = {OldCamera(...)}
@@ -1172,17 +1148,17 @@ RenderStepConnections["FirstPerson"] = function(...)
     if Window.Flags["BB/ThirdPerson/Enabled"] then return end
     --setupvalue(OldFirstPerson,9,0) -- No Bob (shit)
     return OldFirstPerson(...)
-end]]
+end
 
---[[HeartbeatConnections["Control"] = function(...)
+HeartbeatConnections["Control"] = function(Delta,...)
     local LPCharacter = Characters[LocalPlayer]
     if LPCharacter and LPCharacter.Parent and LPCharacter.PrimaryPart then
-        local Args = {OldControl(...)}
+        local Args = {OldControl(Delta,...)}
 
-        if Window.Flags["BB/Fly/Enabled"] and FlyPosition then
-            FlyPosition += Parvus.Utilities.MovementToDirection() * Window.Flags["BB/Fly/Speed"]
+        if Window.Flags["BB/Fly/Enabled"] then
+            local MoveVector = Parvus.Utilities.MovementToDirection()
             LPCharacter.PrimaryPart.AssemblyLinearVelocity = Vector3.zero
-            LPCharacter.PrimaryPart.CFrame = CFrame.new(FlyPosition) * LPCharacter.PrimaryPart.CFrame.Rotation
+            LPCharacter.PrimaryPart.CFrame += MoveVector * Window.Flags["BB/Fly/Speed"] * (Delta * 60)
         end
         if Window.Flags["BB/AntiAim/Enabled"] then
             local Roll = GetAntiAimValue(Window.Flags["BB/AntiAim/Roll/Value"],Window.Flags["BB/AntiAim/Roll/Mode"][1])
@@ -1193,10 +1169,10 @@ end]]
         return unpack(Args)
     end
 
-    return OldControl(...)
-end]]
+    return OldControl(Delta,...)
+end
 
-for Index,Event in pairs(Events) do
+--[[for Index,Event in pairs(Events) do
     if Event.Event == "Item_Throwable" then
         local OldCallback = Event.Callback
         Event.Callback = function(...)
@@ -1205,6 +1181,7 @@ for Index,Event in pairs(Events) do
             Parvus.Utilities.NewThreadLoop(0,function()
                 if Args[2].Parent == nil then return "break" end
                 if AutoshootHitbox and Window.Flags["BB/Rage/TeleGrenade"] then
+                    print(Args[2].PrimaryPart)
                     Args[2].PrimaryPart.Position = AutoshootHitbox[3].Position
                 end
             end)
@@ -1212,7 +1189,7 @@ for Index,Event in pairs(Events) do
             return OldCallback(...)
         end
     end
-end
+end]]
 
 --[[Parvus.Utilities.NewThreadLoop(0,function()
     if not (Aimbot or Window.Flags["Aimbot/AlwaysEnabled"]) then return end
@@ -1275,7 +1252,7 @@ Parvus.Utilities.NewThreadLoop(0,function()
     end Tortoiseshell.Input:AutomateEnded("Shoot")
 end)
 
-Parvus.Utilities.NewThreadLoop(0.25,function()
+Parvus.Utilities.NewThreadLoop(0.5,function()
     local Weapon,Config = GetEquippedWeapon()
     if Weapon and Config then
         if Config.Projectile and Config.Projectile.GravityCorrection then
@@ -1301,34 +1278,34 @@ Parvus.Utilities.NewThreadLoop(0.25,function()
 end)
 Parvus.Utilities.NewThreadLoop(1/10,function()
     CustomizeWeapon(
-        Window.Flags["BB/WC/Enabled"],
-        --and not Window.Flags["BB/ThirdPerson/Enabled"],
+        Window.Flags["BB/WC/Enabled"]
+        and not Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/WC/Texture"],
         Window.Flags["BB/WC/Color"],
         Window.Flags["BB/WC/Reflectance"],
         Window.Flags["BB/WC/Material"][1]
     )
     CustomizeArms(
-        Window.Flags["BB/AC/Enabled"],
-        --and not Window.Flags["BB/ThirdPerson/Enabled"],
+        Window.Flags["BB/AC/Enabled"]
+        and not Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/AC/Texture"],
         Window.Flags["BB/AC/Color"],
         Window.Flags["BB/AC/Reflectance"],
         Window.Flags["BB/AC/Material"][1]
     )
-    --[[CustomizeCharacter(
+    CustomizeCharacter(
         Window.Flags["BB/CC/Enabled"]
         and Window.Flags["BB/ThirdPerson/Enabled"],
         Window.Flags["BB/CC/Texture"],
         Window.Flags["BB/CC/Color"],
         Window.Flags["BB/CC/Reflectance"],
         Window.Flags["BB/CC/Material"][1]
-    )]]
+    )
 end)
 Parvus.Utilities.NewThreadLoop(0,function()
     AutoshootHitbox = GetClosestAllFOV(
         Window.Flags["BB/Rage/Autoshoot/Enabled"]
-        or Window.Flags["BB/Rage/TeleGrenade"]
+        --or Window.Flags["BB/Rage/TeleGrenade"]
         or Window.Flags["BB/Rage/KnifeAura"],
         Window.Flags["BB/Rage/Autoshoot/VisibilityCheck"],
         Window.Flags["BB/Rage/Autoshoot/DistanceCheck"],
@@ -1345,14 +1322,17 @@ Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["BB/Rage/KnifeAura"] then return end
     KnifeAura(AutoshootHitbox,Window.Flags["BB/Rage/Autoshoot/FireRate"])
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+--[[Parvus.Utilities.NewThreadLoop(0,function()
     if not Window.Flags["BB/Rage/AutoGrenade"] then return end
     AutoGrenade()
-end)
---[[Parvus.Utilities.NewThreadLoop(0,function()
-    task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
+end)]]
+Parvus.Utilities.NewThreadLoop(0,function()
+    if not Window.Flags["BB/AntiAim/Enabled"] then return end
+
     JitterValue = JitterValue == -1 and 1 or -1
     SpinValue = SpinValue >= 2 and 0 or SpinValue + 0.1
+
+    task.wait(Window.Flags["BB/AntiAim/RefreshRate"])
 end)
 
 Workspace.Characters.ChildAdded:Connect(function(Child)
@@ -1360,7 +1340,6 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
     repeat task.wait() until Child.PrimaryPart
 
     Child.PrimaryPart.CanCollide = not Window.Flags["BB/NoClip"]
-    FlyPosition = Child.PrimaryPart.Position
 
     if Window.Flags["BB/ThirdPerson/Enabled"] then
         if Window.Flags["BB/ThirdPerson/Outfit"] then
@@ -1377,7 +1356,7 @@ Workspace.Characters.ChildAdded:Connect(function(Child)
             end
         end
     end
-end)]]
+end)
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Camera = Workspace.CurrentCamera
