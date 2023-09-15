@@ -132,9 +132,9 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
-    "Chat Message Send","Ping Return","Bullet Impact Interaction","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard","Statistic Report","Sync Debug Info",
-    "Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State","Sync Near Chunk Loot",
-    "Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
+    "Chat Message Send","Ping Return","Bullet Impact Interaction","Inventory Sync Request","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard",
+    "Statistic Report","Sync Debug Info","Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State",
+    "Sync Near Chunk Loot","Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
 },
 {
     [110] = "Contractor",
@@ -281,7 +281,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Callback = function(Selected,Option) Window.Flags[ItemFlag .. "/Enabled"] = Option.Value end
                 }
             end
-            
+
             ItemSection:Dropdown({Name = "ESP List",Flag = "AR2/Items",List = Items})
         end
         local CorpsesSection = ESPTab:Section({Name = "Corpses ESP",Side = "Left"}) do
@@ -447,20 +447,14 @@ local Window = Parvus.Utilities.UI:Window({
             CharSection:Toggle({Name = "No Jump Debounce",Flag = "AR2/NoJumpDebounce",Value = false})
             CharSection:Slider({Name = "",Flag = "AR2/JumpHeight/Height",Min = 4.8,Max = 100,Precise = 1,Value = 4.8,Unit = "studs",Wide = true})
             --CharSection:Divider()
-            --CharSection:Toggle({Name = "Use In Air",Flag = "AR2/UseInAir",Value = false})
+            CharSection:Toggle({Name = "Use In Air",Flag = "AR2/UseInAir",Value = false})
             CharSection:Toggle({Name = "Use In Water",Flag = "AR2/UseInWater",Value = false})
             CharSection:Toggle({Name = "Fast Respawn",Flag = "AR2/FastRespawn",Value = false})
-            CharSection:Toggle({Name = "Staff Join",Flag = "AR2/StaffJoin",Value = false})
-            CharSection:Dropdown({HideName = true,Flag = "AR2/StaffJoin/List",List = {
-                {Name = "Server Hop",Mode = "Button",Value = false},
-                {Name = "Notify",Mode = "Button",Value = true},
-                {Name = "Kick",Mode = "Button",Value = false}
-            }})
             --[[CharSection:Toggle({Name = "Play Dead",Flag = "AR2/PlayDead",IgnoreFlag = true,Value = false,
             Callback = function(Bool)
                 if not PlayerClass.Character then return end
-                if Bool then PlayerClass.Character.Animator:PlayAnimationReplicated("Death.Standing Backwards",true)
-                else PlayerClass.Character.Animator:StopAnimationReplicated("Death.Standing Backwards",true) end
+                if Bool then PlayerClass.Character.Animator:PlayAnimationReplicated("Death.Standing Forwards",true)
+                else PlayerClass.Character.Animator:StopAnimationReplicated("Death.Standing Forwards",true) end
             end})]]
             CharSection:Button({Name = "Respawn",Callback = function()
                 task.spawn(function() SetIdentity(2)
@@ -490,11 +484,19 @@ local Window = Parvus.Utilities.UI:Window({
             MiscSection:Divider()
             MiscSection:Toggle({Name = "MeleeAura",Flag = "AR2/MeleeAura",Value = false})
             MiscSection:Toggle({Name = "Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
+            MiscSection:Toggle({Name = "Container Persistence",Flag = "AR2/ContainerPersistence",Value = false})
             MiscSection:Toggle({Name = "Instant Search",Flag = "AR2/InstantSearch",Value = false})
             --MiscSection:Toggle({Name = "Anti-Zombie",Flag = "AR2/AntiZombie/Enabled",Value = false}):Keybind()
             --MiscSection:Toggle({Name = "Anti-Zombie MeleeAura",Flag = "AR2/AntiZombie/MeleeAura",Value = false})
             local SpoofSCS = MiscSection:Toggle({Name = "Spoof SCS",Flag = "AR2/SSCS",Value = false}) SpoofSCS:Keybind()
             SpoofSCS:ToolTip("SCS - Set Character State:\nNo Fall Damage\nLess Hunger / Thirst\nWhile Sprinting")
+
+            local MoveStates = {}
+            for MoveState,Value in pairs(Framework.Configs.Character.ValidMoveStates) do
+                MoveStates[#MoveStates + 1] = {Name = MoveState,Mode = "Button",Value = false}
+                if MoveState == "Climbing" then MoveStates[#MoveStates].Value = true end
+            end
+            MiscSection:Dropdown({Name = "Move States",Flag = "AR2/MoveState",List = MoveStates})
             MiscSection:Toggle({Name = "NoClip",Flag = "AR2/NoClip",Value = false,
             Callback = function(Bool)
                 if Bool and not NoClipEvent then
@@ -520,6 +522,12 @@ local Window = Parvus.Utilities.UI:Window({
                 end
             end}):Keybind()
             MiscSection:Toggle({Name = "Map ESP",Flag = "AR2/MapESP",Value = false})
+            MiscSection:Toggle({Name = "Staff Join",Flag = "AR2/StaffJoin",Value = false})
+            MiscSection:Dropdown({HideName = true,Flag = "AR2/StaffJoin/List",List = {
+                {Name = "Server Hop",Mode = "Button",Value = false},
+                {Name = "Notify",Mode = "Button",Value = true},
+                {Name = "Kick",Mode = "Button",Value = false}
+            }})
         end
     end Parvus.Utilities:SettingsSection(Window,"End",true)
 end Parvus.Utilities.InitAutoLoad(Window)
@@ -637,15 +645,10 @@ end]]
 
 local function CheckForAdmin(Player)
     if Window.Flags["AR2/StaffJoin"] then
-        local Success,Result = nil,nil
+        local Rank = Player:GetRankInGroup(15434910)
+        if not Rank then return end
 
-        while not Success do
-            Success,Result = pcall(Player.GetRankInGroup,Player,15434910)
-            task.wait()
-        end
-
-        if not Result then return end
-        local Role = AdminRoles[Result]
+        local Role = AdminRoles[Rank]
         if not Role then return end
 
         local Message = ("Staff member has joined or is in your game\nName: %s\nUserId: %s\nRole: %s"):format(Player.Name,Player.UserId,Role)
@@ -686,7 +689,7 @@ local function SwingMelee(Target)
         Stopped:Wait()
     end
 end
-function GetEnemyForMelee(Player,Zombie)
+local function GetEnemyForMelee(Player,Zombie)
     local PlayerCharacter = PlayerClass.Character
     if not PlayerCharacter then return end
 
@@ -717,7 +720,7 @@ function GetEnemyForMelee(Player,Zombie)
 
     return Closest
 end
-function GetCharactersInRadius(Path,Distance)
+local function GetCharactersInRadius(Path,Distance)
     local PlayerCharacter = PlayerClass.Character
     if not PlayerCharacter then return end
 
@@ -789,21 +792,25 @@ local function HookCharacter(Character)
         end
 
         if Args[1] == "Begin" and Window.Flags["AR2/JumpHeight/Enabled"] then
+            local ReturnArgs = {OldJump(Self,...)}
+
             if Self.Humanoid:GetState() == Enum.HumanoidStateType.Freefall
             and not Window.Flags["AR2/JumpHeight/NoFallCheck"] then return end
 
             Self.Humanoid.UseJumpPower = false
             Self.Humanoid.JumpHeight = Window.Flags["AR2/JumpHeight/Height"]
             Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+            return unpack(ReturnArgs)
         end
 
         return OldJump(Self,...)
     end
     local OldPlayReloadAnimation = Character.Animator.PlayReloadAnimation
     Character.Animator.PlayReloadAnimation = function(Self,...)
-
         if Window.Flags["AR2/InstantReload"] then
-            local ReturnArgs,Args = {OldPlayReloadAnimation(Self,...)},{...}
+            local ReturnArgs = {OldPlayReloadAnimation(Self,...)}
+            local Args = {...}
 
             for Index = 0,Args[3].LoopCount do
                 Self.ReloadEventCallback("Commit","Load")
@@ -885,9 +892,22 @@ Network.Send = function(Self,Name,...)
             return
         end
     end
+
+    if Name == "Inventory Container Group Disconnect" then
+        if Window.Flags["AR2/ContainerPersistence"] then
+            return
+        end
+    end
+
+    --[[if Name == "Animator State Report" then
+        if Window.Flags["AR2/SSCS"] then
+            return
+        end
+    end]]
+
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"] then
-            Args[1] = "Climbing"
+            Args[1] = Window.Flags["AR2/MoveState"][1]
         end
 
         if Window.Flags["AR2/NoSpread"] then
@@ -895,7 +915,6 @@ Network.Send = function(Self,Name,...)
             Args[4] = true
         end
 
-        --OldSend(Self,"Character Toggle Binoculars","Binoculars")
         return OldSend(Self,Name,unpack(Args))
     end
 
@@ -1097,6 +1116,15 @@ local OldFlinch = CharacterCamera.Flinch
 CharacterCamera.Flinch = function(Self,...)
     if Window.Flags["AR2/NoFlinch"] then return end
     return OldFlinch(Self,...)
+end
+local OldCharacterGroundCast = Raycasting.CharacterGroundCast
+Raycasting.CharacterGroundCast = function(Self,Position,LengthDown,...)
+    if PlayerClass.Character and Position == PlayerClass.Character.RootPart.CFrame then
+        if Window.Flags["AR2/UseInAir"] then
+            LengthDown = 1022
+        end
+    end
+    return OldCharacterGroundCast(Self,Position,LengthDown,...)
 end
 local OldSwimCheckCast = Raycasting.SwimCheckCast
 Raycasting.SwimCheckCast = function(Self,...)
