@@ -24,7 +24,7 @@ end]]
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
     Position = UDim2.new(0.5,-173 * 3,0.5,-173),Size = UDim2.new(0,346,0,346)
-}) do Window:Watermark({Enabled = true})
+}) do
 
     local VisualsSection = Parvus.Utilities:ESPSection(Window,"Visuals","ESP/Player",true,true,false,false,true,false) do
         VisualsSection:Colorpicker({Name = "Ally Color",Flag = "ESP/Player/Ally",Value = {0.3333333432674408,0.6666666269302368,1,0,false}})

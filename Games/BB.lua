@@ -18,7 +18,7 @@ local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://r
     }) repeat task.wait(0.5) until Loaded1
 end]]
 
-if game.PlaceVersion > 1402 then
+if game.PlaceVersion > 1407 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
         {Text = "No",LayoutOrder = 0,Primary = true,Callback = function() end}
@@ -149,7 +149,7 @@ local KnownBodyParts = {
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
     Position = UDim2.new(0.5,-248 * 3,0.5,-248)
-}) do Window:Watermark({Enabled = true})
+}) do
 
     local LegitTab = Window:Tab({Name = "Legit"}) do
         --[[local AimbotSection = LegitTab:Section({Name = "Aimbot",Side = "Left"}) do
