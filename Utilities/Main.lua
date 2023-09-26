@@ -244,13 +244,19 @@ end
 ]]
 
 function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
+    Window:KeybindList({Enabled = false})
+    Window:Watermark({Enabled = true})
+
     local OptionsTab = Window:Tab({Name = "Options"}) do
         local MenuSection = OptionsTab:Section({Name = "Menu",Side = "Left"}) do
             local UIToggle = MenuSection:Toggle({Name = "UI Enabled",Flag = "UI/Enabled",IgnoreFlag = true,
             Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
-            UIToggle:Keybind({Value = UIKeybind,Flag = "UI/Keybind",DoNotClear = true})
+            UIToggle:Keybind({Value = UIKeybind,Flag = "UI/Keybind",IgnoreList = true,DoNotClear = true})
             UIToggle:Colorpicker({Flag = "UI/Color",Value = {1,0.25,1,0,true},
             Callback = function(HSVAR,Color) Window.Color = Color end})
+
+            MenuSection:Toggle({Name = "Keybinds",IgnoreFlag = true,Flag = "UI/KeybindList",
+			Value = Window.KeybindList.Enabled,Callback = function(Bool) Window.KeybindList.Enabled = Bool end})
 
             MenuSection:Toggle({Name = "Open On Load",Flag = "UI/OOL",Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay",Flag = "UI/Blur",Value = false,

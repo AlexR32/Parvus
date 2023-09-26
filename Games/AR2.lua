@@ -38,7 +38,7 @@ repeat task.wait() until Framework.Classes.Players.get()
 local PlayerClass = Framework.Classes.Players.get()
 
 local Globals = Framework.Configs.Globals
---local World = Framework.Libraries.World
+local World = Framework.Libraries.World
 local Network = Framework.Libraries.Network
 local Cameras = Framework.Libraries.Cameras
 local Bullets = Framework.Libraries.Bullets
@@ -65,9 +65,27 @@ local SetWheelSpeeds = getupvalue(VehicleController.Step,2)
 local SetSteerWheels = getupvalue(VehicleController.Step,3)
 --local ApplyDragForce = getupvalue(VehicleController.Step,4)
 
---local Effects = getupvalue(CastLocalBullet,2)
---local Sounds = getupvalue(CastLocalBullet,3)
+local BulletFired = false
+local Effects = getupvalue(CastLocalBullet,2)
+local Sounds = getupvalue(CastLocalBullet,3)
+local ImpactEffects = getupvalue(CastLocalBullet,10)
 --local IsNetworkableHit = getupvalue(CastLocalBullet,12)
+
+local function IsNetworkableHit(p10)
+	if Raycasting:IsHitCharacter(p10) then
+		return true
+	end
+	if Raycasting:IsHitZombie(p10) then
+		return true
+	end
+	if Raycasting:IsHitVehicle(p10) then
+		return true
+	end
+	if World:GetInteractable(p10) then
+		return true
+	end
+	return false
+end
 
 if type(Events) == "function" then
     Events = getupvalue(Network.Add,2)
@@ -160,7 +178,7 @@ local KnownBodyParts = {
 local Window = Parvus.Utilities.UI:Window({
     Name = ("Parvus Hub %s %s"):format(utf8.char(8212),Parvus.Game.Name),
     Position = UDim2.new(0.5,-248 * 3,0.5,-248)
-}) do Window:Watermark({Enabled = true})
+}) do
 
     local CombatTab = Window:Tab({Name = "Combat"}) do
         --[[local AimbotSection = CombatTab:Section({Name = "Aimbot",Side = "Left"}) do
@@ -351,7 +369,7 @@ local Window = Parvus.Utilities.UI:Window({
 
         end
         local RecoilSection = MiscTab:Section({Name = "Weapon",Side = "Left"}) do
-            --RecoilSection:Toggle({Name = "Instant Hit",Flag = "AR2/InstantHit",Value = false})
+            RecoilSection:Toggle({Name = "Instant Hit",Flag = "AR2/InstantHit",Value = false})
             RecoilSection:Toggle({Name = "Bullet Tracer",Flag = "AR2/BulletTracer/Enabled",Value = false})
             :Colorpicker({Flag = "AR2/BulletTracer/Color",Value = {1,0.75,1,0,true}})
             RecoilSection:Toggle({Name = "Silent Wallbang",Flag = "AR2/MagicBullet/Enabled",Value = false}):Keybind({Flag = "AR2/MagicBullet/Keybind"})
@@ -662,7 +680,7 @@ local function CheckForAdmin(Player)
     end
 end
 
-local function SwingMelee(Target)
+local function SwingMelee(Enemies)
     local Character = PlayerClass.Character
     if not Character then return end
 
@@ -681,7 +699,10 @@ local function SwingMelee(Target)
         local Maid = Maids.new()
         Maid:Give(Track:GetMarkerReachedSignal("Swing"):Connect(function(State)
             if State ~= "Begin" then return end
-            Network:Send("Melee Hit Register",EquippedItem.Id,Time,Target,"Flesh",false)
+            for Index,Enemy in pairs(Enemies) do
+                Network:Send("Melee Hit Register",EquippedItem.Id,Time,Enemy,"Flesh",false)
+                if not AttackConfig.CanHitMultipleTargets then break end
+            end
             Maid:Destroy()
             Maid = nil
         end))
@@ -689,32 +710,35 @@ local function SwingMelee(Target)
         Stopped:Wait()
     end
 end
-local function GetEnemyForMelee(Player,Zombie)
+local function GetEnemyForMelee(CountPlayers,CountZombies)
     local PlayerCharacter = PlayerClass.Character
     if not PlayerCharacter then return end
 
-    local Closest = nil
-    local ClosestMagnitude = 10
+    local Distance,Closest = 10,{}
 
-    if Zombie then
+    if CountZombies then
         for Index,Zombie in pairs(Zombies.Mobs:GetChildren()) do
             local PrimaryPart = Zombie.PrimaryPart
             if not PrimaryPart then continue end
 
             local Magnitude = (PrimaryPart.Position - PlayerCharacter.RootPart.Position).Magnitude
-            if ClosestMagnitude >= Magnitude then Closest,ClosestMagnitude = PrimaryPart,Magnitude end
+            if Distance > Magnitude then Distance = Magnitude table.insert(Closest,PrimaryPart) end
         end
     end
 
-    if Player then
-        ClosestMagnitude = 10
+    if CountPlayers then
+        Distance = 10
         for Index,Character in pairs(Characters:GetChildren()) do
-            if Character == PlayerCharacter.Instance then continue end
+            local Player = PlayerService:GetPlayerFromCharacter(Character)
+
+            if Player == LocalPlayer then continue end
+            if not InEnemyTeam(true,Player) then continue end
+
             local PrimaryPart = Character.PrimaryPart
             if not PrimaryPart then continue end
 
             local Magnitude = (PrimaryPart.Position - PlayerCharacter.RootPart.Position).Magnitude
-            if ClosestMagnitude >= Magnitude then Closest,ClosestMagnitude = PrimaryPart,Magnitude end
+            if Distance > Magnitude then Distance = Magnitude table.insert(Closest,PrimaryPart) end
         end
     end
 
@@ -905,6 +929,10 @@ Network.Send = function(Self,Name,...)
         end
     end]]
 
+    if Name == "Bullet Fired" then
+        BulletFired = true
+    end
+
     if Name == "Set Character State" then
         if Window.Flags["AR2/SSCS"] then
             Args[1] = Window.Flags["AR2/MoveState"][1]
@@ -942,35 +970,94 @@ setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
 
     return GetSpreadAngle(Character,CCamera,...)
 end)
---[[setupvalue(Bullets.Fire,4,function(...)
-    if Window.Flags["AR2/InstantHit"] then
+setupvalue(CastLocalBullet,10,function(...)
+    if Window.Flags["AR2/BulletTracer/Enabled"] then
+        local Args = {...}
+        if not Args[7] then return ImpactEffects(...) end
+        Parvus.Utilities.MakeBeam(Args[5],Args[3],Window.Flags["AR2/BulletTracer/Color"])
+    end
+
+    return ImpactEffects(...)
+end)
+setupvalue(Bullets.Fire,4,function(...)
+    if Window.Flags["AR2/InstantHit"] and SilentAim then
         local Args = {...}
 
+        --[[local FireConfig = Args[5].FireConfig
+        local OldValue = FireConfig.MuzzleVelocity
+
+        setreadonly(FireConfig,false)
+        FireConfig.MuzzleVelocity *= 100
+        local ReturnArgs = {CastLocalBullet(...)}
+        Args[5].FireConfig.MuzzleVelocity = OldValue
+        setreadonly(FireConfig,true)
+
+        return unpack(ReturnArgs)]]
+
         local Velocity = (Args[7] * Args[5].FireConfig.MuzzleVelocity) * Globals.MuzzleVelocityMod
-        local IsTraveling,TravelTime,TravelDelta,TravelOrigin = true,0,0,Args[6]
+        local IsTraveling,TravelTime,TravelDelta,TravelDistance,TravelOrigin = true,0,0,0,Args[6]
         local Blacklist = {Effects,Sounds,Args[4].Instance}
         local _Ray,_Instance,Position = nil,nil,nil
         local FrameRate = 1 / 60
 
-        while IsTraveling do
-            while TravelDelta > FrameRate do
-                TravelDelta -= FrameRate TravelTime += FrameRate
-                _Ray = Ray.new(TravelOrigin,(Args[6] + (Velocity * TravelTime)) - TravelOrigin)
-                _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
-                TravelOrigin = Position
+        --[[local Distance = (Args[6] - SilentAim[3].Position).Magnitude
+        print(Distance / (Args[5].FireConfig.MuzzleVelocity * Globals.MuzzleVelocityMod))
+        Distance = math.clamp(Distance,0,2000)
 
-                if _Instance then IsTraveling = false break end
+        _Ray = Ray.new(Args[6],SilentAim[3].Position * Distance)
+        _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
+        if not _Instance then print("failed") return CastLocalBullet(...) end
+
+        TravelTime = (Args[6] - SilentAim[3].Position).Magnitude / (Args[5].FireConfig.MuzzleVelocity * Globals.MuzzleVelocityMod)
+        _Ray = Ray.new(Args[6],Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2)
+        _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
+        repeat task.wait() until BulletFired
+        BulletFired = false]]
+
+        while true do
+            TravelTime += FrameRate
+            _Ray = Ray.new(TravelOrigin,Args[6] + Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2 - TravelOrigin)
+            _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
+            TravelDistance += (TravelOrigin - Position).Magnitude
+            TravelOrigin = Position
+
+            if _Instance or Globals.ShotMaxDistance < TravelDistance then
+                break
             end
-            TravelDelta += RunService.Heartbeat:Wait()
+
+            task.wait()
         end
 
-        if _Instance and IsNetworkableHit(_Instance) then
-            if Window.Flags["AR2/BulletTracer/Enabled"] then
-                Parvus.Utilities.MakeBeam(Args[4],BodyPartPosition,Window.Flags["AR2/BulletTracer/Color"])
+        --[[while IsTraveling do
+            while TravelDelta > FrameRate do
+                TravelDelta -= FrameRate
+                TravelTime += FrameRate
+
+                _Ray = Ray.new(TravelOrigin,Args[6] + Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2 - TravelOrigin)
+                _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
+                TravelDistance += (TravelOrigin - Position).Magnitude
+                TravelOrigin = Position
+                print('traveling')
+
+                if _Instance or Globals.ShotMaxDistance < TravelDistance then
+                    IsTraveling = false
+                    break
+                end
             end
+            TravelDelta += RunService.Heartbeat:Wait()
+        end]]
+
+        if _Instance and _Ray then
+            print(_Instance,TravelTime,TravelDistance)
+            if Window.Flags["AR2/BulletTracer/Enabled"] then
+                Parvus.Utilities.MakeBeam(Args[6],Position,Window.Flags["AR2/BulletTracer/Color"])
+            end
+
+            --local INH = IsNetworkableHit(_Instance)
+            --if not INH then print("failed") return CastLocalBullet(...) end
             Network:Send("Bullet Impact",Args[1],Args[5].Id,Args[2],Args[3],_Instance,Position,{
                 _Instance.CFrame:PointToObjectSpace(_Ray.Origin),
-                _Instance.CFrame:VectorToObjectSpace(_Ray.Direction),
+                Vector3.zero,--_Instance.CFrame:VectorToObjectSpace(_Ray.Direction),
                 _Instance.CFrame:PointToObjectSpace(Position)
             })
         end
@@ -979,7 +1066,7 @@ end)
     end
 
     return CastLocalBullet(...)
-end)]]
+end)
 setupvalue(Bullets.Fire,6,function(...)
     if Window.Flags["AR2/NoRecoil"] then
         local ReturnArgs = {GetFireImpulse(...)}
@@ -1002,7 +1089,7 @@ setupvalue(VehicleController.Step,2,function(Self,Throttle,...)
 
             return
         end]]
-
+        if not PlayerClass.Character then return end
         Throttle = Window.Flags["AR2/Vehicle/Instant"]
         and PlayerClass.Character.MoveVector.Z or -Throttle
 
@@ -1022,6 +1109,7 @@ setupvalue(VehicleController.Step,2,function(Self,Throttle,...)
 end)
 setupvalue(VehicleController.Step,3,function(Self,Steer,Throttle,...)
     if Window.Flags["AR2/Vehicle/Enabled"] then
+        if not PlayerClass.Character then return end
         Steer = Window.Flags["AR2/Vehicle/Instant"]
         and -PlayerClass.Character.MoveVector.X or -Steer
 
@@ -1049,6 +1137,7 @@ setupvalue(VehicleController.Step,3,function(Self,Steer,Throttle,...)
 end)
 --[[setupvalue(VehicleController.Step,4,function(Self,Throttle,...)
     if Window.Flags["AR2/Vehicle/Enabled"] then
+        if not PlayerClass.Character then return end
         --Throttle = Window.Flags["AR2/Vehicle/Instant"]
         --and PlayerClass.Character.MoveVector.Z or -Throttle
 
@@ -1088,13 +1177,14 @@ Bullets.Fire = function(Self,...)
             Args[4] = Args[4] + Direction.Unit * Distance
         end
 
+        --[[local BodyPartPosition = Window.Flags["AR2/InstantHit"] and SilentAim[3].Position
+        or Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
+        SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)]]
+
         local BodyPartPosition = Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
         SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)
 
         Args[5] = (BodyPartPosition - Args[4]).Unit
-        if Window.Flags["AR2/BulletTracer/Enabled"] then
-            Parvus.Utilities.MakeBeam(Args[4],BodyPartPosition,Window.Flags["AR2/BulletTracer/Color"])
-        end
 
         return OldFire(Self,unpack(Args))
     end
@@ -1331,13 +1421,14 @@ Parvus.Utilities.NewThreadLoop(0.1,function()
     if not Window.Flags["AR2/MeleeAura"]
     and not Window.Flags["AR2/AntiZombie/MeleeAura"] then return end
 
-    local EnemyRoot = GetEnemyForMelee(
+    local Enemies = GetEnemyForMelee(
         Window.Flags["AR2/MeleeAura"],
         Window.Flags["AR2/AntiZombie/MeleeAura"]
     )
 
-    if not EnemyRoot then return end
-    SwingMelee(EnemyRoot)
+    if not Enemies then return end
+    if #Enemies == 0 then return end
+    SwingMelee(Enemies)
 end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/HeadExpander"] then return end
