@@ -414,15 +414,6 @@ function Assets:Window(ScreenAsset,Window)
 				Window.Colorable[Element.ListMimic.Asset.Tick] = Element.ListMimic.ColorConfig
 			end
 		end
-		--[[KeybindList:GetPropertyChangedSignal("Data"):Connect(function(Data)
-			for Index,KeybindObject in pairs(ScreenAsset.KeybindList.List:GetChildren()) do
-				for Index2,KeybindData in pairs(Data) do
-					if KeybindObject.Name == KeybindData.Name then
-						
-					end
-				end
-			end
-		end)]]
 		
 		Window.Elements[#Window.Elements + 1] = KeybindList
 		Window.KeybindList = KeybindList
@@ -432,7 +423,7 @@ function Assets:Window(ScreenAsset,Window)
 	function Window:SaveConfig(FolderName,Name)
 		local Config = {}
 		for Index,Element in pairs(Window.Elements) do
-			if not Element.IgnoreFlag then
+			if Element.Flag and not Element.IgnoreFlag then
 				Config[Element.Flag] = Window.Flags[Element.Flag]
 			end
 		end
