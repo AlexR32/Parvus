@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+--local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TeamService = game:GetService("Teams")
@@ -11,13 +11,14 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local LoadingGui = PlayerGui:WaitForChild("LoadingGui")
 repeat task.wait(0.5) until not LoadingGui.Enabled
 
-local Loaded1,Loaded2,PromptLib = false,false,loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
---[[if identifyexecutor() ~= "Synapse X" then
+local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
+--[[local Loaded1 = false
+if identifyexecutor() ~= "Synapse X" then
     PromptLib("Unsupported executor","Synapse X only for safety measures\nIf you still want to use the script, click \"Ok\"",{
         {Text = "Ok",LayoutOrder = 0,Primary = false,Callback = function() Loaded1 = true end},
     }) repeat task.wait(0.5) until Loaded1
 end]]
-
+local Loaded2 = false
 if game.PlaceVersion > 1407 then
     PromptLib("Unsupported game version","You are at risk of getting autoban\nAre you sure you want to load Parvus?",{
         {Text = "Yes",LayoutOrder = 0,Primary = false,Callback = function() Loaded2 = true end},
@@ -30,7 +31,7 @@ end
 -- // TODO: Get LocalPlayer Character
 
 local SilentAim,Aimbot,Trigger,AutoshootHitbox = nil,false,false,nil
-local Tortoiseshell,HitmarkerScripts,WeaponModel = getupvalue(require(ReplicatedStorage.TS),2),{},nil
+local Tortoiseshell,HitmarkerScripts,WeaponModel = getupvalue(require(ReplicatedStorage.TS),1),{},nil
 local ProjectileSpeed,ProjectileGravity,GravityCorrection = 1600,150,2--Vector3.new(0,150,0),2
 local BanCommands = {"GetUpdate","SetUpdate","GetSetting","FireProjectile","Invoke"}
 local DisabledStates = {"Sprinting","SuperSprinting","Swapping","Vaulting"}
@@ -51,7 +52,7 @@ end
 
 HandleCharacter = getupvalue(HandleCharacter,3)
 local CharacterHandlers = getupvalue(HandleCharacter,3)
-local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
+--local Events = getupvalue(Tortoiseshell.Network.BindEvent,1)
 local WeaponConfigs = getupvalue(Tortoiseshell.Items.GetConfig,3)
 local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
 local Projectiles = getupvalue(Tortoiseshell.Projectiles.InitProjectile,1)
