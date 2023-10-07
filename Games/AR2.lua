@@ -65,10 +65,15 @@ local SetWheelSpeeds = getupvalue(VehicleController.Step,2)
 local SetSteerWheels = getupvalue(VehicleController.Step,3)
 --local ApplyDragForce = getupvalue(VehicleController.Step,4)
 
+--setconstant(CastLocalBullet,5,1/120)
+--setconstant(CastLocalBullet,11,0)
+--setupvalue(CastLocalBullet,5,Vector3.new(0,0,0))
+
 local BulletFired = false
 local Effects = getupvalue(CastLocalBullet,2)
 local Sounds = getupvalue(CastLocalBullet,3)
 local ImpactEffects = getupvalue(CastLocalBullet,10)
+local TryRicochet = getupvalue(CastLocalBullet,11)
 --local IsNetworkableHit = getupvalue(CastLocalBullet,12)
 
 local function IsNetworkableHit(p10)
@@ -150,9 +155,9 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
-    "Chat Message Send","Ping Return","Bullet Impact Interaction","Inventory Sync Request","Movestate Sync Request","Zombie State Resync Attempt","Resync Leaderboard",
-    "Statistic Report","Sync Debug Info","Resync Character Physics","Update Character Position","Get Player Stance Speed","Force Charcter Save","Update Character State",
-    "Sync Near Chunk Loot","Character Config Resync","Animator State Desync Check","Character Humanoid Update","Character Root Update","Sorry Mate, Wrong Path :/"
+    "Chat Message Send","Ping Return","Bullet Impact Interaction","Crouch Audio Mute","Zombie Pushback Force Request","Camera CFrame Report",
+    "Movestate Sync Request","Update Character Position","Map Icon History Sync","Playerlist Staff Icon Get","Request Physics State Sync",
+    "Inventory Sync Request","Wardrobe Resync Request","Door Interact ","Sorry Mate, Wrong Path :/"
 },
 {
     [110] = "Contractor",
@@ -375,7 +380,8 @@ local Window = Parvus.Utilities.UI:Window({
             RecoilSection:Toggle({Name = "Silent Wallbang",Flag = "AR2/MagicBullet/Enabled",Value = false}):Keybind({Flag = "AR2/MagicBullet/Keybind"})
             RecoilSection:Slider({Name = "Wallbang Depth",Flag = "AR2/MagicBullet/Depth",Min = 1,Max = 5,Value = 5,Unit = "studs"})
             RecoilSection:Divider()
-            RecoilSection:Toggle({Name = "No Recoil",Flag = "AR2/NoRecoil",Value = false})
+            RecoilSection:Toggle({Name = "Recoil Control",Flag = "AR2/Recoil/Enabled",Value = false})
+            RecoilSection:Slider({Name = "Recoil",Flag = "AR2/Recoil/Value",Min = 0,Max = 100,Value = 0,Unit = "%"})
             RecoilSection:Toggle({Name = "No Spread",Flag = "AR2/NoSpread",Value = false})
             --RecoilSection:Toggle({Name = "No Wobble",Flag = "AR2/NoWobble",Value = false})
             RecoilSection:Toggle({Name = "No Camera Flinch",Flag = "AR2/NoFlinch",Value = false})
@@ -949,7 +955,7 @@ Network.Send = function(Self,Name,...)
     return OldSend(Self,Name,...)
 end
 
-setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
+setupvalue(Bullets.Fire,1,function(Character,CCamera,Weapon,...)
     if Window.Flags["AR2/NoSpread"] then
         local OldMoveState = Character.MoveState
         local OldZooming = Character.Zooming
@@ -959,7 +965,7 @@ setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
         Character.Zooming = true
         CCamera.FirstPerson = true
 
-        local ReturnArgs = {GetSpreadAngle(Character,CCamera,...)}
+        local ReturnArgs = {GetSpreadAngle(Character,CCamera,Weapon,...)}
 
         Character.MoveState = OldMoveState
         Character.Zooming = OldZooming
@@ -968,7 +974,7 @@ setupvalue(Bullets.Fire,1,function(Character,CCamera,...)
         return unpack(ReturnArgs)
     end
 
-    return GetSpreadAngle(Character,CCamera,...)
+    return GetSpreadAngle(Character,CCamera,Weapon,...)
 end)
 setupvalue(CastLocalBullet,10,function(...)
     if Window.Flags["AR2/BulletTracer/Enabled"] then
@@ -979,99 +985,12 @@ setupvalue(CastLocalBullet,10,function(...)
 
     return ImpactEffects(...)
 end)
-setupvalue(Bullets.Fire,4,function(...)
-    if Window.Flags["AR2/InstantHit"] and SilentAim then
-        local Args = {...}
 
-        --[[local FireConfig = Args[5].FireConfig
-        local OldValue = FireConfig.MuzzleVelocity
-
-        setreadonly(FireConfig,false)
-        FireConfig.MuzzleVelocity *= 100
-        local ReturnArgs = {CastLocalBullet(...)}
-        Args[5].FireConfig.MuzzleVelocity = OldValue
-        setreadonly(FireConfig,true)
-
-        return unpack(ReturnArgs)]]
-
-        local Velocity = (Args[7] * Args[5].FireConfig.MuzzleVelocity) * Globals.MuzzleVelocityMod
-        local IsTraveling,TravelTime,TravelDelta,TravelDistance,TravelOrigin = true,0,0,0,Args[6]
-        local Blacklist = {Effects,Sounds,Args[4].Instance}
-        local _Ray,_Instance,Position = nil,nil,nil
-        local FrameRate = 1 / 60
-
-        --[[local Distance = (Args[6] - SilentAim[3].Position).Magnitude
-        print(Distance / (Args[5].FireConfig.MuzzleVelocity * Globals.MuzzleVelocityMod))
-        Distance = math.clamp(Distance,0,2000)
-
-        _Ray = Ray.new(Args[6],SilentAim[3].Position * Distance)
-        _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
-        if not _Instance then print("failed") return CastLocalBullet(...) end
-
-        TravelTime = (Args[6] - SilentAim[3].Position).Magnitude / (Args[5].FireConfig.MuzzleVelocity * Globals.MuzzleVelocityMod)
-        _Ray = Ray.new(Args[6],Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2)
-        _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
-        repeat task.wait() until BulletFired
-        BulletFired = false]]
-
-        while true do
-            TravelTime += FrameRate
-            _Ray = Ray.new(TravelOrigin,Args[6] + Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2 - TravelOrigin)
-            _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
-            TravelDistance += (TravelOrigin - Position).Magnitude
-            TravelOrigin = Position
-
-            if _Instance or Globals.ShotMaxDistance < TravelDistance then
-                break
-            end
-
-            task.wait()
-        end
-
-        --[[while IsTraveling do
-            while TravelDelta > FrameRate do
-                TravelDelta -= FrameRate
-                TravelTime += FrameRate
-
-                _Ray = Ray.new(TravelOrigin,Args[6] + Velocity * TravelTime + Globals.ProjectileGravity * Vector3.new(0,1,0) * TravelTime ^ 2 - TravelOrigin)
-                _Instance,Position = Raycasting:BulletCast(_Ray,true,Blacklist)
-                TravelDistance += (TravelOrigin - Position).Magnitude
-                TravelOrigin = Position
-                print('traveling')
-
-                if _Instance or Globals.ShotMaxDistance < TravelDistance then
-                    IsTraveling = false
-                    break
-                end
-            end
-            TravelDelta += RunService.Heartbeat:Wait()
-        end]]
-
-        if _Instance and _Ray then
-            print(_Instance,TravelTime,TravelDistance)
-            if Window.Flags["AR2/BulletTracer/Enabled"] then
-                Parvus.Utilities.MakeBeam(Args[6],Position,Window.Flags["AR2/BulletTracer/Color"])
-            end
-
-            --local INH = IsNetworkableHit(_Instance)
-            --if not INH then print("failed") return CastLocalBullet(...) end
-            Network:Send("Bullet Impact",Args[1],Args[5].Id,Args[2],Args[3],_Instance,Position,{
-                _Instance.CFrame:PointToObjectSpace(_Ray.Origin),
-                Vector3.zero,--_Instance.CFrame:VectorToObjectSpace(_Ray.Direction),
-                _Instance.CFrame:PointToObjectSpace(Position)
-            })
-        end
-
-        return
-    end
-
-    return CastLocalBullet(...)
-end)
 setupvalue(Bullets.Fire,6,function(...)
-    if Window.Flags["AR2/NoRecoil"] then
+    if Window.Flags["AR2/Recoil/Enabled"] then
         local ReturnArgs = {GetFireImpulse(...)}
         for Index = 1,#ReturnArgs[1] do
-            ReturnArgs[1][Index] *= 0
+            ReturnArgs[1][Index] *= (Window.Flags["AR2/Recoil/Value"] / 100)
         end
 
         return unpack(ReturnArgs)
@@ -1177,12 +1096,12 @@ Bullets.Fire = function(Self,...)
             Args[4] = Args[4] + Direction.Unit * Distance
         end
 
-        --[[local BodyPartPosition = Window.Flags["AR2/InstantHit"] and SilentAim[3].Position
+        local BodyPartPosition = Window.Flags["AR2/InstantHit"] and SilentAim[3].Position
         or Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
-        SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)]]
-
-        local BodyPartPosition = Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
         SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)
+
+        --local BodyPartPosition = Parvus.Utilities.Physics.SolveTrajectory(Args[4],SilentAim[3].Position,
+        --SilentAim[3].AssemblyLinearVelocity,ProjectileSpeed,ProjectileGravity)
 
         Args[5] = (BodyPartPosition - Args[4]).Unit
 
@@ -1443,10 +1362,11 @@ Parvus.Utilities.NewThreadLoop(1,function()
         Head.CanCollide = true
     end
 end)
-Parvus.Utilities.NewThreadLoop(0,function()
+Parvus.Utilities.NewThreadLoop(0.5,function()
     if not Window.Flags["AR2/Lighting/Enabled"] then return end
-    local Time = Workspace:GetServerTimeNow() + LightingState.StartTime
-    LightingState.BaseTime = Time + ((Window.Flags["AR2/Lighting/Time"] * 86400 / LightingState.CycleLength) % 1440)
+    local Time = LightingState.StartTime + Workspace:GetServerTimeNow()
+    LightingState.BaseTime = Time + ((Window.Flags["AR2/Lighting/Time"] * (86400 / LightingState.CycleLength)) % 1440)
+    --print(LightingState.StartTime,LightingState.CycleLength,LightingState.BaseTime)
 end)
 Parvus.Utilities.NewThreadLoop(1,function()
     if not Window.Flags["AR2/ESP/Items/Enabled"]

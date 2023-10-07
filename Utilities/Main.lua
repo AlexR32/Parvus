@@ -252,7 +252,7 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
             local UIToggle = MenuSection:Toggle({Name = "UI Enabled",Flag = "UI/Enabled",IgnoreFlag = true,
             Value = Window.Enabled,Callback = function(Bool) Window.Enabled = Bool end})
             UIToggle:Keybind({Value = UIKeybind,Flag = "UI/Keybind",IgnoreList = true,DoNotClear = true})
-            UIToggle:Colorpicker({Flag = "UI/Color",Value = {1,0.25,1,0,true},
+            UIToggle:Colorpicker({Flag = "UI/Color",Value = {0.0836667,1,1,0,false},
             Callback = function(HSVAR,Color) Window.Color = Color end})
 
             MenuSection:Toggle({Name = "Keybinds",IgnoreFlag = true,Flag = "UI/KeybindList",
@@ -278,7 +278,7 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
         end
         OptionsTab:AddConfigSection("Parvus","Left")
         local BackgroundSection = OptionsTab:Section({Name = "Background",Side = "Right"}) do
-            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {1,1,0,0,false},
+            BackgroundSection:Colorpicker({Name = "Color",Flag = "Background/Color",Value = {0.0836667,1,1,0,false},
             Callback = function(HSVAR,Color) Window.Background.ImageColor3 = Color Window.Background.ImageTransparency = HSVAR[4] end})
             BackgroundSection:Textbox({HideName = true,Flag = "Background/CustomImage",Placeholder = "rbxassetid://ImageId",
             Callback = function(String,EnterPressed) if EnterPressed then Window.Background.Image = String end end})
@@ -310,17 +310,17 @@ function Utility.SettingsSection(Self,Window,UIKeybind,CustomMouse)
                 {Name = "Floral",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://5553946656"
                     Window.Flags["Background/CustomImage"] = ""
-                end,Value = true},
+                end},
                 {Name = "Halloween",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://11113209821"
                     Window.Flags["Background/CustomImage"] = ""
-                end},
+                end,Value = true},
                 {Name = "Christmas",Mode = "Button",Callback = function()
                     Window.Background.Image = "rbxassetid://11711560928"
                     Window.Flags["Background/CustomImage"] = ""
                 end}
             }})
-            local TileOffset = BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 74,Wide = true,
+            local TileOffset = BackgroundSection:Slider({Name = "Tile Offset",Flag = "Background/Offset",Min = 74,Max = 296,Value = 296,Wide = true,
             Callback = function(Number) Window.Background.TileSize = UDim2.fromOffset(Number,Number) end})
             Window.Background.TileSize = UDim2.fromOffset(TileOffset.Value,TileOffset.Value)
         end
