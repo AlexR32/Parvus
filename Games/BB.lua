@@ -9,7 +9,7 @@ local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local LoadingGui = PlayerGui:WaitForChild("LoadingGui")
-repeat task.wait(0.5) until not LoadingGui.Enabled
+repeat task.wait(0) until not LoadingGui.Enabled
 
 local PromptLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/Useful/PromptLibrary.lua"))()
 --[[local Loaded1 = false
@@ -206,7 +206,7 @@ local Window = Parvus.Utilities.UI:Window({
             SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
             Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
-            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            --SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
         local TriggerSection = LegitTab:Section({Name = "Trigger",Side = "Right"}) do
@@ -283,9 +283,12 @@ local Window = Parvus.Utilities.UI:Window({
                 if not LPCharacter or not WeaponModel then return end
 
                 if Window.Flags["BB/ThirdPerson/Outfit"] then
-                    task.spawn(function() SetIdentity(2)
-                        if not CharacterHandlers[LPCharacter] then
+                    task.spawn(function()
+                        SetIdentity(2)
+                        if Bool and not CharacterHandlers[LPCharacter] then
                             HandleCharacter(LPCharacter,LocalPlayer)
+                        --[[else
+                            getconnections(LPCharacter.Destroying)[1]:Function()]]
                         end
                     end)
                 end
@@ -368,19 +371,22 @@ local Window = Parvus.Utilities.UI:Window({
                 {Name = "Glass",Mode = "Button"}
             }})
         end
-        --[[local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
+        local MiscSection = MiscTab:Section({Name = "Other",Side = "Left"}) do
             MiscSection:Button({Name = "Redeem Codes",Callback = function()
                 local Codes = ""
-                local Success,Error = pcall(function()
+                local Success,Message = pcall(function()
                     Codes = game:HttpGet("https://roblox-bad-business.fandom.com/wiki/Codes")
                 end)
 
                 if Success then
-                    for Code in Codes:gmatch("<td>([%w\n_]*)</td>") do
-                        Tortoiseshell.Network:Invoke("Codes","Redeem",Code:gsub("\n",""))
-                        --Code = Code:gsub("\n","")
-                        --print(Code,Tortoiseshell.Network:Invoke("Codes","Redeem",Code))
-                    end task.wait(0.05)
+                    Codes = Codes:gmatch("<td>([%w\n_]*)</td>")
+                    for Code in Codes do
+                        Code = Code:gsub("\n","")
+                        Success,Message = pcall(function()
+                            return Tortoiseshell.Network:Invoke("Codes","Redeem",Code)
+                        end)
+                        --print(Code,Success,Message)
+                    end task.wait(0.1)
                     firesignal(LocalPlayer.PlayerGui.MenuGui.ClaimedFrame.CloseButton.MouseButton1Click)
                     firesignal(LocalPlayer.PlayerGui.MenuGui.PurchasedFrame.CloseButton.MouseButton1Click)
                     Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "All available codes are claimed!",Duration = 5})
@@ -388,7 +394,7 @@ local Window = Parvus.Utilities.UI:Window({
                     Parvus.Utilities.UI:Notification({Title = "Parvus Hub",Description = "Failed to get the codes:\n" .. Error,Duration = 5})
                 end
             end})
-        end]]
+        end
         local ACSection = MiscTab:Section({Name = "Arms Customization",Side = "Right"}) do
             ACSection:Toggle({Name = "Enabled",Flag = "BB/AC/Enabled",Value = false})
             :Colorpicker({Flag = "BB/AC/Color",Value = {1,0,1,1,false}})
@@ -491,8 +497,8 @@ local Window = Parvus.Utilities.UI:Window({
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
-Parvus.Utilities.Drawing.SetupCursor(Window)
-Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
+--Parvus.Utilities.Drawing.SetupCursor(Window)
+--Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
 --Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)

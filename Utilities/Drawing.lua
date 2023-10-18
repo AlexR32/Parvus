@@ -62,8 +62,6 @@ local function RESPNew()
     RESPContainer.Storage.Arrow:Clone().Parent = RESPObject
     RESPContainer.Storage.Tracer:Clone().Parent = RESPObject
     RESPContainer.Storage.HeadDot:Clone().Parent = RESPObject
-    local Highlight = Instance.new("Highlight")
-    Highlight.Parent = RESPObject
 
     RESPObject.Name = "RESPObject"
     RESPObject.Parent = RESPContainer
@@ -189,6 +187,11 @@ local function RelativeToCenter(Size)
     return Camera.ViewportSize / 2 - Size
 end
 
+function HighlightNew(Target,Parent)
+    local Highlight = Instance.new("Highlight")
+    Highlight.Adornee = Target
+    Highlight.Parent = Parent
+end
 function GetCharacter(Target,Mode)
     if Mode == "Player" then
         local Character = Target.Character if not Character then return end
@@ -222,6 +225,7 @@ if game.GameId == 1168263273 or game.GameId == 3360073263 then -- Bad Business
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Tortoiseshell = getupvalue(require(ReplicatedStorage.TS),1)
     local Characters = getupvalue(Tortoiseshell.Characters.GetCharacter,1)
+    local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
     local function GetPlayerTeam(Player)
         for Index,Team in pairs(TeamService:GetChildren()) do
@@ -230,10 +234,23 @@ if game.GameId == 1168263273 or game.GameId == 3360073263 then -- Bad Business
             end
         end
     end
+    local function FindHighlightForCharacter(Character)
+        for Index,Highlight in pairs(PlayerGui:GetChildren()) do
+            if not Highlight:IsA("Highlight") then continue end
+            if Highlight.Adornee == Character then
+                return Highlight
+            end
+        end
+    end
 
+    function HighlightNew(Target,Parent)
+        local Character = Characters[Target]
+        return FindHighlightForCharacter(Character)
+    end
     function GetCharacter(Target,Mode)
         local Character = Characters[Target]
         if not Character or Character.Parent == nil then return end
+        DrawingLibrary.ESP[Target].Highlight = FindHighlightForCharacter(Character)
         return Character,Character.PrimaryPart
     end
     function GetHealth(Target,Character,Mode)
@@ -359,6 +376,8 @@ function DrawingLibrary.AddESP(Self,Target,Mode,Flag,Flags)
         Flag = Flag,Flags = Flags,
         RESP = RESPNew()
     }
+
+    Self.ESP[Target].Highlight = HighlightNew(Target,Self.ESP[Target].RESP)
 end
 
 function DrawingLibrary.RemoveESP(Self,Target)
@@ -379,7 +398,7 @@ function DrawingLibrary.RemoveObject(Self,Target)
     Self.ObjectESP[Target] = nil
 end
 
-function DrawingLibrary.SetupCursor(Window)
+--[[function DrawingLibrary.SetupCursor(Window)
     local Cursor = DrawingNew("Image",{
         Size = V2New(64,64) / 1.5,
         Data = Parvus.Cursor,
@@ -395,9 +414,9 @@ function DrawingLibrary.SetupCursor(Window)
         Cursor.Visible = Window.Flags["Mouse/Enabled"] and Window.Enabled and UserInputService.MouseBehavior == Enum.MouseBehavior.Default
         if Cursor.Visible then Cursor.Position = UserInputService:GetMouseLocation() - Cursor.Size / 2 end
     end)
-end
+end]]
 
-function DrawingLibrary.SetupCrosshair(Flags)
+--[[function DrawingLibrary.SetupCrosshair(Flags)
     local CrosshairL = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
     local CrosshairR = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
     local CrosshairT = DrawingNew("Line",{Thickness = 1.5,Transparency = 1,Visible = false,ZIndex = 2})
@@ -434,10 +453,41 @@ function DrawingLibrary.SetupCrosshair(Flags)
             CrosshairB.To = MouseLocation + V2New(0,Size + (Gap + 1))
         end
     end)
-end
+end]]
 
 function DrawingLibrary.FOVCircle(Flag,Flags)
-    local FOVCircle = DrawingNew("Circle",{ZIndex = 4})
+    local FOVCircle = RESPContainer.Storage.FOVCircle:Clone()
+    FOVCircle.Parent = RESPContainer
+
+    RunService.Heartbeat:Connect(function()
+        FOVCircle.Visible = GetFlag(Flags,Flag,"/Enabled")
+        and GetFlag(Flags,Flag,"/FOVCircle/Enabled")
+
+        if FOVCircle.Visible then
+            local MouseLocation = UserInputService:GetMouseLocation()
+            local Thickness = GetFlag(Flags,Flag,"/FOVCircle/Thickness")
+            local Filled = GetFlag(Flags,Flag,"/FOVCircle/Filled")
+            local Color = GetFlag(Flags,Flag,"/FOVCircle/Color")
+            local FOV = GetFlag(Flags,Flag,"/FieldOfView") * 2
+
+            FOVCircle.Position = UDim2FromOffset(MouseLocation.X,MouseLocation.Y)
+            FOVCircle.Size = UDim2FromOffset(FOV,FOV)
+
+            FOVCircle.Stroke.Color = Color[6]
+            FOVCircle.Stroke.Transparency = Color[4]
+            FOVCircle.Outline.Stroke.Transparency = Color[4]
+            FOVCircle.Stroke.Thickness = Thickness
+            FOVCircle.Outline.Stroke.Thickness = Thickness + 1
+
+            if Filled then
+                FOVCircle.BackgroundColor3 = Color[6]
+            end
+
+            FOVCircle.BackgroundTransparency = Filled and Color[4] or 1
+        end
+    end)
+
+    --[[local FOVCircle = DrawingNew("Circle",{ZIndex = 4})
     local Outline   = DrawingNew("Circle",{ZIndex = 3})
 
     RunService.Heartbeat:Connect(function()
@@ -465,7 +515,7 @@ function DrawingLibrary.FOVCircle(Flag,Flags)
             Outline.Position = FOVCircle.Position
             Outline.Radius = FOVCircle.Radius
         end
-    end)
+    end)]]
 end
 
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
@@ -537,13 +587,15 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
                     or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
                     or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
 
-                    if ESP.RESP.Highlight.Enabled then
+                    if ESP.Highlight and ESP.Highlight.Enabled then
                         local OutlineColor = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")
-                        ESP.RESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
+                        ESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
                         and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop
-                        ESP.RESP.Highlight.Adornee = ESP.Target.Character ESP.RESP.Highlight.FillColor = ESP.Target.Color
-                        ESP.RESP.Highlight.OutlineColor = OutlineColor[6] ESP.RESP.Highlight.OutlineTransparency = OutlineColor[4]
-                        ESP.RESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
+                        --ESP.Highlight.Adornee = ESP.Target.Character
+                        ESP.Highlight.FillColor = ESP.Target.Color
+                        ESP.Highlight.OutlineColor = OutlineColor[6]
+                        ESP.Highlight.OutlineTransparency = OutlineColor[4]
+                        ESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
                     end
                     if ESP.RESP.Tracer.Visible or ESP.RESP.HeadDot.Visible then
                         local Head = FindFirstChild(ESP.Target.Character,"Head",true)
@@ -737,7 +789,9 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
         local Visible = ESP.Target.RootPart and ESP.Target.OnScreen and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
         local ArrowVisible = ESP.Target.RootPart and (not ESP.Target.OnScreen) and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
 
-        ESP.RESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
+        if ESP.Highlight then
+            ESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
+        end
 
         ESP.RESP.Box.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/Enabled") or false
         ESP.RESP.Tracer.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Enabled") or false

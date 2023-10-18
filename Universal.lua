@@ -102,7 +102,7 @@ local Window = Parvus.Utilities.UI:Window({
             SAFOVSection:Toggle({Name = "Filled",Flag = "SilentAim/FOVCircle/Filled",Value = false})
             SAFOVSection:Colorpicker({Name = "Color",Flag = "SilentAim/FOVCircle/Color",
             Value = {0.6666666865348816,0.6666666269302368,1,0.25,false}})
-            SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
+            --SAFOVSection:Slider({Name = "NumSides",Flag = "SilentAim/FOVCircle/NumSides",Min = 3,Max = 100,Value = 14})
             SAFOVSection:Slider({Name = "Thickness",Flag = "SilentAim/FOVCircle/Thickness",Min = 1,Max = 10,Value = 2})
         end
         --[[local TriggerSection = CombatTab:Section({Name = "Trigger",Side = "Right"}) do
@@ -152,8 +152,8 @@ end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities:SetupLighting(Window.Flags)
-Parvus.Utilities.Drawing.SetupCursor(Window)
-Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
+--Parvus.Utilities.Drawing.SetupCursor(Window)
+--Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
 --Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 --Parvus.Utilities.Drawing.FOVCircle("Trigger",Window.Flags)
 Parvus.Utilities.Drawing.FOVCircle("SilentAim",Window.Flags)
