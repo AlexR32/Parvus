@@ -86,8 +86,8 @@ end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities:SetupLighting(Window.Flags)
-Parvus.Utilities.Drawing.SetupCursor(Window)
-Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
+--Parvus.Utilities.Drawing.SetupCursor(Window)
+--Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
 --Parvus.Utilities.Drawing.FOVCircle("Aimbot",Window.Flags)
 
 local WallCheckParams = RaycastParams.new()

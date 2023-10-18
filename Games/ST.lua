@@ -59,8 +59,8 @@ local Window = Parvus.Utilities.UI:Window({
 end Parvus.Utilities.InitAutoLoad(Window)
 
 Parvus.Utilities:SetupWatermark(Window)
-Parvus.Utilities.Drawing.SetupCursor(Window)
-Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
+--Parvus.Utilities.Drawing.SetupCursor(Window)
+--Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
 
 -- Fly Logic
 --[[local XZ,YPlus,YMinus = Vector3.new(1,0,1),Vector3.new(0,1,0),Vector3.new(0,-1,0)
