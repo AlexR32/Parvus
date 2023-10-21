@@ -126,20 +126,16 @@ end)
 
 -- game data mess
 local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
-    {"ATVCrashsiteRenegade01",false},{"BankTruckRobbery01",false},{"BeachedAluminumBoat01",false},{"BeechcraftGemBroker01",false},
-    {"CampSovietBandit01",false},{"ConstructionWorksite01",false},{"CrashPrisonBus01",false},{"DryGhillieSpawner01",true},
-    {"FuneralProcession01",false},{"GraveFresh01",false},{"GraveNumberOne1",false},{"LifePreserverMilitary01",true},
-    {"LifePreserverSoviet01",false},{"LifePreserverSpecOps01",true},{"MilitaryBlockade01",false},{"MilitaryConvoy01",true},
-    {"ParamedicScene01",false},{"PartyTrailerDisco01",false},{"PartyTrailerTechnoGold",false},{"PartyTrailerTechnoGoldDeagleMod1",false},
-    {"PirateTreasure01",true},{"PoliceBlockade01",false},{"PoolsClosed01",false},{"PopupCampsite01",false},
-    {"PopupFishing01",false},{"PopupFishing02",false},{"RaiderConvoy01",true},{"RaiderFight01",true},
-    {"RaiderFight02",true},{"RaiderWanderer01",true},{"RandomCrashCessna01",false},{"SeahawkCrashsite04",true},
-    {"SeahawkCrashsite05",true},{"SeahawkCrashsite06",true},{"SeahawkCrashsite07",true},{"SeahawkCrashsiteRogue01",true},
-    {"SedanHaul01",false},{"SpecialForcesCrash01",true},{"StashFood01",false},{"StashFood02",false},
-    {"StashFood03",false},{"StashGeneral01",false},{"StashGeneral02",false},{"StashGeneral03",false},
-    {"StashMedical01",false},{"StashMedical02",false},{"StashMedical03",false},{"StashWeaponHigh01",false},
-    {"StashWeaponHigh02",false},{"StashWeaponHigh03",false},{"StashWeaponMid01",false},{"StashWeaponMid02",false},
-    {"StashWeaponMid03",false},{"StrandedStation01",false},{"StrandedStationKeyboard01",false}
+    {"ATVCrashsiteRenegade01",false},{"BankTruckRobbery01",false},{"BeachedAluminumBoat01",false},{"C-123ProviderMilitary02",false},
+    {"ConstructionWorksite01",false},{"CrashPrisonBus01",false},{"DemonHunter01",false},{"FuneralProcession01",false},
+    {"GraveFresh01",false},{"MilitaryBlockade01",false},{"ParamedicScene01",false},{"PartyTrailerDisco01",false},
+    {"PirateTreasure01",false},{"PoliceBlockade01",false},{"PopupCampsite01",false},{"PopupFishing01",false},
+    {"PumpkinSpawnerCommon01",false},{"PumpkinSpawnerSpecial01",false},{"RandomCrashCessna01",false},{"SeahawkCrashsite05",false},
+    {"SeahawkCrashsite07",false},{"SeahawkCrashsiteRogue01",false},{"SedanHaul01",false},{"SpecialForcesCrash01",false},
+    {"StashFood02",false},{"StashGeneral03",false},{"StashMedical01",false},{"StashMedical02",false},
+    {"StashMedical03",false},{"StashWeaponHigh01",false},{"StashWeaponHigh03",false},{"StashWeaponHigh03",false},
+    {"StashWeaponMid02",false},{"StashWeaponMid03",false},{"StashWeaponMid03",false},{"StrandedStation01",false},
+    {"SummoningCircle01",false},{"SummoningCircle02",false},
 },
 {
     {"Containers",false},{"Accessories",true},{"Ammo",false},{"Attachments",false},
@@ -148,11 +144,20 @@ local RandomEvents,ItemCategory,ZombieInherits,SanityBans,AdminRoles = {
     {"Miscellaneous",false},{"Utility",false},{"VehicleParts",false},{"Vests",true}
 },
 {
-    {"Presets.Behavior Boss Level 01",true},{"Presets.Behavior Boss Level 02",true},{"Presets.Behavior Boss Level 03",true},
-    {"Presets.Behavior Common Level 01",false},{"Presets.Behavior Common Level 02",false},{"Presets.Behavior Common Level 03",false},
-    {"Presets.Behavior Common Thrall Level 01",false},{"Presets.Behavior MiniBoss Level 01",false},{"Presets.Behavior MiniBoss Level 02",false},
-    {"Presets.Skin Tone Dark",false},{"Presets.Skin Tone Dark Servant",false},{"Presets.Skin Tone Light",false},{"Presets.Skin Tone LightMid",false},
-    {"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
+    {"Presets.Behavior Abomination Boss Level 03",true},{"Presets.Behavior Boss Level 01",true},{"Presets.Behavior Boss Level 02",true},
+    {"Presets.Behavior Boss Level 03",false},{"Presets.Behavior Common Level 01",false},{"Presets.Behavior Common Level 02",false},
+    {"Presets.Behavior Common Level 03",false},{"Presets.Behavior Common Thrall Level 01",false},{"Presets.Behavior MiniBoss Level 01",false},
+    {"Presets.Behavior MiniBoss Level 02",false},{"Presets.Behavior RightArm Boss Level 03",false},{"Presets.Behavior Sounds Aggressive Muffled",false},{"Presets.Behavior Sounds Muffled",false},
+    {"Presets.Behavior Unique Big Boss",false},{"Presets.Hair Female Dark",false},{"Presets.Hair Female Dark Military",false},{"Presets.Hair Female Dark w/Gray",false},
+    {"Presets.Hair Female LightMid",false},{"Presets.Hair Female LightMid BlueCollar",false},{"Presets.Hair Female LightMid Hobo",false},{"Presets.Hair Female LightMid Militia Hood",false},
+    {"Presets.Hair Female LightMid Smuggler",false},{"Presets.Hair Female LightMid Smuggler Villager",false},{"HPresets.air Female LightMid WhiteCollar",false},{"Presets.Hair Female LightMid w/Gray Hair",false},
+    {"Presets.Hair Male Dark",false},{"Presets.Hair Male Dark Military",false},{"Presets.Hair Male Dark Smuggler",false},{"Presets.Hair Male Dark Smuggler Villager",false},
+    {"Presets.Hair Male LightMid",false},{"Presets.Hair Male LightMid BlueCollar",false},{"Presets.Hair Male LightMid Cultist",false},{"Presets.Hair Male LightMid Cultist Mask",false},
+    {"Presets.Hair Male LightMid Elder",false},{"Presets.Hair Male LightMid Exercise",false},{"Presets.Hair Male LightMid Military",false},{"Presets.Hair Male LightMid Militia Hood",false},
+    {"Presets.Hair Male LightMid Nightlife",false},{"Presets.Hair Male LightMid Smuggler",false},{"Presets.Hair Male LightMid Smuggler Villager",false},{"Presets.Hair Male LightMid WhiteCollar",false},
+    {"Presets.Hair Male LightMid w/Gray Hair",false},{"Presets.Hair NB Dark Militia Hood",false},{"Presets.HHair NB LightMid Blue Collar",false},{"Presets.Hair NB LightMid Militia Hood",false},
+    {"Presets.Hair NB LightMid White Collar",false},{"Presets.Skin Tone Dark",false},{"Presets.Skin Tone Dark Servant",false},{"Presets.Skin Tone Light",false},
+    {"Presets.Skin Tone LightMid",false},{"Presets.Skin Tone LightMidDark",false},{"Presets.Skin Tone Mid",false},{"Presets.Skin Tone MidDark",false},{"Presets.Skin Tone Servant",false}
 },
 {
     "Chat Message Send","Ping Return","Bullet Impact Interaction","Crouch Audio Mute","Zombie Pushback Force Request","Camera CFrame Report",
