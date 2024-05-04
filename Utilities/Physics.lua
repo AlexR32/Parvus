@@ -20,7 +20,7 @@
 
 -- Utility functions
 
-local eps = 1e-9 -- definitely small enough (0.000000001)
+local eps = 1e-09 -- definitely small enough (0.000000001)
 
 -- checks if d is close enough to 0 to be considered 0 (for our purposes)
 local function isZero(d)
@@ -255,9 +255,9 @@ local function solveQuartic(c0, c1, c2, c3, c4)
 	if (num > 2) then s2 = s2 - sub end
 	if (num > 3) then s3 = s3 - sub end
 
-	return s3, s2, s1, s0
 	--return s0, s1, s2, s3
-	--return {s3, s2, s1, s0}
+	--return s3, s2, s1, s0
+	return {s3, s2, s1, s0}
 end
 
 local module = {}
@@ -269,23 +269,28 @@ function module.SolveTrajectory(origin, targetPosition, targetVelocity, projecti
 	local delta = targetPosition - origin
 	gravity = -gravity / gravityCorrection
 
-	-- time of flight
-	local tof = solveQuartic(
+	local solutions = solveQuartic(
 		gravity * gravity,
 		-2 * targetVelocity.Y * gravity,
 		targetVelocity.Y * targetVelocity.Y - 2 * delta.Y * gravity - projectileSpeed * projectileSpeed + targetVelocity.X * targetVelocity.X + targetVelocity.Z * targetVelocity.Z,
 		2 * delta.Y * targetVelocity.Y + 2 * delta.X * targetVelocity.X + 2 * delta.Z * targetVelocity.Z,
 		delta.Y * delta.Y + delta.X * delta.X + delta.Z * delta.Z
 	)
-	
-	if tof and tof > 0 then
-		return origin + Vector3.new(
-			(delta.X + targetVelocity.X * tof) / tof,
-			(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
-			(delta.Z + targetVelocity.Z * tof) / tof
-		)
+
+	if solutions then
+		for index = 1, #solutions do
+			if solutions[index] > 0 then
+				local tof = solutions[index] -- time of flight
+
+				return origin + Vector3.new(
+					(delta.X + targetVelocity.X * tof) / tof,
+					(delta.Y + targetVelocity.Y * tof - gravity * tof * tof) / tof,
+					(delta.Z + targetVelocity.Z * tof) / tof
+				)
+			end
+		end
 	end
-	
+
 	return targetPosition
 end
 

@@ -2,17 +2,17 @@
 Free Roblox Script Hub designed for shooters.  
 Made With :heart: By ***AlexR32 @ discord.com***
 
-- ***Script is discontinued***
 - ***This script is still in beta stage of development, so expect some bugs or lack of features.***  
-- ***~~This script only officially supports Synapse X, since I'm making this script with Synapse, so if you have problems running this script on other executors, just remember that it might be your executor.~~***  
+- ***This script only officially supports Krampus, since I made this script with Krampus, so if you have problems running this script on other executors, just remember that it might be your executor.***  
+- ***This script is going into long-term support and will not receive major updates, feel free to make pull requests to bug fixes.***  
 - ***Please do not modify this script without my permission, or redistribute it without any credit to me.***  
 
 ### Loadstring
 ```lua
-local IsDevelopmentBranch,NotificationTime = false,5
+local IsDevelopmentBranch, NotificationTime = false, 30
 local Branch = IsDevelopmentBranch and "development" or "main"
 local Source = "https://raw.githubusercontent.com/AlexR32/Parvus/" .. Branch .. "/"
-loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTime)
+loadstring(game:HttpGet(Source .. "Loader.lua"), "Loader")(Branch, NotificationTime)
 
 ```
 
@@ -25,7 +25,7 @@ loadstring(game:HttpGet(Source .. "Loader.lua"),"Loader")(Branch,NotificationTim
 - [The Wild West](https://www.roblox.com/games/2317712696/)
 - [Steel Titans](https://www.roblox.com/games/4746041618/)
 
-### Features
+### Features *(Outdated)*
 ```markdown
 # Universal
   * Aimbot

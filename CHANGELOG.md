@@ -1,3 +1,7 @@
+### Update 04/05/24
+```markdown
+Refreshed the script
+```
 ### Update 14/08/23
 ```markdown
 # AR2
@@ -368,7 +372,7 @@ another big update for UI
 ### Update 20-23/01/23
 ```markdown
 # Global
-* Aimbot,Silent,Trigger various changes
+* Aimbot, Silent, Trigger various changes
 * Prediction various changes
 * from meters to studs (again)
 * little optimization
@@ -484,7 +488,7 @@ view wiki example for more info how things work now
 + Added Vehicle mods
 + Added WalkSpeed changer
 + Added JumpPower changer
-+ Added equip in water,air,vehicle (equip in vehicle a bit buggy)
++ Added equip in water, air, vehicle (equip in vehicle a bit buggy)
 + Added Instant Search
 **SOME FLAGS CHANGED IF YOU HAD OLD CONFIGS PLEASE DELETE OR UPDATE THEM**
 
