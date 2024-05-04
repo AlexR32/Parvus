@@ -622,7 +622,8 @@ local function ObjectOccluded(Enabled, Origin, Position)
     {Workspace.Geometry, Workspace.Terrain})
 end
 local function SolveTrajectory(Origin, Velocity, Time, Gravity, GravityCorrection)
-    return Origin + Velocity * Time + Gravity * Time * Time / GravityCorrection
+    Gravity = Vector3.new(0, math.abs(Gravity), 0)
+    return Origin + (Velocity * Time) + (Gravity * Time * Time / GravityCorrection)
 end
 --[[local function FindWeaponModel()
     for Index, Instance in pairs(Workspace:GetChildren()) do
