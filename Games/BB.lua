@@ -38,7 +38,7 @@ local BanCommands = {"GetUpdate", "SetUpdate", "GetSetting", "FireProjectile", "
 local DisabledStates = {"Sprinting", "SuperSprinting", "Swapping", "Vaulting"}
 
 local NewRandom, JitterValue, SpinValue = Random.new(), 1, 0
-local SetIdentity = setidentity
+local SetIdentity = setthreadidentity
 
 local HitmarkerScripts = {}
 for Index, Connection in pairs(getconnections(Tortoiseshell.UI.Events.Hitmarker.Event)) do

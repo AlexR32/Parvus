@@ -6,10 +6,14 @@ local RunService = game:GetService("RunService")
 local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
-for Index, Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
-    --print("Found ScriptContext error detection, removing")
-    Connection:Disable()
-end
+task.spawn(function()
+    while task.wait(1) do
+        for Index, Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
+            --print("found ScriptContext error detection, removing")
+            Connection:Disable()
+        end
+    end
+end)
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
@@ -92,7 +96,7 @@ local ItemMemory = {}
 local GroundPart = Instance.new("Part")
 local OldBaseTime = LightingState.BaseTime
 local NoClipObjects, NoClipEvent = {}, nil
-local SetIdentity = setidentity
+local SetIdentity = setthreadidentity
 
 local AddObject = Instance.new("BindableEvent")
 AddObject.Event:Connect(function(...)

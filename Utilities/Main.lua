@@ -15,7 +15,7 @@ local Utility = { DefaultLighting = {} }
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = PlayerService.LocalPlayer
 local Request = request or (http and http.request)
-local SetIdentity = setidentity
+local SetIdentity = setthreadidentity
 
 do -- Thanks to Kiriot22
     local OldPluginManager, Message = nil, nil
