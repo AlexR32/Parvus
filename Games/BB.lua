@@ -516,9 +516,9 @@ end Parvus.Utilities.InitAutoLoad(Window)
 Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Trigger", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("SilentAim", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Aimbot", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Trigger", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("SilentAim", Window.Flags)
 
 do
     --[[for Index, Value in pairs(getgc(true)) do

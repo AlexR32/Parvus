@@ -50,7 +50,7 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Toggle({Name = "Distance Check", Flag = "Aimbot/DistanceCheck", Value = false})
             AimbotSection:Toggle({Name = "Visibility Check", Flag = "Aimbot/VisibilityCheck", Value = false})
             AimbotSection:Slider({Name = "Sensitivity", Flag = "Aimbot/Sensitivity", Min = 0, Max = 100, Value = 20, Unit = "%"})
-            AimbotSection:Slider({Name = "Field Of View", Flag = "Aimbot/FieldOfView", Min = 0, Max = 500, Value = 100, Unit = "r"})
+            AimbotSection:Slider({Name = "Field Of View", Flag = "Aimbot/FOV/Radius", Min = 0, Max = 500, Value = 100, Unit = "r"})
             AimbotSection:Slider({Name = "Distance Limit", Flag = "Aimbot/DistanceLimit", Min = 25, Max = 1000, Value = 250, Unit = "studs"})
 
             local PriorityList, BodyPartsList = {{Name = "Closest", Mode = "Button", Value = true}}, {}
@@ -63,11 +63,11 @@ local Window = Parvus.Utilities.UI:Window({
             AimbotSection:Dropdown({Name = "Body Parts", Flag = "Aimbot/BodyParts", List = BodyPartsList})
         end
         local AFOVSection = CombatTab:Section({Name = "Aimbot FOV Circle", Side = "Left"}) do
-            AFOVSection:Toggle({Name = "Enabled", Flag = "Aimbot/FOVCircle/Enabled", Value = true})
-            AFOVSection:Toggle({Name = "Filled", Flag = "Aimbot/FOVCircle/Filled", Value = false})
-            AFOVSection:Colorpicker({Name = "Color", Flag = "Aimbot/FOVCircle/Color", Value = {1, 0.66666662693024, 1, 0.25, false}})
-            AFOVSection:Slider({Name = "NumSides", Flag = "Aimbot/FOVCircle/NumSides", Min = 3, Max = 100, Value = 14})
-            AFOVSection:Slider({Name = "Thickness", Flag = "Aimbot/FOVCircle/Thickness", Min = 1, Max = 10, Value = 2})
+            AFOVSection:Toggle({Name = "Enabled", Flag = "Aimbot/FOV/Enabled", Value = true})
+            AFOVSection:Toggle({Name = "Filled", Flag = "Aimbot/FOV/Filled", Value = false})
+            AFOVSection:Colorpicker({Name = "Color", Flag = "Aimbot/FOV/Color", Value = {1, 0.66666662693024, 1, 0.25, false}})
+            AFOVSection:Slider({Name = "NumSides", Flag = "Aimbot/FOV/NumSides", Min = 3, Max = 100, Value = 14})
+            AFOVSection:Slider({Name = "Thickness", Flag = "Aimbot/FOV/Thickness", Min = 1, Max = 10, Value = 2})
         end
         local SilentAimSection = CombatTab:Section({Name = "Silent Aim", Side = "Right"}) do
             SilentAimSection:Dropdown({HideName = true, Flag = "SilentAim/Mode", List = {
@@ -91,7 +91,7 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Toggle({Name = "Distance Check", Flag = "SilentAim/DistanceCheck", Value = false})
             SilentAimSection:Toggle({Name = "Visibility Check", Flag = "SilentAim/VisibilityCheck", Value = false})
             SilentAimSection:Slider({Name = "Hit Chance", Flag = "SilentAim/HitChance", Min = 0, Max = 100, Value = 100, Unit = "%"})
-            SilentAimSection:Slider({Name = "Field Of View", Flag = "SilentAim/FieldOfView", Min = 0, Max = 500, Value = 100, Unit = "r"})
+            SilentAimSection:Slider({Name = "Field Of View", Flag = "SilentAim/FOV/Radius", Min = 0, Max = 500, Value = 100, Unit = "r"})
             SilentAimSection:Slider({Name = "Distance Limit", Flag = "SilentAim/DistanceLimit", Min = 25, Max = 1000, Value = 250, Unit = "studs"})
 
             local PriorityList, BodyPartsList = {{Name = "Closest", Mode = "Button", Value = true}, {Name = "Random", Mode = "Button"}}, {}
@@ -104,12 +104,12 @@ local Window = Parvus.Utilities.UI:Window({
             SilentAimSection:Dropdown({Name = "Body Parts", Flag = "SilentAim/BodyParts", List = BodyPartsList})
         end
         local SAFOVSection = CombatTab:Section({Name = "Silent Aim FOV Circle", Side = "Right"}) do
-            SAFOVSection:Toggle({Name = "Enabled", Flag = "SilentAim/FOVCircle/Enabled", Value = true})
-            SAFOVSection:Toggle({Name = "Filled", Flag = "SilentAim/FOVCircle/Filled", Value = false})
-            SAFOVSection:Colorpicker({Name = "Color", Flag = "SilentAim/FOVCircle/Color",
+            SAFOVSection:Toggle({Name = "Enabled", Flag = "SilentAim/FOV/Enabled", Value = true})
+            SAFOVSection:Toggle({Name = "Filled", Flag = "SilentAim/FOV/Filled", Value = false})
+            SAFOVSection:Colorpicker({Name = "Color", Flag = "SilentAim/FOV/Color",
             Value = {0.6666666865348816, 0.6666666269302368, 1, 0.25, false}})
-            --SAFOVSection:Slider({Name = "NumSides", Flag = "SilentAim/FOVCircle/NumSides", Min = 3, Max = 100, Value = 14})
-            SAFOVSection:Slider({Name = "Thickness", Flag = "SilentAim/FOVCircle/Thickness", Min = 1, Max = 10, Value = 2})
+            SAFOVSection:Slider({Name = "NumSides", Flag = "SilentAim/FOV/NumSides", Min = 3, Max = 100, Value = 14})
+            SAFOVSection:Slider({Name = "Thickness", Flag = "SilentAim/FOV/Thickness", Min = 1, Max = 10, Value = 2})
         end
         local TriggerSection = CombatTab:Section({Name = "Trigger", Side = "Right"}) do
             TriggerSection:Toggle({Name = "Enabled", Flag = "Trigger/Enabled", Value = false})
@@ -126,7 +126,7 @@ local Window = Parvus.Utilities.UI:Window({
 
             TriggerSection:Slider({Name = "Click Delay", Flag = "Trigger/Delay", Min = 0, Max = 1, Precise = 2, Value = 0.15, Unit = "sec"})
             TriggerSection:Slider({Name = "Distance Limit", Flag = "Trigger/DistanceLimit", Min = 25, Max = 1000, Value = 250, Unit = "studs"})
-            TriggerSection:Slider({Name = "Field Of View", Flag = "Trigger/FieldOfView", Min = 0, Max = 500, Value = 25, Unit = "r"})
+            TriggerSection:Slider({Name = "Field Of View", Flag = "Trigger/FOV/Radius", Min = 0, Max = 500, Value = 25, Unit = "r"})
 
             local PriorityList, BodyPartsList = {{Name = "Closest", Mode = "Button", Value = true}, {Name = "Random", Mode = "Button"}}, {}
             for Index, Value in pairs(KnownBodyParts) do
@@ -138,11 +138,11 @@ local Window = Parvus.Utilities.UI:Window({
             TriggerSection:Dropdown({Name = "Body Parts", Flag = "Trigger/BodyParts", List = BodyPartsList})
         end
         local TFOVSection = CombatTab:Section({Name = "Trigger FOV Circle", Side = "Left"}) do
-            TFOVSection:Toggle({Name = "Enabled", Flag = "Trigger/FOVCircle/Enabled", Value = true})
-            TFOVSection:Toggle({Name = "Filled", Flag = "Trigger/FOVCircle/Filled", Value = false})
-            TFOVSection:Colorpicker({Name = "Color", Flag = "Trigger/FOVCircle/Color", Value = {0.0833333358168602, 0.6666666269302368, 1, 0.25, false}})
-            TFOVSection:Slider({Name = "NumSides", Flag = "Trigger/FOVCircle/NumSides", Min = 3, Max = 100, Value = 14})
-            TFOVSection:Slider({Name = "Thickness", Flag = "Trigger/FOVCircle/Thickness", Min = 1, Max = 10, Value = 2})
+            TFOVSection:Toggle({Name = "Enabled", Flag = "Trigger/FOV/Enabled", Value = true})
+            TFOVSection:Toggle({Name = "Filled", Flag = "Trigger/FOV/Filled", Value = false})
+            TFOVSection:Colorpicker({Name = "Color", Flag = "Trigger/FOV/Color", Value = {0.0833333358168602, 0.6666666269302368, 1, 0.25, false}})
+            TFOVSection:Slider({Name = "NumSides", Flag = "Trigger/FOV/NumSides", Min = 3, Max = 100, Value = 14})
+            TFOVSection:Slider({Name = "Thickness", Flag = "Trigger/FOV/Thickness", Min = 1, Max = 10, Value = 2})
         end
     end
     local VisualsSection = Parvus.Utilities:ESPSection(Window, "Visuals", "ESP/Player", true, true, true, true, true, true) do
@@ -160,9 +160,9 @@ Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Trigger", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("SilentAim", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Aimbot", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Trigger", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("SilentAim", Window.Flags)
 
 local WallCheckParams = RaycastParams.new()
 WallCheckParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -340,7 +340,7 @@ Parvus.Utilities.NewThreadLoop(0, function()
         Window.Flags["Aimbot/VisibilityCheck"],
         Window.Flags["Aimbot/DistanceCheck"],
         Window.Flags["Aimbot/DistanceLimit"],
-        Window.Flags["Aimbot/FieldOfView"],
+        Window.Flags["Aimbot/FOV/Radius"],
         Window.Flags["Aimbot/Priority"][1],
         Window.Flags["Aimbot/BodyParts"],
         Window.Flags["Aimbot/Prediction"]
@@ -353,7 +353,7 @@ Parvus.Utilities.NewThreadLoop(0, function()
         Window.Flags["SilentAim/VisibilityCheck"],
         Window.Flags["SilentAim/DistanceCheck"],
         Window.Flags["SilentAim/DistanceLimit"],
-        Window.Flags["SilentAim/FieldOfView"],
+        Window.Flags["SilentAim/FOV/Radius"],
         Window.Flags["SilentAim/Priority"][1],
         Window.Flags["SilentAim/BodyParts"],
         Window.Flags["SilentAim/Prediction"]
@@ -369,7 +369,7 @@ Parvus.Utilities.NewThreadLoop(0, function()
         Window.Flags["Trigger/VisibilityCheck"],
         Window.Flags["Trigger/DistanceCheck"],
         Window.Flags["Trigger/DistanceLimit"],
-        Window.Flags["Trigger/FieldOfView"],
+        Window.Flags["Trigger/FOV/Radius"],
         Window.Flags["Trigger/Priority"][1],
         Window.Flags["Trigger/BodyParts"],
         Window.Flags["Trigger/Prediction"]
@@ -387,7 +387,7 @@ Parvus.Utilities.NewThreadLoop(0, function()
                 Window.Flags["Trigger/VisibilityCheck"],
                 Window.Flags["Trigger/DistanceCheck"],
                 Window.Flags["Trigger/DistanceLimit"],
-                Window.Flags["Trigger/FieldOfView"],
+                Window.Flags["Trigger/FOV/Radius"],
                 Window.Flags["Trigger/Priority"][1],
                 Window.Flags["Trigger/BodyParts"],
                 Window.Flags["Trigger/Prediction"]

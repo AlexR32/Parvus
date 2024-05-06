@@ -1337,7 +1337,7 @@ function DrawingLibrary.SetupCrosshair(Flags)
     end)
 end
 
-function DrawingLibrary.FOVCircle(Flag, Flags)
+function DrawingLibrary.SetupFOV(Flag, Flags)
     local FOV = AddDrawing("Circle", { ZIndex = 4 })
     local FOVOutline = AddDrawing("Circle", { ZIndex = 3 })
 

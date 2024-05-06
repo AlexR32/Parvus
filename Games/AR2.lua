@@ -7,6 +7,10 @@ local PlayerService = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 task.spawn(function()
+    for Index, Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
+        --print("found ScriptContext error detection, removing")
+        Connection:Disable()
+    end
     while task.wait(1) do
         for Index, Connection in pairs(getconnections(game:GetService("ScriptContext").Error)) do
             --print("found ScriptContext error detection, removing")
@@ -48,7 +52,10 @@ local Maids = Framework.Classes.Maids
 local Animators = Framework.Classes.Animators
 local VehicleController = Framework.Classes.VehicleControler
 
-local Firearm = require(Resources:Find("ReplicatedStorage.Client.Abstracts.ItemInitializers.Firearm"))
+-- dumb krampus error below :scream:
+local Firearm = nil
+task.spawn(function() setthreadidentity(2) Firearm = require(ReplicatedStorage.Client.Abstracts.ItemInitializers.Firearm) end)
+if not Firearm then LocalPlayer:Kick("Send this error to owner: Firearm module does not exist") return end
 local CharacterCamera = Cameras:GetCamera("Character")
 --local ReticleInterface = Interface:Get("Reticle")
 
@@ -595,9 +602,9 @@ Parvus.Utilities:SetupWatermark(Window)
 Parvus.Utilities:SetupLighting(Window.Flags)
 Parvus.Utilities.Drawing.SetupCursor(Window)
 Parvus.Utilities.Drawing.SetupCrosshair(Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Aimbot", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("Trigger", Window.Flags)
-Parvus.Utilities.Drawing.FOVCircle("SilentAim", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Aimbot", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("Trigger", Window.Flags)
+Parvus.Utilities.Drawing.SetupFOV("SilentAim", Window.Flags)
 
 local XZVector = Vector3.new(1, 0, 1)
 local WallCheckParams = RaycastParams.new()
