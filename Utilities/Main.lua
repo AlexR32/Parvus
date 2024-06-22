@@ -161,22 +161,6 @@ function Utility.FixUpValue(fn, hook, gvar)
     end
 end
 
-function Utility.InitAutoLoad(Window)
-    Window:AutoLoadConfig("Parvus")
-    Window:SetValue("UI/Enabled", Window.Flags["UI/OOL"])
-end
-function Utility.SetupWatermark(Self, Window)
-    local GetFPS = Self:SetupFPS()
-
-    RunService.Heartbeat:Connect(function()
-        if Window.Watermark.Enabled then
-            Window.Watermark.Title = string.format(
-                "Parvus Hub    %s    %i FPS    %i MS",
-                os.date("%X"), GetFPS(), math.round(Ping:GetValue())
-            )
-        end
-    end)
-end
 function Utility.ReJoin()
     if #PlayerService:GetPlayers() <= 1 then
         LocalPlayer:Kick("\nParvus Hub\nRejoining...")
@@ -227,6 +211,23 @@ function Utility.JoinDiscord()
     })
 end
 
+function Utility.InitAutoLoad(Window)
+    Window:AutoLoadConfig("Parvus")
+    Window:SetValue("UI/Enabled", Window.Flags["UI/OOL"])
+end
+function Utility.SetupWatermark(Self, Window)
+    local GetFPS = Self:SetupFPS()
+
+    RunService.Heartbeat:Connect(function()
+        if Window.Watermark.Enabled then
+            Window.Watermark.Title = string.format(
+                "Parvus Hub    %s    %i FPS    %i MS",
+                os.date("%X"), GetFPS(), math.round(Ping:GetValue())
+            )
+        end
+    end)
+end
+
 --[[
 # UI Color
   - Default   = 1, 0.25, 1, 0, true
@@ -239,9 +240,6 @@ end
 ]]
 
 function Utility.SettingsSection(Self, Window, UIKeybind, CustomMouse)
-    Window:KeybindList({Enabled = false})
-    Window:Watermark({Enabled = true})
-
     local Backgrounds = {
         {"None", "", false},
         {"Legacy", "rbxassetid://2151741365", false},
@@ -309,7 +307,7 @@ function Utility.SettingsSection(Self, Window, UIKeybind, CustomMouse)
             Callback = function(HSVAR, Color) Window.Color = Color end})
 
             MenuSection:Toggle({Name = "Keybinds", IgnoreFlag = true, Flag = "UI/KeybindList",
-            Value = Window.KeybindList.Enabled, Callback = function(Bool) Window.KeybindList.Enabled = Bool end})
+            Value = false, Callback = function(Bool) Window.KeybindList.Enabled = Bool end})
 
             MenuSection:Toggle({Name = "Open On Load", Flag = "UI/OOL", Value = true})
             MenuSection:Toggle({Name = "Blur Gameplay", Flag = "UI/Blur", Value = false,
@@ -397,6 +395,9 @@ function Utility.SettingsSection(Self, Window, UIKeybind, CustomMouse)
             CreditsSection:Label({Text = "❤️ ❤️ ❤️ ❤️"})
         end
     end
+
+    Window:KeybindList({Enabled = false})
+    Window:Watermark({Enabled = true})
 end
 
 function Utility.ESPSection(Self, Window, Name, Flag, BoxEnabled, ChamEnabled, HeadEnabled, TracerEnabled, OoVEnabled, LightingEnabled)

@@ -231,7 +231,7 @@ elseif game.GameId == 358276974 or game.GameId == 3495983524 then -- Apocalypse 
 
     function GetWeapon(Target, Character, Mode)
         local Equipped = Character.Equipped:GetChildren()
-        return Equipped[0] and Equipped[0].Name or "Hands"
+        return Equipped[1] and Equipped[1].Name or "Hands"
     end
 
     -- TODO: Squad GetTeam function
