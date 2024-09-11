@@ -1181,6 +1181,7 @@ end)
 OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local Method = getnamecallmethod()
 
+    --[[
     if Method == "FireServer" then
         local Args = {...}
         if type(Args[1]) == "table" then
@@ -1188,6 +1189,7 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
             return
         end
     end
+    ]]
 
     if Method == "GetChildren"
     and (Self == ReplicatedFirst
