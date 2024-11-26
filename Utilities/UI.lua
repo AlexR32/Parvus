@@ -2297,7 +2297,7 @@ Bracket.Elements = {
 
 			Bracket.Screen.Watermark.Size = UDim2.fromOffset(
 				Bracket.Screen.Watermark.TextBounds.X + 6,
-				Bracket.Screen.Watermark.TextBounds.Y + 6
+				Bracket.Screen.Watermark.TextSize + 6
 			)
 
 			Bracket.Utilities.MakeDraggable(Bracket.Screen.Watermark, Bracket.Screen.Watermark, function(Position)
@@ -2318,7 +2318,7 @@ Bracket.Elements = {
 				Bracket.Screen.Watermark.Text = Title
 				Bracket.Screen.Watermark.Size = UDim2.fromOffset(
 					Bracket.Screen.Watermark.TextBounds.X + 6,
-					Bracket.Screen.Watermark.TextBounds.Y + 6
+					Bracket.Screen.Watermark.TextSize + 6
 				)
 			end)
 			Watermark:GetPropertyChangedSignal("Value"):Connect(function(Value)
@@ -2556,7 +2556,7 @@ Bracket.Elements = {
 			Bracket.Screen.ToolTip.Text = Text
 			Bracket.Screen.ToolTip.Size = UDim2.fromOffset(
 				Bracket.Screen.ToolTip.TextBounds.X + 6,
-				Bracket.Screen.ToolTip.TextBounds.Y + 6
+				Bracket.Screen.ToolTip.TextSize + 6
 			)
 
 			Bracket.Screen.ToolTip.Visible = true
@@ -2595,7 +2595,7 @@ Bracket.Elements = {
 
 		DividerAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			if DividerAsset.Title.TextBounds.X > 0 then
-				DividerAsset.Size = UDim2.new(1, 0, 0, DividerAsset.Title.TextBounds.Y)
+				DividerAsset.Size = UDim2.new(1, 0, 0, DividerAsset.Title.TextSize)
 				DividerAsset.Left.Size = UDim2.new(0.5, -(DividerAsset.Title.TextBounds.X / 2) - 6, 0 , 2)
 				DividerAsset.Right.Size = UDim2.new(0.5, -(DividerAsset.Title.TextBounds.X / 2) - 6, 0, 2)
 			else
@@ -2616,7 +2616,7 @@ Bracket.Elements = {
 		LabelAsset.Text = Label.Text
 
 		LabelAsset:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			LabelAsset.Size = UDim2.new(1, 0, 0, LabelAsset.TextBounds.Y)
+			LabelAsset.Size = UDim2.new(1, 0, 0, LabelAsset.TextSize)
 		end)
 
 		Label:GetPropertyChangedSignal("Text"):Connect(function(Text)
@@ -2647,7 +2647,7 @@ Bracket.Elements = {
 			ButtonAsset.BorderColor3 = Color3.new(0, 0, 0)
 		end)
 		ButtonAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			ButtonAsset.Size = UDim2.new(1, 0, 0, ButtonAsset.Title.TextBounds.Y + 2)
+			ButtonAsset.Size = UDim2.new(1, 0, 0, ButtonAsset.Title.TextSize + 2)
 		end)
 
 		Button:GetPropertyChangedSignal("Name"):Connect(function(Name)
@@ -2677,7 +2677,7 @@ Bracket.Elements = {
 			Toggle.Value = not Toggle.Value
 		end)
 		ToggleAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			ToggleAsset.Size = UDim2.new(1, 0, 0, ToggleAsset.Title.TextBounds.Y)
+			ToggleAsset.Size = UDim2.new(1, 0, 0, ToggleAsset.Title.TextSize)
 			ToggleAsset.Layout.Size = UDim2.new(1, -ToggleAsset.Title.TextBounds.X - 18, 1, 0)
 		end)
 
@@ -2722,7 +2722,7 @@ Bracket.Elements = {
 			SliderAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 				SliderAsset.Value.Size = UDim2.fromOffset(SliderAsset.Value.TextBounds.X, 16)
 				SliderAsset.Title.Size = UDim2.new(1, -SliderAsset.Value.Size.X.Offset, 0, 16)
-				SliderAsset.Size = UDim2.new(1, 0, 0, SliderAsset.Title.TextBounds.Y + 8)
+				SliderAsset.Size = UDim2.new(1, 0, 0, SliderAsset.Title.TextSize + 8)
 			end)
 			SliderAsset.Value:GetPropertyChangedSignal("TextBounds"):Connect(function()
 				SliderAsset.Value.Size = UDim2.fromOffset(SliderAsset.Value.TextBounds.X, 16)
@@ -2732,7 +2732,7 @@ Bracket.Elements = {
 			SliderAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 				SliderAsset.Value.Size = UDim2.new(0, SliderAsset.Value.TextBounds.X, 1, 0)
 				SliderAsset.Title.Size = UDim2.new(1, -SliderAsset.Value.Size.X.Offset - 12, 1, 0)
-				SliderAsset.Size = UDim2.new(1, 0, 0, SliderAsset.Title.TextBounds.Y + 2)
+				SliderAsset.Size = UDim2.new(1, 0, 0, SliderAsset.Title.TextSize + 2)
 			end)
 			SliderAsset.Value:GetPropertyChangedSignal("TextBounds"):Connect(function()
 				SliderAsset.Value.Size = UDim2.new(0, SliderAsset.Value.TextBounds.X, 1, 0)
@@ -2809,7 +2809,7 @@ Bracket.Elements = {
 
 		TextboxAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			TextboxAsset.Title.Size = Textbox.HideName and UDim2.fromScale(1, 0)
-				or UDim2.new(1, 0, 0, TextboxAsset.Title.TextBounds.Y + 2)
+				or UDim2.new(1, 0, 0, TextboxAsset.Title.TextSize + 2)
 
 			TextboxAsset.Background.Position = UDim2.new(0.5, 0, 0, TextboxAsset.Title.Size.Y.Offset)
 			TextboxAsset.Size = UDim2.new(1, 0, 0, TextboxAsset.Title.Size.Y.Offset + TextboxAsset.Background.Size.Y.Offset)
@@ -2879,7 +2879,7 @@ Bracket.Elements = {
 			Keybind.WaitingForBind = true
 		end)
 		KeybindAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			KeybindAsset.Size = UDim2.new(1, 0, 0, KeybindAsset.Title.TextBounds.Y)
+			KeybindAsset.Size = UDim2.new(1, 0, 0, KeybindAsset.Title.TextSize)
 		end)
 		KeybindAsset.Value:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			KeybindAsset.Value.Size = UDim2.new(0, KeybindAsset.Value.TextBounds.X, 1, 0)
@@ -3127,7 +3127,7 @@ Bracket.Elements = {
 		end)
 		DropdownAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
 			DropdownAsset.Title.Size = Dropdown.HideName and UDim2.fromScale(1, 0)
-				or UDim2.new(1, 0, 0, DropdownAsset.Title.TextBounds.Y + 2)
+				or UDim2.new(1, 0, 0, DropdownAsset.Title.TextSize + 2)
 
 			DropdownAsset.Background.Position = UDim2.new(0.5, 0, 0, DropdownAsset.Title.Size.Y.Offset)
 			DropdownAsset.Size = UDim2.new(1, 0, 0, DropdownAsset.Title.Size.Y.Offset + DropdownAsset.Background.Size.Y.Offset)
@@ -3312,7 +3312,7 @@ Bracket.Elements = {
 
 
 		ColorpickerAsset.Title:GetPropertyChangedSignal("TextBounds"):Connect(function()
-			ColorpickerAsset.Size = UDim2.new(1, 0, 0, ColorpickerAsset.Title.TextBounds.Y)
+			ColorpickerAsset.Size = UDim2.new(1, 0, 0, ColorpickerAsset.Title.TextSize)
 		end)
 
 		ColorpickerAsset.MouseButton1Click:Connect(function()
@@ -4007,8 +4007,8 @@ function Bracket:Push(Notification)
 	NotificationAsset.Parent = Bracket.Screen.PNContainer
 	NotificationAsset.Title.Text = Notification.Title
 	NotificationAsset.Description.Text = Notification.Description
-	NotificationAsset.Title.Size = UDim2.new(1, 0, 0, NotificationAsset.Title.TextBounds.Y)
-	NotificationAsset.Description.Size = UDim2.new(1, 0, 0, NotificationAsset.Description.TextBounds.Y)
+	NotificationAsset.Title.Size = UDim2.new(1, 0, 0, NotificationAsset.Title.TextSize)
+	NotificationAsset.Description.Size = UDim2.new(1, 0, 0, NotificationAsset.Description.TextSize)
 
 	NotificationAsset.Size = UDim2.fromOffset(
 		(NotificationAsset.Title.TextBounds.X > NotificationAsset.Description.TextBounds.X
@@ -4049,7 +4049,7 @@ function Bracket:Toast(Notification)
 
 	NotificationAsset.Main.Size = UDim2.fromOffset(
 		NotificationAsset.Main.Title.TextBounds.X + 10,
-		NotificationAsset.Main.Title.TextBounds.Y + 6
+		NotificationAsset.Main.Title.TextSize + 6
 	)
 	NotificationAsset.Size = UDim2.fromOffset(0,
 		NotificationAsset.Main.Size.Y.Offset + 4
