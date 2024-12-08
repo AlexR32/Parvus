@@ -121,11 +121,10 @@ local function EvalHealth(Percent)
 end
 -- CalculateBox by mickeyrbx (highly edited)
 local function CalculateBoxSize(Model, Distance)
-    local Size = Model:GetExtentsSize()
-    --Size = V2New(Size.X, Size.Y)
-    --local Size = DrawingLibrary.CharacterSize
-    Size = Size / (Distance * Tan(Rad(Camera.FieldOfView / 2)) * 2) * 1000
-    return AntiAliasingXY(Size.X, Size.Y)
+    local CharacterSize = Model:GetExtentsSize()
+    local FrustumHeight = Tan(Rad(Camera.FieldOfView / 2)) * 2 * Distance
+    local BoxSize = Camera.ViewportSize.Y / FrustumHeight * CharacterSize
+    return AntiAliasingXY(BoxSize.X, BoxSize.Y)
 end
 -- Offscreen Arrows by Blissful
 local function GetRelative(Position)
