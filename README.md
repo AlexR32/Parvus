@@ -1,11 +1,11 @@
 # Parvus  [![Discord Shield](https://discordapp.com/api/guilds/958056630321303602/widget.png)](https://discord.gg/sYqDpbPYb7)
 Free Roblox Script Hub designed for shooters.  
-Made With :heart: By ***AlexR32 @ discord.com***
+Made With :heart: By ***@AlexR32***
 
-- ***This script is still in beta stage of development, so expect some bugs or lack of features.***  
-- ~~***This script only officially supports Krampus, since I made this script with Krampus, so if you have problems running this script on other executors, just remember that it might be your executor.***~~  
-- ***This script is going into long-term support and will not receive major updates, feel free to make pull requests to bug fixes.***  
-- ***Please do not modify this script without my permission, or redistribute it without any credit to me.***  
+> [!CAUTION]
+> ***Unfortunately I can't support this script and all fixes come from the guys who make pull requests, if you want this script to live and if you know lua then feel free to make pull request.***
+> 
+> ***Please do not modify this script without my permission, or redistribute it without any credit to me.***  
 
 ### Loadstring
 ```lua
