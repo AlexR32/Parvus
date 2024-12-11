@@ -20,7 +20,6 @@ local Max = math.max
 local Atan2 = math.atan2
 local Clamp = math.clamp
 local Floor = math.floor
-local Clear = table.clear
 
 local WTVP = Camera.WorldToViewportPoint
 local FindFirstChild = Workspace.FindFirstChild
@@ -65,15 +64,14 @@ local function AddDrawing(Type, Properties)
     return DrawingObject
 end
 local function ClearDrawing(Table)
-    for Index, Value in pairs(Table) do
-        if type(Value) == "table" then
+    for _, Value in pairs(Table) do
+        if typeof(Value) == "table" then
             ClearDrawing(Value)
-        elseif typeof(Value) == "DrawingObject" then
-            Value:Destroy()
+        else
+            pcall(function() Value:Destroy() end)
         end
     end
 end
-
 local function GetFlag(Flags, Flag, Option)
     return Flags[Flag .. Option]
 end
@@ -1264,17 +1262,14 @@ function DrawingLibrary.RemoveESP(Self, Target)
 
     --ESP.Connection:Disconnect()
     ClearDrawing(ESP.Drawing)
-
-    Clear(Self.ESP[Target])
     Self.ESP[Target] = nil
 end
 
 function DrawingLibrary.RemoveObject(Self, Target)
     local ESP = Self.ObjectESP[Target]
     if not ESP then return end
-    ESP.Name:Destroy()
 
-    Clear(Self.ObjectESP[Target])
+    ESP.Name:Destroy()
     Self.ObjectESP[Target] = nil
 end
 
