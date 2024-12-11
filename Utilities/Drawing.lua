@@ -1194,53 +1194,53 @@ function DrawingLibrary.AddESP(Self, Target, Mode, Flag, Flags)
                 Visible = false,
                 OutlineVisible = false,
                 LineLT = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineTL = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineLB = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineBL = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineRT = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineTR = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineRB = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 },
                 LineBR = {
+                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
                     Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
-                    Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 })
                 }
             },
             HealthBar = {
+                Outline = AddDrawing("Square", { Visible = false, ZIndex = 0, Filled = true }),
                 Main = AddDrawing("Square", { Visible = false, ZIndex = 1, Filled = true }),
-                Outline = AddDrawing("Square", { Visible = false, ZIndex = 0, Filled = true })
             },
             Tracer = {
-                Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
                 Outline = AddDrawing("Line", { Visible = false, ZIndex = 0 }),
+                Main = AddDrawing("Line", { Visible = false, ZIndex = 1 }),
             },
             HeadDot = {
-                Main = AddDrawing("Circle", { Visible = false, ZIndex = 1 }),
                 Outline = AddDrawing("Circle", { Visible = false, ZIndex = 0 }),
+                Main = AddDrawing("Circle", { Visible = false, ZIndex = 1 }),
             },
             Arrow = {
-                Main = AddDrawing("Triangle", { Visible = false, ZIndex = 1 }),
                 Outline = AddDrawing("Triangle", { Visible = false, ZIndex = 0 }),
+                Main = AddDrawing("Triangle", { Visible = false, ZIndex = 1 }),
             },
             Textboxes = {
                 Name = AddDrawing("Text", { Visible = false, ZIndex = 0, Center = true, Outline = true, Color = WhiteColor, Font = Fonts.Plex }),
