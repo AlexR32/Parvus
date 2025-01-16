@@ -68,6 +68,9 @@ local function ClearDrawing(Table)
         if typeof(Value) == "table" then
             ClearDrawing(Value)
         else
+            if isrenderobj and not isrenderobj(Value) then
+                continue
+            end
             pcall(function() Value:Destroy() end)
         end
     end
