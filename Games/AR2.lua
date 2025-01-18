@@ -1204,7 +1204,7 @@ end)
 local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, Name, ...)
     if table.find(SanityBans, Name) then print("bypassed", Name); return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
-
+            
     if Name == "Vehicle Bumper Impact" then
         if Window.Flags["AR2/Vehicle/Impact"] then
             return
@@ -1218,19 +1218,14 @@ local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, N
     end
 
     if Name == "Character State Report" then
-        local RandomData = GetStates()
         local Args = {...}
+        if Window.Flags["AR2/SSCS"] then
+            Args[4] = Window.Flags["AR2/MoveState"][1]
+        end
 
-        for Index = 1, #Args do
-            if Window.Flags["AR2/SSCS"] then
-                if RandomData[Index] == "MoveState" then
-                    Args[Index] = Window.Flags["AR2/MoveState"][1]
-                end
-            end
-            if Window.Flags["AR2/NoSpread"] then
-                Args[2] = true -- firstperson
-                Args[7] = true -- zooming
-            end
+        if Window.Flags["AR2/NoSpread"] then
+            Args[2] = true -- firstperson
+            Args[7] = true -- zooming
         end
 
         return OldSend(Self, Name, unpack(Args))
