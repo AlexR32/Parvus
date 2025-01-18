@@ -1201,10 +1201,9 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     return OldNamecall(Self, ...)
 end)
 
-local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, Name, ...)
-    if table.find(SanityBans, Name) then print("bypassed", Name); return end
-    if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
-            
+local OldSend; OldSend = hookfunction(Network.Send, function(Self, Name, ...)
+    if table.find(SanityBans, Name) then return task.wait(9e9) end
+    
     if Name == "Vehicle Bumper Impact" then
         if Window.Flags["AR2/Vehicle/Impact"] then
             return
@@ -1232,12 +1231,12 @@ local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, N
     end
 
     return OldSend(Self, Name, ...)
-end))
+end)
 
-local OldFetch; OldFetch = hookfunction(Network.Fetch, newcclosure(function(Self, Name, ...)
-    if table.find(SanityBans, Name) then print("bypassed", Name) return end
+local OldFetch; OldFetch = hookfunction(Network.Fetch, function(Self, Name, ...)
+    if table.find(SanityBans, Name) then return task.wait(9e9) end
     return OldFetch(Self, Name, ...)
-end))
+end)
 
 setupvalue(Bullets.Fire, 1, function(Character, CCamera, Weapon, ...)
     if Window.Flags["AR2/NoSpread"] then
