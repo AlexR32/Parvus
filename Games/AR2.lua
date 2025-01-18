@@ -1202,7 +1202,7 @@ OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
 end)
 
 local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, Name, ...)
-    if table.find(SanityBans, Name) then print("bypassed", Name) return end
+    if table.find(SanityBans, Name) then print("bypassed", Name); return end
     if Name == "Character Jumped" and Window.Flags["AR2/SSCS"] then return end
 
     if Name == "Vehicle Bumper Impact" then
@@ -1217,63 +1217,30 @@ local OldSend; OldSend = hookfunction(Network.Send, newcclosure(function(Self, N
         end
     end
 
-    --[[if Name == "Bullet Fired" then
-        if Window.Flags["AR2/NoSpread"] then
-            local Args = {...}
-            print(Args[5] == ProjectileDirection)
-            Args[5] = ProjectileSpread --* Vector3.new(-1, -1, 1)
-            return OldSend(Self, Name, unpack(Args))
-        end
-    end]]
-
-    --[[if Name == "Bullet Impact" then
-        print("bullet impact")
-        if Window.Flags["AR2/NoSpread"] then
-            local Args = {...}
-            local Position, Table = CastLocalBulletInstant(ProjectileOrigin, ProjectileDirection2, ProjectileSpread)
-            if not Position then print(Args[1], "miss") return OldSend(Self, Name, ...) end
-
-            --Args[5] = Target
-            print(Args[1], "hit")
-            Args[6] = Position
-            Args[7][1] = Table[1]
-            Args[7][2] = Table[2]
-            Args[7][3] = Table[3]
-
-            return OldSend(Self, Name, unpack(Args))
-        end
-    end]]
-
-    return OldSend(Self, Name, ...)
-end))
-
-local OldFetch; OldFetch = hookfunction(Network.Fetch, newcclosure(function(Self, Name, ...)
-    if table.find(SanityBans, Name) then print("bypassed", Name) return end
-
     if Name == "Character State Report" then
         local RandomData = GetStates()
         local Args = {...}
 
         for Index = 1, #Args do
-        --for Index, Value in pairs(Args) do
-            --print(Index, RandomData[Index][1], Value)
             if Window.Flags["AR2/SSCS"] then
                 if RandomData[Index] == "MoveState" then
                     Args[Index] = Window.Flags["AR2/MoveState"][1]
                 end
             end
             if Window.Flags["AR2/NoSpread"] then
-                if RandomData[Index] == "Zooming" then
-                    Args[Index] = true
-                elseif RandomData[Index] == "FirstPerson" then
-                    Args[Index] = true
-                end
+                Args[2] = true -- firstperson
+                Args[7] = true -- zooming
             end
         end
 
-        return OldFetch(Self, Name, unpack(Args))
+        return OldSend(Self, Name, unpack(Args))
     end
 
+    return OldSend(Self, Name, ...)
+end))
+
+local OldFetch; OldFetch = hookfunction(Network.Fetch, newcclosure(function(Self, Name, ...)
+    if table.find(SanityBans, Name) then print("bypassed", Name) return end
     return OldFetch(Self, Name, ...)
 end))
 
