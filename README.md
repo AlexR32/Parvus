@@ -4,8 +4,6 @@ Made With :heart: By ***@AlexR32***
 
 > [!CAUTION]
 > ***Unfortunately I can't support this script and all fixes come from the guys who make pull requests, if you want this script to live and if you know lua then feel free to make pull request.***
-> 
-> ***Please do not modify this script without my permission, or redistribute it without any credit to me.***  
 
 ### Loadstring
 ```lua
